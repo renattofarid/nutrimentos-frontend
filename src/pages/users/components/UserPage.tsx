@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import PageSkeleton from "@/components/PageSkeleton";
 import TitleComponent from "@/components/TitleComponent";
 import UserOptions from "./UserOptions";
 import UserTable from "./UserTable";

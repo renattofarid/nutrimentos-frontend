@@ -61,8 +61,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [filteredNav, setFilteredNav] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!access) return;
-
+    if (!access || access.length === 0) return;
+    
     const filterNav = (items: any[]) =>
       items.filter((item) => {
         if (item.url === "#" && item.items) {

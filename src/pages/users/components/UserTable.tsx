@@ -21,7 +21,16 @@ export default function UserTable({
         columns={columns}
         data={data}
         isLoading={isLoading}
-        initialColumnVisibility={{}}
+        initialColumnVisibility={{
+          business_name: false,
+          type_person: false,
+          type_document: false,
+          address: false,
+          phone: false,
+          email: false,
+          ocupation: false,
+          status: false,
+        }}
       >
         {children}
       </DataTable>

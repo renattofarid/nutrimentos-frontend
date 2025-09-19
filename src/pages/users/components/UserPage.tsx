@@ -51,7 +51,6 @@ export default function UserPage() {
 
   // make pagination of 10 in data
 
-  if (isLoading) return <PageSkeleton />;
   // if (!checkRouteExists("Users")) notFound();
   // if (!data) NotFound();
 

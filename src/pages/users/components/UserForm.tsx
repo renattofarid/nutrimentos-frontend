@@ -19,7 +19,7 @@ import {
 } from "../lib/User.schema";
 import { FormSelect } from "@/components/FormSelect";
 import type { TypeUserResource } from "@/pages/type-users/lib/typeUser.interface";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface MetricFormProps {
   defaultValues: Partial<UserSchema>;
@@ -50,6 +50,102 @@ export const UserForm = ({
 
   const type_person = form.watch("type_person");
   const type_document = form.watch("type_document");
+
+  // Función para obtener la longitud máxima del documento según su tipo
+  const getMaxLength = (docType: string) => {
+    switch (docType) {
+      case "RUC":
+        return 11;
+      case "DNI":
+        return 8;
+      case "CE":
+        return 12;
+      case "PASAPORTE":
+        return 9;
+      default:
+        return 0;
+    }
+  };
+
+  // Función para validar si el número de documento actual es compatible con el nuevo tipo
+  const isDocumentNumberCompatible = (
+    currentNumber: string,
+    newDocType: string
+  ) => {
+    if (!currentNumber) return true;
+    const maxLength = getMaxLength(newDocType);
+    return currentNumber.length <= maxLength;
+  };
+
+  const handleTypeDocumentChange = (value: string) => {
+    const currentDocumentNumber = form.getValues("number_document");
+
+    // Siempre limpiar el número de documento cuando cambia el tipo
+    form.setValue("number_document", "");
+
+    // Si el número actual no es compatible con el nuevo tipo, forzar limpieza
+    if (!isDocumentNumberCompatible(currentDocumentNumber ?? "", value)) {
+      form.setValue("number_document", "");
+      // Opcional: mostrar un mensaje al usuario
+      console.log(
+        `Número de documento limpiado debido al cambio de tipo de documento`
+      );
+    }
+
+    // Limpiar campos según el tipo de documento y persona
+    if (value === "DNI") {
+      form.setValue("business_name", "");
+      // Si DNI, debe ser persona natural
+      form.setValue("type_person", "NATURAL");
+    } else if (value === "RUC") {
+      form.setValue("names", "");
+      form.setValue("father_surname", "");
+      form.setValue("mother_surname", "");
+      // Si RUC, debe ser persona jurídica
+      form.setValue("type_person", "JURIDICA");
+    }
+
+    // Forzar revalidación después de cambiar los valores
+    setTimeout(() => {
+      form.trigger(["type_person", "type_document", "number_document"]);
+    }, 0);
+  };
+
+  const handleTypePersonChange = (value: string) => {
+    // Limpiar campos según el tipo de persona
+    if (value === "NATURAL") {
+      form.setValue("business_name", "");
+      // Si es natural, no puede tener RUC
+      const currentDocType = form.getValues("type_document");
+      if (currentDocType === "RUC") {
+        form.setValue("type_document", "DNI");
+        form.setValue("number_document", "");
+      }
+    } else if (value === "JURIDICA") {
+      form.setValue("names", "");
+      form.setValue("father_surname", "");
+      form.setValue("mother_surname", "");
+      // Si es jurídica, debe tener RUC
+      form.setValue("type_document", "RUC");
+      form.setValue("number_document", "");
+    }
+
+    // Forzar revalidación después de cambiar los valores
+    setTimeout(() => {
+      form.trigger(["type_person", "type_document", "number_document"]);
+    }, 0);
+  };
+
+  // Efecto para validar compatibilidad cuando cambia el tipo de documento
+  useEffect(() => {
+    const currentDocumentNumber = form.getValues("number_document");
+    if (currentDocumentNumber && type_document) {
+      if (!isDocumentNumberCompatible(currentDocumentNumber, type_document)) {
+        form.setValue("number_document", "");
+        form.trigger("number_document");
+      }
+    }
+  }, [type_document, form]);
 
   return (
     <Form {...form}>
@@ -86,6 +182,7 @@ export const UserForm = ({
                   label: "Pasaporte",
                 },
               ]}
+              onChange={handleTypeDocumentChange}
             />
 
             <FormSelect
@@ -97,6 +194,7 @@ export const UserForm = ({
                 { value: "NATURAL", label: "Natural" },
                 { value: "JURIDICA", label: "Juridica" },
               ]}
+              onChange={handleTypePersonChange}
             />
 
             <FormField
@@ -106,22 +204,26 @@ export const UserForm = ({
                 <FormItem>
                   <FormLabel className="text-sm font-normal">
                     Número de Documento
+                    {type_document && (
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({getMaxLength(type_document)} dígitos)
+                      </span>
+                    )}
                   </FormLabel>
                   <FormControl>
                     <Input
-                      maxLength={
-                        type_document === "RUC"
-                          ? 11
-                          : type_document === "DNI"
-                          ? 8
-                          : type_document === "CE"
-                          ? 12
-                          : type_document === "PASAPORTE"
-                          ? 9
-                          : 0
-                      }
-                      placeholder="Número de Documento"
+                      maxLength={getMaxLength(type_document ?? "")}
+                      placeholder={`Número de Documento${
+                        type_document
+                          ? ` (${getMaxLength(type_document)} dígitos)`
+                          : ""
+                      }`}
                       {...field}
+                      onChange={(e) => {
+                        // Solo permitir números
+                        const value = e.target.value.replace(/\D/g, "");
+                        field.onChange(value);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -223,7 +325,16 @@ export const UserForm = ({
                     Teléfono
                   </FormLabel>
                   <FormControl>
-                    <Input maxLength={9} placeholder="Teléfono" {...field} />
+                    <Input
+                      maxLength={9}
+                      placeholder="Teléfono"
+                      {...field}
+                      onChange={(e) => {
+                        // Solo permitir números
+                        const value = e.target.value.replace(/\D/g, "");
+                        field.onChange(value);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -273,13 +384,17 @@ export const UserForm = ({
                 return (
                   <FormItem>
                     <FormLabel className="text-sm font-normal">
-                      Contraseña
+                      Contraseña {mode === "update" && "(Opcional)"}
                     </FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
-                          placeholder="Contraseña"
+                          placeholder={
+                            mode === "update"
+                              ? "Dejar vacío para mantener actual"
+                              : "Contraseña"
+                          }
                           {...field}
                         />
                         <button
@@ -304,19 +419,11 @@ export const UserForm = ({
           </div>
         </div>
 
-        {/* <code>
-          <pre>{JSON.stringify(form.getValues, null, 2)}</pre>
-          <pre>{JSON.stringify(form.formState.errors, null, 2)}</pre>
-        </code> */}
-
         {/* Botones */}
         <div className="flex justify-end gap-4">
           <Button type="button" variant="neutral" onClick={onCancel}>
             Cancelar
           </Button>
-          {/* <Button type="button" variant="neutral" onClick={() => form.trigger()}>
-            Validate
-          </Button> */}
           <Button
             type="submit"
             disabled={isSubmitting || !form.formState.isValid}
@@ -324,7 +431,11 @@ export const UserForm = ({
             <Loader
               className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`}
             />
-            {isSubmitting ? "Guardando" : "Guardar Usuario"}
+            {isSubmitting
+              ? "Guardando"
+              : mode === "create"
+              ? "Crear Usuario"
+              : "Actualizar Usuario"}
           </Button>
         </div>
       </form>

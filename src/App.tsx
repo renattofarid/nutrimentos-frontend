@@ -15,21 +15,12 @@ const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
 
 export const hasAccessToRoute = (access: Access[], route: string): boolean => {
-  const routeName = route.replace("/", ""); // "/usuarios" -> "usuarios"
-  
+  const transformRoute = route.split("/").pop();
   for (const node of access) {
-    // Verificar si el usuario tiene al menos una acción para este módulo
-    const hasPermission = node.permissions.some((permission) => 
-      permission.routes.some(permissionRoute => 
-        permissionRoute.startsWith(routeName + ".")
-      )
-    );
-    
-    if (hasPermission) {
+    if (node.permissions.some((p) => p.routes.includes(transformRoute!))) {
       return true;
     }
-    
-    if (node.children && hasAccessToRoute(node.children, route)) {
+    if (node.children && hasAccessToRoute(node.children, transformRoute!)) {
       return true;
     }
   }

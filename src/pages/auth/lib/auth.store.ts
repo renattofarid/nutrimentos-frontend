@@ -24,6 +24,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     : null,
   message: localStorage.getItem("message"),
   person: null,
+  access: localStorage.getItem("access")
+    ? JSON.parse(localStorage.getItem("access")!)
+    : [],
 
   setToken: (token) => {
     localStorage.setItem("token", token);
@@ -49,6 +52,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     const { user, access } = await authenticate();
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("access", JSON.stringify(access));
       set({
         user,
         access,

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useProductType } from "../lib/product-type.hook";
+import { useNationality } from "../lib/nationality.hook";
 import TitleComponent from "@/components/TitleComponent";
-import ProductTypeActions from "./ProductTypeActions";
-import ProductTypeTable from "./ProductTypeTable";
-import ProductTypeModal from "./ProductTypeModal";
-import { deleteProductType } from "../lib/product-type.actions";
+import NationalityActions from "./NationalityActions";
+import NationalityTable from "./NationalityTable";
+import NationalityModal from "./NationalityModal";
+import { deleteNationality } from "../lib/nationality.actions";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import {
   successToast,
@@ -12,25 +12,25 @@ import {
   SUCCESS_MESSAGE,
   ERROR_MESSAGE,
 } from "@/lib/core.function";
-import { ProductTypeColumns } from "./ProductTypeColumns";
+import { NationalityColumns } from "./NationalityColumns";
 import DataTablePagination from "@/components/DataTablePagination";
-import { PRODUCT_TYPE } from "../lib/product-type.interface";
+import { NATIONALITY } from "../lib/nationality.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON, TITLES } = PRODUCT_TYPE;
+const { MODEL, ICON, TITLES } = NATIONALITY;
 
-export default function ProductTypePage() {
+export default function NationalityPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "update">("create");
-  const [selectedProductTypeId, setSelectedProductTypeId] = useState<
+  const [selectedNationalityId, setSelectedNationalityId] = useState<
     number | null
   >(null);
 
-  const { data, meta, isLoading, refetch } = useProductType();
+  const { data, meta, isLoading, refetch } = useNationality();
 
   useEffect(() => {
     const filterParams = {
@@ -44,7 +44,7 @@ export default function ProductTypePage() {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      await deleteProductType(deleteId);
+      await deleteNationality(deleteId);
       const filterParams = {
         page,
         search,
@@ -61,21 +61,21 @@ export default function ProductTypePage() {
     }
   };
 
-  const handleCreateProductType = () => {
+  const handleCreateNationality = () => {
     setModalMode("create");
-    setSelectedProductTypeId(null);
+    setSelectedNationalityId(null);
     setModalOpen(true);
   };
 
-  const handleEditProductType = (id: number) => {
+  const handleEditNationality = (id: number) => {
     setModalMode("update");
-    setSelectedProductTypeId(id);
+    setSelectedNationalityId(id);
     setModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setModalOpen(false);
-    setSelectedProductTypeId(null);
+    setSelectedNationalityId(null);
   };
 
   return (
@@ -86,13 +86,13 @@ export default function ProductTypePage() {
           subtitle={MODEL.description}
           icon={ICON}
         />
-        <ProductTypeActions onCreateProductType={handleCreateProductType} />
+        <NationalityActions onCreateNationality={handleCreateNationality} />
       </div>
 
-      <ProductTypeTable
+      <NationalityTable
         isLoading={isLoading}
-        columns={ProductTypeColumns({
-          onEdit: handleEditProductType,
+        columns={NationalityColumns({
+          onEdit: handleEditNationality,
           onDelete: setDeleteId,
         })}
         data={data || []}
@@ -108,8 +108,8 @@ export default function ProductTypePage() {
       />
 
       {modalOpen && (
-        <ProductTypeModal
-          id={selectedProductTypeId || undefined}
+        <NationalityModal
+          id={selectedNationalityId || undefined}
           open={modalOpen}
           title={modalMode === "create" ? TITLES.create.title : TITLES.update.title}
           mode={modalMode}

@@ -16,7 +16,10 @@ import UnitPage from "./pages/unit/components/UnitPage";
 import CategoryPage from "./pages/category/components/CategoryPage";
 import ProductPage from "./pages/product/components/ProductPage";
 import ProductDetail from "./pages/product/components/ProductDetail";
+import ProductAddPage from "./pages/product/components/ProductAddPage";
+import ProductEditPage from "./pages/product/components/ProductEditPage";
 import ProductTypePage from "./pages/product-type/components/ProductTypePage";
+import NationalityPage from "./pages/nationality/components/NationalityPage";
 import RolePage from "./pages/role/components/RolePage";
 import ClientPage from "./pages/client/components/ClientPage";
 import ClientAddPage from "./pages/client/components/ClientAddPage";
@@ -38,6 +41,7 @@ import { UNIT } from "./pages/unit/lib/unit.interface";
 import { CATEGORY } from "./pages/category/lib/category.interface";
 import { PRODUCT } from "./pages/product/lib/product.interface";
 import { PRODUCT_TYPE } from "./pages/product-type/lib/product-type.interface";
+import { NATIONALITY } from "./pages/nationality/lib/nationality.interface";
 import { ROLE } from "./pages/role/lib/role.interface";
 import { CLIENT } from "./pages/client/lib/client.interface";
 import { SUPPLIER } from "./pages/supplier/lib/supplier.interface";
@@ -56,6 +60,7 @@ const { ROUTE: UnitRoute } = UNIT;
 const { ROUTE: CategoryRoute } = CATEGORY;
 const { ROUTE: ProductRoute } = PRODUCT;
 const { ROUTE: ProductTypeRoute } = PRODUCT_TYPE;
+const { ROUTE: NationalityRoute } = NATIONALITY;
 const { ROUTE: RoleRoute } = ROLE;
 const { ROUTE: ClientRoute } = CLIENT;
 const { ROUTE: SupplierRoute } = SUPPLIER;
@@ -231,10 +236,37 @@ export default function App() {
           />
 
           <Route
+            path="/productos/agregar"
+            element={
+              <ProtectedRoute path={ProductRoute}>
+                <ProductAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/productos/actualizar/:id"
+            element={
+              <ProtectedRoute path={ProductRoute}>
+                <ProductEditPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path={ProductTypeRoute}
             element={
               <ProtectedRoute path={ProductTypeRoute}>
                 <ProductTypePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={NationalityRoute}
+            element={
+              <ProtectedRoute path={NationalityRoute}>
+                <NationalityPage />
               </ProtectedRoute>
             }
           />

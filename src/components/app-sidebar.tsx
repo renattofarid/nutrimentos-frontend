@@ -23,6 +23,7 @@ import { UNIT } from "@/pages/unit/lib/unit.interface";
 import { CATEGORY } from "@/pages/category/lib/category.interface";
 import { PRODUCT } from "@/pages/product/lib/product.interface";
 import { PRODUCT_TYPE } from "@/pages/product-type/lib/product-type.interface";
+import { NATIONALITY } from "@/pages/nationality/lib/nationality.interface";
 import { ROLE } from "@/pages/role/lib/role.interface";
 import { CLIENT } from "@/pages/client/lib/client.interface";
 import { SUPPLIER } from "@/pages/supplier/lib/supplier.interface";
@@ -96,6 +97,12 @@ const {
   ROUTE: ProductTypeRoute,
   MODEL: { name: ProductTypeTitle },
 } = PRODUCT_TYPE;
+
+const {
+  ICON_REACT: NationalityIcon,
+  ROUTE: NationalityRoute,
+  MODEL: { name: NationalityTitle },
+} = NATIONALITY;
 
 const {
   ICON_REACT: RoleIcon,
@@ -184,6 +191,11 @@ const data = {
           title: UnitTitle,
           url: UnitRoute,
           icon: UnitIcon,
+        },
+        {
+          title: NationalityTitle,
+          url: NationalityRoute,
+          icon: NationalityIcon,
         },
       ],
     },

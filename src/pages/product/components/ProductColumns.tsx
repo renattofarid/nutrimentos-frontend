@@ -6,7 +6,6 @@ import { SelectActions } from "@/components/SelectActions";
 import type { ProductResource } from "../lib/product.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Image } from "lucide-react";
 
 export const ProductColumns = ({
   onEdit,
@@ -54,7 +53,9 @@ export const ProductColumns = ({
     header: "Tipo",
     cell: ({ getValue }) => {
       const type = getValue() as string;
-      const getVariant = (type: string): "default" | "destructive" | "secondary" | "outline" => {
+      const getVariant = (
+        type: string
+      ): "default" | "destructive" | "secondary" | "outline" => {
         switch (type) {
           case "Normal":
             return "default";
@@ -86,7 +87,11 @@ export const ProductColumns = ({
     header: "Precio Venta",
     cell: ({ getValue }) => {
       const price = getValue() as string;
-      return <span className="font-semibold text-green-600">S/ {Number(price).toFixed(2)}</span>;
+      return (
+        <span className="font-semibold text-green-600">
+          S/ {Number(price).toFixed(2)}
+        </span>
+      );
     },
   },
   {

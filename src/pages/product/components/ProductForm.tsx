@@ -26,6 +26,7 @@ import type { BrandResource } from "@/pages/brand/lib/brand.interface";
 import type { UnitResource } from "@/pages/unit/lib/unit.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { ProductTypeResource } from "@/pages/product-type/lib/product-type.interface";
+import type { NationalityResource } from "@/pages/nationality/lib/nationality.interface";
 import { Switch } from "@/components/ui/switch";
 import type { CompanyResource } from "@/pages/company/lib/company.interface";
 
@@ -40,6 +41,7 @@ interface ProductFormProps {
   brands: BrandResource[];
   units: UnitResource[];
   productTypes: ProductTypeResource[];
+  nationalities: NationalityResource[];
   suppliers: PersonResource[];
   product?: ProductResource;
 }
@@ -55,6 +57,7 @@ export const ProductForm = ({
   brands,
   units,
   productTypes,
+  nationalities,
   suppliers,
   product,
 }: ProductFormProps) => {
@@ -178,6 +181,17 @@ export const ProductForm = ({
                 label:
                   `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`.trim() ||
                   supplier.business_name,
+              }))}
+            />
+
+            <FormSelect
+              control={form.control}
+              name="nationality_id"
+              label="Nacionalidad"
+              placeholder="Seleccione una nacionalidad"
+              options={nationalities.map((nationality) => ({
+                value: nationality.id.toString(),
+                label: nationality.name,
               }))}
             />
 

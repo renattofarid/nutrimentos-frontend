@@ -13,34 +13,30 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  categorySchemaCreate,
-  categorySchemaUpdate,
-  type CategorySchema,
-} from "../lib/category.schema";
+  nationalitySchemaCreate,
+  nationalitySchemaUpdate,
+  type NationalitySchema,
+} from "../lib/nationality.schema";
 import { Loader } from "lucide-react";
-import { FormSelect } from "@/components/FormSelect";
-import type { CategoryResource } from "../lib/category.interface";
 
-interface CategoryFormProps {
-  defaultValues: Partial<CategorySchema>;
+interface NationalityFormProps {
+  defaultValues: Partial<NationalitySchema>;
   onSubmit: (data: any) => void;
   onCancel?: () => void;
   isSubmitting?: boolean;
   mode?: "create" | "update";
-  categories: CategoryResource[];
 }
 
-export const CategoryForm = ({
+export const NationalityForm = ({
   onCancel,
   defaultValues,
   onSubmit,
   isSubmitting = false,
   mode = "create",
-  categories,
-}: CategoryFormProps) => {
+}: NationalityFormProps) => {
   const form = useForm({
     resolver: zodResolver(
-      mode === "create" ? categorySchemaCreate : categorySchemaUpdate
+      mode === "create" ? nationalitySchemaCreate : nationalitySchemaUpdate
     ),
     defaultValues: {
       ...defaultValues,
@@ -50,7 +46,7 @@ export const CategoryForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 w-full">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sidebar p-4 rounded-lg">
           <FormField
             control={form.control}
@@ -61,7 +57,7 @@ export const CategoryForm = ({
                 <FormControl>
                   <Input
                     variant="primary"
-                    placeholder="Ej: SmartPhones"
+                    placeholder="Ej: Peruana"
                     {...field}
                   />
                 </FormControl>
@@ -79,40 +75,18 @@ export const CategoryForm = ({
                 <FormControl>
                   <Input
                     variant="primary"
-                    placeholder="Ej: SMP"
-                    maxLength={10}
+                    placeholder="Ej: PE"
+                    {...field}
                     onChange={(e) => {
                       field.onChange(e.target.value.toUpperCase());
                     }}
-                    value={field.value}
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          <div className="md:col-span-2">
-            <FormSelect
-              control={form.control}
-              name="parent_id"
-              label="Categoría Padre (Opcional)"
-              placeholder="Seleccione una categoría padre"
-              options={categories.map((category) => ({
-                value: category.id.toString(),
-                label: category.name,
-              }))}
-            />
-          </div>
         </div>
-
-        {/* 
-        <pre>
-          <code>{JSON.stringify(form.getValues(), null, 2)}</code>
-        </pre> */}
 
         <div className="flex gap-4 w-full justify-end">
           <Button type="button" variant="neutral" onClick={onCancel}>

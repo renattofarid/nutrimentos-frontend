@@ -40,13 +40,11 @@ export default function ProductOptions({
 
       <div className="flex gap-2">
         <SearchableSelect
-          options={[
-            { value: "", label: "Todas las categorías" },
-            ...categories.map((category) => ({
-              value: category.id.toString(),
-              label: category.name,
-            })),
-          ]}
+          options={categories.map((category) => ({
+            value: category.id.toString(),
+            label: category.name,
+          }))}
+          placeholder="Seleccionar categoría"
           value={selectedCategory}
           onChange={setSelectedCategory}
           className="min-w-[200px]"
@@ -54,13 +52,11 @@ export default function ProductOptions({
         />
 
         <SearchableSelect
-          options={[
-            { value: "", label: "Todas las marcas" },
-            ...brands.map((brand) => ({
-              value: brand.id.toString(),
-              label: brand.name,
-            })),
-          ]}
+          options={brands.map((brand) => ({
+            value: brand.id.toString(),
+            label: brand.name,
+          }))}
+          placeholder="Seleccionar marca"
           value={selectedBrand}
           onChange={setSelectedBrand}
           className="min-w-[200px]"
@@ -69,11 +65,11 @@ export default function ProductOptions({
 
         <SearchableSelect
           options={[
-            { value: "", label: "Todos los tipos" },
             { value: "Normal", label: "Normal" },
             { value: "Kit", label: "Kit" },
             { value: "Servicio", label: "Servicio" },
           ]}
+          placeholder="Tipo de producto"
           value={selectedType}
           onChange={setSelectedType}
           className="min-w-[150px]"

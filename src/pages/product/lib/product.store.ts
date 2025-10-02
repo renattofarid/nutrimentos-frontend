@@ -46,6 +46,7 @@ const createFormData = (data: ProductSchema): FormData => {
   formData.append('sale_price', data.sale_price);
   formData.append('is_taxed', data.is_taxed.toString());
   formData.append('supplier_id', data.supplier_id.toString());
+  formData.append('nationality_id', data.nationality_id.toString());
 
   // Optional fields
   if (data.comment) formData.append('comment', data.comment);

@@ -35,6 +35,7 @@ export const productSchemaCreate = z.object({
     }),
   is_taxed: z.number().min(0).max(1).default(1),
   supplier_id: requiredStringId("Debe seleccionar un proveedor"),
+  nationality_id: requiredStringId("Debe seleccionar una nacionalidad"),
   comment: z.string().optional().default(""),
   weight: z
     .string()

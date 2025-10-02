@@ -47,6 +47,7 @@ export const PRODUCT: ModelComplete<ProductSchema> = {
     sale_price: "",
     is_taxed: 1,
     supplier_id: "",
+    nationality_id: "",
     comment: "",
     weight: "",
     price_per_kg: "",

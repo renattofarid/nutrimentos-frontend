@@ -256,7 +256,7 @@ export default function ProductPage() {
         })}
         data={data || []}
       >
-        {/* {categories && brands && (
+        {categories && brands && (
           <ProductOptions
             search={search}
             setSearch={setSearch}
@@ -269,7 +269,7 @@ export default function ProductPage() {
             categories={categories}
             brands={brands}
           />
-        )} */}
+        )}
       </ProductTable>
 
       <DataTablePagination

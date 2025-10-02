@@ -3,6 +3,7 @@
 import SearchInput from "@/components/SearchInput";
 import type { CategoryResource } from "@/pages/category/lib/category.interface";
 import type { BrandResource } from "@/pages/brand/lib/brand.interface";
+import { SearchableSelect } from "@/components/SearchableSelect";
 
 interface ProductOptionsProps {
   search: string;
@@ -38,43 +39,46 @@ export default function ProductOptions({
       />
 
       <div className="flex gap-2">
-        <select
+        <SearchableSelect
+          options={[
+            { value: "", label: "Todas las categorías" },
+            ...categories.map((category) => ({
+              value: category.id.toString(),
+              label: category.name,
+            })),
+          ]}
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="px-3 py-2 border rounded-md text-sm bg-background"
-        >
-          <option value="">Todas las categorías</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id.toString()}>
-              {"  ".repeat(category.level - 1)}
-              {category.name}
-            </option>
-          ))}
-        </select>
+          onChange={setSelectedCategory}
+          className="min-w-[200px]"
+          withValue={false}
+        />
 
-        <select
+        <SearchableSelect
+          options={[
+            { value: "", label: "Todas las marcas" },
+            ...brands.map((brand) => ({
+              value: brand.id.toString(),
+              label: brand.name,
+            })),
+          ]}
           value={selectedBrand}
-          onChange={(e) => setSelectedBrand(e.target.value)}
-          className="px-3 py-2 border rounded-md text-sm bg-background"
-        >
-          <option value="">Todas las marcas</option>
-          {brands.map((brand) => (
-            <option key={brand.id} value={brand.id.toString()}>
-              {brand.name}
-            </option>
-          ))}
-        </select>
+          onChange={setSelectedBrand}
+          className="min-w-[200px]"
+          withValue={false}
+        />
 
-        <select
+        <SearchableSelect
+          options={[
+            { value: "", label: "Todos los tipos" },
+            { value: "Normal", label: "Normal" },
+            { value: "Kit", label: "Kit" },
+            { value: "Servicio", label: "Servicio" },
+          ]}
           value={selectedType}
-          onChange={(e) => setSelectedType(e.target.value)}
-          className="px-3 py-2 border rounded-md text-sm bg-background"
-        >
-          <option value="">Todos los tipos</option>
-          <option value="Normal">Normal</option>
-          <option value="Kit">Kit</option>
-          <option value="Servicio">Servicio</option>
-        </select>
+          onChange={setSelectedType}
+          className="min-w-[150px]"
+          withValue={false}
+        />
       </div>
     </div>
   );

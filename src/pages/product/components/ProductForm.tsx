@@ -394,10 +394,6 @@ export const ProductForm = ({
           />
         </div>
 
-        <pre>
-          <code>{JSON.stringify(form.getValues(), null, 2)}</code>
-        </pre>
-
         <div className="flex gap-4 w-full justify-end">
           <Button type="button" variant="neutral" onClick={onCancel}>
             Cancelar

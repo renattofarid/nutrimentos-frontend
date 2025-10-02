@@ -24,7 +24,7 @@ export const requiredStringId = (message: string) =>
     .string()
     .min(1, message)
     .max(100, message)
-    .refine((val) => val !== undefined, { message });
+    .refine((val) => val !== undefined && val !== "0", { message });
 
 export const requiredNumberId = (message: string) =>
   z.preprocess(

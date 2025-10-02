@@ -110,6 +110,22 @@
   --sidebar-ring: oklch(0.488 0.243 264.376);
 }
 
+@layer utilities {
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--color-border);
+    border-radius: 4px;
+  }
+}
+
 
 @layer base {
   * {

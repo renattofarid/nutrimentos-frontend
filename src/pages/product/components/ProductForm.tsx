@@ -25,6 +25,7 @@ import type { CategoryResource } from "@/pages/category/lib/category.interface";
 import type { BrandResource } from "@/pages/brand/lib/brand.interface";
 import type { UnitResource } from "@/pages/unit/lib/unit.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
+import type { ProductTypeResource } from "@/pages/product-type/lib/product-type.interface";
 import { Switch } from "@/components/ui/switch";
 import type { CompanyResource } from "@/pages/company/lib/company.interface";
 
@@ -38,6 +39,7 @@ interface ProductFormProps {
   categories: CategoryResource[];
   brands: BrandResource[];
   units: UnitResource[];
+  productTypes: ProductTypeResource[];
   suppliers: PersonResource[];
   product?: ProductResource;
 }
@@ -52,6 +54,7 @@ export const ProductForm = ({
   categories,
   brands,
   units,
+  productTypes,
   suppliers,
   product,
 }: ProductFormProps) => {
@@ -137,11 +140,10 @@ export const ProductForm = ({
               name="product_type_id"
               label="Tipo de Producto"
               placeholder="Seleccione el tipo"
-              options={[
-                { value: "1", label: "Normal" },
-                { value: "2", label: "Kit" },
-                { value: "3", label: "Servicio" },
-              ]}
+              options={productTypes.map((type) => ({
+                value: type.id.toString(),
+                label: type.name,
+              }))}
             />
 
             <FormSelect

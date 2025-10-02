@@ -16,6 +16,7 @@ import UnitPage from "./pages/unit/components/UnitPage";
 import CategoryPage from "./pages/category/components/CategoryPage";
 import ProductPage from "./pages/product/components/ProductPage";
 import ProductDetail from "./pages/product/components/ProductDetail";
+import ProductTypePage from "./pages/product-type/components/ProductTypePage";
 import RolePage from "./pages/role/components/RolePage";
 import ClientPage from "./pages/client/components/ClientPage";
 import ClientAddPage from "./pages/client/components/ClientAddPage";
@@ -36,6 +37,7 @@ import { BOX } from "./pages/box/lib/box.interface";
 import { UNIT } from "./pages/unit/lib/unit.interface";
 import { CATEGORY } from "./pages/category/lib/category.interface";
 import { PRODUCT } from "./pages/product/lib/product.interface";
+import { PRODUCT_TYPE } from "./pages/product-type/lib/product-type.interface";
 import { ROLE } from "./pages/role/lib/role.interface";
 import { CLIENT } from "./pages/client/lib/client.interface";
 import { SUPPLIER } from "./pages/supplier/lib/supplier.interface";
@@ -53,6 +55,7 @@ const { ROUTE: BoxRoute } = BOX;
 const { ROUTE: UnitRoute } = UNIT;
 const { ROUTE: CategoryRoute } = CATEGORY;
 const { ROUTE: ProductRoute } = PRODUCT;
+const { ROUTE: ProductTypeRoute } = PRODUCT_TYPE;
 const { ROUTE: RoleRoute } = ROLE;
 const { ROUTE: ClientRoute } = CLIENT;
 const { ROUTE: SupplierRoute } = SUPPLIER;
@@ -223,6 +226,15 @@ export default function App() {
             element={
               <ProtectedRoute path={ProductRoute}>
                 <ProductDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ProductTypeRoute}
+            element={
+              <ProtectedRoute path={ProductTypeRoute}>
+                <ProductTypePage />
               </ProtectedRoute>
             }
           />

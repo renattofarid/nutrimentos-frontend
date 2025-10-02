@@ -5,6 +5,7 @@ import { useAllCategories } from "@/pages/category/lib/category.hook";
 import { useAllBrands } from "@/pages/brand/lib/brand.hook";
 import { useAllUnits } from "@/pages/unit/lib/unit.hook";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
+import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
 import TitleComponent from "@/components/TitleComponent";
 import ProductActions from "./ProductActions";
 import ProductTable from "./ProductTable";
@@ -56,6 +57,7 @@ export default function ProductPage() {
   const { data: categories } = useAllCategories();
   const { data: brands } = useAllBrands();
   const { data: units } = useAllUnits();
+  const { data: productTypes } = useAllProductTypes();
   const suppliers = useAllPersons();
   const { isSubmitting, createProduct, updateProduct, fetchProduct, product } =
     useProductStore();
@@ -216,7 +218,7 @@ export default function ProductPage() {
           handleBack={handleBackToList}
         />
 
-        {categories && brands && units && suppliers && companies && (
+        {categories && brands && units && productTypes && suppliers && companies && (
           <ProductForm
             defaultValues={defaultValues}
             onSubmit={handleSubmit}
@@ -226,6 +228,7 @@ export default function ProductPage() {
             categories={categories}
             brands={brands}
             units={units}
+            productTypes={productTypes}
             suppliers={suppliers}
             product={isEdit ? product || undefined : undefined}
             onCancel={handleBackToList}

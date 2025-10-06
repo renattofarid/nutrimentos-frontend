@@ -1,32 +1,23 @@
-import { DataTable } from "@/components/ui/data-table";
-import { SettingColumns } from "./SettingColumns";
-import { useSettings, useDeleteSetting } from "../lib/setting.hook";
-import { useSettingStore } from "../lib/setting.store";
+import { DataTable } from "@/components/DataTable";
+import type { SettingResource } from "../lib/setting.interface";
+import type { ColumnDef } from "@tanstack/react-table";
 
-export const SettingTable = () => {
-  const { data, isLoading } = useSettings();
-  const { setSettingModal, setSettingIdEdit } = useSettingStore();
-  const deleteMutation = useDeleteSetting();
+interface SettingTableProps {
+  isLoading: boolean;
+  columns: ColumnDef<SettingResource>[];
+  data: SettingResource[];
+  children?: React.ReactNode;
+}
 
-  const handleEdit = (id: number) => {
-    setSettingIdEdit(id);
-    setSettingModal(true);
-  };
-
-  const handleDelete = (id: number) => {
-    if (confirm("¿Estás seguro de eliminar esta configuración?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
-  const columns = SettingColumns({
-    onEdit: handleEdit,
-    onDelete: handleDelete,
-  });
-
-  if (isLoading) {
-    return <div>Cargando...</div>;
-  }
-
-  return <DataTable columns={columns} data={data || []} />;
-};
+export default function SettingTable({
+  isLoading,
+  columns,
+  data,
+  children,
+}: SettingTableProps) {
+  return (
+    <DataTable isLoading={isLoading} columns={columns} data={data}>
+      {children}
+    </DataTable>
+  );
+}

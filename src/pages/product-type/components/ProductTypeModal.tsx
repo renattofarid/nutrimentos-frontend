@@ -7,11 +7,11 @@ import {
   SUCCESS_MESSAGE,
   successToast,
 } from "@/lib/core.function";
-import { PRODUCT_TYPE, type ProductTypeResource } from "../lib/product-type.interface";
 import {
-  useProductType,
-  useProductTypeById,
-} from "../lib/product-type.hook";
+  PRODUCT_TYPE,
+  type ProductTypeResource,
+} from "../lib/product-type.interface";
+import { useProductType, useProductTypeById } from "../lib/product-type.hook";
 import { useProductTypeStore } from "../lib/product-type.store";
 import { ProductTypeForm } from "./ProductTypeForm";
 
@@ -53,7 +53,8 @@ export default function ProductTypeModal({
     code: data.code,
   });
 
-  const { isSubmitting, updateProductType, createProductType } = useProductTypeStore();
+  const { isSubmitting, updateProductType, createProductType } =
+    useProductTypeStore();
 
   const handleSubmit = async (data: ProductTypeSchema) => {
     if (mode === "create") {
@@ -99,7 +100,11 @@ export default function ProductTypeModal({
     >
       {!isLoadingAny && productType ? (
         <ProductTypeForm
-          defaultValues={mapProductTypeToForm(productType)}
+          defaultValues={
+            mode === "create"
+              ? {}
+              : mapProductTypeToForm(productType as ProductTypeResource)
+          }
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           mode={mode}

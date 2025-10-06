@@ -29,9 +29,12 @@ export async function getPersons({
   return data;
 }
 
-export async function getAllPersons(): Promise<PersonResource[]> {
+export async function getAllPersons({
+  params,
+}: GetPersonsProps): Promise<PersonResource[]> {
   const config: AxiosRequestConfig = {
     params: {
+      ...params,
       all: true,
     },
   };
@@ -39,9 +42,7 @@ export async function getAllPersons(): Promise<PersonResource[]> {
   return data;
 }
 
-export async function findPersonById(
-  id: number
-): Promise<PersonResourceById> {
+export async function findPersonById(id: number): Promise<PersonResourceById> {
   const response = await api.get<PersonResourceById>(`${ENDPOINT}/${id}`);
   return response.data;
 }
@@ -49,7 +50,10 @@ export async function findPersonById(
 export async function createPerson(
   data: CreatePersonRequest
 ): Promise<{ message: string; data?: { id: number } }> {
-  const response = await api.post<{ message: string; data?: { id: number } }>(ENDPOINT, data);
+  const response = await api.post<{ message: string; data?: { id: number } }>(
+    ENDPOINT,
+    data
+  );
   return response.data;
 }
 
@@ -67,9 +71,7 @@ export async function createPersonWithRole(
 
     // Assign the specific role
     await updatePersonRoles(personId, {
-      roles: [
-        { role_id: roleId, status: true }
-      ]
+      roles: [{ role_id: roleId, status: true }],
     });
   }
 
@@ -80,12 +82,20 @@ export async function updatePerson(
   id: number,
   data: UpdatePersonRequest
 ): Promise<{ message: string }> {
-  const response = await api.put<{ message: string }>(`${ENDPOINT}/${id}`, data);
+  const response = await api.put<{ message: string }>(
+    `${ENDPOINT}/${id}`,
+    data
+  );
   return response.data;
 }
 
-export async function deletePerson(id: number, role_id: number): Promise<{ message: string }> {
-  const { data } = await api.delete<{ message: string }>(`${ENDPOINT}/${id}/${role_id}`);
+export async function deletePerson(
+  id: number,
+  role_id: number
+): Promise<{ message: string }> {
+  const { data } = await api.delete<{ message: string }>(
+    `${ENDPOINT}/${id}/${role_id}`
+  );
   return data;
 }
 
@@ -93,7 +103,9 @@ export async function deletePerson(id: number, role_id: number): Promise<{ messa
 export async function getPersonRoles(
   personId: number
 ): Promise<PersonRolesResponse> {
-  const { data } = await api.get<PersonRolesResponse>(`${ENDPOINT}/${personId}/roles`);
+  const { data } = await api.get<PersonRolesResponse>(
+    `${ENDPOINT}/${personId}/roles`
+  );
   return data;
 }
 
@@ -101,7 +113,10 @@ export async function updatePersonRoles(
   personId: number,
   request: UpdatePersonRolesRequest
 ): Promise<{ message: string }> {
-  const { data } = await api.post<{ message: string }>(`${ENDPOINT}/${personId}/roles`, request);
+  const { data } = await api.post<{ message: string }>(
+    `${ENDPOINT}/${personId}/roles`,
+    request
+  );
   return data;
 }
 
@@ -115,6 +130,9 @@ export async function getPersonRoleDetails(
       person_id: personId,
     },
   };
-  const { data } = await api.get<PersonRoleDetailResource[]>("/personrole", config);
+  const { data } = await api.get<PersonRoleDetailResource[]>(
+    "/personrole",
+    config
+  );
   return data;
 }

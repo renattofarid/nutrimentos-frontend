@@ -5,17 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  ArrowLeft,
-  Eye,
-  FileText,
-  Image as ImageIcon,
-  DollarSign,
-  Package,
-} from "lucide-react";
+import { ArrowLeft, Eye, Image as ImageIcon, DollarSign } from "lucide-react";
 import { ProductImageGallery } from "./ProductImageGallery";
 import { ProductPriceManager } from "./ProductPriceManager";
-import { ProductComponentManager } from "./ProductComponentManager";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();

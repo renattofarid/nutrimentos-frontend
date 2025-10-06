@@ -43,7 +43,9 @@ export const PaymentConceptForm = ({
 }: PaymentConceptFormProps) => {
   const form = useForm({
     resolver: zodResolver(
-      mode === "create" ? paymentConceptSchemaCreate : paymentConceptSchemaUpdate
+      mode === "create"
+        ? paymentConceptSchemaCreate
+        : paymentConceptSchemaUpdate
     ),
     defaultValues: {
       ...defaultValues,
@@ -84,7 +86,7 @@ export const PaymentConceptForm = ({
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger variant="primary">
+                    <SelectTrigger>
                       <SelectValue placeholder="Seleccione un tipo" />
                     </SelectTrigger>
                   </FormControl>

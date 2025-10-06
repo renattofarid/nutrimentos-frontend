@@ -16,6 +16,7 @@ import { NationalityColumns } from "./NationalityColumns";
 import DataTablePagination from "@/components/DataTablePagination";
 import { NATIONALITY } from "../lib/nationality.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import NationalityOptions from "./NationalityOptions";
 
 const { MODEL, ICON, TITLES } = NATIONALITY;
 
@@ -96,7 +97,9 @@ export default function NationalityPage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
-      />
+      >
+        <NationalityOptions search={search} setSearch={setSearch} />
+      </NationalityTable>
 
       <DataTablePagination
         page={page}
@@ -111,7 +114,9 @@ export default function NationalityPage() {
         <NationalityModal
           id={selectedNationalityId || undefined}
           open={modalOpen}
-          title={modalMode === "create" ? TITLES.create.title : TITLES.update.title}
+          title={
+            modalMode === "create" ? TITLES.create.title : TITLES.update.title
+          }
           mode={modalMode}
           onClose={handleCloseModal}
         />

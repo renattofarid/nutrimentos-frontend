@@ -1,5 +1,5 @@
+import { requiredStringId } from "@/lib/core.schema";
 import { z } from "zod";
-import { requiredStringId } from "@/lib/form-utils";
 
 export const settingSchemaCreate = z.object({
   branch_id: requiredStringId("La sucursal es requerida"),

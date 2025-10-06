@@ -99,7 +99,7 @@ export default function NationalityModal({
     >
       {!isLoadingAny && nationality ? (
         <NationalityForm
-          defaultValues={mapNationalityToForm(nationality)}
+          defaultValues={mode === "create" ? {} : mapNationalityToForm(nationality as NationalityResource)}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           mode={mode}

@@ -1,8 +1,12 @@
-import { ColumnDef } from "@tanstack/react-table";
-import { SettingResource } from "../lib/setting.interface";
-import { SettingActions } from "./SettingActions";
 import { Badge } from "@/components/ui/badge";
+import type { ColumnDef } from "@tanstack/react-table";
 import { Check, X } from "lucide-react";
+import type { SettingResource } from "../lib/setting.interface";
+import {
+  DropdownMenuGroup,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { SelectActions } from "@/components/SelectActions";
 
 export const SettingColumns = ({
   onEdit,
@@ -73,14 +77,21 @@ export const SettingColumns = ({
   },
   {
     id: "actions",
+    header: "Acciones",
     cell: ({ row }) => {
-      const setting = row.original;
+      const id = row.original.id;
+
       return (
-        <SettingActions
-          id={setting.id}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
+        <SelectActions>
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => onEdit(id)}>
+              Editar
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onDelete(id)}>
+              Eliminar
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </SelectActions>
       );
     },
   },

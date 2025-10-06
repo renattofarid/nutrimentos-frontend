@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { BackButton } from "@/components/BackButton";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { ProductForm } from "./ProductForm";
 import { type ProductSchema } from "../lib/product.schema";

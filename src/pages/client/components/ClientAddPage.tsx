@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BackButton } from "@/components/BackButton";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import { type PersonSchema } from "@/pages/person/lib/person.schema";
@@ -55,13 +54,13 @@ export default function ClientAddPage() {
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error &&
-          "response" in error &&
-          typeof error.response === "object" &&
-          error.response !== null &&
-          "data" in error.response &&
-          typeof error.response.data === "object" &&
-          error.response.data !== null &&
-          "message" in error.response.data
+        "response" in error &&
+        typeof error.response === "object" &&
+        error.response !== null &&
+        "data" in error.response &&
+        typeof error.response.data === "object" &&
+        error.response.data !== null &&
+        "message" in error.response.data
           ? (error.response.data.message as string)
           : "Error al crear cliente";
 

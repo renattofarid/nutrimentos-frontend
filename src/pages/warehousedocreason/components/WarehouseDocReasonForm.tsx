@@ -43,7 +43,9 @@ export const WarehouseDocReasonForm = ({
 }: WarehouseDocReasonFormProps) => {
   const form = useForm({
     resolver: zodResolver(
-      mode === "create" ? warehouseDocReasonSchemaCreate : warehouseDocReasonSchemaUpdate
+      mode === "create"
+        ? warehouseDocReasonSchemaCreate
+        : warehouseDocReasonSchemaUpdate
     ),
     defaultValues: {
       name: "",
@@ -81,9 +83,12 @@ export const WarehouseDocReasonForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Tipo</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
-                    <SelectTrigger variant="primary">
+                    <SelectTrigger>
                       <SelectValue placeholder="Seleccione un tipo" />
                     </SelectTrigger>
                   </FormControl>

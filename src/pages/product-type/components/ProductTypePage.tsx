@@ -16,6 +16,7 @@ import { ProductTypeColumns } from "./ProductTypeColumns";
 import DataTablePagination from "@/components/DataTablePagination";
 import { PRODUCT_TYPE } from "../lib/product-type.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import ProductTypeOptions from "./ProductTypeOptions";
 
 const { MODEL, ICON, TITLES } = PRODUCT_TYPE;
 
@@ -96,7 +97,9 @@ export default function ProductTypePage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
-      />
+      >
+        <ProductTypeOptions search={search} setSearch={setSearch} />
+      </ProductTypeTable>
 
       <DataTablePagination
         page={page}
@@ -111,7 +114,9 @@ export default function ProductTypePage() {
         <ProductTypeModal
           id={selectedProductTypeId || undefined}
           open={modalOpen}
-          title={modalMode === "create" ? TITLES.create.title : TITLES.update.title}
+          title={
+            modalMode === "create" ? TITLES.create.title : TITLES.update.title
+          }
           mode={modalMode}
           onClose={handleCloseModal}
         />

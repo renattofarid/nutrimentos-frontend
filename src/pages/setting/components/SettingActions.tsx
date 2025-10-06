@@ -1,23 +1,19 @@
 import { Button } from "@/components/ui/button";
-import { SettingOptions } from "./SettingOptions";
+import { Plus } from "lucide-react";
 
 interface SettingActionsProps {
-  id: number;
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
+  onCreateSetting: () => void;
 }
 
-export const SettingActions = ({
-  id,
-  onEdit,
-  onDelete,
-}: SettingActionsProps) => {
+export default function SettingActions({
+  onCreateSetting,
+}: SettingActionsProps) {
   return (
-    <div className="flex items-center gap-2">
-      <Button variant="outline" size="sm" onClick={() => onEdit(id)}>
-        Editar
+    <div className="flex justify-end">
+      <Button onClick={onCreateSetting}>
+        <Plus className="h-4 w-4 mr-2" />
+        Agregar
       </Button>
-      <SettingOptions id={id} onDelete={onDelete} />
     </div>
   );
-};
+}

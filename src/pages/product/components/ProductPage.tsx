@@ -19,6 +19,7 @@ import { ProductColumns } from "./ProductColumns";
 import DataTablePagination from "@/components/DataTablePagination";
 import { PRODUCT } from "../lib/product.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import { useAllCompanies } from "@/pages/company/lib/company.hook";
 
 const { MODEL, ICON } = PRODUCT;
 
@@ -36,6 +37,7 @@ export default function ProductPage() {
   const { data, meta, isLoading, refetch } = useProduct();
   const { data: categories } = useAllCategories();
   const { data: brands } = useAllBrands();
+  const { data: companies } = useAllCompanies();
 
   useEffect(() => {
     const filterParams = {
@@ -114,7 +116,7 @@ export default function ProductPage() {
         })}
         data={data || []}
       >
-        {categories && brands && (
+        {categories && brands && companies && (
           <ProductOptions
             search={search}
             setSearch={setSearch}
@@ -124,8 +126,11 @@ export default function ProductPage() {
             setSelectedBrand={setSelectedBrand}
             selectedType={selectedType}
             setSelectedType={setSelectedType}
+            selectedCompany={selectedCompany}
+            setSelectedCompany={setSelectedCompany}
             categories={categories}
             brands={brands}
+            companies={companies}
           />
         )}
       </ProductTable>

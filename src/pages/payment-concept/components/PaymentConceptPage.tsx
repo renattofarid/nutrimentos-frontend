@@ -16,6 +16,7 @@ import { PaymentConceptColumns } from "./PaymentConceptColumns";
 import DataTablePagination from "@/components/DataTablePagination";
 import { PAYMENT_CONCEPT } from "../lib/payment-concept.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import PaymentConceptOptions from "./PaymentConceptOptions";
 
 const { MODEL, ICON, TITLES } = PAYMENT_CONCEPT;
 
@@ -86,7 +87,9 @@ export default function PaymentConceptPage() {
           subtitle={MODEL.description}
           icon={ICON}
         />
-        <PaymentConceptActions onCreatePaymentConcept={handleCreatePaymentConcept} />
+        <PaymentConceptActions
+          onCreatePaymentConcept={handleCreatePaymentConcept}
+        />
       </div>
 
       <PaymentConceptTable
@@ -96,7 +99,9 @@ export default function PaymentConceptPage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
-      />
+      >
+        <PaymentConceptOptions search={search} setSearch={setSearch} />
+      </PaymentConceptTable>
 
       <DataTablePagination
         page={page}
@@ -111,7 +116,9 @@ export default function PaymentConceptPage() {
         <PaymentConceptModal
           id={selectedPaymentConceptId || undefined}
           open={modalOpen}
-          title={modalMode === "create" ? TITLES.create.title : TITLES.update.title}
+          title={
+            modalMode === "create" ? TITLES.create.title : TITLES.update.title
+          }
           mode={modalMode}
           onClose={handleCloseModal}
         />

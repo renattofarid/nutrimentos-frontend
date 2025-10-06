@@ -7,7 +7,10 @@ import {
   SUCCESS_MESSAGE,
   successToast,
 } from "@/lib/core.function";
-import { PAYMENT_CONCEPT, type PaymentConceptResource } from "../lib/payment-concept.interface";
+import {
+  PAYMENT_CONCEPT,
+  type PaymentConceptResource,
+} from "../lib/payment-concept.interface";
 import {
   usePaymentConcept,
   usePaymentConceptById,
@@ -53,7 +56,8 @@ export default function PaymentConceptModal({
     type: data.type,
   });
 
-  const { isSubmitting, updatePaymentConcept, createPaymentConcept } = usePaymentConceptStore();
+  const { isSubmitting, updatePaymentConcept, createPaymentConcept } =
+    usePaymentConceptStore();
 
   const handleSubmit = async (data: PaymentConceptSchema) => {
     if (mode === "create") {
@@ -99,7 +103,13 @@ export default function PaymentConceptModal({
     >
       {!isLoadingAny && paymentConcept ? (
         <PaymentConceptForm
-          defaultValues={mapPaymentConceptToForm(paymentConcept)}
+          defaultValues={
+            mode === "create"
+              ? {}
+              : mapPaymentConceptToForm(
+                  paymentConcept as PaymentConceptResource
+                )
+          }
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           mode={mode}

@@ -59,7 +59,6 @@ export const ProductForm = ({
   productTypes,
   nationalities,
   suppliers,
-  product,
 }: ProductFormProps) => {
   const form = useForm({
     resolver: zodResolver(

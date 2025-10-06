@@ -2,14 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import {
   userBoxAssignmentSchemaCreate,
@@ -63,11 +56,15 @@ export const UserBoxAssignmentForm = ({
 
   const form = useForm({
     resolver: zodResolver(
-      mode === "create" ? userBoxAssignmentSchemaCreate : userBoxAssignmentSchemaUpdate
+      mode === "create"
+        ? userBoxAssignmentSchemaCreate
+        : userBoxAssignmentSchemaUpdate
     ),
     defaultValues: {
       user_id: defaultValues.user_id || "",
-      box_id: preselectedBoxId ? preselectedBoxId.toString() : (defaultValues.box_id || ""),
+      box_id: preselectedBoxId
+        ? preselectedBoxId.toString()
+        : defaultValues.box_id || "",
     },
     mode: "onChange",
   });
@@ -75,7 +72,9 @@ export const UserBoxAssignmentForm = ({
   // Cuando hay una caja preseleccionada, actualizar el valor del campo
   useEffect(() => {
     if (preselectedBoxId) {
-      form.setValue("box_id", preselectedBoxId.toString(), { shouldValidate: true });
+      form.setValue("box_id", preselectedBoxId.toString(), {
+        shouldValidate: true,
+      });
     }
   }, [preselectedBoxId, form]);
 
@@ -97,7 +96,9 @@ export const UserBoxAssignmentForm = ({
         <div className="grid grid-cols-1 gap-4 bg-sidebar p-4 rounded-lg">
           {preselectedBoxId && preselectedBoxName && (
             <div className="p-3 bg-muted rounded-md">
-              <p className="text-sm text-muted-foreground">Caja seleccionada:</p>
+              <p className="text-sm text-muted-foreground">
+                Caja seleccionada:
+              </p>
               <p className="font-semibold">{preselectedBoxName}</p>
             </div>
           )}

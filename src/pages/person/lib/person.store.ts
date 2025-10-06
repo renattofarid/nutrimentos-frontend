@@ -35,11 +35,11 @@ interface PersonStore {
   isLoadingRoleDetails: boolean;
   error: string | null;
   fetchPersons: ({ params }: GetPersonsProps) => Promise<void>;
-  fetchAllPersons: () => Promise<void>;
+  fetchAllPersons: ({ params }: GetPersonsProps) => Promise<void>;
   fetchPersonById: (id: number) => Promise<void>;
   createPerson: (data: CreatePersonRequest) => Promise<void>;
   updatePerson: (id: number, data: UpdatePersonRequest) => Promise<void>;
-  deletePerson: (id: number) => Promise<void>;
+  deletePerson: (id: number, role_id: number) => Promise<void>;
   fetchPersonRoles: (personId: number) => Promise<void>;
   fetchPersonRoleDetails: (personId: number) => Promise<void>;
   updatePersonRoles: (
@@ -73,10 +73,10 @@ export const usePersonStore = create<PersonStore>((set) => ({
     }
   },
 
-  fetchAllPersons: async () => {
+  fetchAllPersons: async ({ params }: GetPersonsProps) => {
     set({ error: null });
     try {
-      const data = await getAllPersons();
+      const data = await getAllPersons({ params });
       set({ allPersons: data });
     } catch {
       set({ error: "Error al cargar todas las personas" });
@@ -117,10 +117,10 @@ export const usePersonStore = create<PersonStore>((set) => ({
     }
   },
 
-  deletePerson: async (id: number) => {
+  deletePerson: async (id: number, role_id: number) => {
     set({ error: null });
     try {
-      await deletePerson(id);
+      await deletePerson(id, role_id);
     } catch (err) {
       set({ error: "Error al eliminar la persona" });
       throw err;

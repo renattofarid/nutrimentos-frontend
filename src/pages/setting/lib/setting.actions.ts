@@ -1,12 +1,23 @@
-import { api } from "@/lib/api";
-import { SETTING, SettingResource } from "./setting.interface";
-import { SettingSchemaCreate, SettingSchemaEdit } from "./setting.schema";
+import { api } from "@/lib/config";
+import { SETTING, type SettingResource } from "./setting.interface";
+import type { SettingSchemaCreate, SettingSchemaEdit } from "./setting.schema";
 
 const { ENDPOINT } = SETTING;
 
+export interface SettingResourceById {
+  data: SettingResource;
+}
+
 export const getSettings = async (): Promise<SettingResource[]> => {
-  const response = await api.get(`${ENDPOINT}?all=true`);
+  const response = await api.get(`${ENDPOINT}`);
   return response.data.data;
+};
+
+export const findSettingById = async (
+  id: number
+): Promise<SettingResourceById> => {
+  const response = await api.get<SettingResourceById>(`${ENDPOINT}/${id}`);
+  return response.data;
 };
 
 export const createSetting = async (

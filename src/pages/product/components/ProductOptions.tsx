@@ -4,6 +4,7 @@ import SearchInput from "@/components/SearchInput";
 import type { CategoryResource } from "@/pages/category/lib/category.interface";
 import type { BrandResource } from "@/pages/brand/lib/brand.interface";
 import { SearchableSelect } from "@/components/SearchableSelect";
+import type { CompanyResource } from "@/pages/company/lib/company.interface";
 
 interface ProductOptionsProps {
   search: string;
@@ -14,8 +15,11 @@ interface ProductOptionsProps {
   setSelectedBrand: (value: string) => void;
   selectedType: string;
   setSelectedType: (value: string) => void;
+  selectedCompany: string;
+  setSelectedCompany: (value: string) => void;
   categories: CategoryResource[];
   brands: BrandResource[];
+  companies: CompanyResource[];
 }
 
 export default function ProductOptions({
@@ -27,8 +31,11 @@ export default function ProductOptions({
   setSelectedBrand,
   selectedType,
   setSelectedType,
+  selectedCompany,
+  setSelectedCompany,
   categories,
   brands,
+  companies,
 }: ProductOptionsProps) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -72,6 +79,18 @@ export default function ProductOptions({
           placeholder="Tipo de producto"
           value={selectedType}
           onChange={setSelectedType}
+          className="min-w-[150px]"
+          withValue={false}
+        />
+
+        <SearchableSelect
+          options={companies.map((company) => ({
+            value: company.id.toString(),
+            label: company.social_reason,
+          }))}
+          placeholder="Empresa"
+          value={selectedCompany}
+          onChange={setSelectedCompany}
           className="min-w-[150px]"
           withValue={false}
         />

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BackButton } from "@/components/BackButton";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { ProductForm } from "./ProductForm";
 import { type ProductSchema } from "../lib/product.schema";
@@ -23,8 +22,9 @@ import { useAllNationalities } from "@/pages/nationality/lib/nationality.hook";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import FormSkeleton from "@/components/FormSkeleton";
+import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 
-const { MODEL, ROUTE } = PRODUCT;
+const { MODEL, ROUTE, ICON } = PRODUCT;
 
 export default function ProductAddPage() {
   const navigate = useNavigate();
@@ -37,7 +37,7 @@ export default function ProductAddPage() {
   const { data: units } = useAllUnits();
   const { data: productTypes } = useAllProductTypes();
   const { data: nationalities } = useAllNationalities();
-  const suppliers = useAllPersons();
+  const suppliers = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
 
   const getDefaultValues = (): Partial<ProductSchema> => ({
     codigo: "",
@@ -86,16 +86,23 @@ export default function ProductAddPage() {
     }
   };
 
-  const isLoading = !categories || !brands || !units || !productTypes || !nationalities || !suppliers || !companies;
+  const isLoading =
+    !categories ||
+    !brands ||
+    !units ||
+    !productTypes ||
+    !nationalities ||
+    !suppliers ||
+    !companies;
 
   return (
     <FormWrapper>
-      <div className="mb-6">
-        <div className="flex items-center gap-4 mb-4">
-          <BackButton to={ROUTE} />
-          <TitleFormComponent title={MODEL.name} mode="create" />
-        </div>
-      </div>
+      <TitleFormComponent
+        title={MODEL.name}
+        icon={ICON}
+        mode="create"
+        handleBack={() => navigate(ROUTE)}
+      />
 
       {isLoading ? (
         <FormSkeleton />

@@ -30,6 +30,7 @@ import SupplierEditPage from "./pages/supplier/components/SupplierEditPage";
 import WorkerPage from "./pages/worker/components/WorkerPage";
 import WorkerAddPage from "./pages/worker/components/WorkerAddPage";
 import WorkerEditPage from "./pages/worker/components/WorkerEditPage";
+import PaymentConceptPage from "./pages/payment-concept/components/PaymentConceptPage";
 import { TYPE_USER } from "./pages/type-users/lib/typeUser.interface";
 import { USER } from "./pages/users/lib/User.interface";
 import { COMPANY } from "./pages/company/lib/company.interface";
@@ -46,6 +47,7 @@ import { ROLE } from "./pages/role/lib/role.interface";
 import { CLIENT } from "./pages/client/lib/client.interface";
 import { SUPPLIER } from "./pages/supplier/lib/supplier.interface";
 import { WORKER } from "./pages/worker/lib/worker.interface";
+import { PAYMENT_CONCEPT } from "./pages/payment-concept/lib/payment-concept.interface";
 import type { Access } from "./pages/auth/lib/auth.interface";
 import { ENABLE_PERMISSION_VALIDATION } from "./lib/permissions.config";
 
@@ -65,6 +67,7 @@ const { ROUTE: RoleRoute } = ROLE;
 const { ROUTE: ClientRoute } = CLIENT;
 const { ROUTE: SupplierRoute } = SUPPLIER;
 const { ROUTE: WorkerRoute } = WORKER;
+const { ROUTE: PaymentConceptRoute } = PAYMENT_CONCEPT;
 
 export const hasAccessToRoute = (access: Access[], route: string): boolean => {
   const transformRoute = route.split("/").pop();
@@ -357,6 +360,15 @@ export default function App() {
             element={
               <ProtectedRoute path={WorkerRoute}>
                 <WorkerEditPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={PaymentConceptRoute}
+            element={
+              <ProtectedRoute path={PaymentConceptRoute}>
+                <PaymentConceptPage />
               </ProtectedRoute>
             }
           />

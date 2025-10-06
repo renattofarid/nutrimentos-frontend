@@ -5,9 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Eye, FileText, Image as ImageIcon, DollarSign, Package } from "lucide-react";
+import {
+  ArrowLeft,
+  Eye,
+  FileText,
+  Image as ImageIcon,
+  DollarSign,
+  Package,
+} from "lucide-react";
 import { ProductImageGallery } from "./ProductImageGallery";
-import { ProductTechnicalSheets } from "./ProductTechnicalSheets";
 import { ProductPriceManager } from "./ProductPriceManager";
 import { ProductComponentManager } from "./ProductComponentManager";
 
@@ -84,7 +90,7 @@ export default function ProductDetail() {
                 </label>
                 <div>
                   <Badge variant="outline" className="text-sm">
-                    {product.product_type}
+                    {product.product_type_name}
                   </Badge>
                 </div>
               </div>
@@ -127,20 +133,6 @@ export default function ProductDetail() {
 
           <Separator />
 
-          {/* Technical Sheets */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <FileText className="h-5 w-5" />
-              <h3 className="text-lg font-semibold">Fichas Técnicas</h3>
-            </div>
-            <ProductTechnicalSheets
-              technicalSheets={product.technical_sheet}
-              productId={parseInt(id!)}
-            />
-          </div>
-
-          <Separator />
-
           {/* Prices */}
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -153,15 +145,17 @@ export default function ProductDetail() {
           <Separator />
 
           {/* Components */}
-          <div>
+          {/* <div>
             <div className="flex items-center gap-2 mb-4">
               <Package className="h-5 w-5" />
-              <h3 className="text-lg font-semibold">Componentes del Producto</h3>
+              <h3 className="text-lg font-semibold">
+                Componentes del Producto
+              </h3>
             </div>
             <ProductComponentManager productId={parseInt(id!)} />
           </div>
 
-          <Separator />
+          <Separator /> */}
 
           {/* Images */}
           <div>

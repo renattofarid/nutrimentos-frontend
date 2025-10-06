@@ -28,6 +28,7 @@ import { ROLE } from "@/pages/role/lib/role.interface";
 import { CLIENT } from "@/pages/client/lib/client.interface";
 import { SUPPLIER } from "@/pages/supplier/lib/supplier.interface";
 import { WORKER } from "@/pages/worker/lib/worker.interface";
+import { PAYMENT_CONCEPT } from "@/pages/payment-concept/lib/payment-concept.interface";
 import { hasAccessToRoute } from "@/App";
 import { useEffect, useState } from "react";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
@@ -128,6 +129,12 @@ const {
   MODEL: { name: WorkerTitle },
 } = WORKER;
 
+const {
+  ICON_REACT: PaymentConceptIcon,
+  ROUTE: PaymentConceptRoute,
+  MODEL: { name: PaymentConceptTitle },
+} = PAYMENT_CONCEPT;
+
 const data = {
   navMain: [
     {
@@ -159,6 +166,11 @@ const data = {
           title: BoxTitle,
           url: BoxRoute,
           icon: BoxIcon,
+        },
+        {
+          title: PaymentConceptTitle,
+          url: PaymentConceptRoute,
+          icon: PaymentConceptIcon,
         },
       ],
     },

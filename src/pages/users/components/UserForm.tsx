@@ -77,27 +77,28 @@ export const UserForm = ({
     return currentNumber.length <= maxLength;
   };
 
-  const handleTypeDocumentChange = (value: string) => {
+  // useEffect para manejar cambios en type_document
+  useEffect(() => {
+    if (!type_document) return;
+
     const currentDocumentNumber = form.getValues("number_document");
 
     // Siempre limpiar el número de documento cuando cambia el tipo
     form.setValue("number_document", "");
 
     // Si el número actual no es compatible con el nuevo tipo, forzar limpieza
-    if (!isDocumentNumberCompatible(currentDocumentNumber ?? "", value)) {
+    if (
+      !isDocumentNumberCompatible(currentDocumentNumber ?? "", type_document)
+    ) {
       form.setValue("number_document", "");
-      // Opcional: mostrar un mensaje al usuario
-      console.log(
-        `Número de documento limpiado debido al cambio de tipo de documento`
-      );
     }
 
     // Limpiar campos según el tipo de documento y persona
-    if (value === "DNI") {
+    if (type_document === "DNI") {
       form.setValue("business_name", "");
       // Si DNI, debe ser persona natural
       form.setValue("type_person", "NATURAL");
-    } else if (value === "RUC") {
+    } else if (type_document === "RUC") {
       form.setValue("names", "");
       form.setValue("father_surname", "");
       form.setValue("mother_surname", "");
@@ -109,11 +110,14 @@ export const UserForm = ({
     setTimeout(() => {
       form.trigger(["type_person", "type_document", "number_document"]);
     }, 0);
-  };
+  }, [type_document]);
 
-  const handleTypePersonChange = (value: string) => {
+  // useEffect para manejar cambios en type_person
+  useEffect(() => {
+    if (!type_person) return;
+
     // Limpiar campos según el tipo de persona
-    if (value === "NATURAL") {
+    if (type_person === "NATURAL") {
       form.setValue("business_name", "");
       // Si es natural, no puede tener RUC
       const currentDocType = form.getValues("type_document");
@@ -121,7 +125,7 @@ export const UserForm = ({
         form.setValue("type_document", "DNI");
         form.setValue("number_document", "");
       }
-    } else if (value === "JURIDICA") {
+    } else if (type_person === "JURIDICA") {
       form.setValue("names", "");
       form.setValue("father_surname", "");
       form.setValue("mother_surname", "");
@@ -134,18 +138,7 @@ export const UserForm = ({
     setTimeout(() => {
       form.trigger(["type_person", "type_document", "number_document"]);
     }, 0);
-  };
-
-  // Efecto para validar compatibilidad cuando cambia el tipo de documento
-  useEffect(() => {
-    const currentDocumentNumber = form.getValues("number_document");
-    if (currentDocumentNumber && type_document) {
-      if (!isDocumentNumberCompatible(currentDocumentNumber, type_document)) {
-        form.setValue("number_document", "");
-        form.trigger("number_document");
-      }
-    }
-  }, [type_document, form]);
+  }, [type_person]);
 
   return (
     <Form {...form}>
@@ -182,7 +175,6 @@ export const UserForm = ({
                   label: "Pasaporte",
                 },
               ]}
-              onChange={handleTypeDocumentChange}
             />
 
             <FormSelect
@@ -194,7 +186,6 @@ export const UserForm = ({
                 { value: "NATURAL", label: "Natural" },
                 { value: "JURIDICA", label: "Juridica" },
               ]}
-              onChange={handleTypePersonChange}
             />
 
             <FormField

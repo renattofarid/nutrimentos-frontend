@@ -28,6 +28,11 @@ import { CLIENT } from "@/pages/client/lib/client.interface";
 import { SUPPLIER } from "@/pages/supplier/lib/supplier.interface";
 import { WORKER } from "@/pages/worker/lib/worker.interface";
 import { PAYMENT_CONCEPT } from "@/pages/payment-concept/lib/payment-concept.interface";
+import { BUSINESSTYPE } from "@/pages/businesstype/lib/businesstype.interface";
+import { ZONE } from "@/pages/zone/lib/zone.interface";
+import { JOBPOSITION } from "@/pages/jobposition/lib/jobposition.interface";
+import { WAREHOUSEDOCREASON } from "@/pages/warehousedocreason/lib/warehousedocreason.interface";
+import { SETTING } from "@/pages/setting/lib/setting.interface";
 import { hasAccessToRoute } from "@/App";
 import { useEffect, useState } from "react";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
@@ -128,6 +133,36 @@ const {
   MODEL: { name: PaymentConceptTitle },
 } = PAYMENT_CONCEPT;
 
+const {
+  ICON_REACT: BusinessTypeIcon,
+  ROUTE: BusinessTypeRoute,
+  MODEL: { name: BusinessTypeTitle },
+} = BUSINESSTYPE;
+
+const {
+  ICON_REACT: ZoneIcon,
+  ROUTE: ZoneRoute,
+  MODEL: { name: ZoneTitle },
+} = ZONE;
+
+const {
+  ICON_REACT: JobPositionIcon,
+  ROUTE: JobPositionRoute,
+  MODEL: { name: JobPositionTitle },
+} = JOBPOSITION;
+
+const {
+  ICON_REACT: WarehouseDocReasonIcon,
+  ROUTE: WarehouseDocReasonRoute,
+  MODEL: { name: WarehouseDocReasonTitle },
+} = WAREHOUSEDOCREASON;
+
+const {
+  ICON_REACT: SettingIcon,
+  ROUTE: SettingRoute,
+  MODEL: { name: SettingTitle },
+} = SETTING;
+
 const data = {
   navMain: [
     {
@@ -164,6 +199,16 @@ const data = {
           title: PaymentConceptTitle,
           url: PaymentConceptRoute,
           icon: PaymentConceptIcon,
+        },
+        {
+          title: WarehouseDocReasonTitle,
+          url: WarehouseDocReasonRoute,
+          icon: WarehouseDocReasonIcon,
+        },
+        {
+          title: SettingTitle,
+          url: SettingRoute,
+          icon: SettingIcon,
         },
       ],
     },
@@ -223,6 +268,21 @@ const data = {
           title: WorkerTitle,
           url: WorkerRoute,
           icon: WorkerIcon,
+        },
+        {
+          title: BusinessTypeTitle,
+          url: BusinessTypeRoute,
+          icon: BusinessTypeIcon,
+        },
+        {
+          title: ZoneTitle,
+          url: ZoneRoute,
+          icon: ZoneIcon,
+        },
+        {
+          title: JobPositionTitle,
+          url: JobPositionRoute,
+          icon: JobPositionIcon,
         },
         {
           title: UserTitle,

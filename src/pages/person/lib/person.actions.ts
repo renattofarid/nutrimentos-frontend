@@ -84,8 +84,8 @@ export async function updatePerson(
   return response.data;
 }
 
-export async function deletePerson(id: number): Promise<{ message: string }> {
-  const { data } = await api.delete<{ message: string }>(`${ENDPOINT}/${id}`);
+export async function deletePerson(id: number, role_id: number): Promise<{ message: string }> {
+  const { data } = await api.delete<{ message: string }>(`${ENDPOINT}/${id}/${role_id}`);
   return data;
 }
 

@@ -36,4 +36,4 @@ export const SUPPLIER: ModelComplete<any> = {
 };
 
 export const SUPPLIER_ROLE_CODE = "Proveedor";
-export const SUPPLIER_ROLE_ID = 2;
+export const SUPPLIER_ROLE_ID = 3;

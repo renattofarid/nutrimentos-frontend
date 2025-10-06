@@ -35,5 +35,5 @@ export const CLIENT: ModelComplete<any> = {
   EMPTY: {},
 };
 
-export const CLIENT_ROLE_CODE = "CLIENT";
+export const CLIENT_ROLE_CODE = "Cliente";
 export const CLIENT_ROLE_ID = 1;

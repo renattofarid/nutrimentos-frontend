@@ -30,6 +30,11 @@ import WorkerPage from "./pages/worker/components/WorkerPage";
 import WorkerAddPage from "./pages/worker/components/WorkerAddPage";
 import WorkerEditPage from "./pages/worker/components/WorkerEditPage";
 import PaymentConceptPage from "./pages/payment-concept/components/PaymentConceptPage";
+import BusinessTypePage from "./pages/businesstype/components/BusinessTypePage";
+import ZonePage from "./pages/zone/components/ZonePage";
+import JobPositionPage from "./pages/jobposition/components/JobPositionPage";
+import WarehouseDocReasonPage from "./pages/warehousedocreason/components/WarehouseDocReasonPage";
+import SettingPage from "./pages/setting/components/SettingPage";
 import { TYPE_USER } from "./pages/type-users/lib/typeUser.interface";
 import { USER } from "./pages/users/lib/User.interface";
 import { COMPANY } from "./pages/company/lib/company.interface";
@@ -46,6 +51,11 @@ import { CLIENT } from "./pages/client/lib/client.interface";
 import { SUPPLIER } from "./pages/supplier/lib/supplier.interface";
 import { WORKER } from "./pages/worker/lib/worker.interface";
 import { PAYMENT_CONCEPT } from "./pages/payment-concept/lib/payment-concept.interface";
+import { BUSINESSTYPE } from "./pages/businesstype/lib/businesstype.interface";
+import { ZONE } from "./pages/zone/lib/zone.interface";
+import { JOBPOSITION } from "./pages/jobposition/lib/jobposition.interface";
+import { WAREHOUSEDOCREASON } from "./pages/warehousedocreason/lib/warehousedocreason.interface";
+import { SETTING } from "./pages/setting/lib/setting.interface";
 import type { Access } from "./pages/auth/lib/auth.interface";
 import { ENABLE_PERMISSION_VALIDATION } from "./lib/permissions.config";
 
@@ -65,6 +75,11 @@ const { ROUTE: ClientRoute } = CLIENT;
 const { ROUTE: SupplierRoute } = SUPPLIER;
 const { ROUTE: WorkerRoute } = WORKER;
 const { ROUTE: PaymentConceptRoute } = PAYMENT_CONCEPT;
+const { ROUTE: BusinessTypeRoute } = BUSINESSTYPE;
+const { ROUTE: ZoneRoute } = ZONE;
+const { ROUTE: JobPositionRoute } = JOBPOSITION;
+const { ROUTE: WarehouseDocReasonRoute } = WAREHOUSEDOCREASON;
+const { ROUTE: SettingRoute } = SETTING;
 
 export const hasAccessToRoute = (access: Access[], route: string): boolean => {
   const transformRoute = route.split("/").pop();
@@ -357,6 +372,51 @@ export default function App() {
             element={
               <ProtectedRoute path={PaymentConceptRoute}>
                 <PaymentConceptPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={BusinessTypeRoute}
+            element={
+              <ProtectedRoute path={BusinessTypeRoute}>
+                <BusinessTypePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={ZoneRoute}
+            element={
+              <ProtectedRoute path={ZoneRoute}>
+                <ZonePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={JobPositionRoute}
+            element={
+              <ProtectedRoute path={JobPositionRoute}>
+                <JobPositionPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={WarehouseDocReasonRoute}
+            element={
+              <ProtectedRoute path={WarehouseDocReasonRoute}>
+                <WarehouseDocReasonPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={SettingRoute}
+            element={
+              <ProtectedRoute path={SettingRoute}>
+                <SettingPage />
               </ProtectedRoute>
             }
           />

@@ -19,7 +19,7 @@ import { CLIENT } from "../lib/client.interface";
 import { PersonRoleAssignment } from "@/pages/person/components/PersonRoleAssignment";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
-
+import { CLIENT_ROLE_ID } from "../lib/client.interface";
 const { MODEL, ICON } = CLIENT;
 
 export default function ClientPage() {
@@ -39,7 +39,7 @@ export default function ClientPage() {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      await deletePerson(deleteId);
+      await deletePerson(deleteId, CLIENT_ROLE_ID);
       await refetch();
       successToast(SUCCESS_MESSAGE(MODEL, "delete"));
     } catch (error: any) {
@@ -104,8 +104,8 @@ export default function ClientPage() {
           open={true}
           onOpenChange={(open) => !open && setDeleteId(null)}
           onConfirm={handleDelete}
-          // title={`Eliminar ${MODEL.name}`}
-          // description={`¿Está seguro de que desea eliminar este ${MODEL.name.toLowerCase()}? Esta acción no se puede deshacer.`}
+        // title={`Eliminar ${MODEL.name}`}
+        // description={`¿Está seguro de que desea eliminar este ${MODEL.name.toLowerCase()}? Esta acción no se puede deshacer.`}
         />
       )}
     </div>

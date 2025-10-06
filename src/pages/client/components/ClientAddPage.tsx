@@ -16,7 +16,7 @@ import {
 import { CLIENT, CLIENT_ROLE_ID } from "../lib/client.interface";
 import FormWrapper from "@/components/FormWrapper";
 
-const { MODEL } = CLIENT;
+const { MODEL, ICON } = CLIENT;
 
 export default function ClientAddPage() {
   const navigate = useNavigate();
@@ -44,10 +44,10 @@ export default function ClientAddPage() {
         phone: data.phone,
         email: data.email,
         status: "Activo",
-        rol_id: CLIENT_ROLE_ID,
+        role_id: Number(data.role_id),
       };
 
-      await createPersonWithRole(createPersonData, CLIENT_ROLE_ID);
+      await createPersonWithRole(createPersonData, Number(data.role_id));
       successToast(
         SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "create")
       );
@@ -55,13 +55,13 @@ export default function ClientAddPage() {
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error &&
-        "response" in error &&
-        typeof error.response === "object" &&
-        error.response !== null &&
-        "data" in error.response &&
-        typeof error.response.data === "object" &&
-        error.response.data !== null &&
-        "message" in error.response.data
+          "response" in error &&
+          typeof error.response === "object" &&
+          error.response !== null &&
+          "data" in error.response &&
+          typeof error.response.data === "object" &&
+          error.response.data !== null &&
+          "message" in error.response.data
           ? (error.response.data.message as string)
           : "Error al crear cliente";
 
@@ -77,10 +77,7 @@ export default function ClientAddPage() {
   return (
     <FormWrapper>
       <div className="mb-6">
-        <div className="flex items-center gap-4 mb-4">
-          <BackButton to="/clientes" /> 
-          <TitleFormComponent title={MODEL.name} mode="edit" />
-        </div>
+        <TitleFormComponent icon={ICON} title={MODEL.name} mode="edit" />
       </div>
 
       <PersonForm

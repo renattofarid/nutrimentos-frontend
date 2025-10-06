@@ -20,7 +20,6 @@ import ProductAddPage from "./pages/product/components/ProductAddPage";
 import ProductEditPage from "./pages/product/components/ProductEditPage";
 import ProductTypePage from "./pages/product-type/components/ProductTypePage";
 import NationalityPage from "./pages/nationality/components/NationalityPage";
-import RolePage from "./pages/role/components/RolePage";
 import ClientPage from "./pages/client/components/ClientPage";
 import ClientAddPage from "./pages/client/components/ClientAddPage";
 import ClientEditPage from "./pages/client/components/ClientEditPage";

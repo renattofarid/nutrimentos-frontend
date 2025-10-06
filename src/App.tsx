@@ -43,7 +43,6 @@ import { CATEGORY } from "./pages/category/lib/category.interface";
 import { PRODUCT } from "./pages/product/lib/product.interface";
 import { PRODUCT_TYPE } from "./pages/product-type/lib/product-type.interface";
 import { NATIONALITY } from "./pages/nationality/lib/nationality.interface";
-import { ROLE } from "./pages/role/lib/role.interface";
 import { CLIENT } from "./pages/client/lib/client.interface";
 import { SUPPLIER } from "./pages/supplier/lib/supplier.interface";
 import { WORKER } from "./pages/worker/lib/worker.interface";
@@ -63,7 +62,6 @@ const { ROUTE: CategoryRoute } = CATEGORY;
 const { ROUTE: ProductRoute } = PRODUCT;
 const { ROUTE: ProductTypeRoute } = PRODUCT_TYPE;
 const { ROUTE: NationalityRoute } = NATIONALITY;
-const { ROUTE: RoleRoute } = ROLE;
 const { ROUTE: ClientRoute } = CLIENT;
 const { ROUTE: SupplierRoute } = SUPPLIER;
 const { ROUTE: WorkerRoute } = WORKER;
@@ -270,15 +268,6 @@ export default function App() {
             element={
               <ProtectedRoute path={NationalityRoute}>
                 <NationalityPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path={RoleRoute}
-            element={
-              <ProtectedRoute path={RoleRoute}>
-                <RolePage />
               </ProtectedRoute>
             }
           />

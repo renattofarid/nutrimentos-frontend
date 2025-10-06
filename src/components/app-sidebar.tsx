@@ -24,7 +24,6 @@ import { CATEGORY } from "@/pages/category/lib/category.interface";
 import { PRODUCT } from "@/pages/product/lib/product.interface";
 import { PRODUCT_TYPE } from "@/pages/product-type/lib/product-type.interface";
 import { NATIONALITY } from "@/pages/nationality/lib/nationality.interface";
-import { ROLE } from "@/pages/role/lib/role.interface";
 import { CLIENT } from "@/pages/client/lib/client.interface";
 import { SUPPLIER } from "@/pages/supplier/lib/supplier.interface";
 import { WORKER } from "@/pages/worker/lib/worker.interface";
@@ -104,12 +103,6 @@ const {
   ROUTE: NationalityRoute,
   MODEL: { name: NationalityTitle },
 } = NATIONALITY;
-
-const {
-  ICON_REACT: RoleIcon,
-  ROUTE: RoleRoute,
-  MODEL: { name: RoleTitle },
-} = ROLE;
 
 const {
   ICON_REACT: ClientIcon,
@@ -216,11 +209,6 @@ const data = {
       url: "#",
       icon: ShieldUser,
       items: [
-        {
-          title: RoleTitle,
-          url: RoleRoute,
-          icon: RoleIcon,
-        },
         {
           title: ClientTitle,
           url: ClientRoute,

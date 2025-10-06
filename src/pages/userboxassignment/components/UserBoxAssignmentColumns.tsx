@@ -3,33 +3,29 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { SelectActions } from "@/components/SelectActions";
-import type { BoxResource } from "../lib/box.interface";
+import type { UserBoxAssignmentResource } from "../lib/userboxassignment.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 
-export const BoxColumns = ({
+export const UserBoxAssignmentColumns = ({
   onEdit,
   onDelete,
-  onAssign,
-  onViewAssignments,
 }: {
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
-  onAssign?: (id: number) => void;
-  onViewAssignments?: (id: number) => void;
-}): ColumnDef<BoxResource>[] => [
+}): ColumnDef<UserBoxAssignmentResource>[] => [
   {
-    accessorKey: "name",
-    header: "Nombre",
+    accessorKey: "user_name",
+    header: "Usuario",
     cell: ({ getValue }) => (
       <span className="font-semibold">{getValue() as string}</span>
     ),
   },
   {
-    accessorKey: "serie",
-    header: "Serie",
+    accessorKey: "box_name",
+    header: "Caja",
     cell: ({ getValue }) => (
-      <Badge variant="secondary" className="font-mono">
+      <Badge variant="secondary">
         {getValue() as string}
       </Badge>
     ),
@@ -41,19 +37,35 @@ export const BoxColumns = ({
       const status = getValue() as string;
       return (
         <Badge
-          variant={status === "Activo" ? "default" : "destructive"}
-          className={`font-semibold`}
+          variant={status === "active" ? "default" : "destructive"}
+          className="font-semibold"
         >
-          {status}
+          {status === "active" ? "Activo" : "Inactivo"}
         </Badge>
       );
     },
   },
   {
-    accessorKey: "created_at",
-    header: "Fecha de Creación",
+    accessorKey: "assigned_at",
+    header: "Fecha de Asignación",
     cell: ({ getValue }) => {
       const date = new Date(getValue() as string);
+      return date.toLocaleDateString('es-PE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    },
+  },
+  {
+    accessorKey: "ended_at",
+    header: "Fecha de Finalización",
+    cell: ({ getValue }) => {
+      const value = getValue() as string | null;
+      if (!value) return <span className="text-muted-foreground">-</span>;
+      const date = new Date(value);
       return date.toLocaleDateString('es-PE', {
         day: '2-digit',
         month: '2-digit',
@@ -72,16 +84,6 @@ export const BoxColumns = ({
       return (
         <SelectActions>
           <DropdownMenuGroup>
-            {onViewAssignments && (
-              <DropdownMenuItem onClick={() => onViewAssignments(id)}>
-                Ver Asignaciones
-              </DropdownMenuItem>
-            )}
-            {onAssign && (
-              <DropdownMenuItem onClick={() => onAssign(id)}>
-                Asignar Usuario
-              </DropdownMenuItem>
-            )}
             <DropdownMenuItem onClick={() => onEdit(id)}>
               Editar
             </DropdownMenuItem>

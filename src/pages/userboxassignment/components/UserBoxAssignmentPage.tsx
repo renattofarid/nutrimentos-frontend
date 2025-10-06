@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useBox } from "../lib/box.hook";
+import { useUserBoxAssignment } from "../lib/userboxassignment.hook";
 import TitleComponent from "@/components/TitleComponent";
-import BoxActions from "./BoxActions";
-import BoxTable from "./BoxTable";
-import BoxOptions from "./BoxOptions";
-import { deleteBox } from "../lib/box.actions";
+import UserBoxAssignmentActions from "./UserBoxAssignmentActions";
+import UserBoxAssignmentTable from "./UserBoxAssignmentTable";
+import UserBoxAssignmentOptions from "./UserBoxAssignmentOptions";
+import { deleteUserBoxAssignment } from "../lib/userboxassignment.actions";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import {
   successToast,
@@ -12,25 +12,21 @@ import {
   SUCCESS_MESSAGE,
   ERROR_MESSAGE,
 } from "@/lib/core.function";
-import { BoxColumns } from "./BoxColumns";
+import { UserBoxAssignmentColumns } from "./UserBoxAssignmentColumns";
 import DataTablePagination from "@/components/DataTablePagination";
-import { BOX } from "../lib/box.interface";
-import BoxModal from "./BoxModal";
+import { USERBOXASSIGNMENT } from "../lib/userboxassignment.interface";
+import UserBoxAssignmentModal from "./UserBoxAssignmentModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
-import UserBoxAssignmentModal from "@/pages/userboxassignment/components/UserBoxAssignmentModal";
-import BoxAssignmentsSheet from "./BoxAssignmentsSheet";
 
-const { MODEL, ICON } = BOX;
+const { MODEL, ICON } = USERBOXASSIGNMENT;
 
-export default function BoxPage() {
+export default function UserBoxAssignmentPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [editId, setEditId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [assignBoxId, setAssignBoxId] = useState<number | null>(null);
-  const [viewAssignmentsBoxId, setViewAssignmentsBoxId] = useState<number | null>(null);
-  const { data, meta, isLoading, refetch } = useBox();
+  const { data, meta, isLoading, refetch } = useUserBoxAssignment();
 
   useEffect(() => {
     refetch({ page, search, per_page });
@@ -39,7 +35,7 @@ export default function BoxPage() {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      await deleteBox(deleteId);
+      await deleteUserBoxAssignment(deleteId);
       await refetch();
       successToast(SUCCESS_MESSAGE(MODEL, "delete"));
     } catch (error: any) {
@@ -57,21 +53,19 @@ export default function BoxPage() {
           subtitle={MODEL.description}
           icon={ICON}
         />
-        <BoxActions />
+        <UserBoxAssignmentActions />
       </div>
 
-      <BoxTable
+      <UserBoxAssignmentTable
         isLoading={isLoading}
-        columns={BoxColumns({
+        columns={UserBoxAssignmentColumns({
           onEdit: setEditId,
           onDelete: setDeleteId,
-          onAssign: setAssignBoxId,
-          onViewAssignments: setViewAssignmentsBoxId,
         })}
         data={data || []}
       >
-        <BoxOptions search={search} setSearch={setSearch} />
-      </BoxTable>
+        <UserBoxAssignmentOptions search={search} setSearch={setSearch} />
+      </UserBoxAssignmentTable>
 
       <DataTablePagination
         page={page}
@@ -83,7 +77,7 @@ export default function BoxPage() {
       />
 
       {editId !== null && (
-        <BoxModal
+        <UserBoxAssignmentModal
           id={editId}
           open={true}
           onClose={() => setEditId(null)}
@@ -97,26 +91,6 @@ export default function BoxPage() {
           open={true}
           onOpenChange={(open) => !open && setDeleteId(null)}
           onConfirm={handleDelete}
-        />
-      )}
-
-      {assignBoxId !== null && (
-        <UserBoxAssignmentModal
-          open={true}
-          onClose={() => setAssignBoxId(null)}
-          title="Asignar Usuario a Caja"
-          mode="create"
-          preselectedBoxId={assignBoxId}
-          preselectedBoxName={data?.find(box => box.id === assignBoxId)?.name}
-        />
-      )}
-
-      {viewAssignmentsBoxId !== null && (
-        <BoxAssignmentsSheet
-          open={true}
-          onOpenChange={(open) => !open && setViewAssignmentsBoxId(null)}
-          boxId={viewAssignmentsBoxId}
-          boxName={data?.find(box => box.id === viewAssignmentsBoxId)?.name || ""}
         />
       )}
     </div>

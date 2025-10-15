@@ -27,6 +27,8 @@ export default function BranchModal({ id, open, title, mode, onClose }: Props) {
   const { refetch } = useBranch();
   const { user } = useAuthStore();
 
+  
+
   const {
     data: branch,
     isFinding: findingBranch,

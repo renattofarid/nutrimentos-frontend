@@ -40,7 +40,11 @@ export const BranchForm = ({
   mode = "create",
 }: BranchFormProps) => {
   const { user } = useAuthStore();
-  const { data: companies, isLoading: loadingCompanies } = useAllCompanies();
+  const {
+    data: companies,
+    isLoading: loadingCompanies,
+    refetch,
+  } = useAllCompanies();
 
   const form = useForm({
     resolver: zodResolver(
@@ -58,6 +62,10 @@ export const BranchForm = ({
     },
     mode: "onChange",
   });
+
+  useEffect(() => {
+    refetch();
+  }, []);
 
   // Auto-llenar responsible_id con el ID del usuario logueado
   useEffect(() => {

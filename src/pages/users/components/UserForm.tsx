@@ -1,6 +1,5 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import {
   Form,
   FormControl,
@@ -57,6 +56,7 @@ export const UserForm = ({
 
   const type_person = form.watch("type_person");
   const type_document = form.watch("type_document");
+  const number_document = form.watch("number_document");
 
   const [isSearching, setIsSearching] = useState(false);
   const [fieldsFromSearch, setFieldsFromSearch] = useState({
@@ -66,6 +66,27 @@ export const UserForm = ({
     business_name: false,
     address: false,
   });
+
+  // Función para detectar el tipo de documento según la longitud
+  const detectDocumentType = (docNumber: string): string | null => {
+    if (!docNumber) return null;
+    const length = docNumber.length;
+    
+    if (length === 8 && /^\d+$/.test(docNumber)) return "DNI";
+    if (length === 11 && /^\d+$/.test(docNumber)) return "RUC";
+    if (length === 12 && /^\d+$/.test(docNumber)) return "CE";
+    if (length >= 7 && length <= 9) return "PASAPORTE";
+    
+    return null;
+  };
+
+  // Detectar si el número ingresado no coincide con el tipo seleccionado
+  const detectedDocType = detectDocumentType(number_document || "");
+  const hasDocumentMismatch =
+    detectedDocType &&
+    type_document &&
+    detectedDocType !== type_document &&
+    (number_document?.length === 8 || number_document?.length === 11 || number_document?.length === 12);
 
   // Lógica de validación entre tipo de persona y tipo de documento
   const getValidDocumentTypes = (personType: string) => {
@@ -266,6 +287,12 @@ export const UserForm = ({
                       )}
                     </div>
                   </FormControl>
+                  {hasDocumentMismatch && (
+                    <p className="text-sm text-amber-600 dark:text-amber-500 mt-1">
+                      ⚠️ El número ingresado parece ser un {detectedDocType}, pero
+                      seleccionaste {type_document}
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

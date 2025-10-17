@@ -466,10 +466,10 @@ export const UserForm = ({
           </div>
         </div>
 
-        <code>
+        {/* <code>
           <pre>{JSON.stringify(form.getValues(), null, 2)}</pre>
           <pre>{JSON.stringify(form.formState.errors, null, 2)}</pre>
-        </code>
+        </code> */}
 
         {/* Botones */}
         <div className="flex justify-end gap-4">

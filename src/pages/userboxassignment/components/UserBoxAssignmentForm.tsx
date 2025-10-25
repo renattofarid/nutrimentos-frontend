@@ -52,7 +52,6 @@ export const UserBoxAssignmentForm = ({
       box_id: preselectedBoxId
         ? preselectedBoxId.toString()
         : defaultValues.box_id || "",
-      status: "active" as const,
     },
     mode: "onChange",
   });

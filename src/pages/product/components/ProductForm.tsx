@@ -131,9 +131,8 @@ export const ProductForm = ({
               placeholder="Seleccione una categoría"
               options={categories.map((category) => ({
                 value: category.id.toString(),
-                label: `${"  ".repeat(Math.max(0, category.level - 1))}${
-                  category.name
-                }`,
+                label: `${"  ".repeat(Math.max(0, category.level - 1))}${category.name
+                  }`,
               }))}
             />
 
@@ -178,8 +177,7 @@ export const ProductForm = ({
               options={suppliers.map((supplier) => ({
                 value: supplier.id.toString(),
                 label:
-                  `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`.trim() ||
-                  supplier.business_name,
+                  supplier.business_name ?? `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`.trim()
               }))}
             />
 

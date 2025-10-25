@@ -15,6 +15,7 @@ import { FormSelect } from "@/components/FormSelect";
 import { useEffect, useState } from "react";
 import { getAllUsers } from "@/pages/users/lib/User.actions";
 import type { UserResource } from "@/pages/users/lib/User.interface";
+import { getUserBoxAssignmentsByBoxId } from "../lib/userboxassignment.actions";
 
 interface UserBoxAssignmentFormProps {
   defaultValues: Partial<UserBoxAssignmentSchema>;
@@ -38,6 +39,25 @@ export const UserBoxAssignmentForm = ({
   const { data: boxes, isLoading: loadingBoxes } = useAllBoxes();
   const [users, setUsers] = useState<UserResource[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [assignedUserIds, setAssignedUserIds] = useState<number[]>([]);
+
+  const form = useForm({
+    resolver: zodResolver(
+      mode === "create"
+        ? userBoxAssignmentSchemaCreate
+        : userBoxAssignmentSchemaUpdate
+    ),
+    defaultValues: {
+      user_id: defaultValues.user_id || "",
+      box_id: preselectedBoxId
+        ? preselectedBoxId.toString()
+        : defaultValues.box_id || "",
+      status: "active" as const,
+    },
+    mode: "onChange",
+  });
+
+  const selectedBoxId = form.watch("box_id");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -54,20 +74,26 @@ export const UserBoxAssignmentForm = ({
     fetchUsers();
   }, []);
 
-  const form = useForm({
-    resolver: zodResolver(
-      mode === "create"
-        ? userBoxAssignmentSchemaCreate
-        : userBoxAssignmentSchemaUpdate
-    ),
-    defaultValues: {
-      user_id: defaultValues.user_id || "",
-      box_id: preselectedBoxId
-        ? preselectedBoxId.toString()
-        : defaultValues.box_id || "",
-    },
-    mode: "onChange",
-  });
+  // Cargar usuarios ya asignados a la caja cuando cambie la caja seleccionada
+  useEffect(() => {
+    const fetchAssignedUsers = async () => {
+      const boxId = preselectedBoxId || selectedBoxId;
+      if (boxId) {
+        try {
+          const assignments = await getUserBoxAssignmentsByBoxId(Number(boxId));
+          // Obtener IDs de todos los usuarios asignados (activos e inactivos)
+          const userIds = assignments.map((assignment) => assignment.user_id);
+          setAssignedUserIds(userIds);
+        } catch (error) {
+          console.error("Error loading assigned users:", error);
+          setAssignedUserIds([]);
+        }
+      } else {
+        setAssignedUserIds([]);
+      }
+    };
+    fetchAssignedUsers();
+  }, [preselectedBoxId, selectedBoxId]);
 
   // Cuando hay una caja preseleccionada, actualizar el valor del campo
   useEffect(() => {
@@ -78,8 +104,11 @@ export const UserBoxAssignmentForm = ({
     }
   }, [preselectedBoxId, form]);
 
+  // Filtrar usuarios que ya están asignados
+  const availableUsers = users.filter((user) => !assignedUserIds.includes(user.id));
+
   const userOptions =
-    users?.map((user) => ({
+    availableUsers?.map((user) => ({
       value: user.id.toString(),
       label: user.name,
     })) || [];

@@ -8,7 +8,7 @@ import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import { Upload, Plus, Trash2, Eye } from "lucide-react";
 import { successToast, errorToast } from "@/lib/core.function";
 import { useProductStore } from "../lib/product.store";
-import { prodAssetURL } from "@/lib/config";
+import { prodAssetStorageURL } from "@/lib/config";
 
 interface ProductImageGalleryProps {
   productId: number;
@@ -101,7 +101,7 @@ export function ProductImageGallery({ productId }: ProductImageGalleryProps) {
               className="group relative aspect-square bg-muted rounded-xl overflow-hidden border-2 border-muted hover:border-border transition-all duration-200"
             >
               <img
-                src={prodAssetURL + imageData.image_url}
+                src={prodAssetStorageURL + imageData.image_url}
                 alt={imageData.alt_text}
                 className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
               />
@@ -234,7 +234,7 @@ export function ProductImageGallery({ productId }: ProductImageGalleryProps) {
         >
           <div className="max-w-4xl max-h-[90vh] p-4">
             <img
-              src={prodAssetURL + selectedImage}
+              src={prodAssetStorageURL + selectedImage}
               alt="Vista previa"
               className="max-w-full max-h-full object-contain rounded-lg"
             />

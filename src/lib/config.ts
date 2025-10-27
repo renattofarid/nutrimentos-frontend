@@ -1,10 +1,12 @@
 import axios from "axios";
 import { errorToast } from "./core.function";
 
-const baseURL =
-  "https://develop.garzasoft.com:82/nutrimentos/public/api";
+const baseURL = "https://develop.garzasoft.com:82/nutrimentos/public/api";
 export const prodAssetURL =
   "https://develop.garzasoft.com:82/nutrimentos/public/";
+
+export const prodAssetStorageURL =
+  "https://develop.garzasoft.com:82/nutrimentos/public/storage/";
 
 export const api = axios.create({
   baseURL,

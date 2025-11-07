@@ -58,20 +58,19 @@ export default function ClientEditPage() {
     setIsSubmitting(true);
     try {
       // Transform PersonSchema to UpdatePersonRequest
-      // For names field: use business_name for JURIDICA, or concatenate names for NATURAL
-      const fullName = data.type_person === "JURIDICA" 
-        ? data.business_name || ""
-        : `${data.names || ""} ${data.father_surname || ""} ${data.mother_surname || ""}`.trim();
-      
       const updatePersonData: any = {
         document_type_id: data.document_type_id,
         type_person: data.type_person,
         number_document: data.number_document || "", // Can be empty for clients
-        names: fullName,
         address: data.address || "",
         phone: data.phone,
         email: data.email,
       };
+
+      // Only include names when NATURAL or when the document type is DNI
+      if (data.type_person === "NATURAL" || data.type_document === "DNI") {
+        updatePersonData.names = data.names || "";
+      }
 
       // Add fields specific to NATURAL person
       if (data.type_person === "NATURAL") {

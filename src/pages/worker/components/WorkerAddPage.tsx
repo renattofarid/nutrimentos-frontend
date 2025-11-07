@@ -26,23 +26,25 @@ export default function WorkerAddPage() {
     setIsSubmitting(true);
     try {
       // Transform PersonSchema to CreatePersonRequest
-      // For names field: use business_name for JURIDICA, or concatenate names for NATURAL
-      const fullName = data.type_person === "JURIDICA" 
-        ? data.business_name || ""
-        : `${data.names || ""} ${data.father_surname || ""} ${data.mother_surname || ""}`.trim();
-      
+  // For names field: send only the 'names' field as entered by the user
+  const namesOnly = data.names || "";
+
       // Build payload with only the fields present in the form
       const createPersonData: any = {
         document_type_id: data.document_type_id,
         type_person: data.type_person,
         number_document: data.number_document || "",
-        names: fullName,
         address: data.address || "",
         phone: data.phone,
         email: data.email,
         status: "Activo",
         role_id: Number(data.role_id),
       };
+
+      // Only include names when NATURAL or when the document type is DNI
+      if (data.type_person === "NATURAL" || data.type_document === "DNI") {
+        createPersonData.names = namesOnly;
+      }
 
       // Add fields specific to NATURAL person
       if (data.type_person === "NATURAL") {

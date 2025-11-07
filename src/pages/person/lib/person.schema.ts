@@ -234,12 +234,15 @@ export const createPersonSchema = (isClient: boolean = false) => {
         });
       }
 
-      if (data.type_document === "RUC" && data.number_document.length !== 11) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "El RUC debe tener exactamente 11 dígitos",
-          path: ["number_document"],
-        });
+      // Si es cliente y el tipo de documento es RUC, no validar la longitud del RUC
+      if (!(isClient && data.type_document === "RUC")) {
+        if (data.type_document === "RUC" && data.number_document.length !== 11) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "El RUC debe tener exactamente 11 dígitos",
+            path: ["number_document"],
+          });
+        }
       }
 
       if (

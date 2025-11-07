@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/BackButton";
-import { type PersonSchema } from "@/pages/person/lib/person.schema";
+import { type PersonSchemaClient } from "@/pages/person/lib/person.schema";
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import {
   findPersonById,
@@ -20,7 +20,7 @@ import type { PersonResource } from "@/pages/person/lib/person.interface";
 import FormWrapper from "@/components/FormWrapper";
 import TitleFormComponent from "@/components/TitleFormComponent";
 
-const { MODEL } = CLIENT;
+const { MODEL, ICON } = CLIENT;
 
 export default function ClientEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -52,7 +52,7 @@ export default function ClientEditPage() {
     loadPersonData();
   }, [id, navigate]);
 
-  const handleSubmit = async (data: PersonSchema) => {
+  const handleSubmit = async (data: PersonSchemaClient) => {
     if (!personData) return;
 
     setIsSubmitting(true);
@@ -61,7 +61,7 @@ export default function ClientEditPage() {
       const updatePersonData = {
         type_document: data.type_document,
         type_person: data.type_person,
-        number_document: data.number_document,
+        number_document: data.number_document || "", // Can be empty for clients
         names: data.names || "",
         gender: data.type_person === "NATURAL" ? data.gender || "M" : undefined,
         birth_date:
@@ -83,13 +83,13 @@ export default function ClientEditPage() {
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error &&
-        "response" in error &&
-        typeof error.response === "object" &&
-        error.response !== null &&
-        "data" in error.response &&
-        typeof error.response.data === "object" &&
-        error.response.data !== null &&
-        "message" in error.response.data
+          "response" in error &&
+          typeof error.response === "object" &&
+          error.response !== null &&
+          "data" in error.response &&
+          typeof error.response.data === "object" &&
+          error.response.data !== null &&
+          "message" in error.response.data
           ? (error.response.data.message as string)
           : "Error al actualizar cliente";
 
@@ -117,7 +117,7 @@ export default function ClientEditPage() {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-6">
           <BackButton to="/clientes" />
-          <TitleFormComponent title={MODEL.name} mode="edit" />
+          <TitleFormComponent icon={ICON} title={MODEL.name} mode="edit" />
         </div>
       </div>
 
@@ -127,6 +127,7 @@ export default function ClientEditPage() {
         isSubmitting={isSubmitting}
         onCancel={() => navigate("/clientes")}
         roleId={CLIENT_ROLE_ID}
+        isClient={true}
       />
     </FormWrapper>
   );

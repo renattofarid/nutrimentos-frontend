@@ -33,6 +33,7 @@ import { ZONE } from "@/pages/zone/lib/zone.interface";
 import { JOBPOSITION } from "@/pages/jobposition/lib/jobposition.interface";
 import { WAREHOUSEDOCREASON } from "@/pages/warehousedocreason/lib/warehousedocreason.interface";
 import { SETTING } from "@/pages/setting/lib/setting.interface";
+import { DOCUMENT_TYPE } from "@/pages/document-type/lib/document-type.interface";
 import { hasAccessToRoute } from "@/App";
 import { useEffect, useState } from "react";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
@@ -163,6 +164,12 @@ const {
   MODEL: { name: SettingTitle },
 } = SETTING;
 
+const {
+  ICON_REACT: DocumentTypeIcon,
+  ROUTE: DocumentTypeRoute,
+  MODEL: { name: DocumentTypeTitle },
+} = DOCUMENT_TYPE;
+
 const data = {
   navMain: [
     {
@@ -209,6 +216,11 @@ const data = {
           title: SettingTitle,
           url: SettingRoute,
           icon: SettingIcon,
+        },
+        {
+          title: DocumentTypeTitle,
+          url: DocumentTypeRoute,
+          icon: DocumentTypeIcon,
         },
       ],
     },

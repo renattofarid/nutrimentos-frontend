@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { PersonForm } from "@/pages/person/components/PersonForm";
-import { type PersonSchema } from "@/pages/person/lib/person.schema";
+import { type PersonSchemaClient } from "@/pages/person/lib/person.schema";
 import { createPersonWithRole } from "@/pages/person/lib/person.actions";
 import {
   ERROR_MESSAGE,
@@ -21,16 +21,20 @@ export default function ClientAddPage() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (data: PersonSchema) => {
+  const handleSubmit = async (data: PersonSchemaClient) => {
     setIsSubmitting(true);
     try {
+      // For clients, if number_document is not provided, use email as username/password
+      const username = data.number_document || data.email;
+      const password = data.number_document || data.email;
+      
       // Transform PersonSchema to CreatePersonRequest
       const createPersonData = {
-        username: data.number_document, // Use document number as username
-        password: data.number_document, // Use document number as password
+        username: username, // Use document number or email as username
+        password: password, // Use document number or email as password
         type_document: data.type_document,
         type_person: data.type_person,
-        number_document: data.number_document,
+        number_document: data.number_document || "", // Can be empty for clients
         names: data.names || "",
         gender: data.type_person === "NATURAL" ? data.gender || "M" : undefined,
         birth_date:
@@ -84,6 +88,7 @@ export default function ClientAddPage() {
         isSubmitting={isSubmitting}
         onCancel={() => navigate("/clientes")}
         roleId={CLIENT_ROLE_ID}
+        isClient={true}
       />
     </FormWrapper>
   );

@@ -60,23 +60,34 @@ export interface PersonResponse {
 
 export interface PersonResource {
   id: number;
-  type_document: string;
   type_person: string;
-  number_document: string;
+  number_document: string | null; // Can be null for clients
   names: string;
   father_surname: string;
   mother_surname: string;
-  gender: string;
+  gender?: string;
   birth_date: string;
   phone: string;
   email: string;
   address: string;
+  nationality_id?: string;
   business_name: string;
   commercial_name: string;
+  occupation?: string;
+  document_type_id?: string;
+  document_type_name?: string;
+  job_position_id?: string;
+  job_position_name?: string;
+  business_type_id?: string;
+  business_type_name?: string;
+  zone_id?: string;
+  zone_name?: string;
   user_id?: string;
   created_at: string;
   roles: Role[];
+  client_category?: string;
 }
+
 
 interface Role {
   id: number;

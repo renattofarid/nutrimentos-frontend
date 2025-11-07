@@ -58,22 +58,42 @@ export default function WorkerEditPage() {
     setIsSubmitting(true);
     try {
       // Transform PersonSchema to UpdatePersonRequest
-      const updatePersonData = {
-        type_document: data.type_document,
+      // For names field: use business_name for JURIDICA, or concatenate names for NATURAL
+      const fullName = data.type_person === "JURIDICA" 
+        ? data.business_name || ""
+        : `${data.names || ""} ${data.father_surname || ""} ${data.mother_surname || ""}`.trim();
+      
+      const updatePersonData: any = {
+        document_type_id: data.document_type_id,
         type_person: data.type_person,
         number_document: data.number_document,
-        names: data.names || "",
-        gender: data.type_person === "NATURAL" ? data.gender || "M" : undefined,
-        birth_date:
-          data.type_person === "NATURAL" ? data.birth_date || "" : undefined,
-        father_surname: data.father_surname || "",
-        mother_surname: data.mother_surname || "",
-        business_name: data.business_name || "",
-        commercial_name: data.commercial_name || "",
+        names: fullName,
         address: data.address || "",
         phone: data.phone,
         email: data.email,
       };
+
+      // Add fields specific to NATURAL person
+      if (data.type_person === "NATURAL") {
+        updatePersonData.gender = data.gender || "M";
+        updatePersonData.birth_date = data.birth_date || "";
+        updatePersonData.father_surname = data.father_surname || "";
+        updatePersonData.mother_surname = data.mother_surname || "";
+      }
+
+      // Add fields specific to JURIDICA person
+      if (data.type_person === "JURIDICA") {
+        updatePersonData.business_name = data.business_name || "";
+        updatePersonData.commercial_name = data.commercial_name || "";
+      }
+
+      // Add optional fields if provided
+      if (data.job_position_id) {
+        updatePersonData.job_position_id = Number(data.job_position_id);
+      }
+      if (data.zone_id) {
+        updatePersonData.zone_id = Number(data.zone_id);
+      }
 
       await updatePerson(personData.id, updatePersonData);
       successToast(
@@ -126,6 +146,8 @@ export default function WorkerEditPage() {
         onCancel={() => navigate("/trabajadores")}
         roleId={WORKER_ROLE_ID}
         isWorker={true}
+        showJobPosition={true}
+        showZone={true}
       />
     </FormWrapper>
   );

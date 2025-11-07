@@ -24,31 +24,45 @@ export default function ClientAddPage() {
   const handleSubmit = async (data: PersonSchemaClient) => {
     setIsSubmitting(true);
     try {
-      // For clients, if number_document is not provided, use email as username/password
-      const username = data.number_document || data.email;
-      const password = data.number_document || data.email;
+      // For names field: use business_name for JURIDICA, or concatenate names for NATURAL
+      const fullName = data.type_person === "JURIDICA" 
+        ? data.business_name || ""
+        : `${data.names || ""} ${data.father_surname || ""} ${data.mother_surname || ""}`.trim();
       
-      // Transform PersonSchema to CreatePersonRequest
-      const createPersonData = {
-        username: username, // Use document number or email as username
-        password: password, // Use document number or email as password
-        type_document: data.type_document,
+      // Build payload with only the fields present in the form
+      const createPersonData: any = {
+        document_type_id: data.document_type_id,
         type_person: data.type_person,
         number_document: data.number_document || "", // Can be empty for clients
-        names: data.names || "",
-        gender: data.type_person === "NATURAL" ? data.gender || "M" : undefined,
-        birth_date:
-          data.type_person === "NATURAL" ? data.birth_date || "" : undefined,
-        father_surname: data.father_surname || "",
-        mother_surname: data.mother_surname || "",
-        business_name: data.business_name || "",
-        commercial_name: data.commercial_name || "",
+        names: fullName,
         address: data.address || "",
         phone: data.phone,
         email: data.email,
         status: "Activo",
         role_id: Number(data.role_id),
       };
+
+      // Add fields specific to NATURAL person
+      if (data.type_person === "NATURAL") {
+        createPersonData.gender = data.gender || "M";
+        createPersonData.birth_date = data.birth_date || "";
+        createPersonData.father_surname = data.father_surname || "";
+        createPersonData.mother_surname = data.mother_surname || "";
+      }
+
+      // Add fields specific to JURIDICA person
+      if (data.type_person === "JURIDICA") {
+        createPersonData.business_name = data.business_name || "";
+        createPersonData.commercial_name = data.commercial_name || "";
+      }
+
+      // Add optional fields if provided
+      if (data.business_type_id) {
+        createPersonData.business_type_id = Number(data.business_type_id);
+      }
+      if (data.zone_id) {
+        createPersonData.zone_id = Number(data.zone_id);
+      }
 
       await createPersonWithRole(createPersonData, Number(data.role_id));
       successToast(
@@ -72,6 +86,8 @@ export default function ClientAddPage() {
         errorMessage,
         ERROR_MESSAGE({ name: "Cliente", gender: false }, "create")
       );
+      // Propagate error so the form container can avoid resetting the form
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
@@ -89,6 +105,8 @@ export default function ClientAddPage() {
         onCancel={() => navigate("/clientes")}
         roleId={CLIENT_ROLE_ID}
         isClient={true}
+        showBusinessType={true}
+        showZone={true}
       />
     </FormWrapper>
   );

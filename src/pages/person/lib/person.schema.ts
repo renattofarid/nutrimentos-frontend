@@ -20,6 +20,7 @@ export type Gender = z.infer<typeof genderSchema>;
 // Base schema - number_document is optional initially
 const basePersonSchema = z.object({
   type_document: typeDocumentSchema,
+  document_type_id: requiredStringId("Debe seleccionar un tipo de documento válido"),
   type_person: typePersonSchema,
   number_document: z
     .string()
@@ -75,6 +76,11 @@ const basePersonSchema = z.object({
       .email("Ingrese un correo electrónico válido")
       .max(255, "El correo no puede exceder 255 caracteres"),
 
+    // Optional fields for specific contexts
+    job_position_id: z.string().optional().or(z.literal("")),
+    business_type_id: z.string().optional().or(z.literal("")),
+    zone_id: z.string().optional().or(z.literal("")),
+
     // ocupation: z
     //   .string()
     //   .max(100, "La ocupación no puede exceder 100 caracteres")
@@ -129,6 +135,11 @@ export const createPersonSchema = (isClient: boolean = false) => {
         .min(1, "El correo electrónico es obligatorio")
         .email("Ingrese un correo electrónico válido")
         .max(255, "El correo no puede exceder 255 caracteres"),
+
+      // Optional fields for specific contexts
+      job_position_id: z.string().optional().or(z.literal("")),
+      business_type_id: z.string().optional().or(z.literal("")),
+      zone_id: z.string().optional().or(z.literal("")),
 
       role_id: requiredStringId("Debe seleccionar un rol válido"),
     })

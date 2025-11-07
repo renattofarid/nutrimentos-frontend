@@ -26,26 +26,45 @@ export default function SupplierAddPage() {
     setIsSubmitting(true);
     try {
       // Transform PersonSchema to CreatePersonRequest
-      const createPersonData = {
-        username: data.number_document, // Use document number as username
-        password: data.number_document, // Use document number as password
-        type_document: data.type_document,
+      // For names field: use business_name for JURIDICA, or concatenate names for NATURAL
+      const fullName = data.type_person === "JURIDICA" 
+        ? data.business_name || ""
+        : `${data.names || ""} ${data.father_surname || ""} ${data.mother_surname || ""}`.trim();
+      
+      // Build payload with only the fields present in the form
+      const createPersonData: any = {
+        document_type_id: data.document_type_id,
         type_person: data.type_person,
-        number_document: data.number_document,
-        names: data.names || "",
-        gender: data.type_person === "NATURAL" ? data.gender || "M" : undefined,
-        birth_date:
-          data.type_person === "NATURAL" ? data.birth_date || "" : undefined,
-        father_surname: data.father_surname || "",
-        mother_surname: data.mother_surname || "",
-        business_name: data.business_name || "",
-        commercial_name: data.commercial_name || "",
+        number_document: data.number_document || "",
+        names: fullName,
         address: data.address || "",
         phone: data.phone,
         email: data.email,
         status: "Activo",
         role_id: Number(data.role_id),
       };
+
+      // Add fields specific to NATURAL person
+      if (data.type_person === "NATURAL") {
+        createPersonData.gender = data.gender || "M";
+        createPersonData.birth_date = data.birth_date || "";
+        createPersonData.father_surname = data.father_surname || "";
+        createPersonData.mother_surname = data.mother_surname || "";
+      }
+
+      // Add fields specific to JURIDICA person
+      if (data.type_person === "JURIDICA") {
+        createPersonData.business_name = data.business_name || "";
+        createPersonData.commercial_name = data.commercial_name || "";
+      }
+
+      // Add optional fields if provided
+      if (data.business_type_id) {
+        createPersonData.business_type_id = Number(data.business_type_id);
+      }
+      if (data.zone_id) {
+        createPersonData.zone_id = Number(data.zone_id);
+      }
 
       await createPersonWithRole(createPersonData, Number(data.role_id));
       successToast(
@@ -69,6 +88,8 @@ export default function SupplierAddPage() {
         errorMessage,
         ERROR_MESSAGE({ name: "Proveedor", gender: false }, "create")
       );
+      // Propagate error so the form container can avoid resetting the form
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
@@ -88,6 +109,8 @@ export default function SupplierAddPage() {
         isSubmitting={isSubmitting}
         onCancel={() => navigate("/proveedores")}
         roleId={SUPPLIER_ROLE_ID}
+        showBusinessType={true}
+        showZone={true}
       />
     </FormWrapper>
   );

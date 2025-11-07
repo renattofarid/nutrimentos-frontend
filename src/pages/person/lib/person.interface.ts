@@ -36,6 +36,7 @@ export const PERSON: ModelComplete<PersonSchema> = {
   },
   EMPTY: {
     type_document: "DNI",
+    document_type_id: "",
     type_person: "NATURAL",
     names: "",
     gender: "M",
@@ -88,7 +89,6 @@ export interface PersonResource {
   client_category?: string;
 }
 
-
 interface Role {
   id: number;
   name: string;
@@ -102,6 +102,7 @@ export interface CreatePersonRequest {
   username: string;
   password: string;
   type_document: "DNI" | "RUC" | "CE" | "PASAPORTE";
+  document_type_id: string;
   type_person: "NATURAL" | "JURIDICA";
   names: string;
   gender?: string;
@@ -117,12 +118,16 @@ export interface CreatePersonRequest {
   status: string;
   role_id: number;
   number_document: string;
+  job_position_id?: number;
+  business_type_id?: number;
+  zone_id?: number;
 }
 
 export interface UpdatePersonRequest {
   username?: string;
   password?: string;
   type_document?: "DNI" | "RUC" | "CE" | "PASAPORTE";
+  document_type_id?: string;
   type_person?: "NATURAL" | "JURIDICA";
   names?: string;
   father_surname?: string;
@@ -133,6 +138,9 @@ export interface UpdatePersonRequest {
   email?: string;
   rol_id?: number;
   number_document?: string;
+  job_position_id?: number;
+  business_type_id?: number;
+  zone_id?: number;
 }
 
 export interface GetPersonsProps {

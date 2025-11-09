@@ -24,11 +24,16 @@ export const CompanyColumns = ({
   {
     accessorKey: "ruc",
     header: "RUC",
-    cell: ({ getValue }) => (
-      <Badge variant={"secondary"} className="font-mono">
-        {getValue() as string}
-      </Badge>
-    ),
+    cell: ({ getValue }) => {
+      const ruc = getValue() as string;
+      return (
+        ruc && (
+          <Badge variant={"secondary"} className="font-mono">
+            {ruc}
+          </Badge>
+        )
+      );
+    },
   },
   {
     accessorKey: "trade_name",

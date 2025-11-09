@@ -16,7 +16,7 @@ import {
 import { WORKER, WORKER_ROLE_ID } from "../lib/worker.interface";
 import FormWrapper from "@/components/FormWrapper";
 
-const { MODEL } = WORKER;
+const { MODEL, ICON } = WORKER;
 
 export default function WorkerAddPage() {
   const navigate = useNavigate();
@@ -26,8 +26,8 @@ export default function WorkerAddPage() {
     setIsSubmitting(true);
     try {
       // Transform PersonSchema to CreatePersonRequest
-  // For names field: send only the 'names' field as entered by the user
-  const namesOnly = data.names || "";
+      // For names field: send only the 'names' field as entered by the user
+      const namesOnly = data.names || "";
 
       // Build payload with only the fields present in the form
       const createPersonData: any = {
@@ -101,8 +101,12 @@ export default function WorkerAddPage() {
     <FormWrapper>
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
-          <BackButton to="/trabajadores" />
-          <TitleFormComponent title={MODEL.name} mode="create" />
+          <TitleFormComponent
+            handleBack={() => navigate("/trabajadores")}
+            icon={ICON}
+            title={MODEL.name}
+            mode="create"
+          />
         </div>
       </div>
 

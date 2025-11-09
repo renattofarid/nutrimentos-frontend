@@ -14,12 +14,10 @@ export const companySchemaCreate = z.object({
     .max(11, {
       message: "El RUC no puede tener más de 11 caracteres",
     })
-    .min(11, {
-      message: "El RUC debe tener 11 caracteres",
-    })
-    .regex(/^\d+$/, {
+    .regex(/^\d*$/, {
       message: "El RUC solo debe contener números",
-    }),
+    })
+    .optional(),
   trade_name: z
     .string()
     .max(255, {

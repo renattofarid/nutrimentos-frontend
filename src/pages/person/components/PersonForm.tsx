@@ -12,11 +12,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader, Search, Save, UserPlus } from "lucide-react";
-import { 
-  personCreateSchema, 
+import {
+  personCreateSchema,
   personCreateSchemaClient,
+  personCreateSchemaWorker,
   type PersonSchema,
-  type PersonSchemaClient 
+  type PersonSchemaClient,
 } from "../lib/person.schema";
 import { FormSelect } from "@/components/FormSelect";
 import {
@@ -63,13 +64,24 @@ export const PersonForm = ({
   const isEditing = !!initialData;
 
   // Use client schema if isClient is true
-  const schema = isClient ? personCreateSchemaClient : personCreateSchema;
+  const schema = isClient
+    ? personCreateSchemaClient
+    : isWorker
+    ? personCreateSchemaWorker
+    : personCreateSchema;
   type FormSchema = PersonSchema | PersonSchemaClient;
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(schema),
     defaultValues: {
-      type_document: (initialData?.document_type_name as "DNI" | "RUC" | "CE" | "PASAPORTE") || (initialData as any)?.type_document || "DNI",
+      type_document:
+        (initialData?.document_type_name as
+          | "DNI"
+          | "RUC"
+          | "CE"
+          | "PASAPORTE") ||
+        (initialData as any)?.type_document ||
+        "DNI",
       document_type_id: initialData?.document_type_id?.toString() || "",
       type_person:
         (initialData?.type_person as "NATURAL" | "JURIDICA") || "NATURAL",
@@ -95,16 +107,19 @@ export const PersonForm = ({
   const type_person = form.watch("type_person");
   const type_document = form.watch("type_document");
   const [isSearching, setIsSearching] = useState(false);
-  
+
   // Ref to track if document type change triggered person type change
   const documentChangeRef = useRef(false);
-  
+
   // Get all document types from API
-  const { data: documentTypes, isLoading: isLoadingDocumentTypes } = useAllDocumentTypes();
-  
+  const { data: documentTypes, isLoading: isLoadingDocumentTypes } =
+    useAllDocumentTypes();
+
   // Get optional data from API
-  const { data: jobPositions, isLoading: isLoadingJobPositions } = useAllJobPositions();
-  const { data: businessTypes, isLoading: isLoadingBusinessTypes } = useAllBusinessTypes();
+  const { data: jobPositions, isLoading: isLoadingJobPositions } =
+    useAllJobPositions();
+  const { data: businessTypes, isLoading: isLoadingBusinessTypes } =
+    useAllBusinessTypes();
   const { data: zones, isLoading: isLoadingZones } = useAllZones();
 
   // Update document_type_id when type_document changes
@@ -157,7 +172,11 @@ export const PersonForm = ({
     // Only auto-set RUC if user manually changes type_person to JURIDICA while document is DNI
     // Skip if the change came from document type change
     const currentDoc = form.getValues("type_document");
-    if (type_person === "JURIDICA" && currentDoc === "DNI" && !documentChangeRef.current) {
+    if (
+      type_person === "JURIDICA" &&
+      currentDoc === "DNI" &&
+      !documentChangeRef.current
+    ) {
       form.setValue("type_document", "RUC", { shouldValidate: true });
       form.setValue("number_document", "", { shouldValidate: true });
     }
@@ -257,7 +276,9 @@ export const PersonForm = ({
             control={form.control}
             name="type_document"
             label="Tipo de Documento"
-            placeholder={isLoadingDocumentTypes ? "Cargando..." : "Seleccione tipo"}
+            placeholder={
+              isLoadingDocumentTypes ? "Cargando..." : "Seleccione tipo"
+            }
             disabled={isWorker || isLoadingDocumentTypes} // Workers can only use DNI
             options={
               isLoadingDocumentTypes
@@ -265,7 +286,10 @@ export const PersonForm = ({
                 : isWorker
                 ? (documentTypes || [])
                     .filter((dt: DocumentTypeResource) => dt.name === "DNI")
-                    .map((dt: DocumentTypeResource) => ({ value: dt.name, label: dt.name }))
+                    .map((dt: DocumentTypeResource) => ({
+                      value: dt.name,
+                      label: dt.name,
+                    }))
                 : (documentTypes || []).map((dt: DocumentTypeResource) => ({
                     value: dt.name,
                     label: dt.name,
@@ -281,7 +305,8 @@ export const PersonForm = ({
                 <FormLabel
                   className={errors.number_document ? "text-destructive" : ""}
                 >
-                  Número de Documento {!isClient && errors.number_document && "*"}
+                  Número de Documento{" "}
+                  {!isClient && errors.number_document && "*"}
                   {isClient && " (Opcional)"}
                 </FormLabel>
                 <FormControl>
@@ -345,10 +370,11 @@ export const PersonForm = ({
 
                         // Auto-search when completing DNI (8 digits) or RUC (11 digits)
                         // Only if value is not empty (for optional client documents)
-                        if (value && (
-                          (type_document === "DNI" && value.length === 8) ||
-                          (type_document === "RUC" && value.length === 11)
-                        )) {
+                        if (
+                          value &&
+                          ((type_document === "DNI" && value.length === 8) ||
+                            (type_document === "RUC" && value.length === 11))
+                        ) {
                           setTimeout(() => handleDocumentSearch(), 100);
                         }
                       }}
@@ -847,9 +873,7 @@ export const PersonForm = ({
                 control={form.control}
                 name="zone_id"
                 label="Zona"
-                placeholder={
-                  isLoadingZones ? "Cargando..." : "Seleccione zona"
-                }
+                placeholder={isLoadingZones ? "Cargando..." : "Seleccione zona"}
                 disabled={isLoadingZones}
                 options={
                   isLoadingZones

@@ -131,8 +131,9 @@ export const ProductForm = ({
               placeholder="Seleccione una categoría"
               options={categories.map((category) => ({
                 value: category.id.toString(),
-                label: `${"  ".repeat(Math.max(0, category.level - 1))}${category.name
-                  }`,
+                label: `${"  ".repeat(Math.max(0, category.level - 1))}${
+                  category.name
+                }`,
               }))}
             />
 
@@ -177,7 +178,8 @@ export const ProductForm = ({
               options={suppliers.map((supplier) => ({
                 value: supplier.id.toString(),
                 label:
-                  supplier.business_name ?? `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`.trim()
+                  supplier.business_name ??
+                  `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`.trim(),
               }))}
             />
 
@@ -214,132 +216,132 @@ export const ProductForm = ({
           </div>
         </div>
 
-        {/* Precios y Costos */}
-        <div className="bg-sidebar p-4 rounded-lg space-y-4">
-          <h3 className="text-lg font-semibold">Precios y Costos</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="purchase_price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Precio de Compra</FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="primary"
-                      type="number"
-                      step="0.01"
-                      placeholder="50.00"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Precios y Costos: mostrar SOLO en modo 'update' */}
+        {mode !== "create" && (
+          <div className="bg-sidebar p-4 rounded-lg space-y-4">
+            <h3 className="text-lg font-semibold">Precios y Costos</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="purchase_price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Precio de Compra</FormLabel>
+                    <FormControl>
+                      <Input
+                        variant="primary"
+                        type="number"
+                        step="0.01"
+                        placeholder="50.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="sale_price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Precio de Venta</FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="primary"
-                      type="number"
-                      step="0.01"
-                      placeholder="60.00"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="sale_price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Precio de Venta</FormLabel>
+                    <FormControl>
+                      <Input
+                        variant="primary"
+                        type="number"
+                        step="0.01"
+                        placeholder="60.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="profit_margin"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Margen de Ganancia (%)</FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="primary"
-                      type="number"
-                      step="0.01"
-                      placeholder="20"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="profit_margin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Margen de Ganancia (%)</FormLabel>
+                    <FormControl>
+                      <Input
+                        variant="primary"
+                        type="number"
+                        step="0.01"
+                        placeholder="20"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="accounting_cost"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Costo Contable (Opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="primary"
-                      type="number"
-                      step="0.01"
-                      placeholder="50.00"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="accounting_cost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Costo Contable (Opcional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        variant="primary"
+                        type="number"
+                        step="0.01"
+                        placeholder="50.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="inventory_cost"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Costo de Inventario (Opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="primary"
-                      type="number"
-                      step="0.01"
-                      placeholder="45.00"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="inventory_cost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Costo de Inventario (Opcional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        variant="primary"
+                        type="number"
+                        step="0.01"
+                        placeholder="45.00"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="commission_percentage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Comisión (%) (Opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="primary"
-                      type="number"
-                      step="0.01"
-                      placeholder="5"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="commission_percentage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Comisión (%) (Opcional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        variant="primary"
+                        type="number"
+                        step="0.01"
+                        placeholder="5"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
-        </div>
-
+        )}
         {/* Peso y Medidas */}
         <div className="bg-sidebar p-4 rounded-lg space-y-4">
           <h3 className="text-lg font-semibold">Peso y Medidas (Opcional)</h3>

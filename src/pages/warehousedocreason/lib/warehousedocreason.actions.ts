@@ -6,6 +6,7 @@ import {
   type WarehouseDocReasonResourceById,
   type WarehouseDocReasonResponse,
 } from "./warehousedocreason.interface";
+import type { WarehouseDocReasonSchema } from "./warehousedocreason.schema";
 import type { AxiosRequestConfig } from "axios";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
@@ -41,20 +42,24 @@ export async function findWarehouseDocReasonById(
   return response.data;
 }
 
-export async function storeWarehouseDocReason(data: any): Promise<WarehouseDocReasonResponse> {
+export async function storeWarehouseDocReason(
+  data: WarehouseDocReasonSchema
+): Promise<WarehouseDocReasonResponse> {
   const response = await api.post<WarehouseDocReasonResponse>(ENDPOINT, data);
   return response.data;
 }
 
 export async function updateWarehouseDocReason(
   id: number,
-  data: any
+  data: WarehouseDocReasonSchema
 ): Promise<WarehouseDocReasonResponse> {
   const response = await api.put<WarehouseDocReasonResponse>(`${ENDPOINT}/${id}`, data);
   return response.data;
 }
 
-export async function deleteWarehouseDocReason(id: number): Promise<any> {
-  const { data } = await api.delete<any>(`${ENDPOINT}/${id}`);
+export async function deleteWarehouseDocReason(
+  id: number
+): Promise<{ message: string }> {
+  const { data } = await api.delete<{ message: string }>(`${ENDPOINT}/${id}`);
   return data;
 }

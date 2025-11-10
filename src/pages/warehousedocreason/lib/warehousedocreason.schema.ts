@@ -10,12 +10,8 @@ export const warehouseDocReasonSchemaCreate = z.object({
       message: "El nombre es requerido",
     }),
   type: z
-    .string()
-    .min(1, {
-      message: "El tipo es requerido",
-    })
-    .refine((val) => val === "ingreso" || val === "egreso", {
-      message: "El tipo debe ser 'ingreso' o 'egreso'",
+    .enum(["INGRESO", "EGRESO"], {
+      errorMap: () => ({ message: "El tipo debe ser INGRESO o EGRESO" }),
     }),
 });
 

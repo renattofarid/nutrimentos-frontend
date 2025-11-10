@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(\"e:\\front\\nutrimentos-frontend\\src\\pages\\warehousedocreason\\lib\\warehousedocreason.interface.ts\")",
+      "Bash(touch:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

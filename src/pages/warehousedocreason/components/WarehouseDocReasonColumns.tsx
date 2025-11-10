@@ -28,10 +28,10 @@ export const WarehouseDocReasonColumns = ({
       const type = getValue() as string;
       return (
         <Badge
-          variant={type === "ingreso" ? "default" : "destructive"}
+          variant={type === "INGRESO" ? "default" : "destructive"}
           className="capitalize"
         >
-          {type}
+          {type.toLowerCase()}
         </Badge>
       );
     },

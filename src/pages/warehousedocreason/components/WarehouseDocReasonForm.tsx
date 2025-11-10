@@ -16,7 +16,7 @@ import {
   warehouseDocReasonSchemaCreate,
   warehouseDocReasonSchemaUpdate,
   type WarehouseDocReasonSchema,
-} from "../lib/warehousedocreason.schema.ts";
+} from "../lib/warehousedocreason.schema";
 import { Loader } from "lucide-react";
 import {
   Select,
@@ -93,8 +93,8 @@ export const WarehouseDocReasonForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="ingreso">Ingreso</SelectItem>
-                    <SelectItem value="egreso">Egreso</SelectItem>
+                    <SelectItem value="INGRESO">Ingreso</SelectItem>
+                    <SelectItem value="EGRESO">Egreso</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

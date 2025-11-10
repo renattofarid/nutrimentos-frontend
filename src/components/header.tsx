@@ -2,6 +2,7 @@ import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import { NavUser } from "./nav-user";
 import { Separator } from "./ui/separator";
 import { SidebarTrigger } from "./ui/sidebar";
+import { NotificationBell } from "./NotificationBell";
 
 export default function HeaderComponent() {
   const { user } = useAuthStore();
@@ -33,6 +34,7 @@ export default function HeaderComponent() {
         </div>
       </div>
       <div className="hidden md:flex items-center gap-2">
+        <NotificationBell />
         <NavUser user={user} />
       </div>
     </header>

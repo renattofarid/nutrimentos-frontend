@@ -35,6 +35,7 @@ import { WAREHOUSEDOCREASON } from "@/pages/warehousedocreason/lib/warehousedocr
 import { SETTING } from "@/pages/setting/lib/setting.interface";
 import { DOCUMENT_TYPE } from "@/pages/document-type/lib/document-type.interface";
 import { PRICELIST } from "@/pages/pricelist/lib/pricelist.interface";
+import { PURCHASE } from "@/pages/purchase/lib/purchase.interface";
 import { hasAccessToRoute } from "@/App";
 import { useEffect, useState } from "react";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
@@ -177,6 +178,12 @@ const {
   MODEL: { name: PriceListTitle },
 } = PRICELIST;
 
+const {
+  ICON_REACT: PurchaseIcon,
+  ROUTE: PurchaseRoute,
+  MODEL: { name: PurchaseTitle },
+} = PURCHASE;
+
 const data = {
   navMain: [
     {
@@ -228,6 +235,11 @@ const data = {
           title: DocumentTypeTitle,
           url: DocumentTypeRoute,
           icon: DocumentTypeIcon,
+        },
+        {
+          title: PurchaseTitle,
+          url: PurchaseRoute,
+          icon: PurchaseIcon,
         },
       ],
     },

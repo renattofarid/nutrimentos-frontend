@@ -34,6 +34,7 @@ import { JOBPOSITION } from "@/pages/jobposition/lib/jobposition.interface";
 import { WAREHOUSEDOCREASON } from "@/pages/warehousedocreason/lib/warehousedocreason.interface";
 import { SETTING } from "@/pages/setting/lib/setting.interface";
 import { DOCUMENT_TYPE } from "@/pages/document-type/lib/document-type.interface";
+import { PRICELIST } from "@/pages/pricelist/lib/pricelist.interface";
 import { hasAccessToRoute } from "@/App";
 import { useEffect, useState } from "react";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
@@ -170,6 +171,12 @@ const {
   MODEL: { name: DocumentTypeTitle },
 } = DOCUMENT_TYPE;
 
+const {
+  ICON_REACT: PriceListIcon,
+  ROUTE: PriceListRoute,
+  MODEL: { name: PriceListTitle },
+} = PRICELIST;
+
 const data = {
   navMain: [
     {
@@ -258,6 +265,11 @@ const data = {
           title: NationalityTitle,
           url: NationalityRoute,
           icon: NationalityIcon,
+        },
+        {
+          title: PriceListTitle,
+          url: PriceListRoute,
+          icon: PriceListIcon,
         },
       ],
     },

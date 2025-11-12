@@ -80,6 +80,7 @@ const basePersonSchema = z.object({
   job_position_id: z.string().optional().or(z.literal("")),
   business_type_id: z.string().optional().or(z.literal("")),
   zone_id: z.string().optional().or(z.literal("")),
+  client_category_id: z.string().optional().or(z.literal("")),
 
   // ocupation: z
   //   .string()
@@ -141,6 +142,7 @@ export const createPersonSchema = (
       job_position_id: z.string().optional().or(z.literal("")),
       business_type_id: z.string().optional().or(z.literal("")),
       zone_id: z.string().optional().or(z.literal("")),
+      client_category_id: z.string().optional().or(z.literal("")),
 
       role_id: requiredStringId("Debe seleccionar un rol válido"),
     })

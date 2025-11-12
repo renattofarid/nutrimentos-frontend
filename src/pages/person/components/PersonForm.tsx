@@ -35,6 +35,8 @@ import { useAllBusinessTypes } from "@/pages/businesstype/lib/businesstype.hook"
 import type { BusinessTypeResource } from "@/pages/businesstype/lib/businesstype.interface";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
+import { usePriceList } from "@/pages/pricelist/lib/pricelist.hook";
+import type { PriceList } from "@/pages/pricelist/lib/pricelist.interface";
 
 interface PersonFormProps {
   initialData?: PersonResource | null;
@@ -47,6 +49,7 @@ interface PersonFormProps {
   showJobPosition?: boolean; // Show job position field
   showBusinessType?: boolean; // Show business type field
   showZone?: boolean; // Show zone field
+  showPriceList?: boolean; // Show price list field for clients
 }
 
 export const PersonForm = ({
@@ -60,6 +63,7 @@ export const PersonForm = ({
   showJobPosition = false,
   showBusinessType = false,
   showZone = false,
+  showPriceList = false,
 }: PersonFormProps) => {
   const isEditing = !!initialData;
 
@@ -100,6 +104,7 @@ export const PersonForm = ({
       job_position_id: initialData?.job_position_id?.toString() || "",
       business_type_id: initialData?.business_type_id?.toString() || "",
       zone_id: initialData?.zone_id?.toString() || "",
+      client_category_id: initialData?.client_category_id?.toString() || "",
     },
     mode: "onChange", // Validate on change for immediate feedback
   });
@@ -121,6 +126,7 @@ export const PersonForm = ({
   const { data: businessTypes, isLoading: isLoadingBusinessTypes } =
     useAllBusinessTypes();
   const { data: zones, isLoading: isLoadingZones } = useAllZones();
+  const { data: priceLists, isLoading: isLoadingPriceLists } = usePriceList();
 
   // Update document_type_id when type_document changes
   useEffect(() => {
@@ -824,7 +830,7 @@ export const PersonForm = ({
         />
 
         {/* Optional Fields - Context specific */}
-        {(showJobPosition || showBusinessType || showZone) && (
+        {(showJobPosition || showBusinessType || showZone || showPriceList) && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {showJobPosition && (
               <FormSelect
@@ -882,6 +888,30 @@ export const PersonForm = ({
                         value: z.id.toString(),
                         label: z.name,
                       }))
+                }
+              />
+            )}
+
+            {showPriceList && (
+              <FormSelect
+                control={form.control}
+                name="client_category_id"
+                label="Lista de Precio"
+                placeholder={
+                  isLoadingPriceLists
+                    ? "Cargando..."
+                    : "Seleccione lista de precio"
+                }
+                disabled={isLoadingPriceLists}
+                options={
+                  isLoadingPriceLists
+                    ? []
+                    : (priceLists || [])
+                        .filter((pl: PriceList) => pl.is_active)
+                        .map((pl: PriceList) => ({
+                          value: pl.id.toString(),
+                          label: `${pl.name} (${pl.code})`,
+                        }))
                 }
               />
             )}
@@ -956,6 +986,11 @@ export const PersonForm = ({
           </div>
         )}
       </form>
+
+      <pre>
+        <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
+      </pre>
+      <Button onClick={() => form.trigger()}>Button</Button>
     </Form>
   );
 };

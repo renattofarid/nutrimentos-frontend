@@ -65,6 +65,9 @@ export default function ClientAddPage() {
       if (data.zone_id) {
         createPersonData.zone_id = Number(data.zone_id);
       }
+      if (data.client_category_id) {
+        createPersonData.client_category_id = Number(data.client_category_id);
+      }
 
       await createPersonWithRole(createPersonData, Number(data.role_id));
       successToast(
@@ -109,6 +112,7 @@ export default function ClientAddPage() {
         isClient={true}
         showBusinessType={true}
         showZone={true}
+        showPriceList={true}
       />
     </FormWrapper>
   );

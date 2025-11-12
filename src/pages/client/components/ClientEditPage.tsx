@@ -93,6 +93,9 @@ export default function ClientEditPage() {
       if (data.zone_id) {
         updatePersonData.zone_id = Number(data.zone_id);
       }
+      if (data.client_category_id) {
+        updatePersonData.client_category_id = Number(data.client_category_id);
+      }
 
       await updatePerson(personData.id, updatePersonData);
       successToast(
@@ -102,13 +105,13 @@ export default function ClientEditPage() {
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error &&
-          "response" in error &&
-          typeof error.response === "object" &&
-          error.response !== null &&
-          "data" in error.response &&
-          typeof error.response.data === "object" &&
-          error.response.data !== null &&
-          "message" in error.response.data
+        "response" in error &&
+        typeof error.response === "object" &&
+        error.response !== null &&
+        "data" in error.response &&
+        typeof error.response.data === "object" &&
+        error.response.data !== null &&
+        "message" in error.response.data
           ? (error.response.data.message as string)
           : "Error al actualizar cliente";
 
@@ -135,7 +138,6 @@ export default function ClientEditPage() {
     <FormWrapper>
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-6">
-          <BackButton to="/clientes" />
           <TitleFormComponent icon={ICON} title={MODEL.name} mode="edit" />
         </div>
       </div>
@@ -149,6 +151,7 @@ export default function ClientEditPage() {
         isClient={true}
         showBusinessType={true}
         showZone={true}
+        showPriceList={true}
       />
     </FormWrapper>
   );

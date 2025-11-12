@@ -87,6 +87,7 @@ export interface PersonResource {
   created_at: string;
   roles: Role[];
   client_category?: string;
+  client_category_id?: number;
 }
 
 interface Role {
@@ -121,6 +122,7 @@ export interface CreatePersonRequest {
   job_position_id?: number;
   business_type_id?: number;
   zone_id?: number;
+  client_category_id?: number;
 }
 
 export interface UpdatePersonRequest {
@@ -141,6 +143,7 @@ export interface UpdatePersonRequest {
   job_position_id?: number;
   business_type_id?: number;
   zone_id?: number;
+  client_category_id?: number;
 }
 
 export interface GetPersonsProps {

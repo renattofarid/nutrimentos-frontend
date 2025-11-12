@@ -277,7 +277,6 @@ export interface UpdatePurchasePaymentRequest {
 // ===== CONSTANTS =====
 
 export const PURCHASE_ENDPOINT = "/purchase";
-export const PURCHASE_DETAIL_ENDPOINT = "/purchasedetail";
 export const PURCHASE_INSTALLMENT_ENDPOINT = "/purchaseinstallment";
 export const PURCHASE_PAYMENT_ENDPOINT = "/purchasepayment";
 export const PURCHASE_INSTALLMENTS_EXPIRING_ALERT_ENDPOINT =
@@ -364,37 +363,6 @@ export const PURCHASE: ModelComplete<PurchaseSchema> = {
     delete: {
       title: `Eliminar ${NAME}`,
       subtitle: `Confirme para eliminar la ${NAME.toLowerCase()}`,
-    },
-  },
-  EMPTY: {} as any,
-};
-
-export const PURCHASE_DETAIL: ModelComplete<any> = {
-  MODEL: {
-    name: NAME_DETAIL,
-    description: "Gestión de detalles de compra.",
-    plural: "Detalles de Compra",
-    gender: false,
-  },
-  ICON: "PackageOpen",
-  ICON_REACT: PackageOpen,
-  ENDPOINT: PURCHASE_DETAIL_ENDPOINT,
-  QUERY_KEY: PURCHASE_DETAIL_QUERY_KEY,
-  ROUTE: PurchaseRoute,
-  ROUTE_ADD: PurchaseRoute,
-  ROUTE_UPDATE: PurchaseRoute,
-  TITLES: {
-    create: {
-      title: `Crear ${NAME_DETAIL}`,
-      subtitle: `Complete los campos para crear un nuevo detalle`,
-    },
-    update: {
-      title: `Actualizar ${NAME_DETAIL}`,
-      subtitle: `Actualice los campos para modificar el detalle`,
-    },
-    delete: {
-      title: `Eliminar ${NAME_DETAIL}`,
-      subtitle: `Confirme para eliminar el detalle`,
     },
   },
   EMPTY: {} as any,

@@ -78,7 +78,6 @@ export default function PurchaseAddPage() {
     <FormWrapper>
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
-          <BackButton to="/compras" />
           <TitleFormComponent title="Compra" mode="create" />
         </div>
       </div>

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/BackButton";
 import TitleComponent from "@/components/TitleComponent";
-import { usePurchaseDetailStore } from "../lib/purchase-detail.store";
 import { usePurchaseInstallmentStore } from "../lib/purchase-installment.store";
 import FormWrapper from "@/components/FormWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
@@ -32,7 +31,6 @@ export const PurchaseDetailViewPage = () => {
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
 
   const { purchase, fetchPurchase, isFinding } = usePurchaseStore();
-  const { details, fetchDetails } = usePurchaseDetailStore();
   const { installments, fetchInstallments, updateInstallment } =
     usePurchaseInstallmentStore();
 
@@ -42,7 +40,6 @@ export const PurchaseDetailViewPage = () => {
       return;
     }
     fetchPurchase(Number(id));
-    fetchDetails(Number(id));
     fetchInstallments(Number(id));
   }, [id, navigate]);
 
@@ -273,7 +270,7 @@ export const PurchaseDetailViewPage = () => {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="details" className="flex items-center gap-2">
               <PackageOpen className="h-4 w-4" />
-              Detalles ({details?.length || 0})
+              Detalles ({purchase.details?.length || 0})
             </TabsTrigger>
             <TabsTrigger
               value="installments"
@@ -295,10 +292,9 @@ export const PurchaseDetailViewPage = () => {
               </CardHeader>
               <CardContent>
                 <PurchaseDetailTable
-                  details={details || []}
+                  details={purchase.details || []}
                   onEdit={() => {}}
                   onRefresh={() => {
-                    fetchDetails(Number(id));
                     fetchPurchase(Number(id));
                   }}
                   isPurchasePaid={purchase?.status === "PAGADO"}
@@ -523,7 +519,7 @@ export const PurchaseDetailViewPage = () => {
                             Productos
                           </p>
                           <p className="text-3xl font-bold">
-                            {details?.length || 0}
+                            {purchase.details?.length || 0}
                           </p>
                         </div>
                       </CardContent>

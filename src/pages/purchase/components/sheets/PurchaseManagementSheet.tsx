@@ -12,15 +12,12 @@ import { Plus, PackageOpen, CreditCard } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { PurchaseResource } from "../../lib/purchase.interface";
-import { usePurchaseDetailStore } from "../../lib/purchase-detail.store";
 import { usePurchaseInstallmentStore } from "../../lib/purchase-installment.store";
-import { usePurchaseStore } from "../../lib/purchase.store";
-import { useAllProducts } from "@/pages/product/lib/product.hook";
+import { PurchaseInstallmentForm } from "../forms/PurchaseInstallmentForm";
 import { PurchaseDetailTable } from "../PurchaseDetailTable";
 import { PurchaseInstallmentTable } from "../PurchaseInstallmentTable";
-import { PurchaseDetailForm } from "../forms/PurchaseDetailForm";
-import { PurchaseInstallmentForm } from "../forms/PurchaseInstallmentForm";
 import { errorToast, successToast } from "@/lib/core.function";
+import { usePurchaseStore } from "../../lib/purchase.store";
 
 interface PurchaseManagementSheetProps {
   open: boolean;
@@ -36,25 +33,14 @@ export function PurchaseManagementSheet({
   onPurchaseUpdate,
 }: PurchaseManagementSheetProps) {
   const [activeTab, setActiveTab] = useState("details");
-  const [showDetailForm, setShowDetailForm] = useState(false);
   const [showInstallmentForm, setShowInstallmentForm] = useState(false);
-  const [editingDetailId, setEditingDetailId] = useState<number | null>(null);
-  const [editingInstallmentId, setEditingInstallmentId] = useState<number | null>(null);
-  const [currentPurchase, setCurrentPurchase] = useState<PurchaseResource | null>(purchase);
+  const [editingInstallmentId, setEditingInstallmentId] = useState<
+    number | null
+  >(null);
+  const [currentPurchase, setCurrentPurchase] =
+    useState<PurchaseResource | null>(purchase);
 
-  const { data: products } = useAllProducts();
   const { fetchPurchase } = usePurchaseStore();
-
-  const {
-    details,
-    detail,
-    fetchDetails,
-    fetchDetail,
-    createDetail,
-    updateDetail,
-    isSubmitting: detailSubmitting,
-    resetDetail,
-  } = usePurchaseDetailStore();
 
   const {
     installments,
@@ -70,7 +56,6 @@ export function PurchaseManagementSheet({
   useEffect(() => {
     if (purchase && open) {
       setCurrentPurchase(purchase);
-      fetchDetails(purchase.id);
       fetchInstallments(purchase.id);
     }
   }, [purchase, open]);
@@ -93,53 +78,12 @@ export function PurchaseManagementSheet({
   };
 
   useEffect(() => {
-    if (editingDetailId) {
-      fetchDetail(editingDetailId);
-    } else {
-      resetDetail();
-    }
-  }, [editingDetailId]);
-
-  useEffect(() => {
     if (editingInstallmentId) {
       fetchInstallment(editingInstallmentId);
     } else {
       resetInstallment();
     }
   }, [editingInstallmentId]);
-
-  const handleAddDetail = () => {
-    setEditingDetailId(null);
-    setShowDetailForm(true);
-  };
-
-  const handleEditDetail = (detailId: number) => {
-    setEditingDetailId(detailId);
-    setShowDetailForm(true);
-  };
-
-  const handleDetailSubmit = async (data: any) => {
-    if (!purchase) return;
-
-    try {
-      if (editingDetailId) {
-        await updateDetail(editingDetailId, data);
-        successToast("Detalle actualizado exitosamente");
-      } else {
-        await createDetail({
-          purchase_id: purchase.id,
-          ...data,
-        });
-        successToast("Detalle agregado exitosamente");
-      }
-      setShowDetailForm(false);
-      setEditingDetailId(null);
-      fetchDetails(purchase.id);
-      await refreshPurchaseData(); // Actualizar la compra y la información general
-    } catch (error: any) {
-      errorToast(error.response?.data?.message || "Error al guardar el detalle");
-    }
-  };
 
   const handleAddInstallment = () => {
     setEditingInstallmentId(null);
@@ -173,7 +117,10 @@ export function PurchaseManagementSheet({
     }
   };
 
-  const handleSyncInstallment = async (installmentId: number, newAmount: number) => {
+  const handleSyncInstallment = async (
+    installmentId: number,
+    newAmount: number
+  ) => {
     if (!purchase) return;
 
     try {
@@ -183,19 +130,17 @@ export function PurchaseManagementSheet({
       successToast("Cuota sincronizada exitosamente");
       fetchInstallments(purchase.id);
     } catch (error: any) {
-      errorToast(error.response?.data?.message || "Error al sincronizar la cuota");
+      errorToast(
+        error.response?.data?.message || "Error al sincronizar la cuota"
+      );
     }
   };
 
   if (!currentPurchase) return null;
 
-  // Determinar si se pueden agregar detalles o cuotas
+  // Determinar si se pueden agregar cuotas
   const isPaid = currentPurchase.status === "PAGADO";
   const isCash = currentPurchase.payment_type === "CONTADO";
-  const hasPayments = parseFloat(currentPurchase.total_amount) !== parseFloat(currentPurchase.current_amount);
-
-  // Para detalles: NO se puede si está pagada O (es al contado Y tiene pagos)
-  const canAddDetails = !isPaid && !(isCash && hasPayments);
 
   // Para cuotas: NO se puede si está pagada O es al contado
   const canAddInstallments = !isPaid && !isCash;
@@ -222,12 +167,15 @@ export function PurchaseManagementSheet({
             <CardContent className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Proveedor:</span>
-                <p className="font-semibold">{currentPurchase.supplier_fullname}</p>
+                <p className="font-semibold">
+                  {currentPurchase.supplier_fullname}
+                </p>
               </div>
               <div>
                 <span className="text-muted-foreground">Documento:</span>
                 <p className="font-semibold">
-                  {currentPurchase.document_type} - {currentPurchase.document_number}
+                  {currentPurchase.document_type} -{" "}
+                  {currentPurchase.document_number}
                 </p>
               </div>
               <div>
@@ -264,7 +212,11 @@ export function PurchaseManagementSheet({
                 <span className="text-muted-foreground">Tipo de Pago:</span>
                 <div className="mt-1">
                   <Badge
-                    variant={currentPurchase.payment_type === "CONTADO" ? "default" : "secondary"}
+                    variant={
+                      currentPurchase.payment_type === "CONTADO"
+                        ? "default"
+                        : "secondary"
+                    }
                   >
                     {currentPurchase.payment_type}
                   </Badge>
@@ -278,67 +230,30 @@ export function PurchaseManagementSheet({
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="details" className="flex items-center gap-2">
                 <PackageOpen className="h-4 w-4" />
-                Detalles ({details?.length || 0})
+                Detalles ({currentPurchase.details?.length || 0})
               </TabsTrigger>
-              <TabsTrigger value="installments" className="flex items-center gap-2">
+              <TabsTrigger
+                value="installments"
+                className="flex items-center gap-2"
+              >
                 <CreditCard className="h-4 w-4" />
                 Cuotas ({installments?.length || 0})
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="details" className="space-y-4 mt-4">
-              {showDetailForm ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">
-                      {editingDetailId ? "Editar Detalle" : "Agregar Detalle"}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {products && (
-                      <PurchaseDetailForm
-                        products={products}
-                        detail={editingDetailId ? detail : null}
-                        onSubmit={handleDetailSubmit}
-                        onCancel={() => {
-                          setShowDetailForm(false);
-                          setEditingDetailId(null);
-                        }}
-                        isSubmitting={detailSubmitting}
-                      />
-                    )}
-                  </CardContent>
-                </Card>
-              ) : (
-                <>
-                  <Button
-                    onClick={handleAddDetail}
-                    className="w-full"
-                    disabled={!canAddDetails}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar Detalle
-                  </Button>
-                  {!canAddDetails && (
-                    <p className="text-sm text-muted-foreground text-center">
-                      {isPaid
-                        ? "No se pueden agregar detalles a una compra pagada"
-                        : "No se pueden agregar detalles a pagos al contado con pagos registrados"}
-                    </p>
-                  )}
-                  <PurchaseDetailTable
-                    details={details || []}
-                    onEdit={handleEditDetail}
-                    onRefresh={async () => {
-                      if (purchase) {
-                        fetchDetails(purchase.id);
-                        await refreshPurchaseData(); // Actualizar la compra y la información general
-                      }
-                    }}
-                    isPurchasePaid={isPaid || (isCash && hasPayments)}
-                  />
-                </>
-              )}
+              <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg mb-4">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  ℹ️ Los detalles solo se pueden modificar al editar la compra completa.
+                  Use el botón "Editar Compra" en la vista principal.
+                </p>
+              </div>
+              <PurchaseDetailTable
+                details={currentPurchase.details || []}
+                onEdit={() => {}}
+                onRefresh={() => {}}
+                isPurchasePaid={true}
+              />
             </TabsContent>
 
             <TabsContent value="installments" className="space-y-4 mt-4">
@@ -380,31 +295,45 @@ export function PurchaseManagementSheet({
                   )}
 
                   {/* Advertencia de desincronización */}
-                  {isCash && installments && installments.length > 0 && (() => {
-                    const totalAmount = parseFloat(currentPurchase.total_amount);
-                    const installmentAmount = parseFloat(installments[0]?.amount || "0");
-                    const hasNoPayments = parseFloat(installments[0]?.pending_amount || "0") === installmentAmount;
-                    const hasDifference = Math.abs(installmentAmount - totalAmount) > 0.01;
-
-                    if (hasNoPayments && hasDifference) {
-                      return (
-                        <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-                          <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                            ⚠️ La cuota ({installmentAmount.toFixed(2)}) no coincide con el total de la compra ({totalAmount.toFixed(2)}).
-                            Debe sincronizar la cuota usando el botón 🔄
-                          </p>
-                        </div>
+                  {isCash &&
+                    installments &&
+                    installments.length > 0 &&
+                    (() => {
+                      const totalAmount = parseFloat(
+                        currentPurchase.total_amount
                       );
-                    }
-                    return null;
-                  })()}
+                      const installmentAmount = parseFloat(
+                        installments[0]?.amount || "0"
+                      );
+                      const hasNoPayments =
+                        parseFloat(installments[0]?.pending_amount || "0") ===
+                        installmentAmount;
+                      const hasDifference =
+                        Math.abs(installmentAmount - totalAmount) > 0.01;
+
+                      if (hasNoPayments && hasDifference) {
+                        return (
+                          <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+                            <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
+                              ⚠️ La cuota ({installmentAmount.toFixed(2)}) no
+                              coincide con el total de la compra (
+                              {totalAmount.toFixed(2)}). Debe sincronizar la
+                              cuota usando el botón 🔄
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
 
                   <PurchaseInstallmentTable
                     installments={installments || []}
                     onEdit={handleEditInstallment}
                     onRefresh={() => purchase && fetchInstallments(purchase.id)}
                     isCashPayment={isCash}
-                    purchaseTotalAmount={parseFloat(currentPurchase.total_amount)}
+                    purchaseTotalAmount={parseFloat(
+                      currentPurchase.total_amount
+                    )}
                     onSyncInstallment={handleSyncInstallment}
                   />
                 </>

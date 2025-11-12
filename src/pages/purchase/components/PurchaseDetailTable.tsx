@@ -15,7 +15,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { usePurchaseDetailStore } from "../lib/purchase-detail.store";
 import { useState } from "react";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import type { PurchaseDetailResource } from "../lib/purchase.interface";
@@ -33,14 +32,12 @@ export function PurchaseDetailTable({
   onRefresh,
   isPurchasePaid = false,
 }: PurchaseDetailTableProps) {
-  const { deleteDetail } = usePurchaseDetailStore();
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const handleDelete = async () => {
     if (!deleteId) return;
 
     try {
-      await deleteDetail(deleteId);
       onRefresh();
     } catch (error: any) {
       // El error ya se maneja en el store
@@ -122,7 +119,9 @@ export function PurchaseDetailTable({
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>No se puede editar un detalle de compra pagada</p>
+                            <p>
+                              No se puede editar un detalle de compra pagada
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -152,7 +151,9 @@ export function PurchaseDetailTable({
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>No se puede eliminar un detalle de compra pagada</p>
+                            <p>
+                              No se puede eliminar un detalle de compra pagada
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

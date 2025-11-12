@@ -36,9 +36,6 @@ import JobPositionPage from "./pages/jobposition/components/JobPositionPage";
 import WarehouseDocReasonPage from "./pages/warehousedocreason/components/WarehouseDocReasonPage";
 import SettingPage from "./pages/setting/components/SettingPage";
 import DocumentTypePage from "./pages/document-type/components/DocumentTypePage";
-import PurchasePage from "./pages/purchase/components/PurchasePage";
-import PurchaseAddPage from "./pages/purchase/components/PurchaseAddPage";
-import PurchaseDetailPage from "./pages/purchase/components/PurchaseDetailPage";
 import PurchaseInstallmentPage from "./pages/purchaseinstallment/components/PurchaseInstallmentPage";
 import PriceListPage from "./pages/pricelist/components/PriceListPage";
 import PriceListAddPage from "./pages/pricelist/components/PriceListAddPage";
@@ -65,11 +62,15 @@ import { JOBPOSITION } from "./pages/jobposition/lib/jobposition.interface";
 import { WAREHOUSEDOCREASON } from "./pages/warehousedocreason/lib/warehousedocreason.interface";
 import { SETTING } from "./pages/setting/lib/setting.interface";
 import { DOCUMENT_TYPE } from "./pages/document-type/lib/document-type.interface";
-import { PURCHASE } from "./pages/purchase/lib/purchase.interface";
 import { PURCHASE_INSTALLMENT } from "./pages/purchaseinstallment/lib/purchaseinstallment.interface";
 import { PRICELIST } from "./pages/pricelist/lib/pricelist.interface";
 import type { Access } from "./pages/auth/lib/auth.interface";
 import { ENABLE_PERMISSION_VALIDATION } from "./lib/permissions.config";
+import PurchasePage from "./pages/purchase/components/PurchasePage";
+import PurchaseAddPage from "./pages/purchase/components/PurchaseAddPage";
+import { PurchaseEditPage } from "./pages/purchase/components/PurchaseEditPage";
+import { PurchaseDetailViewPage } from "./pages/purchase/components/PurchaseDetailViewPage";
+import { PURCHASE } from "./pages/purchase/lib/purchase.interface";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -456,7 +457,7 @@ export default function App() {
           />
 
           <Route
-            path="/compra/agregar"
+            path="/compras/agregar"
             element={
               <ProtectedRoute path={PurchaseRoute}>
                 <PurchaseAddPage />
@@ -465,10 +466,19 @@ export default function App() {
           />
 
           <Route
-            path="/compra/:id"
+            path="/compras/actualizar/:id"
             element={
               <ProtectedRoute path={PurchaseRoute}>
-                <PurchaseDetailPage />
+                <PurchaseEditPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/compras/detalle/:id"
+            element={
+              <ProtectedRoute path={PurchaseRoute}>
+                <PurchaseDetailViewPage />
               </ProtectedRoute>
             }
           />

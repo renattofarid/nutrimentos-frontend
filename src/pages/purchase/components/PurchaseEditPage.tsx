@@ -5,7 +5,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/BackButton";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { PurchaseForm } from "./PurchaseForm";
-import { usePurchaseDetailStore } from "../lib/purchase-detail.store";
 import { usePurchaseInstallmentStore } from "../lib/purchase-installment.store";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
@@ -15,7 +14,6 @@ import FormSkeleton from "@/components/FormSkeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { PurchaseDetailModal } from "./PurchaseDetailModal";
 import { PurchaseDetailTable } from "./PurchaseDetailTable";
 import { errorToast } from "@/lib/core.function";
 import { useAllSuppliers } from "@/pages/supplier/lib/supplier.hook";
@@ -32,8 +30,6 @@ export const PurchaseEditPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Modal states
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [editingDetailId, setEditingDetailId] = useState<number | null>(null);
   const [isInstallmentModalOpen, setIsInstallmentModalOpen] = useState(false);
   const [editingInstallmentId, setEditingInstallmentId] = useState<
     number | null
@@ -48,7 +44,6 @@ export const PurchaseEditPage = () => {
 
   const { updatePurchase, fetchPurchase, purchase, isFinding } =
     usePurchaseStore();
-  const { fetchDetails, details } = usePurchaseDetailStore();
   const { fetchInstallments, installments } = usePurchaseInstallmentStore();
 
   const isLoading =
@@ -68,10 +63,10 @@ export const PurchaseEditPage = () => {
 
   useEffect(() => {
     if (id) {
-      fetchDetails(Number(id));
+      fetchPurchase(Number(id));
       fetchInstallments(Number(id));
     }
-  }, [id, fetchDetails, fetchInstallments]);
+  }, [id, fetchPurchase, fetchInstallments]);
 
   const mapPurchaseToForm = (
     data: PurchaseResource
@@ -84,8 +79,16 @@ export const PurchaseEditPage = () => {
     issue_date: data.issue_date,
     payment_type: data.payment_type,
     currency: data.currency,
-    details: [],
-    installments: [],
+    details: data.details.map((detail) => ({
+      product_id: detail.product.id.toString(),
+      quantity: detail.quantity.toString(),
+      unit_price: detail.unit_price.toString(),
+    })),
+    installments: data.installments.map((installment) => ({
+      due_date: installment.due_date.toString(),
+      amount: installment.amount.toString(),
+      due_days: installment.due_days.toString(),
+    })),
   });
 
   const handleSubmit = async (data: Partial<PurchaseSchema>) => {
@@ -102,26 +105,6 @@ export const PurchaseEditPage = () => {
       );
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  // Detail handlers
-  const handleAddDetail = () => {
-    setEditingDetailId(null);
-    setIsDetailModalOpen(true);
-  };
-
-  const handleEditDetail = (detailId: number) => {
-    setEditingDetailId(detailId);
-    setIsDetailModalOpen(true);
-  };
-
-  const handleDetailModalClose = () => {
-    setIsDetailModalOpen(false);
-    setEditingDetailId(null);
-    if (id) {
-      fetchDetails(Number(id));
-      fetchPurchase(Number(id));
     }
   };
 
@@ -177,7 +160,6 @@ export const PurchaseEditPage = () => {
     <FormWrapper>
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
-          <BackButton to="/compras" />
           <TitleFormComponent title="Compra" mode="edit" />
         </div>
       </div>
@@ -209,16 +191,16 @@ export const PurchaseEditPage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Detalles de la Compra</CardTitle>
-            <Button onClick={handleAddDetail}>
+            <Button onClick={() => {}}>
               <Plus className="h-4 w-4 mr-2" />
               Agregar Detalle
             </Button>
           </CardHeader>
           <CardContent>
             <PurchaseDetailTable
-              details={details || []}
-              onEdit={handleEditDetail}
-              onRefresh={() => id && fetchDetails(Number(id))}
+              details={purchase.details || []}
+              onEdit={() => {}}
+              onRefresh={() => id && fetchPurchase(Number(id))}
             />
           </CardContent>
         </Card>
@@ -244,15 +226,6 @@ export const PurchaseEditPage = () => {
       </div>
 
       {/* Modals */}
-      {isDetailModalOpen && products && (
-        <PurchaseDetailModal
-          open={isDetailModalOpen}
-          onClose={handleDetailModalClose}
-          purchaseId={Number(id)}
-          products={products}
-          detailId={editingDetailId}
-        />
-      )}
 
       {isInstallmentModalOpen && (
         <PurchaseInstallmentModal

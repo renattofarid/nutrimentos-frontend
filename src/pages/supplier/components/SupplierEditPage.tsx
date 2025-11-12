@@ -58,22 +58,41 @@ export default function SupplierEditPage() {
     setIsSubmitting(true);
     try {
       // Transform PersonSchema to UpdatePersonRequest
-      const updatePersonData = {
-        type_document: data.type_document,
+      const updatePersonData: any = {
+        document_type_id: data.document_type_id,
         type_person: data.type_person,
         number_document: data.number_document,
-        names: data.names || "",
-        gender: data.type_person === "NATURAL" ? data.gender || "M" : undefined,
-        birth_date:
-          data.type_person === "NATURAL" ? data.birth_date || "" : undefined,
-        father_surname: data.father_surname || "",
-        mother_surname: data.mother_surname || "",
-        business_name: data.business_name || "",
-        commercial_name: data.commercial_name || "",
         address: data.address || "",
         phone: data.phone,
         email: data.email,
       };
+
+      // Only include names when NATURAL or when the document type is DNI
+      if (data.type_person === "NATURAL" || data.type_document === "DNI") {
+        updatePersonData.names = data.names || "";
+      }
+
+      // Add fields specific to NATURAL person
+      if (data.type_person === "NATURAL") {
+        updatePersonData.gender = data.gender || "M";
+        updatePersonData.birth_date = data.birth_date || "";
+        updatePersonData.father_surname = data.father_surname || "";
+        updatePersonData.mother_surname = data.mother_surname || "";
+      }
+
+      // Add fields specific to JURIDICA person
+      if (data.type_person === "JURIDICA") {
+        updatePersonData.business_name = data.business_name || "";
+        updatePersonData.commercial_name = data.commercial_name || "";
+      }
+
+      // Add optional fields if provided
+      if (data.business_type_id) {
+        updatePersonData.business_type_id = Number(data.business_type_id);
+      }
+      if (data.zone_id) {
+        updatePersonData.zone_id = Number(data.zone_id);
+      }
 
       await updatePerson(personData.id, updatePersonData);
       successToast(
@@ -125,6 +144,8 @@ export default function SupplierEditPage() {
         isSubmitting={isSubmitting}
         onCancel={() => navigate("/proveedores")}
         roleId={SUPPLIER_ROLE_ID}
+        showBusinessType={true}
+        showZone={true}
       />
     </FormWrapper>
   );

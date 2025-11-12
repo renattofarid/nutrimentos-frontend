@@ -7,8 +7,14 @@ import {
   SUCCESS_MESSAGE,
   successToast,
 } from "@/lib/core.function";
-import { WAREHOUSEDOCREASON, type WarehouseDocReasonResource } from "../lib/warehousedocreason.interface";
-import { useWarehouseDocReason, useWarehouseDocReasonById } from "../lib/warehousedocreason.hook";
+import {
+  WAREHOUSEDOCREASON,
+  type WarehouseDocReasonResource,
+} from "../lib/warehousedocreason.interface";
+import {
+  useWarehouseDocReason,
+  useWarehouseDocReasonById,
+} from "../lib/warehousedocreason.hook";
 import { useWarehouseDocReasonStore } from "../lib/warehousedocreason.store";
 import { WarehouseDocReasonForm } from "./WarehouseDocReasonForm";
 
@@ -22,7 +28,13 @@ interface Props {
 
 const { MODEL, EMPTY } = WAREHOUSEDOCREASON;
 
-export default function WarehouseDocReasonModal({ id, open, title, mode, onClose }: Props) {
+export default function WarehouseDocReasonModal({
+  id,
+  open,
+  title,
+  mode,
+  onClose,
+}: Props) {
   const { refetch } = useWarehouseDocReason();
 
   const {
@@ -37,12 +49,17 @@ export default function WarehouseDocReasonModal({ id, open, title, mode, onClose
       }
     : useWarehouseDocReasonById(id!);
 
-  const mapWarehouseDocReasonToForm = (data: WarehouseDocReasonResource): Partial<WarehouseDocReasonSchema> => ({
+  const mapWarehouseDocReasonToForm = (
+    data:
+      | WarehouseDocReasonResource
+      | { name: string; type: "INGRESO" | "EGRESO" }
+  ): Partial<WarehouseDocReasonSchema> => ({
     name: data?.name || "",
-    type: data?.type || "",
+    type: data?.type,
   });
 
-  const { isSubmitting, updateWarehouseDocReason, createWarehouseDocReason } = useWarehouseDocReasonStore();
+  const { isSubmitting, updateWarehouseDocReason, createWarehouseDocReason } =
+    useWarehouseDocReasonStore();
 
   const handleSubmit = async (data: WarehouseDocReasonSchema) => {
     if (mode === "create") {

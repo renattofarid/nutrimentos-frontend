@@ -59,7 +59,7 @@ export default function CompanyModal({
 
   const handleSubmit = async (data: CompanySchema) => {
     if (mode === "create") {
-      await createCompany(data)
+      await createCompany({ ...data, ruc: data.ruc || "" })
         .then(() => {
           onClose();
           successToast(SUCCESS_MESSAGE(MODEL, "create"));

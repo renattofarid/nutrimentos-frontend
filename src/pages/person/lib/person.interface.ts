@@ -36,6 +36,7 @@ export const PERSON: ModelComplete<PersonSchema> = {
   },
   EMPTY: {
     type_document: "DNI",
+    document_type_id: "",
     type_person: "NATURAL",
     names: "",
     gender: "M",
@@ -60,22 +61,33 @@ export interface PersonResponse {
 
 export interface PersonResource {
   id: number;
-  type_document: string;
   type_person: string;
-  number_document: string;
+  number_document: string | null; // Can be null for clients
   names: string;
   father_surname: string;
   mother_surname: string;
-  gender: string;
+  gender?: string;
   birth_date: string;
   phone: string;
   email: string;
   address: string;
+  nationality_id?: string;
   business_name: string;
   commercial_name: string;
+  occupation?: string;
+  document_type_id?: string;
+  document_type_name?: string;
+  job_position_id?: string;
+  job_position_name?: string;
+  business_type_id?: string;
+  business_type_name?: string;
+  zone_id?: string;
+  zone_name?: string;
   user_id?: string;
   created_at: string;
   roles: Role[];
+  client_category?: string;
+  client_category_id?: number;
 }
 
 interface Role {
@@ -91,6 +103,7 @@ export interface CreatePersonRequest {
   username: string;
   password: string;
   type_document: "DNI" | "RUC" | "CE" | "PASAPORTE";
+  document_type_id: string;
   type_person: "NATURAL" | "JURIDICA";
   names: string;
   gender?: string;
@@ -106,12 +119,17 @@ export interface CreatePersonRequest {
   status: string;
   role_id: number;
   number_document: string;
+  job_position_id?: number;
+  business_type_id?: number;
+  zone_id?: number;
+  client_category_id?: number;
 }
 
 export interface UpdatePersonRequest {
   username?: string;
   password?: string;
   type_document?: "DNI" | "RUC" | "CE" | "PASAPORTE";
+  document_type_id?: string;
   type_person?: "NATURAL" | "JURIDICA";
   names?: string;
   father_surname?: string;
@@ -122,6 +140,10 @@ export interface UpdatePersonRequest {
   email?: string;
   rol_id?: number;
   number_document?: string;
+  job_position_id?: number;
+  business_type_id?: number;
+  zone_id?: number;
+  client_category_id?: number;
 }
 
 export interface GetPersonsProps {

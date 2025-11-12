@@ -33,6 +33,9 @@ import { ZONE } from "@/pages/zone/lib/zone.interface";
 import { JOBPOSITION } from "@/pages/jobposition/lib/jobposition.interface";
 import { WAREHOUSEDOCREASON } from "@/pages/warehousedocreason/lib/warehousedocreason.interface";
 import { SETTING } from "@/pages/setting/lib/setting.interface";
+import { DOCUMENT_TYPE } from "@/pages/document-type/lib/document-type.interface";
+import { PRICELIST } from "@/pages/pricelist/lib/pricelist.interface";
+import { PURCHASE } from "@/pages/purchase/lib/purchase.interface";
 import { hasAccessToRoute } from "@/App";
 import { useEffect, useState } from "react";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
@@ -163,6 +166,24 @@ const {
   MODEL: { name: SettingTitle },
 } = SETTING;
 
+const {
+  ICON_REACT: DocumentTypeIcon,
+  ROUTE: DocumentTypeRoute,
+  MODEL: { name: DocumentTypeTitle },
+} = DOCUMENT_TYPE;
+
+const {
+  ICON_REACT: PriceListIcon,
+  ROUTE: PriceListRoute,
+  MODEL: { name: PriceListTitle },
+} = PRICELIST;
+
+const {
+  ICON_REACT: PurchaseIcon,
+  ROUTE: PurchaseRoute,
+  MODEL: { name: PurchaseTitle },
+} = PURCHASE;
+
 const data = {
   navMain: [
     {
@@ -210,6 +231,16 @@ const data = {
           url: SettingRoute,
           icon: SettingIcon,
         },
+        {
+          title: DocumentTypeTitle,
+          url: DocumentTypeRoute,
+          icon: DocumentTypeIcon,
+        },
+        {
+          title: PurchaseTitle,
+          url: PurchaseRoute,
+          icon: PurchaseIcon,
+        },
       ],
     },
     {
@@ -246,6 +277,11 @@ const data = {
           title: NationalityTitle,
           url: NationalityRoute,
           icon: NationalityIcon,
+        },
+        {
+          title: PriceListTitle,
+          url: PriceListRoute,
+          icon: PriceListIcon,
         },
       ],
     },

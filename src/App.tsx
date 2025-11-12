@@ -35,6 +35,11 @@ import ZonePage from "./pages/zone/components/ZonePage";
 import JobPositionPage from "./pages/jobposition/components/JobPositionPage";
 import WarehouseDocReasonPage from "./pages/warehousedocreason/components/WarehouseDocReasonPage";
 import SettingPage from "./pages/setting/components/SettingPage";
+import DocumentTypePage from "./pages/document-type/components/DocumentTypePage";
+import PurchaseInstallmentPage from "./pages/purchaseinstallment/components/PurchaseInstallmentPage";
+import PriceListPage from "./pages/pricelist/components/PriceListPage";
+import PriceListAddPage from "./pages/pricelist/components/PriceListAddPage";
+import PriceListEditPage from "./pages/pricelist/components/PriceListEditPage";
 import { TYPE_USER } from "./pages/type-users/lib/typeUser.interface";
 import { USER } from "./pages/users/lib/User.interface";
 import { COMPANY } from "./pages/company/lib/company.interface";
@@ -56,8 +61,16 @@ import { ZONE } from "./pages/zone/lib/zone.interface";
 import { JOBPOSITION } from "./pages/jobposition/lib/jobposition.interface";
 import { WAREHOUSEDOCREASON } from "./pages/warehousedocreason/lib/warehousedocreason.interface";
 import { SETTING } from "./pages/setting/lib/setting.interface";
+import { DOCUMENT_TYPE } from "./pages/document-type/lib/document-type.interface";
+import { PURCHASE_INSTALLMENT } from "./pages/purchaseinstallment/lib/purchaseinstallment.interface";
+import { PRICELIST } from "./pages/pricelist/lib/pricelist.interface";
 import type { Access } from "./pages/auth/lib/auth.interface";
 import { ENABLE_PERMISSION_VALIDATION } from "./lib/permissions.config";
+import PurchasePage from "./pages/purchase/components/PurchasePage";
+import PurchaseAddPage from "./pages/purchase/components/PurchaseAddPage";
+import { PurchaseDetailViewPage } from "./pages/purchase/components/PurchaseDetailViewPage";
+import { PURCHASE } from "./pages/purchase/lib/purchase.interface";
+import PurchaseEditPage from "./pages/purchase/components/PurchaseEditPage";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -80,6 +93,10 @@ const { ROUTE: ZoneRoute } = ZONE;
 const { ROUTE: JobPositionRoute } = JOBPOSITION;
 const { ROUTE: WarehouseDocReasonRoute } = WAREHOUSEDOCREASON;
 const { ROUTE: SettingRoute } = SETTING;
+const { ROUTE: DocumentTypeRoute } = DOCUMENT_TYPE;
+const { ROUTE: PurchaseRoute } = PURCHASE;
+const { ROUTE: PurchaseInstallmentRoute } = PURCHASE_INSTALLMENT;
+const { ROUTE: PriceListRoute } = PRICELIST;
 
 export const hasAccessToRoute = (access: Access[], route: string): boolean => {
   const transformRoute = route.split("/").pop();
@@ -417,6 +434,87 @@ export default function App() {
             element={
               <ProtectedRoute path={SettingRoute}>
                 <SettingPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={DocumentTypeRoute}
+            element={
+              <ProtectedRoute path={DocumentTypeRoute}>
+                <DocumentTypePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={PurchaseRoute}
+            element={
+              <ProtectedRoute path={PurchaseRoute}>
+                <PurchasePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/compras/agregar"
+            element={
+              <ProtectedRoute path={PurchaseRoute}>
+                <PurchaseAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/compras/actualizar/:id"
+            element={
+              <ProtectedRoute path={PurchaseRoute}>
+                <PurchaseEditPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/compras/detalle/:id"
+            element={
+              <ProtectedRoute path={PurchaseRoute}>
+                <PurchaseDetailViewPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={PurchaseInstallmentRoute}
+            element={
+              <ProtectedRoute path={PurchaseInstallmentRoute}>
+                <PurchaseInstallmentPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={PriceListRoute}
+            element={
+              <ProtectedRoute path={PriceListRoute}>
+                <PriceListPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={`${PriceListRoute}/agregar`}
+            element={
+              <ProtectedRoute path={PriceListRoute}>
+                <PriceListAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={`${PriceListRoute}/editar/:id`}
+            element={
+              <ProtectedRoute path={PriceListRoute}>
+                <PriceListEditPage />
               </ProtectedRoute>
             }
           />

@@ -41,6 +41,8 @@ interface FormSelectProps {
   control: Control<any>;
   disabled?: boolean;
   tooltip?: string | React.ReactNode;
+  withValue?: boolean;
+  classNameOption?: string;
   strictFilter?: boolean;
 }
 
@@ -53,6 +55,8 @@ export function FormSelect({
   control,
   disabled,
   tooltip,
+  withValue = true,
+  classNameOption,
   strictFilter = false,
 }: FormSelectProps) {
   const [open, setOpen] = useState(false);
@@ -104,7 +108,7 @@ export function FormSelect({
               <PopoverTrigger asChild>
                 <FormControl>
                   <Button
-                    variant="outline"
+                    variant="input"
                     role="combobox"
                     disabled={disabled}
                     className={cn(
@@ -176,10 +180,18 @@ export function FormSelect({
                               : "opacity-0"
                           )}
                         />
-                        <div className="min-w-0 flex-1">
-                          {typeof option.label === "function"
-                            ? option.label()
-                            : option.label}
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className={cn("truncate", classNameOption)}>
+                            {typeof option.label === "function"
+                              ? option.label()
+                              : option.label}
+                          </span>
+                          {option.description && (
+                            <span className="text-[10px] text-muted-foreground truncate">
+                              {withValue && `${option.value} - `}{" "}
+                              {option.description}
+                            </span>
+                          )}
                         </div>
                       </CommandItem>
                     ))}

@@ -42,9 +42,6 @@ export const PRODUCT: ModelComplete<ProductSchema> = {
     product_type_id: "",
     brand_id: "",
     unit_id: "",
-    profit_margin: "",
-    purchase_price: "",
-    sale_price: "",
     is_taxed: 1,
     supplier_id: "",
     nationality_id: "",
@@ -65,31 +62,31 @@ export interface ProductResponse {
 
 export interface ProductResource {
   id: number;
-  company_id: number;
+  company_id: string;
   codigo: string;
   name: string;
-  category_id: number;
-  category_name: string;
-  product_type_id: number;
+  category_id: string;
+  category_name?: string;
+  product_type_id: string;
   product_type_name: string;
-  brand_id: number;
+  brand_id: string;
   brand_name: string;
-  unit_id: number;
+  unit_id: string;
   unit_name: string;
-  profit_margin: string;
-  purchase_price: string;
-  sale_price: string;
-  is_taxed: number;
-  supplier_id: number;
+  profit_margin?: string;
+  purchase_price?: string;
+  sale_price?: string;
+  is_taxed: string;
+  supplier_id: string;
   supplier_full_name: string;
   comment: string;
-  weight: string;
-  price_per_kg: string;
-  commission_percentage: string;
-  accounting_cost: string;
-  inventory_cost: string;
-  nationality_id: number;
-  nationality_name: string;
+  weight?: string;
+  price_per_kg?: string;
+  commission_percentage?: string;
+  accounting_cost?: string;
+  inventory_cost?: string;
+  nationality_id?: string;
+  nationality_name?: string;
   created_at: string;
 }
 

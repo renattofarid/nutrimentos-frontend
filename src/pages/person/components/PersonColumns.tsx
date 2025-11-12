@@ -21,7 +21,7 @@ export const PersonColumns = ({
     header: "Nombre Completo",
     cell: ({ row }) => {
       const person = row.original;
-      const typeDocument = person?.type_document;
+      const typeDocument = person?.document_type_name;
       return (
         <div>
           <div className="font-medium">
@@ -53,7 +53,7 @@ export const PersonColumns = ({
     },
   },
   {
-    accessorKey: "type_document",
+    accessorKey: "document_type_name",
     header: "Tipo Documento",
     cell: ({ getValue }) => (
       <Badge variant="outline">{getValue() as string}</Badge>

@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { BackButton } from "@/components/BackButton";
-import { type PersonSchema } from "@/pages/person/lib/person.schema";
+import { type PersonSchemaClient } from "@/pages/person/lib/person.schema";
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import {
   findPersonById,
@@ -20,7 +19,7 @@ import type { PersonResource } from "@/pages/person/lib/person.interface";
 import FormWrapper from "@/components/FormWrapper";
 import TitleFormComponent from "@/components/TitleFormComponent";
 
-const { MODEL } = CLIENT;
+const { MODEL, ICON } = CLIENT;
 
 export default function ClientEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -52,28 +51,50 @@ export default function ClientEditPage() {
     loadPersonData();
   }, [id, navigate]);
 
-  const handleSubmit = async (data: PersonSchema) => {
+  const handleSubmit = async (data: PersonSchemaClient) => {
     if (!personData) return;
 
     setIsSubmitting(true);
     try {
       // Transform PersonSchema to UpdatePersonRequest
-      const updatePersonData = {
-        type_document: data.type_document,
+      const updatePersonData: any = {
+        document_type_id: data.document_type_id,
         type_person: data.type_person,
-        number_document: data.number_document,
-        names: data.names || "",
-        gender: data.type_person === "NATURAL" ? data.gender || "M" : undefined,
-        birth_date:
-          data.type_person === "NATURAL" ? data.birth_date || "" : undefined,
-        father_surname: data.father_surname || "",
-        mother_surname: data.mother_surname || "",
-        business_name: data.business_name || "",
-        commercial_name: data.commercial_name || "",
+        number_document: data.number_document || "", // Can be empty for clients
         address: data.address || "",
         phone: data.phone,
         email: data.email,
       };
+
+      // Only include names when NATURAL or when the document type is DNI
+      if (data.type_person === "NATURAL" || data.type_document === "DNI") {
+        updatePersonData.names = data.names || "";
+      }
+
+      // Add fields specific to NATURAL person
+      if (data.type_person === "NATURAL") {
+        updatePersonData.gender = data.gender || "M";
+        updatePersonData.birth_date = data.birth_date || "";
+        updatePersonData.father_surname = data.father_surname || "";
+        updatePersonData.mother_surname = data.mother_surname || "";
+      }
+
+      // Add fields specific to JURIDICA person
+      if (data.type_person === "JURIDICA") {
+        updatePersonData.business_name = data.business_name || "";
+        updatePersonData.commercial_name = data.commercial_name || "";
+      }
+
+      // Add optional fields if provided
+      if (data.business_type_id) {
+        updatePersonData.business_type_id = Number(data.business_type_id);
+      }
+      if (data.zone_id) {
+        updatePersonData.zone_id = Number(data.zone_id);
+      }
+      if (data.client_category_id) {
+        updatePersonData.client_category_id = Number(data.client_category_id);
+      }
 
       await updatePerson(personData.id, updatePersonData);
       successToast(
@@ -116,8 +137,7 @@ export default function ClientEditPage() {
     <FormWrapper>
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-6">
-          <BackButton to="/clientes" />
-          <TitleFormComponent title={MODEL.name} mode="edit" />
+          <TitleFormComponent icon={ICON} title={MODEL.name} mode="edit" />
         </div>
       </div>
 
@@ -127,6 +147,10 @@ export default function ClientEditPage() {
         isSubmitting={isSubmitting}
         onCancel={() => navigate("/clientes")}
         roleId={CLIENT_ROLE_ID}
+        isClient={true}
+        showBusinessType={true}
+        showZone={true}
+        showPriceList={true}
       />
     </FormWrapper>
   );

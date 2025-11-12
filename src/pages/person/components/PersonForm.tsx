@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Form,
   FormControl,
@@ -12,7 +12,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader, Search, Save, UserPlus } from "lucide-react";
-import { personCreateSchema, type PersonSchema } from "../lib/person.schema";
+import {
+  personCreateSchema,
+  personCreateSchemaClient,
+  personCreateSchemaWorker,
+  type PersonSchema,
+  type PersonSchemaClient,
+} from "../lib/person.schema";
 import { FormSelect } from "@/components/FormSelect";
 import {
   searchDNI,
@@ -21,14 +27,29 @@ import {
 } from "@/lib/document-search.service";
 import type { PersonResource } from "../lib/person.interface";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
+import { useAllDocumentTypes } from "@/pages/document-type/lib/document-type.hook";
+import type { DocumentTypeResource } from "@/pages/document-type/lib/document-type.interface";
+import { useAllJobPositions } from "@/pages/jobposition/lib/jobposition.hook";
+import type { JobPositionResource } from "@/pages/jobposition/lib/jobposition.interface";
+import { useAllBusinessTypes } from "@/pages/businesstype/lib/businesstype.hook";
+import type { BusinessTypeResource } from "@/pages/businesstype/lib/businesstype.interface";
+import { useAllZones } from "@/pages/zone/lib/zone.hook";
+import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
+import { usePriceList } from "@/pages/pricelist/lib/pricelist.hook";
+import type { PriceList } from "@/pages/pricelist/lib/pricelist.interface";
 
 interface PersonFormProps {
   initialData?: PersonResource | null;
-  onSubmit: (data: PersonSchema) => Promise<void>;
+  onSubmit: (data: PersonSchema | PersonSchemaClient) => Promise<void>;
   isSubmitting?: boolean;
   onCancel?: () => void;
   roleId: number; // Role ID to assign automatically
   isWorker?: boolean; // If true, only allow DNI and NATURAL person
+  isClient?: boolean; // If true, number_document is optional
+  showJobPosition?: boolean; // Show job position field
+  showBusinessType?: boolean; // Show business type field
+  showZone?: boolean; // Show zone field
+  showPriceList?: boolean; // Show price list field for clients
 }
 
 export const PersonForm = ({
@@ -38,16 +59,37 @@ export const PersonForm = ({
   onCancel,
   roleId,
   isWorker = false,
+  isClient = false,
+  showJobPosition = false,
+  showBusinessType = false,
+  showZone = false,
+  showPriceList = false,
 }: PersonFormProps) => {
   const isEditing = !!initialData;
 
-  const form = useForm<PersonSchema>({
-    resolver: zodResolver(personCreateSchema),
+  // Use client schema if isClient is true
+  const schema = isClient
+    ? personCreateSchemaClient
+    : isWorker
+    ? personCreateSchemaWorker
+    : personCreateSchema;
+  type FormSchema = PersonSchema | PersonSchemaClient;
+
+  const form = useForm<FormSchema>({
+    resolver: zodResolver(schema),
     defaultValues: {
-      type_document: (initialData?.type_document as "DNI" | "RUC") || "DNI",
+      type_document:
+        (initialData?.document_type_name as
+          | "DNI"
+          | "RUC"
+          | "CE"
+          | "PASAPORTE") ||
+        (initialData as any)?.type_document ||
+        "DNI",
+      document_type_id: initialData?.document_type_id?.toString() || "",
       type_person:
         (initialData?.type_person as "NATURAL" | "JURIDICA") || "NATURAL",
-      number_document: initialData?.number_document || "",
+      number_document: initialData?.number_document ?? "",
       names: initialData?.names || "",
       gender: (initialData?.gender as "M" | "F" | "O") || "M",
       birth_date: initialData?.birth_date || "",
@@ -59,6 +101,10 @@ export const PersonForm = ({
       phone: initialData?.phone || "",
       email: initialData?.email || "",
       role_id: roleId.toString(),
+      job_position_id: initialData?.job_position_id?.toString() || "",
+      business_type_id: initialData?.business_type_id?.toString() || "",
+      zone_id: initialData?.zone_id?.toString() || "",
+      client_category_id: initialData?.client_category_id?.toString() || "",
     },
     mode: "onChange", // Validate on change for immediate feedback
   });
@@ -66,6 +112,35 @@ export const PersonForm = ({
   const type_person = form.watch("type_person");
   const type_document = form.watch("type_document");
   const [isSearching, setIsSearching] = useState(false);
+
+  // Ref to track if document type change triggered person type change
+  const documentChangeRef = useRef(false);
+
+  // Get all document types from API
+  const { data: documentTypes, isLoading: isLoadingDocumentTypes } =
+    useAllDocumentTypes();
+
+  // Get optional data from API
+  const { data: jobPositions, isLoading: isLoadingJobPositions } =
+    useAllJobPositions();
+  const { data: businessTypes, isLoading: isLoadingBusinessTypes } =
+    useAllBusinessTypes();
+  const { data: zones, isLoading: isLoadingZones } = useAllZones();
+  const { data: priceLists, isLoading: isLoadingPriceLists } = usePriceList();
+
+  // Update document_type_id when type_document changes
+  useEffect(() => {
+    if (documentTypes && type_document) {
+      const selectedDocType = documentTypes.find(
+        (dt: DocumentTypeResource) => dt.name === type_document
+      );
+      if (selectedDocType) {
+        form.setValue("document_type_id", selectedDocType.id.toString(), {
+          shouldValidate: true,
+        });
+      }
+    }
+  }, [type_document, documentTypes, form]);
 
   // Get form state for better UX
   const { errors, isValid, dirtyFields } = form.formState;
@@ -78,21 +153,40 @@ export const PersonForm = ({
   });
 
   // Auto-set person type based on document type
+  // This handles when user changes document type first
   useEffect(() => {
     if (type_document === "DNI" && type_person !== "NATURAL") {
-      form.setValue("type_person", "NATURAL", { shouldValidate: true });
+      documentChangeRef.current = true; // Mark that this change came from document type
+      form.setValue("type_person", "NATURAL", { shouldValidate: false });
+      // Reset the flag after a brief moment
+      setTimeout(() => {
+        documentChangeRef.current = false;
+      }, 50);
     } else if (type_document === "RUC" && type_person !== "JURIDICA") {
-      form.setValue("type_person", "JURIDICA", { shouldValidate: true });
+      documentChangeRef.current = true; // Mark that this change came from document type
+      form.setValue("type_person", "JURIDICA", { shouldValidate: false });
+      // Reset the flag after a brief moment
+      setTimeout(() => {
+        documentChangeRef.current = false;
+      }, 50);
     }
-  }, [type_document, type_person, form]);
+  }, [type_document, form]);
 
-  // Reset document type when person type changes to JURIDICA
+  // Reset document type when person type changes to JURIDICA manually
+  // Only trigger if the change came from user changing type_person, not from document type change
   useEffect(() => {
-    if (type_person === "JURIDICA" && type_document !== "RUC") {
+    // Only auto-set RUC if user manually changes type_person to JURIDICA while document is DNI
+    // Skip if the change came from document type change
+    const currentDoc = form.getValues("type_document");
+    if (
+      type_person === "JURIDICA" &&
+      currentDoc === "DNI" &&
+      !documentChangeRef.current
+    ) {
       form.setValue("type_document", "RUC", { shouldValidate: true });
       form.setValue("number_document", "", { shouldValidate: true });
     }
-  }, [type_person, type_document, form]);
+  }, [type_person, form]);
 
   const handleDocumentSearch = async () => {
     const numberDocument = form.getValues("number_document");
@@ -165,7 +259,7 @@ export const PersonForm = ({
     }
   };
 
-  const handleSubmit = async (data: PersonSchema) => {
+  const handleSubmit = async (data: FormSchema) => {
     try {
       // Only include role_id when creating (not editing)
       const submitData = isEditing ? { ...data, role_id: "" } : data;
@@ -188,19 +282,24 @@ export const PersonForm = ({
             control={form.control}
             name="type_document"
             label="Tipo de Documento"
-            placeholder="Seleccione tipo"
-            disabled={isWorker || isEditing} // Workers can only use DNI
+            placeholder={
+              isLoadingDocumentTypes ? "Cargando..." : "Seleccione tipo"
+            }
+            disabled={isWorker || isLoadingDocumentTypes} // Workers can only use DNI
             options={
-              isWorker
-                ? [{ value: "DNI", label: "DNI" }] // Workers can only use DNI
-                : type_person === "JURIDICA"
-                ? [{ value: "RUC", label: "RUC" }]
-                : [
-                    { value: "DNI", label: "DNI" },
-                    { value: "RUC", label: "RUC" },
-                    { value: "CE", label: "CE" },
-                    { value: "PASAPORTE", label: "PASAPORTE" },
-                  ]
+              isLoadingDocumentTypes
+                ? []
+                : isWorker
+                ? (documentTypes || [])
+                    .filter((dt: DocumentTypeResource) => dt.name === "DNI")
+                    .map((dt: DocumentTypeResource) => ({
+                      value: dt.name,
+                      label: dt.name,
+                    }))
+                : (documentTypes || []).map((dt: DocumentTypeResource) => ({
+                    value: dt.name,
+                    label: dt.name,
+                  }))
             }
           />
 
@@ -212,12 +311,13 @@ export const PersonForm = ({
                 <FormLabel
                   className={errors.number_document ? "text-destructive" : ""}
                 >
-                  Número de Documento {errors.number_document && "*"}
+                  Número de Documento{" "}
+                  {!isClient && errors.number_document && "*"}
+                  {isClient && " (Opcional)"}
                 </FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
-                      disabled={isEditing}
                       placeholder={
                         type_document === "DNI"
                           ? "Ingrese 8 dígitos"
@@ -275,9 +375,11 @@ export const PersonForm = ({
                         field.onChange(value);
 
                         // Auto-search when completing DNI (8 digits) or RUC (11 digits)
+                        // Only if value is not empty (for optional client documents)
                         if (
-                          (type_document === "DNI" && value.length === 8) ||
-                          (type_document === "RUC" && value.length === 11)
+                          value &&
+                          ((type_document === "DNI" && value.length === 8) ||
+                            (type_document === "RUC" && value.length === 11))
                         ) {
                           setTimeout(() => handleDocumentSearch(), 100);
                         }
@@ -290,7 +392,7 @@ export const PersonForm = ({
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={handleDocumentSearch}
-                        disabled={isSearching || !field.value || isEditing}
+                        disabled={isSearching || !field.value}
                       >
                         {isSearching ? (
                           <Loader className="h-4 w-4 animate-spin" />
@@ -359,7 +461,7 @@ export const PersonForm = ({
             name="type_person"
             label="Tipo de Persona"
             placeholder="Seleccione tipo"
-            disabled={isWorker || isEditing} // Workers are always natural persons
+            disabled={isWorker} // Workers are always natural persons
             options={
               isWorker
                 ? [{ value: "NATURAL", label: "Natural" }] // Workers are always natural
@@ -384,7 +486,6 @@ export const PersonForm = ({
                   </FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isEditing}
                       placeholder="Ingrese los nombres"
                       {...field}
                       className={`
@@ -425,7 +526,6 @@ export const PersonForm = ({
                   <FormLabel>Apellido Paterno</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isEditing}
                       placeholder="Ingrese apellido paterno"
                       {...field}
                       className={
@@ -448,7 +548,6 @@ export const PersonForm = ({
                   <FormLabel>Apellido Materno</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isEditing}
                       placeholder="Ingrese apellido materno"
                       {...field}
                       className={
@@ -546,7 +645,6 @@ export const PersonForm = ({
                   </FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isEditing}
                       placeholder="Ingrese la razón social"
                       {...field}
                       className={`
@@ -731,6 +829,95 @@ export const PersonForm = ({
           )}
         />
 
+        {/* Optional Fields - Context specific */}
+        {(showJobPosition || showBusinessType || showZone || showPriceList) && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {showJobPosition && (
+              <FormSelect
+                control={form.control}
+                name="job_position_id"
+                label="Cargo / Puesto de Trabajo"
+                placeholder={
+                  isLoadingJobPositions ? "Cargando..." : "Seleccione cargo"
+                }
+                disabled={isLoadingJobPositions}
+                options={
+                  isLoadingJobPositions
+                    ? []
+                    : (jobPositions || []).map((jp: JobPositionResource) => ({
+                        value: jp.id.toString(),
+                        label: jp.name,
+                      }))
+                }
+              />
+            )}
+
+            {showBusinessType && (
+              <FormSelect
+                control={form.control}
+                name="business_type_id"
+                label="Tipo de Negocio"
+                placeholder={
+                  isLoadingBusinessTypes
+                    ? "Cargando..."
+                    : "Seleccione tipo de negocio"
+                }
+                disabled={isLoadingBusinessTypes}
+                options={
+                  isLoadingBusinessTypes
+                    ? []
+                    : (businessTypes || []).map((bt: BusinessTypeResource) => ({
+                        value: bt.id.toString(),
+                        label: bt.name,
+                      }))
+                }
+              />
+            )}
+
+            {showZone && (
+              <FormSelect
+                control={form.control}
+                name="zone_id"
+                label="Zona"
+                placeholder={isLoadingZones ? "Cargando..." : "Seleccione zona"}
+                disabled={isLoadingZones}
+                options={
+                  isLoadingZones
+                    ? []
+                    : (zones || []).map((z: ZoneResource) => ({
+                        value: z.id.toString(),
+                        label: z.name,
+                      }))
+                }
+              />
+            )}
+
+            {showPriceList && (
+              <FormSelect
+                control={form.control}
+                name="client_category_id"
+                label="Lista de Precio"
+                placeholder={
+                  isLoadingPriceLists
+                    ? "Cargando..."
+                    : "Seleccione lista de precio"
+                }
+                disabled={isLoadingPriceLists}
+                options={
+                  isLoadingPriceLists
+                    ? []
+                    : (priceLists || [])
+                        .filter((pl: PriceList) => pl.is_active)
+                        .map((pl: PriceList) => ({
+                          value: pl.id.toString(),
+                          label: `${pl.name} (${pl.code})`,
+                        }))
+                }
+              />
+            )}
+          </div>
+        )}
+
         {/* Form Actions */}
         <div className="flex justify-end gap-3">
           {onCancel && (
@@ -799,6 +986,11 @@ export const PersonForm = ({
           </div>
         )}
       </form>
+
+      {/* <pre>
+        <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
+      </pre>
+      <Button onClick={() => form.trigger()}>Button</Button> */}
     </Form>
   );
 };

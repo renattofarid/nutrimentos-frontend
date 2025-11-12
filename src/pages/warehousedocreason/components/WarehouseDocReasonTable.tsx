@@ -1,4 +1,4 @@
-import { DataTable } from "@/components/DataTable.tsx";
+import { DataTable } from "@/components/DataTable";
 import type { WarehouseDocReasonResource } from "../lib/warehousedocreason.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 

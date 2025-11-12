@@ -1,16 +1,17 @@
 import type { ModelComplete } from "@/lib/core.interface";
 import type { Links, Meta } from "@/lib/pagination.interface";
 import { FileText } from "lucide-react";
+import type { WarehouseDocReasonSchema } from "./warehousedocreason.schema";
 
-const ROUTE = "/motivo-documento-almacen";
-const NAME = "Motivo Documento Almacén";
+const ROUTE = "/motivos-documento-almacen";
+const NAME = "Motivo de Documento de Almacén";
 
-export const WAREHOUSEDOCREASON: ModelComplete<WarehouseDocReasonResource> = {
+export const WAREHOUSEDOCREASON: ModelComplete<WarehouseDocReasonSchema> = {
   MODEL: {
     name: NAME,
-    description: "Gestión de motivos de documentos de almacén.",
-    plural: "Motivos de Documentos de Almacén",
-    gender: false,
+    description: "Gestión de motivos de documentos de almacén del sistema.",
+    plural: "Motivos de Documento de Almacén",
+    gender: true,
   },
   ICON: "FileText",
   ICON_REACT: FileText,
@@ -34,10 +35,8 @@ export const WAREHOUSEDOCREASON: ModelComplete<WarehouseDocReasonResource> = {
     },
   },
   EMPTY: {
-    id: 0,
     name: "",
-    type: "",
-    created_at: "",
+    type: "INGRESO",
   },
 };
 
@@ -50,7 +49,7 @@ export interface WarehouseDocReasonResponse {
 export interface WarehouseDocReasonResource {
   id: number;
   name: string;
-  type: string;
+  type?: "INGRESO" | "EGRESO";
   created_at: string;
 }
 
@@ -59,5 +58,5 @@ export interface WarehouseDocReasonResourceById {
 }
 
 export interface getWarehouseDocReasonProps {
-  params?: Record<string, any>;
+  params?: Record<string, unknown>;
 }

@@ -50,13 +50,23 @@ const basePersonSchema = z.object({
 
   business_name: z
     .string()
+    .min(1, "La razón social es obligatoria")
     .max(255, "La razón social no puede exceder 255 caracteres")
+    .refine(
+      (val) => !val || val.trim().length > 0,
+      "La razón social no puede estar vacía"
+    )
     .optional()
     .or(z.literal("")),
 
   commercial_name: z
     .string()
+    .min(1, "El nombre comercial es obligatorio")
     .max(255, "El nombre comercial no puede exceder 255 caracteres")
+    .refine(
+      (val) => !val || val.trim().length > 0,
+      "El nombre comercial no puede estar vacío"
+    )
     .optional()
     .or(z.literal("")),
 
@@ -112,13 +122,23 @@ export const createPersonSchema = (
 
       business_name: z
         .string()
+        .min(1, "La razón social es obligatoria")
         .max(255, "La razón social no puede exceder 255 caracteres")
+        .refine(
+          (val) => !val || val.trim().length > 0,
+          "La razón social no puede estar vacía"
+        )
         .optional()
         .or(z.literal("")),
 
       commercial_name: z
         .string()
+        .min(1, "El nombre comercial es obligatorio")
         .max(255, "El nombre comercial no puede exceder 255 caracteres")
+        .refine(
+          (val) => !val || val.trim().length > 0,
+          "El nombre comercial no puede estar vacío"
+        )
         .optional()
         .or(z.literal("")),
 

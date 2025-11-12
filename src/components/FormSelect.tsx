@@ -104,7 +104,7 @@ export function FormSelect({
               <PopoverTrigger asChild>
                 <FormControl>
                   <Button
-                    variant="outline"
+                    variant="input"
                     role="combobox"
                     disabled={disabled}
                     className={cn(

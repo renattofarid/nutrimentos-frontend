@@ -118,6 +118,7 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
           product_id: Number(detail.product_id),
           quantity: Number(detail.quantity),
           unit_price: Number(detail.unit_price),
+          tax: Number(detail.tax),
         })),
         installments: data.installments.map((installment) => ({
           due_days: Number(installment.due_days),

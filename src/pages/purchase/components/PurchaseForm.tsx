@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader, Plus, Trash2, Edit } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
+import { FormSwitch } from "@/components/FormSwitch";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
@@ -202,8 +203,16 @@ export const PurchaseForm = ({
     mode: "onChange",
   });
 
-  // Watch para el tipo de pago
+  // Watch para el tipo de pago y el switch de IGV
   const selectedPaymentType = form.watch("payment_type");
+  const watchIncludeIgv = form.watch("include_igv");
+
+  // Sincronizar el estado local includeIgv con el formulario
+  useEffect(() => {
+    if (watchIncludeIgv !== undefined && watchIncludeIgv !== includeIgv) {
+      setIncludeIgv(watchIncludeIgv);
+    }
+  }, [watchIncludeIgv, includeIgv]);
 
   // Establecer fechas automáticamente al cargar el formulario
   useEffect(() => {
@@ -505,7 +514,8 @@ export const PurchaseForm = ({
           <CardHeader>
             <CardTitle>Información General</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Proveedor y Almacén */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <FormSelect
                 control={form.control}
@@ -541,10 +551,42 @@ export const PurchaseForm = ({
                 control={form.control}
                 name="document_type"
                 label="Tipo de Documento"
-                placeholder="Seleccione tipo"
+                placeholder="Seleccione"
                 options={DOCUMENT_TYPES.map((dt) => ({
                   value: dt.value,
                   label: dt.label,
+                }))}
+              />
+
+              <DatePickerFormField
+                control={form.control}
+                name="issue_date"
+                label="Fecha de Emisión"
+                placeholder="Seleccione fecha"
+              />
+
+              <DatePickerFormField
+                control={form.control}
+                name="reception_date"
+                label="Fecha de Recepción"
+                placeholder="Seleccione fecha"
+              />
+
+              <DatePickerFormField
+                control={form.control}
+                name="due_date"
+                label="Fecha de Vencimiento"
+                placeholder="Seleccione fecha"
+              />
+
+              <FormSelect
+                control={form.control}
+                name="currency"
+                label="Moneda"
+                placeholder="Seleccione"
+                options={CURRENCIES.map((c) => ({
+                  value: c.value,
+                  label: c.label,
                 }))}
               />
 
@@ -557,7 +599,7 @@ export const PurchaseForm = ({
                     <FormControl>
                       <Input
                         variant="primary"
-                        placeholder="Ej: F001-001245"
+                        placeholder="Ej: B001-00123"
                         {...field}
                       />
                     </FormControl>
@@ -570,45 +612,22 @@ export const PurchaseForm = ({
                 control={form.control}
                 name="payment_type"
                 label="Tipo de Pago"
-                placeholder="Seleccione tipo"
+                placeholder="Seleccione"
                 options={PAYMENT_TYPES.map((pt) => ({
                   value: pt.value,
                   label: pt.label,
                 }))}
               />
-
-              <FormSelect
-                control={form.control}
-                name="currency"
-                label="Moneda"
-                placeholder="Seleccione moneda"
-                options={CURRENCIES.map((c) => ({
-                  value: c.value,
-                  label: c.label,
-                }))}
-              />
-
-              <DatePickerFormField
-                control={form.control}
-                name="issue_date"
-                label="Fecha de Emisión"
-                placeholder="Seleccione fecha de emisión"
-              />
-
-              <DatePickerFormField
-                control={form.control}
-                name="reception_date"
-                label="Fecha de Recepción"
-                placeholder="Seleccione fecha de recepción"
-              />
-
-              <DatePickerFormField
-                control={form.control}
-                name="due_date"
-                label="Fecha de Vencimiento"
-                placeholder="Seleccione fecha de vencimiento"
-              />
             </div>
+
+            {/* IGV */}
+            <FormSwitch
+              control={form.control}
+              name="include_igv"
+              text="Incluir IGV (18%)"
+              textDescription="Los precios ingresados NO incluyen IGV"
+              className="h-auto"
+            />
           </CardContent>
         </Card>
 
@@ -671,35 +690,20 @@ export const PurchaseForm = ({
                 )}
               />
 
-              <div className="md:col-span-4 flex items-center justify-between">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={includeIgv}
-                    onChange={(e) => {
-                      setIncludeIgv(e.target.checked);
-                      form.setValue("include_igv", e.target.checked);
-                    }}
-                    className="accent-primary"
-                  />
-                  <span className="text-sm">Incluir IGV (18%)</span>
-                </label>
-
-                <div>
-                  <Button
-                    type="button"
-                    variant="default"
-                    onClick={handleAddDetail}
-                    disabled={
-                      !currentDetail.product_id ||
-                      !currentDetail.quantity ||
-                      !currentDetail.unit_price
-                    }
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    {editingDetailIndex !== null ? "Actualizar" : "Agregar"}
-                  </Button>
-                </div>
+              <div className="md:col-span-4 flex justify-end">
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={handleAddDetail}
+                  disabled={
+                    !currentDetail.product_id ||
+                    !currentDetail.quantity ||
+                    !currentDetail.unit_price
+                  }
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {editingDetailIndex !== null ? "Actualizar" : "Agregar"}
+                </Button>
               </div>
             </div>
 

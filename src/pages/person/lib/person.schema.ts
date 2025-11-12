@@ -36,7 +36,11 @@ const basePersonSchema = z.object({
       "El número de documento debe tener entre 8 y 11 dígitos"
     ),
 
-  names: onlyLettersSchema("nombre"),
+  names: z
+    .string()
+    .max(255, "El nombre no puede exceder 255 caracteres")
+    .optional()
+    .or(z.literal("")),
   gender: genderSchema.optional(),
   birth_date: z
     .string()
@@ -108,7 +112,11 @@ export const createPersonSchema = (
 ) => {
   return basePersonSchema
     .extend({
-      names: onlyLettersSchema("nombre"),
+      names: z
+        .string()
+        .max(255, "El nombre no puede exceder 255 caracteres")
+        .optional()
+        .or(z.literal("")),
       gender: genderSchema.optional(),
       birth_date: z
         .string()
@@ -229,6 +237,15 @@ export const createPersonSchema = (
             code: "invalid_type",
             expected: "string",
             message: "El nombre es obligatorio para personas naturales",
+            path: ["names"],
+          });
+        }
+
+        // Validar que solo contenga letras y espacios para personas naturales
+        if (data.names && !/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/.test(data.names)) {
+          ctx.addIssue({
+            code: "custom",
+            message: "El nombre solo puede contener letras y espacios",
             path: ["names"],
           });
         }

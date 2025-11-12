@@ -1,74 +1,108 @@
+"use client";
+
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BackButton } from "@/components/BackButton";
+import TitleFormComponent from "@/components/TitleFormComponent";
 import { PurchaseForm } from "./PurchaseForm";
-import { usePurchaseStore } from "../lib/purchase.store";
-import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
-import { useAllCompanies } from "@/pages/company/lib/company.hook";
-import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
-import TitleComponent from "@/components/TitleComponent";
-import { PURCHASE } from "../lib/purchase.interface";
-import {
-  successToast,
-  errorToast,
-  SUCCESS_MESSAGE,
-  ERROR_MESSAGE,
-} from "@/lib/core.function";
-import type { CreatePurchaseRequest } from "../lib/purchase.interface";
-import { Loader } from "lucide-react";
+import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
+import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
+import { useAllProducts } from "@/pages/product/lib/product.hook";
+import { useAllCompanies } from "@/pages/company/lib/company.hook";
+import FormWrapper from "@/components/FormWrapper";
+import FormSkeleton from "@/components/FormSkeleton";
+import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
+import { usePurchaseStore } from "../lib/purchase.store";
+import type { PurchaseSchema } from "../lib/purchase.schema";
 
 export default function PurchaseAddPage() {
   const navigate = useNavigate();
-  const { createPurchase, isSubmitting } = usePurchaseStore();
-  const { data: companies, isLoading: isLoadingCompanies } = useAllCompanies();
-  const { data: warehouses, isLoading: isLoadingWarehouses } =
-    useAllWarehouses();
-  const { data: products, isLoading: isLoadingProducts } = useAllProducts();
-  const persons = useAllPersons();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { MODEL, ICON, ROUTE } = PURCHASE;
+  const { data: companies, isLoading: companiesLoading } = useAllCompanies();
+  const suppliers = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
+  const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
+  const { data: products, isLoading: productsLoading } = useAllProducts();
+
+  const { createPurchase } = usePurchaseStore();
 
   const isLoading =
-    isLoadingCompanies ||
-    isLoadingWarehouses ||
-    isLoadingProducts ||
-    !persons;
+    companiesLoading || !suppliers || warehousesLoading || productsLoading;
 
-  const handleSubmit = async (data: CreatePurchaseRequest) => {
+  const getDefaultValues = (): Partial<PurchaseSchema> => ({
+    company_id: undefined,
+    supplier_id: "",
+    warehouse_id: "",
+    purchase_order_id: "",
+    document_type: "",
+    document_number: "",
+    issue_date: "",
+    reception_date: "",
+    due_date: "",
+    payment_type: "",
+    include_igv: false,
+    currency: "PEN",
+    details: [],
+    installments: [],
+  });
+
+  const handleSubmit = async (data: PurchaseSchema) => {
+    setIsSubmitting(true);
     try {
       await createPurchase(data);
-      successToast(SUCCESS_MESSAGE(MODEL, "create"));
-      navigate(ROUTE);
+      successToast("Compra creada correctamente");
+      navigate("/compras");
     } catch (error: any) {
-      errorToast(error.response?.data?.message, ERROR_MESSAGE(MODEL, "create"));
+      errorToast(error.response?.data?.message || ERROR_MESSAGE);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader className="w-8 h-8 animate-spin" />
-      </div>
+      <FormWrapper>
+        <div className="mb-6">
+          <div className="flex items-center gap-4 mb-4">
+            <BackButton to="/compras" />
+            <TitleFormComponent title="Compra" mode="create" />
+          </div>
+        </div>
+        <FormSkeleton />
+      </FormWrapper>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <TitleComponent
-        title={`Crear ${MODEL.name}`}
-        subtitle={`Complete los campos para crear una nueva ${MODEL.name.toLowerCase()}`}
-        icon={ICON}
-      />
+    <FormWrapper>
+      <div className="mb-6">
+        <div className="flex items-center gap-4 mb-4">
+          <BackButton to="/compras" />
+          <TitleFormComponent title="Compra" mode="create" />
+        </div>
+      </div>
 
-      <PurchaseForm
-        defaultValues={{}}
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-        companies={companies || []}
-        warehouses={warehouses || []}
-        suppliers={persons?.filter((p) => p.roles.some((r) => r.name === "Proveedor")) || []}
-        products={products || []}
-        onCancel={() => navigate(ROUTE)}
-      />
-    </div>
+      {companies &&
+        companies.length > 0 &&
+        suppliers &&
+        suppliers.length > 0 &&
+        warehouses &&
+        warehouses.length > 0 &&
+        products &&
+        products.length > 0 && (
+          <PurchaseForm
+            defaultValues={getDefaultValues()}
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+            mode="create"
+            companies={companies}
+            suppliers={suppliers}
+            warehouses={warehouses}
+            products={products}
+            onCancel={() => navigate("/compras")}
+          />
+        )}
+    </FormWrapper>
   );
 }

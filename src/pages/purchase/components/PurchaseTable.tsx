@@ -1,30 +1,41 @@
-import { DataTable } from "@/components/DataTable.tsx";
 import type { PurchaseResource } from "../lib/purchase.interface";
-import type { ColumnDef } from "@tanstack/react-table";
+import { getPurchaseColumns } from "./PurchaseColumns";
+import { DataTable } from "@/components/DataTable";
 
-interface Props {
-  columns: ColumnDef<PurchaseResource>[];
+interface PurchaseTableProps {
   data: PurchaseResource[];
+  onEdit: (purchase: PurchaseResource) => void;
+  onDelete: (id: number) => void;
+  onViewDetails: (purchase: PurchaseResource) => void;
+  onManage: (purchase: PurchaseResource) => void;
+  onQuickPay: (purchase: PurchaseResource) => void;
+  isLoading: boolean;
   children?: React.ReactNode;
-  isLoading?: boolean;
 }
 
-export default function PurchaseTable({
-  columns,
+export const PurchaseTable = ({
   data,
-  children,
+  onEdit,
+  onDelete,
+  onViewDetails,
+  onManage,
+  onQuickPay,
   isLoading,
-}: Props) {
+  children,
+}: PurchaseTableProps) => {
+  const columns = getPurchaseColumns({
+    onEdit,
+    onDelete,
+    onViewDetails,
+    onManage,
+    onQuickPay,
+  });
+
   return (
     <div className="border-none text-muted-foreground max-w-full">
-      <DataTable
-        columns={columns}
-        data={data}
-        isLoading={isLoading}
-        initialColumnVisibility={{}}
-      >
+      <DataTable columns={columns} data={data} isLoading={isLoading}>
         {children}
       </DataTable>
     </div>
   );
-}
+};

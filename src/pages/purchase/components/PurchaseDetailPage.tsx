@@ -1,8 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { usePurchaseById } from "../lib/purchase.hook";
 import TitleComponent from "@/components/TitleComponent";
-import { PURCHASE } from "../lib/purchase.interface";
-import { Loader, ArrowLeft, FileText, Calendar, DollarSign } from "lucide-react";
+import {
+  Loader,
+  ArrowLeft,
+  FileText,
+  Calendar,
+  DollarSign,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +17,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { usePurchaseById } from "../lib/purchase.hook";
+import {
+  PURCHASE,
+  type PurchaseDetailResource,
+} from "../lib/purchase.interface";
 
 export default function PurchaseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,7 +38,10 @@ export default function PurchaseDetailPage() {
     );
   }
 
-  const statusVariants: Record<string, "default" | "secondary" | "destructive"> = {
+  const statusVariants: Record<
+    string,
+    "default" | "secondary" | "destructive"
+  > = {
     PENDIENTE: "secondary",
     APROBADA: "default",
     RECHAZADA: "destructive",
@@ -75,7 +87,9 @@ export default function PurchaseDetailPage() {
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Número de Documento</p>
-            <p className="font-semibold font-mono">{purchase.document_number}</p>
+            <p className="font-semibold font-mono">
+              {purchase.document_number}
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Estado</p>
@@ -155,7 +169,7 @@ export default function PurchaseDetailPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {purchase.details.map((detail) => (
+            {purchase.details.map((detail: PurchaseDetailResource) => (
               <TableRow key={detail.id}>
                 <TableCell className="font-mono">
                   {detail.product.codigo}

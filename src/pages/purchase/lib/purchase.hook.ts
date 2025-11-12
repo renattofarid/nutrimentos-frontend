@@ -1,50 +1,82 @@
 import { useEffect } from "react";
+import type { GetPurchasesParams } from "./purchase.actions";
+import type { PurchaseResource } from "./purchase.interface";
 import { usePurchaseStore } from "./purchase.store";
+import type { Meta } from "@/lib/pagination.interface";
 
-export function usePurchase(params?: Record<string, unknown>) {
+// ============================================
+// PURCHASE HOOKS
+// ============================================
+
+/**
+ * Hook to fetch purchases with pagination and filters
+ */
+export const usePurchase = (params?: GetPurchasesParams) => {
   const { purchases, meta, isLoading, error, fetchPurchases } =
     usePurchaseStore();
 
   useEffect(() => {
-    if (!purchases) fetchPurchases(params);
-  }, [purchases, fetchPurchases]);
+    fetchPurchases(params);
+  }, []);
+
+  const refetch = async (newParams?: GetPurchasesParams) => {
+    await fetchPurchases(newParams || params);
+  };
 
   return {
-    data: purchases,
-    meta,
+    data: purchases as PurchaseResource[] | null,
+    meta: meta as Meta | null,
     isLoading,
     error,
-    refetch: fetchPurchases,
+    refetch,
   };
-}
+};
 
-export function useAllPurchases() {
+/**
+ * Hook to fetch all purchases (no pagination)
+ */
+export const useAllPurchases = () => {
   const { allPurchases, isLoadingAll, error, fetchAllPurchases } =
     usePurchaseStore();
 
   useEffect(() => {
-    if (!allPurchases) fetchAllPurchases();
-  }, [allPurchases, fetchAllPurchases]);
+    fetchAllPurchases();
+  }, []);
+
+  const refetch = async () => {
+    await fetchAllPurchases();
+  };
 
   return {
-    data: allPurchases,
+    data: allPurchases as PurchaseResource[] | null,
     isLoading: isLoadingAll,
     error,
-    refetch: fetchAllPurchases,
+    refetch,
   };
-}
+};
 
-export function usePurchaseById(id: number) {
+/**
+ * Hook to fetch a single purchase by ID
+ */
+export const usePurchaseById = (id: number) => {
   const { purchase, isFinding, error, fetchPurchase } = usePurchaseStore();
 
   useEffect(() => {
-    fetchPurchase(id);
+    if (id) {
+      fetchPurchase(id);
+    }
   }, [id]);
 
+  const refetch = async () => {
+    if (id) {
+      await fetchPurchase(id);
+    }
+  };
+
   return {
-    data: purchase,
+    data: purchase as PurchaseResource | null,
     isFinding,
     error,
-    refetch: () => fetchPurchase(id),
+    refetch,
   };
-}
+};

@@ -38,17 +38,23 @@ export const purchaseInstallmentSchema = z.object({
     }),
 });
 
-export type PurchaseInstallmentSchema = z.infer<typeof purchaseInstallmentSchema>;
+export type PurchaseInstallmentSchema = z.infer<
+  typeof purchaseInstallmentSchema
+>;
 
 // ===== MAIN PURCHASE SCHEMA =====
 
 export const purchaseSchemaCreate = z.object({
-  company_id: requiredStringId("Debe seleccionar una empresa"),
   supplier_id: requiredStringId("Debe seleccionar un proveedor"),
   warehouse_id: requiredStringId("Debe seleccionar un almacén"),
   purchase_order_id: z.string().optional().nullable(),
-  document_type: z.string().min(1, { message: "Debe seleccionar un tipo de documento" }),
-  document_number: z.string().min(1, { message: "El número de documento es requerido" }).max(50),
+  document_type: z
+    .string()
+    .min(1, { message: "Debe seleccionar un tipo de documento" }),
+  document_number: z
+    .string()
+    .min(1, { message: "El número de documento es requerido" })
+    .max(50),
   issue_date: z
     .string()
     .min(1, { message: "La fecha de emisión es requerida" })
@@ -67,7 +73,9 @@ export const purchaseSchemaCreate = z.object({
     .refine((val) => !isNaN(Date.parse(val)), {
       message: "La fecha de vencimiento no es válida",
     }),
-  payment_type: z.string().min(1, { message: "Debe seleccionar un tipo de pago" }),
+  payment_type: z
+    .string()
+    .min(1, { message: "Debe seleccionar un tipo de pago" }),
   include_igv: z.boolean().default(false),
   currency: z.string().min(1, { message: "Debe seleccionar una moneda" }),
   details: z
@@ -105,13 +113,17 @@ export const purchaseDetailSchemaCreate = z.object({
     }),
 });
 
-export type PurchaseDetailCreateSchema = z.infer<typeof purchaseDetailSchemaCreate>;
+export type PurchaseDetailCreateSchema = z.infer<
+  typeof purchaseDetailSchemaCreate
+>;
 
 export const purchaseDetailSchemaUpdate = purchaseDetailSchemaCreate
   .omit({ purchase_id: true })
   .partial();
 
-export type PurchaseDetailUpdateSchema = z.infer<typeof purchaseDetailSchemaUpdate>;
+export type PurchaseDetailUpdateSchema = z.infer<
+  typeof purchaseDetailSchemaUpdate
+>;
 
 // ===== INSTALLMENT CRUD SCHEMAS =====
 
@@ -131,13 +143,17 @@ export const purchaseInstallmentSchemaCreate = z.object({
     }),
 });
 
-export type PurchaseInstallmentCreateSchema = z.infer<typeof purchaseInstallmentSchemaCreate>;
+export type PurchaseInstallmentCreateSchema = z.infer<
+  typeof purchaseInstallmentSchemaCreate
+>;
 
 export const purchaseInstallmentSchemaUpdate = purchaseInstallmentSchemaCreate
   .omit({ purchase_id: true })
   .partial();
 
-export type PurchaseInstallmentUpdateSchema = z.infer<typeof purchaseInstallmentSchemaUpdate>;
+export type PurchaseInstallmentUpdateSchema = z.infer<
+  typeof purchaseInstallmentSchemaUpdate
+>;
 
 // ===== PAYMENT SCHEMAS =====
 
@@ -150,8 +166,14 @@ export const purchasePaymentSchemaCreate = z.object({
     .refine((val) => !isNaN(Date.parse(val)), {
       message: "La fecha de pago no es válida",
     }),
-  reference_number: z.string().min(1, { message: "El número de referencia es requerido" }).max(50),
-  bank_number: z.string().min(1, { message: "El número de banco es requerido" }).max(50),
+  reference_number: z
+    .string()
+    .min(1, { message: "El número de referencia es requerido" })
+    .max(50),
+  bank_number: z
+    .string()
+    .min(1, { message: "El número de banco es requerido" })
+    .max(50),
   route: z.string().optional().default(""),
   amount_cash: z
     .string()
@@ -186,10 +208,14 @@ export const purchasePaymentSchemaCreate = z.object({
   observation: z.string().max(500).optional().default(""),
 });
 
-export type PurchasePaymentCreateSchema = z.infer<typeof purchasePaymentSchemaCreate>;
+export type PurchasePaymentCreateSchema = z.infer<
+  typeof purchasePaymentSchemaCreate
+>;
 
 export const purchasePaymentSchemaUpdate = purchasePaymentSchemaCreate
   .omit({ purchase_installment_id: true })
   .partial();
 
-export type PurchasePaymentUpdateSchema = z.infer<typeof purchasePaymentSchemaUpdate>;
+export type PurchasePaymentUpdateSchema = z.infer<
+  typeof purchasePaymentSchemaUpdate
+>;

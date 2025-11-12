@@ -9,7 +9,6 @@ import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
-import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import FormWrapper from "@/components/FormWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
@@ -20,18 +19,15 @@ export default function PurchaseAddPage() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: companies, isLoading: companiesLoading } = useAllCompanies();
   const suppliers = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
 
   const { createPurchase } = usePurchaseStore();
 
-  const isLoading =
-    companiesLoading || !suppliers || warehousesLoading || productsLoading;
+  const isLoading = !suppliers || warehousesLoading || productsLoading;
 
   const getDefaultValues = (): Partial<PurchaseSchema> => ({
-    company_id: undefined,
     supplier_id: "",
     warehouse_id: "",
     purchase_order_id: "",
@@ -82,9 +78,7 @@ export default function PurchaseAddPage() {
         </div>
       </div>
 
-      {companies &&
-        companies.length > 0 &&
-        suppliers &&
+      {suppliers &&
         suppliers.length > 0 &&
         warehouses &&
         warehouses.length > 0 &&
@@ -95,7 +89,6 @@ export default function PurchaseAddPage() {
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
             mode="create"
-            companies={companies}
             suppliers={suppliers}
             warehouses={warehouses}
             products={products}

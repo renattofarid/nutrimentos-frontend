@@ -68,9 +68,9 @@ import type { Access } from "./pages/auth/lib/auth.interface";
 import { ENABLE_PERMISSION_VALIDATION } from "./lib/permissions.config";
 import PurchasePage from "./pages/purchase/components/PurchasePage";
 import PurchaseAddPage from "./pages/purchase/components/PurchaseAddPage";
-import { PurchaseEditPage } from "./pages/purchase/components/PurchaseEditPage";
 import { PurchaseDetailViewPage } from "./pages/purchase/components/PurchaseDetailViewPage";
 import { PURCHASE } from "./pages/purchase/lib/purchase.interface";
+import PurchaseEditPage from "./pages/purchase/components/PurchaseEditPage";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;

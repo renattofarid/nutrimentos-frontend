@@ -35,6 +35,7 @@ export interface PurchaseInstallmentResource {
 export interface PurchaseResource {
   id: number;
   correlativo: string;
+  company_id: number;
   supplier_id: number;
   supplier_fullname: string;
   warehouse_id: number;
@@ -45,7 +46,10 @@ export interface PurchaseResource {
   document_type: string;
   document_number: string;
   issue_date: string;
+  reception_date: string;
+  due_date: string;
   payment_type: string;
+  include_igv: boolean;
   total_amount: string;
   current_amount: string;
   currency: string;
@@ -93,6 +97,7 @@ export interface CreatePurchaseDetailRequest {
   product_id: number;
   quantity: number;
   unit_price: number;
+  tax: number;
 }
 
 export interface CreatePurchaseInstallmentRequest {
@@ -300,7 +305,7 @@ export const PurchaseEditRoute = "/compras/actualizar/:id";
 export const DOCUMENT_TYPES = [
   { value: "FACTURA", label: "Factura" },
   { value: "BOLETA", label: "Boleta" },
-  { value: "GUIA", label: "Guía de Remisión" },
+  // { value: "GUIA", label: "Guía de Remisión" },
 ] as const;
 
 export const PAYMENT_TYPES = [
@@ -329,11 +334,10 @@ export const INSTALLMENT_STATUSES = [
 // ===== MODEL COMPLETE =====
 
 import type { ModelComplete } from "@/lib/core.interface";
-import { ShoppingCart, PackageOpen, CreditCard, Wallet } from "lucide-react";
+import { ShoppingCart, CreditCard, Wallet } from "lucide-react";
 import type { PurchaseSchema } from "./purchase.schema";
 
 const NAME = "Compra";
-const NAME_DETAIL = "Detalle de Compra";
 const NAME_INSTALLMENT = "Cuota de Compra";
 const NAME_PAYMENT = "Pago de Compra";
 

@@ -13,7 +13,7 @@ import {
   deletePurchasePayment,
   type GetPurchasePaymentsParams,
 } from "./purchase.actions";
-import { ERROR_MESSAGE, SUCCESS_MESSAGE, errorToast, successToast } from "@/lib/core.function";
+import { ERROR_MESSAGE, errorToast } from "@/lib/core.function";
 import { PURCHASE_PAYMENT } from "./purchase.interface";
 
 const { MODEL } = PURCHASE_PAYMENT;
@@ -29,10 +29,18 @@ interface PurchasePaymentStore {
   error: string | null;
 
   // Actions
-  fetchPayments: (installmentId: number, params?: GetPurchasePaymentsParams) => Promise<void>;
+  fetchPayments: (
+    installmentId: number,
+    params?: GetPurchasePaymentsParams
+  ) => Promise<void>;
   fetchPayment: (id: number) => Promise<void>;
-  createPayment: (data: CreatePurchasePaymentRequest | FormData) => Promise<void>;
-  updatePayment: (id: number, data: UpdatePurchasePaymentRequest | FormData) => Promise<void>;
+  createPayment: (
+    data: CreatePurchasePaymentRequest | FormData
+  ) => Promise<void>;
+  updatePayment: (
+    id: number,
+    data: UpdatePurchasePaymentRequest | FormData
+  ) => Promise<void>;
   deletePayment: (id: number) => Promise<void>;
   resetPayment: () => void;
 }
@@ -48,7 +56,10 @@ export const usePurchasePaymentStore = create<PurchasePaymentStore>((set) => ({
   error: null,
 
   // Fetch payments for an installment
-  fetchPayments: async (installmentId: number, params?: GetPurchasePaymentsParams) => {
+  fetchPayments: async (
+    installmentId: number,
+    params?: GetPurchasePaymentsParams
+  ) => {
     set({ isLoading: true, error: null });
     try {
       const response = await getPurchasePayments(installmentId, params);
@@ -85,24 +96,27 @@ export const usePurchasePaymentStore = create<PurchasePaymentStore>((set) => ({
     try {
       await createPurchasePayment(data);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "create"));
+      // successToast(SUCCESS_MESSAGE(MODEL, "create"));
     } catch (error) {
       set({ error: ERROR_MESSAGE(MODEL, "create"), isSubmitting: false });
-      errorToast(ERROR_MESSAGE(MODEL, "create"));
+      // errorToast(ERROR_MESSAGE(MODEL, "create"));
       throw error;
     }
   },
 
   // Update payment
-  updatePayment: async (id: number, data: UpdatePurchasePaymentRequest | FormData) => {
+  updatePayment: async (
+    id: number,
+    data: UpdatePurchasePaymentRequest | FormData
+  ) => {
     set({ isSubmitting: true, error: null });
     try {
       await updatePurchasePayment(id, data);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "update"));
+      // successToast(SUCCESS_MESSAGE(MODEL, "update"));
     } catch (error) {
       set({ error: ERROR_MESSAGE(MODEL, "update"), isSubmitting: false });
-      errorToast(ERROR_MESSAGE(MODEL, "update"));
+      // errorToast(ERROR_MESSAGE(MODEL, "update"));
       throw error;
     }
   },
@@ -113,7 +127,7 @@ export const usePurchasePaymentStore = create<PurchasePaymentStore>((set) => ({
     try {
       await deletePurchasePayment(id);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "delete"));
+      // successToast(SUCCESS_MESSAGE(MODEL, "delete"));
     } catch (error) {
       set({ error: ERROR_MESSAGE(MODEL, "delete"), isSubmitting: false });
       errorToast(ERROR_MESSAGE(MODEL, "delete"));

@@ -15,7 +15,12 @@ import {
   type GetPurchasesParams,
 } from "./purchase.actions";
 import type { PurchaseSchema, PurchaseUpdateSchema } from "./purchase.schema";
-import { ERROR_MESSAGE, SUCCESS_MESSAGE, errorToast, successToast } from "@/lib/core.function";
+import {
+  ERROR_MESSAGE,
+  SUCCESS_MESSAGE,
+  errorToast,
+  successToast,
+} from "@/lib/core.function";
 import { PURCHASE } from "./purchase.interface";
 
 const { MODEL } = PURCHASE;
@@ -37,7 +42,10 @@ interface PurchaseStore {
   fetchPurchases: (params?: GetPurchasesParams) => Promise<void>;
   fetchPurchase: (id: number) => Promise<void>;
   createPurchase: (data: PurchaseSchema) => Promise<void>;
-  updatePurchase: (id: number, data: Partial<PurchaseUpdateSchema>) => Promise<void>;
+  updatePurchase: (
+    id: number,
+    data: Partial<PurchaseUpdateSchema>
+  ) => Promise<void>;
   removePurchase: (id: number) => Promise<void>;
   resetPurchase: () => void;
 }
@@ -139,26 +147,43 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
     set({ isSubmitting: true, error: null });
     try {
       const request: UpdatePurchaseRequest = {
+        ...(data.company_id && { company_id: Number(data.company_id) }),
         ...(data.supplier_id && { supplier_id: Number(data.supplier_id) }),
         ...(data.warehouse_id && { warehouse_id: Number(data.warehouse_id) }),
-        ...(data.user_id && { user_id: Number(data.user_id) }),
+        ...(data.include_igv !== undefined && {
+          include_igv: data.include_igv,
+        }),
         ...(data.purchase_order_id !== undefined && {
-          purchase_order_id: data.purchase_order_id ? Number(data.purchase_order_id) : null,
+          purchase_order_id: data.purchase_order_id
+            ? Number(data.purchase_order_id)
+            : null,
         }),
         ...(data.document_type && { document_type: data.document_type }),
         ...(data.document_number && { document_number: data.document_number }),
         ...(data.issue_date && { issue_date: data.issue_date }),
         ...(data.payment_type && { payment_type: data.payment_type }),
         ...(data.currency && { currency: data.currency }),
-        ...(data.observations !== undefined && { observations: data.observations }),
+        ...(data.details && {
+          details: data.details.map((detail) => ({
+            product_id: Number(detail.product_id),
+            quantity: Number(detail.quantity),
+            unit_price: Number(detail.unit_price),
+          })),
+        }),
+        ...(data.installments && {
+          installments: data.installments.map((installment) => ({
+            due_days: Number(installment.due_days),
+            amount: Number(installment.amount),
+          })),
+        }),
       };
 
       await updatePurchase(id, request);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "update"));
+      // successToast(SUCCESS_MESSAGE(MODEL, "update"));
     } catch (error) {
       set({ error: ERROR_MESSAGE(MODEL, "update"), isSubmitting: false });
-      errorToast(ERROR_MESSAGE(MODEL, "update"));
+      // errorToast(ERROR_MESSAGE(MODEL, "update"));
       throw error;
     }
   },

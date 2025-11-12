@@ -14,9 +14,9 @@ import type { PurchaseInstallmentResource } from "../../lib/purchase.interface";
 import { usePurchasePaymentStore } from "../../lib/purchase-payment.store";
 import { usePurchaseInstallmentStore } from "../../lib/purchase-installment.store";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
-import { PurchasePaymentTable } from "../PurchasePaymentTable";
 import { PurchasePaymentForm } from "../forms/PurchasePaymentForm";
 import { errorToast, successToast } from "@/lib/core.function";
+import { PurchasePaymentTable } from "../PurchasePaymentTable";
 
 interface InstallmentPaymentsSheetProps {
   open: boolean;
@@ -33,7 +33,8 @@ export function InstallmentPaymentsSheet({
 }: InstallmentPaymentsSheetProps) {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [editingPaymentId, setEditingPaymentId] = useState<number | null>(null);
-  const [currentInstallment, setCurrentInstallment] = useState<PurchaseInstallmentResource | null>(installment);
+  const [currentInstallment, setCurrentInstallment] =
+    useState<PurchaseInstallmentResource | null>(installment);
 
   const { user } = useAuthStore();
 
@@ -48,10 +49,8 @@ export function InstallmentPaymentsSheet({
     resetPayment,
   } = usePurchasePaymentStore();
 
-  const {
-    installment: updatedInstallment,
-    fetchInstallment,
-  } = usePurchaseInstallmentStore();
+  const { installment: updatedInstallment, fetchInstallment } =
+    usePurchaseInstallmentStore();
 
   useEffect(() => {
     if (installment && open) {
@@ -107,11 +106,11 @@ export function InstallmentPaymentsSheet({
       }
       setShowPaymentForm(false);
       setEditingPaymentId(null);
-      
+
       // Refrescar pagos y cuota actualizada
       await fetchPayments(installment.id);
       await fetchInstallment(installment.id);
-      
+
       // Notificar al componente padre que hubo un pago exitoso
       if (onPaymentSuccess) {
         onPaymentSuccess();
@@ -123,7 +122,11 @@ export function InstallmentPaymentsSheet({
 
   if (!currentInstallment) return null;
 
-  const totalPaid = payments?.reduce((sum, p) => sum + parseFloat(p.total_paid.toString()), 0) || 0;
+  const totalPaid =
+    payments?.reduce(
+      (sum, p) => sum + parseFloat(p.total_paid.toString()),
+      0
+    ) || 0;
   const pending = parseFloat(currentInstallment.pending_amount.toString());
   const isPaid = currentInstallment.status === "PAGADO";
   const canAddPayment = pending > 0 && !isPaid;
@@ -145,12 +148,16 @@ export function InstallmentPaymentsSheet({
           {/* Información de la Cuota */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Información de la Cuota</CardTitle>
+              <CardTitle className="text-base">
+                Información de la Cuota
+              </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Cuota #:</span>
-                <p className="font-semibold text-lg">{currentInstallment.installment_number}</p>
+                <p className="font-semibold text-lg">
+                  {currentInstallment.installment_number}
+                </p>
               </div>
               <div>
                 <span className="text-muted-foreground">Estado:</span>
@@ -160,8 +167,8 @@ export function InstallmentPaymentsSheet({
                       currentInstallment.status === "PAGADO"
                         ? "default"
                         : currentInstallment.status === "VENCIDO"
-                          ? "destructive"
-                          : "secondary"
+                        ? "destructive"
+                        : "secondary"
                     }
                   >
                     {currentInstallment.status}
@@ -169,13 +176,18 @@ export function InstallmentPaymentsSheet({
                 </div>
               </div>
               <div>
-                <span className="text-muted-foreground">Fecha Vencimiento:</span>
+                <span className="text-muted-foreground">
+                  Fecha Vencimiento:
+                </span>
                 <p className="font-semibold">
-                  {new Date(currentInstallment.due_date).toLocaleDateString("es-ES", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })}
+                  {new Date(currentInstallment.due_date).toLocaleDateString(
+                    "es-ES",
+                    {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    }
+                  )}
                 </p>
               </div>
               <div>
@@ -242,7 +254,9 @@ export function InstallmentPaymentsSheet({
               <PurchasePaymentTable
                 payments={payments || []}
                 onEdit={handleEditPayment}
-                onRefresh={() => currentInstallment && fetchPayments(currentInstallment.id)}
+                onRefresh={() =>
+                  currentInstallment && fetchPayments(currentInstallment.id)
+                }
               />
             </>
           )}

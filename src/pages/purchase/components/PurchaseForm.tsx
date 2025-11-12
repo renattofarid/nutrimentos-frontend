@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Loader, Plus, Trash2, Edit } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
@@ -57,6 +56,7 @@ interface PurchaseFormProps {
   warehouses: WarehouseResource[];
   products: ProductResource[];
   purchase?: PurchaseResource;
+  companies?: CompanyResource[];
 }
 
 interface DetailRow {
@@ -83,6 +83,7 @@ export const PurchaseForm = ({
   suppliers,
   warehouses,
   products,
+  companies,
 }: PurchaseFormProps) => {
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
@@ -197,8 +198,6 @@ export const PurchaseForm = ({
     ),
     defaultValues: {
       ...defaultValues,
-      details: details.length > 0 ? details : [],
-      installments: installments.length > 0 ? installments : [],
     },
     mode: "onChange",
   });
@@ -227,6 +226,40 @@ export const PurchaseForm = ({
     const formattedDueDate = format(dueDate, "yyyy-MM-dd");
     form.setValue("due_date", formattedDueDate);
   }, [form]);
+
+  // Inicializar details e installments desde defaultValues cuando se carga el formulario
+  useEffect(() => {
+    if (defaultValues.details && defaultValues.details.length > 0) {
+      const mappedDetails = defaultValues.details.map((detail) => {
+        const product = products.find(
+          (p) => p.id.toString() === detail.product_id
+        );
+        const quantity = parseFloat(detail.quantity);
+        const unitPrice = parseFloat(detail.unit_price);
+        const tax = parseFloat(detail.tax);
+        const subtotal = quantity * unitPrice;
+        const total = subtotal + tax;
+
+        return {
+          product_id: detail.product_id,
+          product_name: product?.name,
+          quantity: detail.quantity,
+          unit_price: detail.unit_price,
+          tax: detail.tax,
+          subtotal,
+          total,
+        };
+      });
+      setDetails(mappedDetails);
+      form.setValue("details", mappedDetails);
+    }
+
+    if (defaultValues.installments && defaultValues.installments.length > 0) {
+      setInstallments(defaultValues.installments);
+      form.setValue("installments", defaultValues.installments);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Funciones para detalles
   const handleAddDetail = () => {
@@ -519,6 +552,21 @@ export const PurchaseForm = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <FormSelect
                 control={form.control}
+                label="Empresa"
+                name="company_id"
+                placeholder="Seleccione una empresa"
+                options={
+                  companies?.map((company) => ({
+                    value: company.id.toString(),
+                    label: company.social_reason,
+                    description: company.ruc,
+                  })) || []
+                }
+                withValue={false}
+              />
+
+              <FormSelect
+                control={form.control}
                 name="supplier_id"
                 label="Proveedor"
                 placeholder="Seleccione un proveedor"
@@ -531,6 +579,7 @@ export const PurchaseForm = ({
                       supplier.father_surname +
                       " " +
                       supplier.mother_surname,
+                  description: supplier.number_document || undefined,
                 }))}
                 disabled={mode === "update"}
               />
@@ -543,6 +592,7 @@ export const PurchaseForm = ({
                 options={warehouses.map((warehouse) => ({
                   value: warehouse.id.toString(),
                   label: warehouse.name,
+                  description: warehouse.address,
                 }))}
                 disabled={mode === "update"}
               />
@@ -731,16 +781,16 @@ export const PurchaseForm = ({
                         <TableCell className="text-right">
                           {isNaN(parseFloat(detail.unit_price))
                             ? detail.unit_price
-                            : parseFloat(detail.unit_price)}
+                            : parseFloat(detail.unit_price).toFixed(2)}
                         </TableCell>
                         <TableCell className="text-right">
-                          {detail.subtotal}
+                          {detail.subtotal.toFixed(2)}
                         </TableCell>
                         <TableCell className="text-right">
-                          {parseFloat(detail.tax || "0")}
+                          {parseFloat(detail.tax || "0").toFixed(2)}
                         </TableCell>
                         <TableCell className="text-right font-bold text-primary">
-                          {detail.total}
+                          {detail.total.toFixed(2)}
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex justify-center gap-2">
@@ -769,7 +819,7 @@ export const PurchaseForm = ({
                         SUBTOTAL:
                       </TableCell>
                       <TableCell className="text-right font-bold">
-                        {calculateSubtotalTotal()}
+                        {calculateSubtotalTotal().toFixed(2)}
                       </TableCell>
                       <TableCell></TableCell>
                     </TableRow>
@@ -779,7 +829,7 @@ export const PurchaseForm = ({
                         IGV (18%):
                       </TableCell>
                       <TableCell className="text-right font-bold">
-                        {calculateTaxTotal()}
+                        {calculateTaxTotal().toFixed(2)}
                       </TableCell>
                       <TableCell></TableCell>
                     </TableRow>
@@ -789,7 +839,7 @@ export const PurchaseForm = ({
                         TOTAL:
                       </TableCell>
                       <TableCell className="text-right font-bold text-lg text-primary">
-                        {calculateDetailsTotal()}
+                        {calculateDetailsTotal().toFixed(2)}
                       </TableCell>
                       <TableCell></TableCell>
                     </TableRow>
@@ -893,7 +943,7 @@ export const PurchaseForm = ({
                               {inst.due_days} días
                             </TableCell>
                             <TableCell className="text-right font-semibold">
-                              {parseFloat(inst.amount)}
+                              {parseFloat(inst.amount).toFixed(2)}
                             </TableCell>
                             <TableCell className="text-center">
                               <div className="flex justify-center gap-2">
@@ -925,7 +975,7 @@ export const PurchaseForm = ({
                             TOTAL CUOTAS:
                           </TableCell>
                           <TableCell className="text-right font-bold text-lg text-blue-600">
-                            {(calculateInstallmentsTotal(), 6)}
+                            {calculateInstallmentsTotal().toFixed(2)}
                           </TableCell>
                           <TableCell></TableCell>
                         </TableRow>
@@ -936,9 +986,10 @@ export const PurchaseForm = ({
                   {!installmentsMatchTotal() && (
                     <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
                       <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                        ⚠️ El total de cuotas ({calculateInstallmentsTotal()})
-                        debe sr igual al total de la compra (
-                        {calculateDetailsTotal()}).
+                        ⚠️ El total de cuotas (
+                        {calculateInstallmentsTotal().toFixed(2)}) debe ser
+                        igual al total de la compra (
+                        {calculateDetailsTotal().toFixed(2)}).
                       </p>
                     </div>
                   )}
@@ -953,6 +1004,13 @@ export const PurchaseForm = ({
             </CardContent>
           </Card>
         )}
+
+        {/* <pre>
+          <code>
+            {JSON.stringify(form.getValues(), null, 2)}
+            {JSON.stringify(form.formState.errors, null, 2)}
+          </code>
+        </pre> */}
 
         {/* Botones */}
         <div className="flex gap-4 w-full justify-end">

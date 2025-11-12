@@ -14,12 +14,14 @@ import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 import { usePurchaseStore } from "../lib/purchase.store";
 import type { PurchaseResource } from "../lib/purchase.interface";
 import type { PurchaseSchema } from "../lib/purchase.schema";
+import { useAllCompanies } from "@/pages/company/lib/company.hook";
 
 export default function PurchaseEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { data: companies, isLoading: companiesLoading } = useAllCompanies();
   const suppliers = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
@@ -28,7 +30,11 @@ export default function PurchaseEditPage() {
     usePurchaseStore();
 
   const isLoading =
-    !suppliers || warehousesLoading || productsLoading || isFinding;
+    companiesLoading ||
+    !suppliers ||
+    warehousesLoading ||
+    productsLoading ||
+    isFinding;
 
   useEffect(() => {
     if (!id) {
@@ -40,28 +46,32 @@ export default function PurchaseEditPage() {
 
   const mapPurchaseToForm = (
     data: PurchaseResource
-  ): Partial<PurchaseSchema> => ({
-    supplier_id: data.supplier_id?.toString(),
-    warehouse_id: data.warehouse_id?.toString(),
-    purchase_order_id: data.purchase_order_id?.toString() || "",
-    document_type: data.document_type,
-    document_number: data.document_number,
-    issue_date: data.issue_date?.split("T")[0], // Formato YYYY-MM-DD
-    reception_date: data.reception_date?.split("T")[0],
-    due_date: data.due_date?.split("T")[0],
-    payment_type: data.payment_type,
-    include_igv: data.include_igv || false,
-    currency: data.currency,
-    details: data.details.map((detail) => ({
-      product_id: detail.product.id.toString(),
-      quantity: detail.quantity.toString(),
-      unit_price: detail.unit_price.toString(),
-    })),
-    installments: data.installments.map((installment) => ({
-      due_days: installment.due_days.toString(),
-      amount: installment.amount.toString(),
-    })),
-  });
+  ): Partial<PurchaseSchema> => {
+    return {
+      company_id: data.company_id?.toString(),
+      supplier_id: data.supplier_id?.toString(),
+      warehouse_id: data.warehouse_id?.toString(),
+      purchase_order_id: data.purchase_order_id?.toString() || "",
+      document_type: data.document_type,
+      document_number: data.document_number,
+      issue_date: data.issue_date?.split("T")[0], // Formato YYYY-MM-DD
+      reception_date: data.reception_date?.split("T")[0],
+      due_date: data.due_date?.split("T")[0],
+      payment_type: data.payment_type,
+      include_igv: data.include_igv || false,
+      currency: data.currency,
+      details: data.details.map((detail) => ({
+        product_id: detail.product.id.toString(),
+        quantity: detail.quantity.toString(),
+        unit_price: detail.unit_price.toString(),
+        tax: detail.tax.toString(),
+      })),
+      installments: data.installments.map((installment) => ({
+        due_days: installment.due_days.toString(),
+        amount: installment.amount.toString(),
+      })),
+    };
+  };
 
   const handleSubmit = async (data: PurchaseSchema) => {
     if (!purchase || !id) return;
@@ -112,7 +122,9 @@ export default function PurchaseEditPage() {
         </div>
       </div>
 
-      {suppliers &&
+      {companies &&
+        companies.length > 0 &&
+        suppliers &&
         suppliers.length > 0 &&
         warehouses &&
         warehouses.length > 0 &&
@@ -123,6 +135,7 @@ export default function PurchaseEditPage() {
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
             mode="update"
+            companies={companies}
             suppliers={suppliers}
             warehouses={warehouses}
             products={products}

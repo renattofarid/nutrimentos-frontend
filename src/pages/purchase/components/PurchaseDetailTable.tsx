@@ -74,7 +74,7 @@ export function PurchaseDetailTable({
               <TableHead className="text-right">Subtotal</TableHead>
               <TableHead className="text-right">Impuesto</TableHead>
               <TableHead className="text-right">Total</TableHead>
-              <TableHead className="text-center">Acciones</TableHead>
+              {/* <TableHead className="text-center">Acciones</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -101,7 +101,7 @@ export function PurchaseDetailTable({
                 <TableCell className="text-right font-bold text-primary">
                   {detail.total.toFixed(2)}
                 </TableCell>
-                <TableCell className="text-center">
+                {/* <TableCell className="text-center">
                   <div className="flex justify-center gap-2">
                     {isPurchasePaid ? (
                       <TooltipProvider>
@@ -167,7 +167,7 @@ export function PurchaseDetailTable({
                       </Button>
                     )}
                   </div>
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
             <TableRow className="bg-sidebar">

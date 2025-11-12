@@ -264,7 +264,7 @@ export const getPurchaseColumns = ({
     id: "actions",
     header: "Acciones",
     cell: ({ row }) => {
-      const isPaid = row.original.status === "PAGADA";
+      const isPaid = row.original.status === "PAGADO";
 
       return (
         <DropdownMenu>
@@ -285,7 +285,6 @@ export const getPurchaseColumns = ({
             <DropdownMenuItem
               onClick={() => !isPaid && onEdit(row.original)}
               disabled={isPaid}
-              className={isPaid ? "opacity-50 cursor-not-allowed" : ""}
             >
               <Edit className="mr-2 h-4 w-4" />
               Editar {isPaid && "(Pagado)"}

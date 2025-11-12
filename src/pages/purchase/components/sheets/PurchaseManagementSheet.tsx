@@ -242,12 +242,6 @@ export function PurchaseManagementSheet({
             </TabsList>
 
             <TabsContent value="details" className="space-y-4 mt-4">
-              <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg mb-4">
-                <p className="text-sm text-blue-800 dark:text-blue-200">
-                  ℹ️ Los detalles solo se pueden modificar al editar la compra completa.
-                  Use el botón "Editar Compra" en la vista principal.
-                </p>
-              </div>
               <PurchaseDetailTable
                 details={currentPurchase.details || []}
                 onEdit={() => {}}

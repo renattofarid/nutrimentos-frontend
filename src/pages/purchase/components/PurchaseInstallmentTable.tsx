@@ -68,7 +68,7 @@ export function PurchaseInstallmentTable({
             <TableHead className="text-right">Monto</TableHead>
             <TableHead className="text-right">Saldo</TableHead>
             <TableHead>Estado</TableHead>
-            <TableHead className="text-center">Acciones</TableHead>
+            {/* <TableHead className="text-center">Acciones</TableHead> */}
           </TableRow>
         </TableHeader>
         <TableBody>

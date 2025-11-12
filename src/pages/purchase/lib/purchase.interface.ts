@@ -97,7 +97,6 @@ export interface CreatePurchaseDetailRequest {
   product_id: number;
   quantity: number;
   unit_price: number;
-  tax: number;
 }
 
 export interface CreatePurchaseInstallmentRequest {
@@ -132,6 +131,8 @@ export interface UpdatePurchaseRequest {
   payment_type?: string;
   currency?: string;
   observations?: string;
+  details?: CreatePurchaseDetailRequest[];
+  installments?: CreatePurchaseInstallmentRequest[];
 }
 
 // ===== DETAIL MANAGEMENT =====

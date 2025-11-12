@@ -51,6 +51,7 @@ export type PurchaseInstallmentSchema = z.infer<
 // ===== MAIN PURCHASE SCHEMA =====
 
 export const purchaseSchemaCreate = z.object({
+  company_id: requiredStringId("Debe seleccionar una empresa"),
   supplier_id: requiredStringId("Debe seleccionar un proveedor"),
   warehouse_id: requiredStringId("Debe seleccionar un almacén"),
   purchase_order_id: z.string().optional().nullable(),
@@ -94,9 +95,7 @@ export type PurchaseSchema = z.infer<typeof purchaseSchemaCreate>;
 
 // ===== UPDATE SCHEMA =====
 
-export const purchaseSchemaUpdate = purchaseSchemaCreate
-  .omit({ details: true, installments: true })
-  .partial();
+export const purchaseSchemaUpdate = purchaseSchemaCreate.partial();
 
 export type PurchaseUpdateSchema = z.infer<typeof purchaseSchemaUpdate>;
 

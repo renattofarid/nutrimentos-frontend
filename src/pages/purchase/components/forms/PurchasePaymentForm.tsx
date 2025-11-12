@@ -14,6 +14,7 @@ import {
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { Loader } from "lucide-react";
 import type { PurchasePaymentResource } from "../../lib/purchase.interface";
+import { format } from "date-fns";
 
 interface PurchasePaymentFormProps {
   payment?: PurchasePaymentResource | null;
@@ -29,7 +30,7 @@ export function PurchasePaymentForm({
   isSubmitting,
 }: PurchasePaymentFormProps) {
   const [formData, setFormData] = useState({
-    payment_date: payment?.payment_date || new Date().toISOString().split("T")[0],
+    payment_date: payment?.payment_date || format(new Date(), "yyyy-MM-dd"),
     reference_number: payment?.reference_number || "",
     bank_number: payment?.bank_number || "",
     amount_cash: payment?.amount_cash.toString() || "0",
@@ -65,7 +66,7 @@ export function PurchasePaymentForm({
   useEffect(() => {
     const subscription = form.watch((values) => {
       setFormData({
-        payment_date: values.payment_date || new Date().toISOString().split("T")[0],
+        payment_date: values.payment_date || format(new Date(), "yyyy-MM-dd"),
         reference_number: values.reference_number || "",
         bank_number: values.bank_number || "",
         amount_cash: values.amount_cash || "0",
@@ -122,7 +123,11 @@ export function PurchasePaymentForm({
             <FormItem>
               <FormLabel>Número de Referencia</FormLabel>
               <FormControl>
-                <Input variant="primary" placeholder="Ej: OP-20251009-001" {...field} />
+                <Input
+                  variant="primary"
+                  placeholder="Ej: OP-20251009-001"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -136,7 +141,11 @@ export function PurchasePaymentForm({
             <FormItem>
               <FormLabel>Número de Banco/Cuenta</FormLabel>
               <FormControl>
-                <Input variant="primary" placeholder="Ej: 4567891230" {...field} />
+                <Input
+                  variant="primary"
+                  placeholder="Ej: 4567891230"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -151,7 +160,13 @@ export function PurchasePaymentForm({
               <FormItem>
                 <FormLabel>Efectivo</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" variant="primary" placeholder="0.00" {...field} />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    variant="primary"
+                    placeholder="0.00"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -165,7 +180,13 @@ export function PurchasePaymentForm({
               <FormItem>
                 <FormLabel>Yape</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" variant="primary" placeholder="0.00" {...field} />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    variant="primary"
+                    placeholder="0.00"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -179,7 +200,13 @@ export function PurchasePaymentForm({
               <FormItem>
                 <FormLabel>Plin</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" variant="primary" placeholder="0.00" {...field} />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    variant="primary"
+                    placeholder="0.00"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -193,7 +220,13 @@ export function PurchasePaymentForm({
               <FormItem>
                 <FormLabel>Depósito</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" variant="primary" placeholder="0.00" {...field} />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    variant="primary"
+                    placeholder="0.00"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -207,7 +240,13 @@ export function PurchasePaymentForm({
               <FormItem>
                 <FormLabel>Transferencia</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" variant="primary" placeholder="0.00" {...field} />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    variant="primary"
+                    placeholder="0.00"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -247,7 +286,9 @@ export function PurchasePaymentForm({
             Cancelar
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            <Loader className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`} />
+            <Loader
+              className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`}
+            />
             {isSubmitting ? "Guardando..." : "Guardar"}
           </Button>
         </div>

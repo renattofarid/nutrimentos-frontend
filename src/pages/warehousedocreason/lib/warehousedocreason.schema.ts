@@ -9,12 +9,14 @@ export const warehouseDocReasonSchemaCreate = z.object({
     .min(1, {
       message: "El nombre es requerido",
     }),
-  type: z
-    .enum(["INGRESO", "EGRESO"], {
-      errorMap: () => ({ message: "El tipo debe ser INGRESO o EGRESO" }),
-    }),
+  type: z.enum(["INGRESO", "EGRESO"], {
+    message: "El tipo debe ser INGRESO o EGRESO",
+  }),
 });
 
-export const warehouseDocReasonSchemaUpdate = warehouseDocReasonSchemaCreate.partial();
+export const warehouseDocReasonSchemaUpdate =
+  warehouseDocReasonSchemaCreate.partial();
 
-export type WarehouseDocReasonSchema = z.infer<typeof warehouseDocReasonSchemaCreate>;
+export type WarehouseDocReasonSchema = z.infer<
+  typeof warehouseDocReasonSchemaCreate
+>;

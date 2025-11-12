@@ -66,6 +66,8 @@ export async function assignClientToPriceList(
 }
 
 // Consultar precio para un cliente, producto y peso específico
-export async function getPrice(data: GetPriceRequest): Promise<GetPriceResponse> {
+export async function getPrice(
+  data: GetPriceRequest
+): Promise<GetPriceResponse> {
   return (await api.post<GetPriceResponse>(`${ENDPOINT}/get-price`, data)).data;
 }

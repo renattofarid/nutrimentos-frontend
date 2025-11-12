@@ -51,7 +51,9 @@ export const usePriceListStore = create<PriceListStore>((set) => ({
       set({ priceLists: data, meta, isLoading: false });
     } catch (error: any) {
       set({
-        error: error.response?.data?.message || "Error al cargar las listas de precio",
+        error:
+          error.response?.data?.message ||
+          "Error al cargar las listas de precio",
         isLoading: false,
       });
     }
@@ -65,7 +67,8 @@ export const usePriceListStore = create<PriceListStore>((set) => ({
       set({ priceList: data, isFinding: false });
     } catch (error: any) {
       set({
-        error: error.response?.data?.message || "Error al cargar la lista de precio",
+        error:
+          error.response?.data?.message || "Error al cargar la lista de precio",
         isFinding: false,
       });
     }
@@ -79,7 +82,8 @@ export const usePriceListStore = create<PriceListStore>((set) => ({
       set({ isSubmitting: false });
     } catch (error: any) {
       set({
-        error: error.response?.data?.message || "Error al crear la lista de precio",
+        error:
+          error.response?.data?.message || "Error al crear la lista de precio",
         isSubmitting: false,
       });
       throw error;
@@ -87,7 +91,7 @@ export const usePriceListStore = create<PriceListStore>((set) => ({
   },
 
   // Actualizar una lista de precio
-  updatePriceList: async (id: number, data: PriceListSchemaUpdate) => {
+  updatePriceList: async (id: number, data: any) => {
     set({ isSubmitting: true, error: null });
     try {
       await actions.updatePriceList(id, data);
@@ -95,7 +99,8 @@ export const usePriceListStore = create<PriceListStore>((set) => ({
     } catch (error: any) {
       set({
         error:
-          error.response?.data?.message || "Error al actualizar la lista de precio",
+          error.response?.data?.message ||
+          "Error al actualizar la lista de precio",
         isSubmitting: false,
       });
       throw error;
@@ -110,7 +115,9 @@ export const usePriceListStore = create<PriceListStore>((set) => ({
       set({ isSubmitting: false });
     } catch (error: any) {
       set({
-        error: error.response?.data?.message || "Error al eliminar la lista de precio",
+        error:
+          error.response?.data?.message ||
+          "Error al eliminar la lista de precio",
         isSubmitting: false,
       });
       throw error;
@@ -126,7 +133,8 @@ export const usePriceListStore = create<PriceListStore>((set) => ({
     } catch (error: any) {
       set({
         error:
-          error.response?.data?.message || "Error al asignar cliente a la lista de precio",
+          error.response?.data?.message ||
+          "Error al asignar cliente a la lista de precio",
         isSubmitting: false,
       });
       throw error;

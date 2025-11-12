@@ -49,7 +49,7 @@ export const WarehouseDocReasonForm = ({
     ),
     defaultValues: {
       name: "",
-      type: "",
+      type: "INGRESO",
       ...defaultValues,
     },
     mode: "onChange",

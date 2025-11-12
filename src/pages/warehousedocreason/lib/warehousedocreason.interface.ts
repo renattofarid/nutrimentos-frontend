@@ -49,7 +49,7 @@ export interface WarehouseDocReasonResponse {
 export interface WarehouseDocReasonResource {
   id: number;
   name: string;
-  type: string;
+  type?: "INGRESO" | "EGRESO";
   created_at: string;
 }
 

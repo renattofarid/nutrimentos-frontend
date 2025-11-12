@@ -12,11 +12,7 @@ import {
   updatePurchaseInstallment,
   type GetPurchaseInstallmentsParams,
 } from "./purchase.actions";
-import {
-  ERROR_MESSAGE,
-  SUCCESS_MESSAGE,
-  errorToast,
-} from "@/lib/core.function";
+import { ERROR_MESSAGE, errorToast } from "@/lib/core.function";
 import { PURCHASE_INSTALLMENT } from "./purchase.interface";
 
 const { MODEL } = PURCHASE_INSTALLMENT;

@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, GripVertical } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -133,7 +132,10 @@ export default function PriceListForm({
                   <FormItem>
                     <FormLabel>Nombre *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej: Lista de Precios 2025" {...field} />
+                      <Input
+                        placeholder="Ej: Lista de Precios 2025"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -181,11 +183,15 @@ export default function PriceListForm({
                   <div className="space-y-0.5">
                     <FormLabel className="text-base">Estado Activo</FormLabel>
                     <div className="text-sm text-muted-foreground">
-                      La lista de precios estará disponible para asignar a clientes
+                      La lista de precios estará disponible para asignar a
+                      clientes
                     </div>
                   </div>
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -269,7 +275,9 @@ export default function PriceListForm({
                             step="0.01"
                             placeholder="Sin límite"
                             value={
-                              field.value === null ? "" : (field.value as number)
+                              field.value === null
+                                ? ""
+                                : (field.value as number)
                             }
                             onChange={(e) =>
                               field.onChange(
@@ -365,8 +373,12 @@ export default function PriceListForm({
                         <FormItem className="md:col-span-4">
                           <FormLabel>Producto</FormLabel>
                           <Select
-                            onValueChange={(value) => field.onChange(Number(value))}
-                            value={field.value ? field.value.toString() : undefined}
+                            onValueChange={(value) =>
+                              field.onChange(Number(value))
+                            }
+                            value={
+                              field.value ? field.value.toString() : undefined
+                            }
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -396,7 +408,9 @@ export default function PriceListForm({
                         <FormItem className="md:col-span-3">
                           <FormLabel>Rango de Peso</FormLabel>
                           <Select
-                            onValueChange={(value) => field.onChange(Number(value))}
+                            onValueChange={(value) =>
+                              field.onChange(Number(value))
+                            }
                             value={
                               field.value !== undefined && field.value !== null
                                 ? field.value.toString()
@@ -410,7 +424,10 @@ export default function PriceListForm({
                             </FormControl>
                             <SelectContent>
                               {weightRangeFields.map((range, idx) => (
-                                <SelectItem key={idx} value={idx.toString()}>
+                                <SelectItem
+                                  key={idx + range.id}
+                                  value={idx.toString()}
+                                >
                                   {form.watch(`weight_ranges.${idx}.name`) ||
                                     `Rango ${idx + 1}`}
                                 </SelectItem>
@@ -453,7 +470,10 @@ export default function PriceListForm({
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
                           <FormLabel>Moneda</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue />
@@ -500,8 +520,8 @@ export default function PriceListForm({
             {isSubmitting
               ? "Guardando..."
               : mode === "create"
-                ? "Crear Lista de Precio"
-                : "Actualizar Lista de Precio"}
+              ? "Crear Lista de Precio"
+              : "Actualizar Lista de Precio"}
           </Button>
         </div>
       </form>

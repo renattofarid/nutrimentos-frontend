@@ -6,15 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useState } from "react";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import type { PurchaseDetailResource } from "../lib/purchase.interface";
@@ -28,9 +20,7 @@ interface PurchaseDetailTableProps {
 
 export function PurchaseDetailTable({
   details,
-  onEdit,
   onRefresh,
-  isPurchasePaid = false,
 }: PurchaseDetailTableProps) {
   const [deleteId, setDeleteId] = useState<number | null>(null);
 

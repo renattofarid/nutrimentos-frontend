@@ -17,7 +17,6 @@ import { PurchaseInstallmentForm } from "../forms/PurchaseInstallmentForm";
 import { PurchaseDetailTable } from "../PurchaseDetailTable";
 import { PurchaseInstallmentTable } from "../PurchaseInstallmentTable";
 import { errorToast, successToast } from "@/lib/core.function";
-import { usePurchaseStore } from "../../lib/purchase.store";
 
 interface PurchaseManagementSheetProps {
   open: boolean;
@@ -30,7 +29,6 @@ export function PurchaseManagementSheet({
   open,
   onClose,
   purchase,
-  onPurchaseUpdate,
 }: PurchaseManagementSheetProps) {
   const [activeTab, setActiveTab] = useState("details");
   const [showInstallmentForm, setShowInstallmentForm] = useState(false);
@@ -39,8 +37,6 @@ export function PurchaseManagementSheet({
   >(null);
   const [currentPurchase, setCurrentPurchase] =
     useState<PurchaseResource | null>(purchase);
-
-  const { fetchPurchase } = usePurchaseStore();
 
   const {
     installments,
@@ -59,23 +55,6 @@ export function PurchaseManagementSheet({
       fetchInstallments(purchase.id);
     }
   }, [purchase, open]);
-
-  // Función para refrescar los datos de la compra
-  const refreshPurchaseData = async () => {
-    if (!purchase) return;
-
-    try {
-      await fetchPurchase(purchase.id);
-      // Actualizar la compra localmente obteniendo los datos del store
-      const { purchase: updatedPurchase } = usePurchaseStore.getState();
-      if (updatedPurchase) {
-        setCurrentPurchase(updatedPurchase);
-      }
-      onPurchaseUpdate?.(); // Notificar al componente padre
-    } catch (error) {
-      // Error manejado en el store
-    }
-  };
 
   useEffect(() => {
     if (editingInstallmentId) {

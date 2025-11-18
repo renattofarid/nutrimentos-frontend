@@ -1,4 +1,4 @@
-import { requiredStringId } from "@/lib/core.schema";
+import { optionalStringId, requiredStringId } from "@/lib/core.schema";
 import { z } from "zod";
 
 // ===== DETAIL SCHEMA =====
@@ -52,7 +52,7 @@ export type PurchaseInstallmentSchema = z.infer<
 
 export const purchaseSchemaCreate = z.object({
   company_id: requiredStringId("Debe seleccionar una empresa"),
-  supplier_id: requiredStringId("Debe seleccionar un proveedor"),
+  supplier_id: optionalStringId("Proveedor inválido"),
   warehouse_id: requiredStringId("Debe seleccionar un almacén"),
   purchase_order_id: z.string().optional().nullable(),
   document_type: z

@@ -30,6 +30,9 @@ api.interceptors.request.use(
   }
 );
 
+// Flag global para prevenir múltiples notificaciones de sesión expirada
+let isSessionExpired = false;
+
 // Interceptor para manejar respuestas y errores
 api.interceptors.response.use(
   (response) => {
@@ -37,17 +40,21 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response && error.response.status === 401) {
-      console.error(
-        "No autenticado: Redirigiendo al inicio de sesión en 3 segundos..."
-      );
-      localStorage.removeItem("token");
-      errorToast(
-        "SESIÓN EXPIRADA",
-        "Redirigiendo al inicio de sesión en 3 segundos"
-      );
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 3000);
+      // Solo mostrar el toast y redirigir si no se ha manejado ya
+      if (!isSessionExpired) {
+        isSessionExpired = true;
+        console.error(
+          "No autenticado: Redirigiendo al inicio de sesión en 3 segundos..."
+        );
+        localStorage.removeItem("token");
+        errorToast(
+          "SESIÓN EXPIRADA",
+          "Redirigiendo al inicio de sesión en 3 segundos"
+        );
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 3000);
+      }
     }
     return Promise.reject(error);
   }

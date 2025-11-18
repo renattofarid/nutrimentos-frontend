@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Eye, Image as ImageIcon, DollarSign } from "lucide-react";
+import { ArrowLeft, Eye, Image as ImageIcon } from "lucide-react";
 import { ProductImageGallery } from "./ProductImageGallery";
-import { ProductPriceManager } from "./ProductPriceManager";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -121,17 +120,6 @@ export default function ProductDetail() {
                 </p>
               </div>
             </div>
-          </div>
-
-          <Separator />
-
-          {/* Prices */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <DollarSign className="h-5 w-5" />
-              <h3 className="text-lg font-semibold">Lista de Precios</h3>
-            </div>
-            <ProductPriceManager productId={parseInt(id!)} />
           </div>
 
           <Separator />

@@ -1,14 +1,21 @@
-import type { LucideIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
+import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "destructive" | "secondary" | "accent" | "success" | "warning"
+type Variant =
+  | "primary"
+  | "destructive"
+  | "secondary"
+  | "accent"
+  | "success"
+  | "warning"
+  | "muted";
 
 interface StatCardProps {
-  title: string
-  value: string | number
-  subtitle: string
-  icon: LucideIcon
-  variant?: Variant
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: LucideIcon;
+  variant?: Variant;
 }
 
 export function StatCard({
@@ -25,7 +32,8 @@ export function StatCard({
     accent: "bg-accent/10 border-accent/20",
     success: "bg-green-500/10 border-green-500/20",
     warning: "bg-orange-500/10 border-orange-500/20",
-  }
+    muted: "bg-muted/10 border-muted/20",
+  };
 
   const textStyles: Record<Variant, string> = {
     primary: "text-primary",
@@ -34,12 +42,13 @@ export function StatCard({
     accent: "text-accent",
     success: "text-green-600 dark:text-green-500",
     warning: "text-orange-600 dark:text-orange-500",
-  }
+    muted: "text-muted-foreground",
+  };
 
   return (
     <div
       className={cn(
-        "rounded-xl p-5 shadow-sm border transition-all hover:shadow-md",
+        "rounded-xl p-5 shadow-sm transition-all hover:shadow-md",
         variantStyles[variant]
       )}
     >
@@ -57,9 +66,11 @@ export function StatCard({
           <p className="text-xs text-muted-foreground">{subtitle}</p>
         </div>
         <div className={cn("rounded-lg p-2", variantStyles[variant])}>
-          <Icon className={cn("h-8 w-8 md:h-10 md:w-10", textStyles[variant])} />
+          <Icon
+            className={cn("h-8 w-8 md:h-10 md:w-10", textStyles[variant])}
+          />
         </div>
       </div>
     </div>
-  )
+  );
 }

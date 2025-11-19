@@ -15,22 +15,10 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts";
 import { usePurchase } from "@/pages/purchase/lib/purchase.hook";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { Badge } from "@/components/ui/badge";
-import { PurchaseStatusChart, PaymentTypeChart } from "./charts";
+import { PurchaseStatusChart, PaymentTypeChart, MonthlyPurchasesChart } from "./charts";
 import { StatCard } from "./StatCard";
 
 export default function HomePage() {
@@ -129,33 +117,6 @@ export default function HomePage() {
     }
   }, [purchases, products]);
 
-  const chartConfig = {
-    total: {
-      label: "Total",
-      color: "var(--chart-1)",
-    },
-    REGISTRADO: {
-      label: "Registrado",
-      color: "var(--chart-2)",
-    },
-    PAGADA: {
-      label: "Pagada",
-      color: "var(--chart-1)",
-    },
-    PENDIENTE: {
-      label: "Pendiente",
-      color: "var(--chart-3)",
-    },
-    CONTADO: {
-      label: "Contado",
-      color: "var(--chart-1)",
-    },
-    CREDITO: {
-      label: "Crédito",
-      color: "var(--chart-2)",
-    },
-  };
-
   if (purchasesLoading || productsLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -189,7 +150,7 @@ export default function HomePage() {
           value={`S/. ${stats.totalPurchaseAmount.toFixed(2)}`}
           subtitle="En compras realizadas"
           icon={DollarSign}
-          variant="success"
+          variant="secondary"
         />
 
         <StatCard
@@ -205,49 +166,14 @@ export default function HomePage() {
           value={stats.totalProducts}
           subtitle="En el catálogo"
           icon={Package}
-          variant="accent"
+          variant="muted"
         />
       </div>
 
       {/* Charts Grid */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Compras por Mes */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Compras por Mes</CardTitle>
-            <CardDescription>
-              Monto total de compras en los últimos 6 meses
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {purchasesByMonth.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                <BarChart data={purchasesByMonth}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    className="stroke-muted"
-                  />
-                  <XAxis
-                    dataKey="month"
-                    tick={{ fontSize: 12 }}
-                    tickLine={false}
-                  />
-                  <YAxis tick={{ fontSize: 12 }} tickLine={false} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar
-                    dataKey="total"
-                    fill="var(--chart-1)"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No hay datos disponibles
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <MonthlyPurchasesChart data={purchasesByMonth} />
 
         {/* Estado de Compras */}
         <PurchaseStatusChart data={purchasesByStatus} />

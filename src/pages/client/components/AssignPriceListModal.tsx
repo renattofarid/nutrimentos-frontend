@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { successToast, errorToast } from "@/lib/core.function";
 import { GeneralModal } from "@/components/GeneralModal";
 import { FormSelect } from "@/components/FormSelect";
-import { usePriceList } from "@/pages/pricelist/lib/pricelist.hook";
+import { useAllPriceList } from "@/pages/pricelist/lib/pricelist.hook";
 import type { PriceList } from "@/pages/pricelist/lib/pricelist.interface";
 
 interface AssignPriceListModalProps {
@@ -28,7 +28,7 @@ export default function AssignPriceListModal({
   onClose,
   onSuccess,
 }: AssignPriceListModalProps) {
-  const { data: priceLists } = usePriceList({ per_page: 1000 });
+  const { data: priceLists } = useAllPriceList();
   const { assignClient, isSubmitting } = usePriceListStore();
 
   const form = useForm<AssignPriceListToClientSchema>({

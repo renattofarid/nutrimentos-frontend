@@ -7,6 +7,7 @@ import type {
   AssignClientRequest,
   GetPriceRequest,
   GetPriceResponse,
+  PriceList,
 } from "./pricelist.interface";
 import { PRICELIST } from "./pricelist.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
@@ -26,6 +27,22 @@ export async function getPriceLists({
     },
   };
   const { data } = await api.get<PriceListResponse>(ENDPOINT, config);
+  return data;
+}
+
+// Obtener todas las listas de precio con paginación
+export async function getAllPriceLists({
+  params,
+}: {
+  params?: Record<string, any>;
+}): Promise<PriceList[]> {
+  const config: AxiosRequestConfig = {
+    params: {
+      ...params,
+      all: true,
+    },
+  };
+  const { data } = await api.get<PriceList[]>(ENDPOINT, config);
   return data;
 }
 

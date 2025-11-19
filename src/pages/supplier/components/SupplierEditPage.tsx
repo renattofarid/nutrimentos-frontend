@@ -19,6 +19,7 @@ import { SUPPLIER, SUPPLIER_ROLE_ID } from "../lib/supplier.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import FormWrapper from "@/components/FormWrapper";
 import TitleFormComponent from "@/components/TitleFormComponent";
+import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
 
 const { MODEL } = SUPPLIER;
 
@@ -68,7 +69,7 @@ export default function SupplierEditPage() {
       };
 
       // Only include names when NATURAL or when the document type is DNI
-      if (data.type_person === "NATURAL" || data.type_document === "DNI") {
+      if (data.type_person === "NATURAL" || data.document_type_id === TYPE_DOCUMENT.DNI.id) {
         updatePersonData.names = data.names || "";
       }
 

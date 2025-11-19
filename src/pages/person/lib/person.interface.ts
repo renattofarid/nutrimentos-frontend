@@ -35,7 +35,6 @@ export const PERSON: ModelComplete<PersonSchema> = {
     },
   },
   EMPTY: {
-    type_document: "DNI",
     document_type_id: "",
     type_person: "NATURAL",
     names: "",

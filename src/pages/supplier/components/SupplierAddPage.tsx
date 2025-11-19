@@ -15,6 +15,7 @@ import {
 } from "@/lib/core.function";
 import { SUPPLIER, SUPPLIER_ROLE_ID } from "../lib/supplier.interface";
 import FormWrapper from "@/components/FormWrapper";
+import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
 
 const { MODEL } = SUPPLIER;
 
@@ -42,7 +43,7 @@ export default function SupplierAddPage() {
       };
 
       // Only include names when NATURAL or when the document type is DNI
-      if (data.type_person === "NATURAL" || data.type_document === "DNI") {
+      if (data.type_person === "NATURAL" || data.document_type_id === TYPE_DOCUMENT.DNI.id) {
         createPersonData.names = namesOnly;
       }
 

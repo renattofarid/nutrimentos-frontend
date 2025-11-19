@@ -126,7 +126,7 @@ export interface PriceListByIdResponse {
 
 // Asignar cliente a lista de precio
 export interface AssignClientRequest {
-  person_id: number;
+  person_id: string;
 }
 
 // Consultar precio

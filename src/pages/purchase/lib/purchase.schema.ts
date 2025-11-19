@@ -83,7 +83,7 @@ export const purchaseSchemaCreate = z.object({
   payment_type: z
     .string()
     .min(1, { message: "Debe seleccionar un tipo de pago" }),
-  include_igv: z.boolean().default(false),
+  include_igv: z.boolean(),
   currency: z.string().min(1, { message: "Debe seleccionar una moneda" }),
   details: z
     .array(purchaseDetailSchema)

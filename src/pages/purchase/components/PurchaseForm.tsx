@@ -581,7 +581,6 @@ export const PurchaseForm = ({
                   supplier.mother_surname,
               description: supplier.number_document || undefined,
             }))}
-            disabled={mode === "update"}
           />
 
           <FormSelect
@@ -1019,7 +1018,6 @@ export const PurchaseForm = ({
             type="submit"
             disabled={
               isSubmitting ||
-              !form.formState.isValid ||
               (mode === "create" && details.length === 0) ||
               (mode === "create" &&
                 selectedPaymentType === "CREDITO" &&

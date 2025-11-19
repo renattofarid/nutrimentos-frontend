@@ -1,3 +1,4 @@
+import { requiredStringId } from "@/lib/core.schema";
 import { z } from "zod";
 
 // Schema para Weight Range
@@ -110,10 +111,7 @@ export const priceListSchemaUpdate = z.object({
 
 // Schema para asignar cliente
 export const assignClientSchema = z.object({
-  person_id: z
-    .number({ error: "Debe seleccionar un cliente" })
-    .int("Debe ser un número entero")
-    .min(1, "Debe seleccionar un cliente"),
+  person_id: requiredStringId("Debe seleccionar un cliente"),
 });
 
 // Schema para consultar precio

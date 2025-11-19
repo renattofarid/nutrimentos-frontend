@@ -55,7 +55,7 @@ export function FormSelect({
   control,
   disabled,
   tooltip,
-  withValue = true,
+  withValue = false,
   classNameOption,
   strictFilter = false,
 }: FormSelectProps) {

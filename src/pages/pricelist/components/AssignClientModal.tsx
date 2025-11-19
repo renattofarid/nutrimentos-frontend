@@ -5,25 +5,14 @@ import {
   assignClientSchema,
   type AssignClientSchema,
 } from "../lib/pricelist.schema";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { successToast, errorToast } from "@/lib/core.function";
 import { GeneralModal } from "@/components/GeneralModal";
+import { FormSelect } from "@/components/FormSelect";
+import { CLIENT_ROLE_CODE } from "@/pages/client/lib/client.interface";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
 
 interface AssignClientModalProps {
   priceListId: number;
@@ -36,13 +25,13 @@ export default function AssignClientModal({
   open,
   onClose,
 }: AssignClientModalProps) {
-  const persons = useAllPersons({ is_client: 1 }); // Filtrar solo clientes
+  const persons = useAllPersons({ role_names: [CLIENT_ROLE_CODE] }); // Filtrar solo clientes
   const { assignClient, isSubmitting } = usePriceListStore();
 
   const form = useForm<AssignClientSchema>({
     resolver: zodResolver(assignClientSchema),
     defaultValues: {
-      person_id: 0,
+      person_id: "",
     },
     mode: "onChange",
   });
@@ -71,41 +60,22 @@ export default function AssignClientModal({
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <FormField
+          <FormSelect
+            label={"Cliente"}
             control={form.control}
             name="person_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cliente *</FormLabel>
-                <Select
-                  onValueChange={(value) => field.onChange(Number(value))}
-                  value={field.value?.toString()}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar cliente" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {persons && persons.length > 0 ? (
-                      persons.map((person: any) => (
-                        <SelectItem
-                          key={person.id}
-                          value={person.id.toString()}
-                        >
-                          {person.name || person.business_name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="0" disabled>
-                        No hay clientes disponibles
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            placeholder="Seleccionar cliente"
+            options={
+              persons && persons.length > 0
+                ? persons.map((person: PersonResource) => ({
+                    label:
+                      person.business_name ??
+                      `${person.names} ${person.father_surname} ${person.mother_surname}`,
+                    value: person.id.toString(),
+                    description: person.number_document ?? undefined,
+                  }))
+                : []
+            }
           />
 
           <div className="flex gap-4 justify-end mt-6">

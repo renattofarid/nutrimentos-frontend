@@ -37,3 +37,68 @@ export const CLIENT: ModelComplete<any> = {
 
 export const CLIENT_ROLE_CODE = "Cliente";
 export const CLIENT_ROLE_ID = 1;
+
+// Interfaces para la lista de precios del cliente
+export interface ClientPriceListWeightRange {
+  id: number;
+  client_category_id: number;
+  name: string;
+  min_weight: string;
+  max_weight: string;
+  order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClientPriceList {
+  id: number;
+  name: string;
+  code: string;
+  description: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  weight_ranges: ClientPriceListWeightRange[];
+}
+
+export interface ClientPriceProduct {
+  id: number;
+  company_id: number;
+  codigo: string;
+  name: string;
+  category_id: number;
+  product_type_id: number;
+  brand_id: number;
+  unit_id: number;
+  is_taxed: number;
+  supplier_id: number;
+  comment: string;
+  nationality_id: number;
+  created_at: string;
+}
+
+export interface ClientProductPrice {
+  id: number;
+  product_id: number;
+  weight_range_id: number;
+  client_category_id: number;
+  price: string;
+  currency: string;
+  is_active: boolean;
+  branch_id: null | number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: null | string;
+  product: ClientPriceProduct;
+}
+
+export interface ClientPriceListData {
+  price_list: ClientPriceList;
+  products: ClientProductPrice[];
+  total_products: number;
+}
+
+export interface ClientPriceListResponse {
+  message: string;
+  data: ClientPriceListData;
+}

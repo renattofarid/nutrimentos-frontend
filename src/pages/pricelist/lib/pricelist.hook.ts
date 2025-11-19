@@ -5,7 +5,8 @@ import { usePriceListStore } from "./pricelist.store";
  * Hook para obtener listas de precio con paginación
  */
 export function usePriceList(params?: Record<string, unknown>) {
-  const { priceLists, meta, isLoading, error, fetchPriceLists } = usePriceListStore();
+  const { priceLists, meta, isLoading, error, fetchPriceLists } =
+    usePriceListStore();
 
   useEffect(() => {
     if (!priceLists) {
@@ -19,6 +20,21 @@ export function usePriceList(params?: Record<string, unknown>) {
     isLoading,
     error,
     refetch: fetchPriceLists,
+  };
+}
+
+export function useAllPriceList() {
+  const { allPriceLists, isLoadingAll, error, fetchAllPriceLists } =
+    usePriceListStore();
+
+  useEffect(() => {
+    if (!allPriceLists) fetchAllPriceLists();
+  }, [allPriceLists, fetchAllPriceLists]);
+  return {
+    data: allPriceLists,
+    isLoading: isLoadingAll,
+    error,
+    refetch: fetchAllPriceLists,
   };
 }
 

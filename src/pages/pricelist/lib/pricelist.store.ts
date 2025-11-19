@@ -11,17 +11,20 @@ import * as actions from "./pricelist.actions";
 
 interface PriceListStore {
   // Estado
+  allPriceLists: PriceList[] | null;
   priceLists: PriceList[] | null;
   priceList: PriceList | null;
   priceData: GetPriceResponse | null;
   meta: Meta | null;
   isLoading: boolean;
+  isLoadingAll: boolean;
   isFinding: boolean;
   isSubmitting: boolean;
   error: string | null;
 
   // Acciones
   fetchPriceLists: (params?: Record<string, any>) => Promise<void>;
+  fetchAllPriceLists: () => Promise<void>;
   fetchPriceList: (id: number) => Promise<void>;
   createPriceList: (data: PriceListSchemaCreate) => Promise<void>;
   updatePriceList: (id: number, data: PriceListSchemaUpdate) => Promise<void>;
@@ -34,11 +37,13 @@ interface PriceListStore {
 
 export const usePriceListStore = create<PriceListStore>((set) => ({
   // Estado inicial
+  allPriceLists: null,
   priceLists: null,
   priceList: null,
   priceData: null,
   meta: null,
   isLoading: false,
+  isLoadingAll: false,
   isFinding: false,
   isSubmitting: false,
   error: null,
@@ -55,6 +60,21 @@ export const usePriceListStore = create<PriceListStore>((set) => ({
           error.response?.data?.message ||
           "Error al cargar las listas de precio",
         isLoading: false,
+      });
+    }
+  },
+
+  fetchAllPriceLists: async () => {
+    set({ isLoadingAll: true, error: null });
+    try {
+      const data = await actions.getAllPriceLists({});
+      set({ allPriceLists: data, isLoadingAll: false });
+    } catch (error: any) {
+      set({
+        error:
+          error.response?.data?.message ||
+          "Error al cargar todas las listas de precio",
+        isLoadingAll: false,
       });
     }
   },

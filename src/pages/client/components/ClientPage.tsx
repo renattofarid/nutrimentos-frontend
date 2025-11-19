@@ -20,6 +20,8 @@ import { PersonRoleAssignment } from "@/pages/person/components/PersonRoleAssign
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import { CLIENT_ROLE_ID } from "../lib/client.interface";
+import ClientPriceListSheet from "./ClientPriceListSheet";
+import AssignPriceListModal from "./AssignPriceListModal";
 const { MODEL, ICON } = CLIENT;
 
 export default function ClientPage() {
@@ -29,6 +31,10 @@ export default function ClientPage() {
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [roleAssignmentPerson, setRoleAssignmentPerson] =
+    useState<PersonResource | null>(null);
+  const [priceListPerson, setPriceListPerson] =
+    useState<PersonResource | null>(null);
+  const [assignPriceListPerson, setAssignPriceListPerson] =
     useState<PersonResource | null>(null);
   const { data, meta, isLoading, refetch } = useClients();
 
@@ -57,6 +63,22 @@ export default function ClientPage() {
     setRoleAssignmentPerson(null);
   };
 
+  const handleViewPriceList = (person: PersonResource) => {
+    setPriceListPerson(person);
+  };
+
+  const handleClosePriceList = () => {
+    setPriceListPerson(null);
+  };
+
+  const handleAssignPriceList = (person: PersonResource) => {
+    setAssignPriceListPerson(person);
+  };
+
+  const handleCloseAssignPriceList = () => {
+    setAssignPriceListPerson(null);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -73,6 +95,8 @@ export default function ClientPage() {
         columns={PersonColumns({
           onEdit: (person) => navigate(`/clientes/editar/${person}`),
           onDelete: setDeleteId,
+          onViewPriceList: handleViewPriceList,
+          onAssignPriceList: handleAssignPriceList,
           // onManageRoles: handleManageRoles,
         })}
         data={data || []}
@@ -96,6 +120,34 @@ export default function ClientPage() {
           personName={roleAssignmentPerson.names}
           open={!!roleAssignmentPerson}
           onClose={handleCloseRoleAssignment}
+        />
+      )}
+
+      {priceListPerson && (
+        <ClientPriceListSheet
+          open={!!priceListPerson}
+          onOpenChange={(open) => !open && handleClosePriceList()}
+          personId={priceListPerson.id}
+          personName={
+            priceListPerson.business_name ||
+            `${priceListPerson.names} ${priceListPerson.father_surname || ""} ${
+              priceListPerson.mother_surname || ""
+            }`.trim()
+          }
+        />
+      )}
+
+      {assignPriceListPerson && (
+        <AssignPriceListModal
+          open={!!assignPriceListPerson}
+          onClose={handleCloseAssignPriceList}
+          personId={assignPriceListPerson.id}
+          personName={
+            assignPriceListPerson.business_name ||
+            `${assignPriceListPerson.names} ${
+              assignPriceListPerson.father_surname || ""
+            } ${assignPriceListPerson.mother_surname || ""}`.trim()
+          }
         />
       )}
 

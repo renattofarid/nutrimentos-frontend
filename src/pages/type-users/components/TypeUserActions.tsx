@@ -5,13 +5,14 @@ import TypeUserModal from "./TypeUserModal";
 import { Plus } from "lucide-react";
 import { TYPE_USER } from "../lib/typeUser.interface";
 import { useState } from "react";
+import ActionsWrapper from "@/components/ActionsWrapper";
 
 export default function TypeUserActions() {
   const [open, setOpen] = useState(false);
 
   const { MODEL } = TYPE_USER;
   return (
-    <div className="flex items-center gap-2">
+    <ActionsWrapper>
       <Button
         size="sm"
         className="ml-auto"
@@ -25,6 +26,6 @@ export default function TypeUserActions() {
         open={open}
         onClose={() => setOpen(false)}
       />
-    </div>
+    </ActionsWrapper>
   );
 }

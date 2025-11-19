@@ -1,3 +1,4 @@
+import { requiredStringId } from "@/lib/core.schema";
 import { z } from "zod";
 
 // Schema para Weight Range
@@ -110,10 +111,12 @@ export const priceListSchemaUpdate = z.object({
 
 // Schema para asignar cliente
 export const assignClientSchema = z.object({
-  person_id: z
-    .number({ error: "Debe seleccionar un cliente" })
-    .int("Debe ser un número entero")
-    .min(1, "Debe seleccionar un cliente"),
+  person_id: requiredStringId("Debe seleccionar un cliente"),
+});
+
+// Schema para asignar lista de precios a cliente
+export const assignPriceListToClientSchema = z.object({
+  price_list_id: requiredStringId("Debe seleccionar una lista de precios"),
 });
 
 // Schema para consultar precio
@@ -137,4 +140,7 @@ export type PriceListSchemaUpdate = z.infer<typeof priceListSchemaUpdate>;
 export type WeightRangeSchema = z.infer<typeof weightRangeSchema>;
 export type ProductPriceSchema = z.infer<typeof productPriceSchema>;
 export type AssignClientSchema = z.infer<typeof assignClientSchema>;
+export type AssignPriceListToClientSchema = z.infer<
+  typeof assignPriceListToClientSchema
+>;
 export type GetPriceSchema = z.infer<typeof getPriceSchema>;

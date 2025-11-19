@@ -70,7 +70,7 @@ export const BoxForm = ({
                 <FormLabel>Nombre</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     placeholder="Ej: Caja Central"
                     {...field}
                   />
@@ -88,7 +88,7 @@ export const BoxForm = ({
                 <FormLabel>Serie</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     placeholder="Ej: 001"
                     className="font-mono"
                     maxLength={10}

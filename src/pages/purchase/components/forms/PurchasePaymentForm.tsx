@@ -124,7 +124,7 @@ export function PurchasePaymentForm({
               <FormLabel>Número de Referencia</FormLabel>
               <FormControl>
                 <Input
-                  variant="primary"
+                  variant="default"
                   placeholder="Ej: OP-20251009-001"
                   {...field}
                 />
@@ -142,7 +142,7 @@ export function PurchasePaymentForm({
               <FormLabel>Número de Banco/Cuenta</FormLabel>
               <FormControl>
                 <Input
-                  variant="primary"
+                  variant="default"
                   placeholder="Ej: 4567891230"
                   {...field}
                 />
@@ -163,7 +163,7 @@ export function PurchasePaymentForm({
                   <Input
                     type="number"
                     step="0.01"
-                    variant="primary"
+                    variant="default"
                     placeholder="0.00"
                     {...field}
                   />
@@ -183,7 +183,7 @@ export function PurchasePaymentForm({
                   <Input
                     type="number"
                     step="0.01"
-                    variant="primary"
+                    variant="default"
                     placeholder="0.00"
                     {...field}
                   />
@@ -203,7 +203,7 @@ export function PurchasePaymentForm({
                   <Input
                     type="number"
                     step="0.01"
-                    variant="primary"
+                    variant="default"
                     placeholder="0.00"
                     {...field}
                   />
@@ -223,7 +223,7 @@ export function PurchasePaymentForm({
                   <Input
                     type="number"
                     step="0.01"
-                    variant="primary"
+                    variant="default"
                     placeholder="0.00"
                     {...field}
                   />
@@ -243,7 +243,7 @@ export function PurchasePaymentForm({
                   <Input
                     type="number"
                     step="0.01"
-                    variant="primary"
+                    variant="default"
                     placeholder="0.00"
                     {...field}
                   />

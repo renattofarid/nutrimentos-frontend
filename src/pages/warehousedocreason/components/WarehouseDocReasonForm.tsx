@@ -67,7 +67,7 @@ export const WarehouseDocReasonForm = ({
                 <FormLabel>Nombre</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     placeholder="Ej: COBRAR DEUDA"
                     {...field}
                   />

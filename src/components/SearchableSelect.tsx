@@ -90,10 +90,11 @@ export function SearchableSelect({
     >
       <PopoverTrigger asChild>
         <Button
+          size={"sm"}
           variant="outline"
           type="button"
           className={cn(
-            "flex h-9 md:w-fit w-full items-center justify-between rounded-md border px-3 text-sm",
+            "flex md:w-fit w-full items-center justify-between rounded-md border px-3 text-sm",
             selected && "text-primary",
             className
           )}

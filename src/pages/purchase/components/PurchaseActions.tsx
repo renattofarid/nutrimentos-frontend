@@ -1,3 +1,4 @@
+import ActionsWrapper from "@/components/ActionsWrapper";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -7,11 +8,11 @@ interface PurchaseActionsProps {
 
 export const PurchaseActions = ({ onCreatePurchase }: PurchaseActionsProps) => {
   return (
-    <div className="flex gap-2">
-      <Button onClick={onCreatePurchase}>
+    <ActionsWrapper>
+      <Button onClick={onCreatePurchase} size="sm">
         <Plus className="mr-2 h-4 w-4" />
         Crear Compra
       </Button>
-    </div>
+    </ActionsWrapper>
   );
 };

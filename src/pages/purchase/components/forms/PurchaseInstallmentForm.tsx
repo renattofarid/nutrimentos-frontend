@@ -76,7 +76,7 @@ export function PurchaseInstallmentForm({
               <FormControl>
                 <Input
                   type="number"
-                  variant="primary"
+                  variant="default"
                   placeholder="Ej: 30"
                   {...field}
                 />
@@ -96,7 +96,7 @@ export function PurchaseInstallmentForm({
                 <Input
                   type="number"
                   step="0.01"
-                  variant="primary"
+                  variant="default"
                   placeholder="0.00"
                   {...field}
                 />

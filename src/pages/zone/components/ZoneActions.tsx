@@ -5,18 +5,15 @@ import ZoneModal from "./ZoneModal";
 import { Plus } from "lucide-react";
 import { ZONE } from "../lib/zone.interface";
 import { useState } from "react";
+import ActionsWrapper from "@/components/ActionsWrapper";
 
 export default function ZoneActions() {
   const [open, setOpen] = useState(false);
 
   const { MODEL } = ZONE;
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        size="sm"
-        className="ml-auto"
-        onClick={() => setOpen(true)}
-      >
+    <ActionsWrapper>
+      <Button size="sm" className="ml-auto" onClick={() => setOpen(true)}>
         <Plus className="size-4 mr-2" /> Agregar {MODEL.name}
       </Button>
       <ZoneModal
@@ -25,6 +22,6 @@ export default function ZoneActions() {
         open={open}
         onClose={() => setOpen(false)}
       />
-    </div>
+    </ActionsWrapper>
   );
 }

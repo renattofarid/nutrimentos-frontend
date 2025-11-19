@@ -56,7 +56,7 @@ export const NationalityForm = ({
                 <FormLabel>Nombre</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     placeholder="Ej: Peruana"
                     {...field}
                   />
@@ -74,7 +74,7 @@ export const NationalityForm = ({
                 <FormLabel>Código</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     placeholder="Ej: PE"
                     {...field}
                     onChange={(e) => {

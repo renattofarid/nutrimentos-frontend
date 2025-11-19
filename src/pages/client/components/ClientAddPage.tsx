@@ -14,6 +14,7 @@ import {
 } from "@/lib/core.function";
 import { CLIENT, CLIENT_ROLE_ID } from "../lib/client.interface";
 import FormWrapper from "@/components/FormWrapper";
+import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
 
 const { MODEL, ICON } = CLIENT;
 
@@ -24,8 +25,8 @@ export default function ClientAddPage() {
   const handleSubmit = async (data: PersonSchemaClient) => {
     setIsSubmitting(true);
     try {
-  // For names field: send only the 'names' field as entered by the user
-  const namesOnly = data.names || "";
+      // For names field: send only the 'names' field as entered by the user
+      const namesOnly = data.names || "";
 
       // Build payload with only the fields present in the form
       const createPersonData: any = {
@@ -40,7 +41,10 @@ export default function ClientAddPage() {
       };
 
       // Only include names when NATURAL or when the document type is DNI
-      if (data.type_person === "NATURAL" || data.type_document === "DNI") {
+      if (
+        data.type_person === "NATURAL" ||
+        data.document_type_id === TYPE_DOCUMENT.DNI.id
+      ) {
         createPersonData.names = namesOnly;
       }
 

@@ -56,7 +56,7 @@ export const ProductTypeForm = ({
                 <FormLabel>Nombre</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     placeholder="Ej: Normal"
                     {...field}
                   />
@@ -74,7 +74,7 @@ export const ProductTypeForm = ({
                 <FormLabel>Código</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     placeholder="Ej: NORM"
                     {...field}
                     onChange={(e) => {

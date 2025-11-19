@@ -1,10 +1,6 @@
 import { Bell } from "lucide-react";
 import { Button } from "./ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "./ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Badge } from "./ui/badge";
 import { useExpiringAlerts } from "@/pages/purchaseinstallment/lib/purchaseinstallment.hook";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +14,7 @@ export function NotificationBell() {
   const alertCount = alerts?.length || 0;
 
   const handleAlertClick = (purchaseId: number) => {
-    navigate(`/compra/${purchaseId}`);
+    navigate(`/compras/detalle/${purchaseId}`);
   };
 
   return (
@@ -40,9 +36,7 @@ export function NotificationBell() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h4 className="font-semibold text-sm">Cuotas por Vencer</h4>
-            {alertCount > 0 && (
-              <Badge variant="secondary">{alertCount}</Badge>
-            )}
+            {alertCount > 0 && <Badge variant="secondary">{alertCount}</Badge>}
           </div>
           <Separator />
           {isLoading ? (
@@ -71,7 +65,8 @@ export function NotificationBell() {
                       </Badge>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Vence: {new Date(alert.due_date).toLocaleDateString("es-PE")}
+                      Vence:{" "}
+                      {new Date(alert.due_date).toLocaleDateString("es-PE")}
                     </div>
                     <div className="text-sm font-semibold mt-1">
                       S/. {parseFloat(alert.pending_amount).toFixed(2)}

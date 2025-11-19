@@ -5,13 +5,14 @@ import RoleModal from "./RoleModal";
 import { Plus } from "lucide-react";
 import { ROLE } from "../lib/role.interface";
 import { useState } from "react";
+import ActionsWrapper from "@/components/ActionsWrapper";
 
 export default function RoleActions() {
   const [open, setOpen] = useState(false);
 
   const { MODEL } = ROLE;
   return (
-    <div className="flex items-center gap-2">
+    <ActionsWrapper>
       <Button
         size="sm"
         className="ml-auto"
@@ -24,6 +25,6 @@ export default function RoleActions() {
         onOpenChange={setOpen}
         onSuccess={() => setOpen(false)}
       />
-    </div>
+    </ActionsWrapper>
   );
 }

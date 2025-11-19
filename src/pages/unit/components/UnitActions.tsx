@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import UnitModal from "./UnitModal";
 import { UNIT } from "../lib/unit.interface";
+import ActionsWrapper from "@/components/ActionsWrapper";
 
 const { TITLES } = UNIT;
 
@@ -10,8 +11,8 @@ export default function UnitActions() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   return (
-    <>
-      <Button onClick={() => setIsCreateModalOpen(true)}>
+    <ActionsWrapper>
+      <Button size={"sm"} onClick={() => setIsCreateModalOpen(true)}>
         <Plus className="mr-2 h-4 w-4" />
         Agregar Unidad
       </Button>
@@ -24,6 +25,6 @@ export default function UnitActions() {
           mode="create"
         />
       )}
-    </>
+    </ActionsWrapper>
   );
 }

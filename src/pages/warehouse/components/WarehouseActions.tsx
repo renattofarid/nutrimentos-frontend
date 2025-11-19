@@ -5,13 +5,14 @@ import WarehouseModal from "./WarehouseModal";
 import { Plus } from "lucide-react";
 import { WAREHOUSE } from "../lib/warehouse.interface";
 import { useState } from "react";
+import ActionsWrapper from "@/components/ActionsWrapper";
 
 export default function WarehouseActions() {
   const [open, setOpen] = useState(false);
 
   const { MODEL } = WAREHOUSE;
   return (
-    <div className="flex items-center gap-2">
+    <ActionsWrapper>
       <Button
         size="sm"
         className="ml-auto"
@@ -25,6 +26,6 @@ export default function WarehouseActions() {
         open={open}
         onClose={() => setOpen(false)}
       />
-    </div>
+    </ActionsWrapper>
   );
 }

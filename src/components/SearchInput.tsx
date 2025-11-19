@@ -29,7 +29,7 @@ export default function SearchInput({
 
   return (
     <Input
-      className="w-full md:w-64 h-9 text-sm md:text-sm"
+      className="w-full md:w-64 h-8"
       variant="default"
       placeholder={placeholder}
       value={inputValue}

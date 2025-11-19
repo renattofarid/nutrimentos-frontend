@@ -58,7 +58,7 @@ export const JobPositionForm = ({
                 <FormLabel>Nombre</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     placeholder="Ej: Contador"
                     {...field}
                   />
@@ -76,7 +76,7 @@ export const JobPositionForm = ({
                 <FormLabel>Código</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     placeholder="Ej: Cont"
                     className="font-mono"
                     maxLength={10}

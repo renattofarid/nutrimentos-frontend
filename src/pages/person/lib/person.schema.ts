@@ -1,10 +1,6 @@
 import { onlyLettersSchema, requiredStringId } from "@/lib/core.schema";
 import { z } from "zod";
 
-const typeDocumentSchema = z.enum(["DNI", "RUC", "CE", "PASAPORTE"], {
-  error: "Debe seleccionar un tipo de documento",
-});
-
 const typePersonSchema = z.enum(["NATURAL", "JURIDICA"], {
   error: "Debe seleccionar un tipo de persona",
 });
@@ -13,13 +9,11 @@ const genderSchema = z.enum(["M", "F", "O"], {
   error: "Debe seleccionar un género",
 });
 
-export type TypeDocument = z.infer<typeof typeDocumentSchema>;
 export type TypePerson = z.infer<typeof typePersonSchema>;
 export type Gender = z.infer<typeof genderSchema>;
 
 // Base schema - number_document is optional initially
 const basePersonSchema = z.object({
-  type_document: typeDocumentSchema,
   document_type_id: requiredStringId(
     "Debe seleccionar un tipo de documento válido"
   ),
@@ -301,7 +295,10 @@ export const createPersonSchema = (
       // Validaciones específicas por tipo de documento
       // Solo validar si number_document está presente (no vacío)
       if (data.number_document && data.number_document.trim() !== "") {
-        if (data.type_document === "DNI" && data.number_document.length !== 8) {
+        if (
+          data.document_type_id === "1" &&
+          data.number_document.length !== 8
+        ) {
           ctx.addIssue({
             code: "invalid_type",
             expected: "string",
@@ -311,9 +308,9 @@ export const createPersonSchema = (
         }
 
         // Si es cliente y el tipo de documento es RUC, no validar la longitud del RUC
-        if (!(isClient && data.type_document === "RUC")) {
+        if (!(isClient && data.document_type_id === "2")) {
           if (
-            data.type_document === "RUC" &&
+            data.document_type_id === "2" &&
             data.number_document.length !== 11
           ) {
             ctx.addIssue({
@@ -323,30 +320,6 @@ export const createPersonSchema = (
               path: ["number_document"],
             });
           }
-        }
-
-        if (
-          data.type_document === "CE" &&
-          (data.number_document.length < 8 || data.number_document.length > 9)
-        ) {
-          ctx.addIssue({
-            code: "invalid_type",
-            expected: "string",
-            message: "El Carnet de Extranjería debe tener entre 8 y 9 dígitos",
-            path: ["number_document"],
-          });
-        }
-
-        if (
-          data.type_document === "PASAPORTE" &&
-          (data.number_document.length < 8 || data.number_document.length > 11)
-        ) {
-          ctx.addIssue({
-            code: "invalid_type",
-            expected: "string",
-            message: "El Pasaporte debe tener entre 8 y 11 caracteres",
-            path: ["number_document"],
-          });
         }
       }
     });

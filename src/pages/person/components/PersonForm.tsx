@@ -11,7 +11,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader, Search, Save, UserPlus } from "lucide-react";
+import {
+  Loader,
+  Search,
+  Paperclip,
+  IdCard,
+  IdCardLanyard,
+  ListPlus,
+} from "lucide-react";
 import {
   personCreateSchema,
   personCreateSchemaClient,
@@ -37,6 +44,8 @@ import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
 import { usePriceList } from "@/pages/pricelist/lib/pricelist.hook";
 import type { PriceList } from "@/pages/pricelist/lib/pricelist.interface";
+import { TYPE_DOCUMENT } from "../lib/person.constants";
+import { GroupFormSection } from "@/components/GroupFormSection";
 
 interface PersonFormProps {
   initialData?: PersonResource | null;
@@ -78,14 +87,6 @@ export const PersonForm = ({
   const form = useForm<FormSchema>({
     resolver: zodResolver(schema),
     defaultValues: {
-      type_document:
-        (initialData?.document_type_name as
-          | "DNI"
-          | "RUC"
-          | "CE"
-          | "PASAPORTE") ||
-        (initialData as any)?.type_document ||
-        "DNI",
       document_type_id: initialData?.document_type_id?.toString() || "",
       type_person:
         (initialData?.type_person as "NATURAL" | "JURIDICA") || "NATURAL",
@@ -110,7 +111,7 @@ export const PersonForm = ({
   });
 
   const type_person = form.watch("type_person");
-  const type_document = form.watch("type_document");
+  const document_type_id = form.watch("document_type_id");
   const [isSearching, setIsSearching] = useState(false);
 
   // Ref to track if document type change triggered person type change
@@ -128,11 +129,11 @@ export const PersonForm = ({
   const { data: zones, isLoading: isLoadingZones } = useAllZones();
   const { data: priceLists, isLoading: isLoadingPriceLists } = usePriceList();
 
-  // Update document_type_id when type_document changes
+  // Update document_type_id when document_type_id changes
   useEffect(() => {
-    if (documentTypes && type_document) {
+    if (documentTypes) {
       const selectedDocType = documentTypes.find(
-        (dt: DocumentTypeResource) => dt.name === type_document
+        (dt: DocumentTypeResource) => dt.id.toString() === document_type_id
       );
       if (selectedDocType) {
         form.setValue("document_type_id", selectedDocType.id.toString(), {
@@ -140,7 +141,7 @@ export const PersonForm = ({
         });
       }
     }
-  }, [type_document, documentTypes, form]);
+  }, [document_type_id, documentTypes, form]);
 
   // Get form state for better UX
   const { errors, isValid, dirtyFields } = form.formState;
@@ -155,14 +156,20 @@ export const PersonForm = ({
   // Auto-set person type based on document type
   // This handles when user changes document type first
   useEffect(() => {
-    if (type_document === "DNI" && type_person !== "NATURAL") {
+    if (
+      document_type_id === TYPE_DOCUMENT.DNI.id &&
+      type_person !== "NATURAL"
+    ) {
       documentChangeRef.current = true; // Mark that this change came from document type
       form.setValue("type_person", "NATURAL", { shouldValidate: false });
       // Reset the flag after a brief moment
       setTimeout(() => {
         documentChangeRef.current = false;
       }, 50);
-    } else if (type_document === "RUC" && type_person !== "JURIDICA") {
+    } else if (
+      document_type_id === TYPE_DOCUMENT.RUC.id &&
+      type_person !== "JURIDICA"
+    ) {
       documentChangeRef.current = true; // Mark that this change came from document type
       form.setValue("type_person", "JURIDICA", { shouldValidate: false });
       // Reset the flag after a brief moment
@@ -170,34 +177,36 @@ export const PersonForm = ({
         documentChangeRef.current = false;
       }, 50);
     }
-  }, [type_document, form]);
+  }, [document_type_id, form]);
 
   // Reset document type when person type changes to JURIDICA manually
   // Only trigger if the change came from user changing type_person, not from document type change
   useEffect(() => {
     // Only auto-set RUC if user manually changes type_person to JURIDICA while document is DNI
     // Skip if the change came from document type change
-    const currentDoc = form.getValues("type_document");
+    const currentDoc = form.getValues("document_type_id");
     if (
       type_person === "JURIDICA" &&
-      currentDoc === "DNI" &&
+      currentDoc === TYPE_DOCUMENT.DNI.id &&
       !documentChangeRef.current
     ) {
-      form.setValue("type_document", "RUC", { shouldValidate: true });
+      form.setValue("document_type_id", TYPE_DOCUMENT.RUC.id, {
+        shouldValidate: true,
+      });
       form.setValue("number_document", "", { shouldValidate: true });
     }
   }, [type_person, form]);
 
   const handleDocumentSearch = async () => {
     const numberDocument = form.getValues("number_document");
-    const typeDocument = form.getValues("type_document");
+    const typeDocument = form.getValues("document_type_id");
 
     if (!numberDocument || !typeDocument) return;
 
     setIsSearching(true);
 
     try {
-      if (typeDocument === "DNI") {
+      if (typeDocument === TYPE_DOCUMENT.DNI.id) {
         const result = await searchDNI({ search: numberDocument });
 
         if (result && isValidData(result.message) && result.data) {
@@ -225,7 +234,7 @@ export const PersonForm = ({
 
           setFieldsFromSearch(fieldsSet);
         }
-      } else if (typeDocument === "RUC") {
+      } else if (typeDocument === TYPE_DOCUMENT.RUC.id) {
         const result = await searchRUC({ search: numberDocument });
 
         if (result && isValidData(result.message) && result.data) {
@@ -277,10 +286,14 @@ export const PersonForm = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         {/* Document Information */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <GroupFormSection
+          title="Información de Documento"
+          icon={IdCard}
+          cols={{ md: 3 }}
+        >
           <FormSelect
             control={form.control}
-            name="type_document"
+            name="document_type_id"
             label="Tipo de Documento"
             placeholder={
               isLoadingDocumentTypes ? "Cargando..." : "Seleccione tipo"
@@ -291,13 +304,16 @@ export const PersonForm = ({
                 ? []
                 : isWorker
                 ? (documentTypes || [])
-                    .filter((dt: DocumentTypeResource) => dt.name === "DNI")
+                    .filter(
+                      (dt: DocumentTypeResource) =>
+                        dt.name === TYPE_DOCUMENT.DNI.id
+                    )
                     .map((dt: DocumentTypeResource) => ({
-                      value: dt.name,
+                      value: dt.id.toString(),
                       label: dt.name,
                     }))
                 : (documentTypes || []).map((dt: DocumentTypeResource) => ({
-                    value: dt.name,
+                    value: dt.id.toString(),
                     label: dt.name,
                   }))
             }
@@ -319,13 +335,13 @@ export const PersonForm = ({
                   <div className="relative">
                     <Input
                       placeholder={
-                        type_document === "DNI"
+                        document_type_id === TYPE_DOCUMENT.DNI.id
                           ? "Ingrese 8 dígitos"
-                          : type_document === "RUC"
+                          : document_type_id === TYPE_DOCUMENT.RUC.id
                           ? "Ingrese 11 dígitos"
-                          : type_document === "CE"
+                          : document_type_id === "CE"
                           ? "Ingrese 8-9 dígitos"
-                          : type_document === "PASAPORTE"
+                          : document_type_id === "PASAPORTE"
                           ? "Ingrese 8-11 caracteres"
                           : "Ingrese el número"
                       }
@@ -348,13 +364,13 @@ export const PersonForm = ({
                         }
                       `}
                       maxLength={
-                        type_document === "DNI"
+                        document_type_id === TYPE_DOCUMENT.DNI.id
                           ? 8
-                          : type_document === "RUC"
+                          : document_type_id === TYPE_DOCUMENT.RUC.id
                           ? 11
-                          : type_document === "CE"
+                          : document_type_id === "CE"
                           ? 9
-                          : type_document === "PASAPORTE"
+                          : document_type_id === "PASAPORTE"
                           ? 11
                           : 11
                       }
@@ -362,9 +378,9 @@ export const PersonForm = ({
                         let value;
                         // For DNI, RUC, CE only allow numbers
                         if (
-                          type_document === "DNI" ||
-                          type_document === "RUC" ||
-                          type_document === "CE"
+                          document_type_id === TYPE_DOCUMENT.DNI.id ||
+                          document_type_id === TYPE_DOCUMENT.RUC.id ||
+                          document_type_id === "CE"
                         ) {
                           value = e.target.value.replace(/\D/g, "");
                         } else {
@@ -378,14 +394,17 @@ export const PersonForm = ({
                         // Only if value is not empty (for optional client documents)
                         if (
                           value &&
-                          ((type_document === "DNI" && value.length === 8) ||
-                            (type_document === "RUC" && value.length === 11))
+                          ((document_type_id === TYPE_DOCUMENT.DNI.id &&
+                            value.length === 8) ||
+                            (document_type_id === TYPE_DOCUMENT.RUC.id &&
+                              value.length === 11))
                         ) {
                           setTimeout(() => handleDocumentSearch(), 100);
                         }
                       }}
                     />
-                    {(type_document === "DNI" || type_document === "RUC") && (
+                    {(document_type_id === TYPE_DOCUMENT.DNI.id ||
+                      document_type_id === TYPE_DOCUMENT.RUC.id) && (
                       <Button
                         type="button"
                         variant="ghost"
@@ -405,25 +424,29 @@ export const PersonForm = ({
                 </FormControl>
                 <FormMessage />
                 {/* Fixed height container for feedback messages */}
-                <div className="h-4 text-xs">
-                  {field.value && !errors.number_document && (
+                {field.value && !errors.number_document && (
+                  <div className="h-4 text-xs">
                     <>
-                      {type_document === "DNI" && field.value.length === 8 && (
-                        <p className="text-primary">✓ DNI válido (8 dígitos)</p>
-                      )}
-                      {type_document === "RUC" && field.value.length === 11 && (
-                        <p className="text-primary">
-                          ✓ RUC válido (11 dígitos)
-                        </p>
-                      )}
-                      {type_document === "CE" &&
+                      {document_type_id === TYPE_DOCUMENT.DNI.id &&
+                        field.value.length === 8 && (
+                          <p className="text-primary">
+                            ✓ DNI válido (8 dígitos)
+                          </p>
+                        )}
+                      {document_type_id === TYPE_DOCUMENT.RUC.id &&
+                        field.value.length === 11 && (
+                          <p className="text-primary">
+                            ✓ RUC válido (11 dígitos)
+                          </p>
+                        )}
+                      {document_type_id === "CE" &&
                         field.value.length >= 8 &&
                         field.value.length <= 9 && (
                           <p className="text-primary">
                             ✓ CE válido ({field.value.length} dígitos)
                           </p>
                         )}
-                      {type_document === "PASAPORTE" &&
+                      {document_type_id === "PASAPORTE" &&
                         field.value.length >= 8 &&
                         field.value.length <= 11 && (
                           <p className="text-primary">
@@ -431,27 +454,29 @@ export const PersonForm = ({
                           </p>
                         )}
                       {/* Show progress */}
-                      {((type_document === "DNI" && field.value.length < 8) ||
-                        (type_document === "RUC" && field.value.length < 11) ||
-                        (type_document === "CE" && field.value.length < 8) ||
-                        (type_document === "PASAPORTE" &&
+                      {((document_type_id === TYPE_DOCUMENT.DNI.id &&
+                        field.value.length < 8) ||
+                        (document_type_id === TYPE_DOCUMENT.RUC.id &&
+                          field.value.length < 11) ||
+                        (document_type_id === "CE" && field.value.length < 8) ||
+                        (document_type_id === "PASAPORTE" &&
                           field.value.length < 8)) && (
                         <p className="text-amber-600">
-                          {type_document === "DNI" &&
+                          {document_type_id === TYPE_DOCUMENT.DNI.id &&
                             `${8 - field.value.length} dígitos restantes`}
-                          {type_document === "RUC" &&
+                          {document_type_id === TYPE_DOCUMENT.RUC.id &&
                             `${11 - field.value.length} dígitos restantes`}
-                          {type_document === "CE" &&
+                          {document_type_id === "CE" &&
                             field.value.length < 8 &&
                             `${8 - field.value.length} dígitos restantes`}
-                          {type_document === "PASAPORTE" &&
+                          {document_type_id === "PASAPORTE" &&
                             field.value.length < 8 &&
                             `${8 - field.value.length} caracteres restantes`}
                         </p>
                       )}
                     </>
-                  )}
-                </div>
+                  </div>
+                )}
               </FormItem>
             )}
           />
@@ -471,11 +496,15 @@ export const PersonForm = ({
                   ]
             }
           />
-        </div>
+        </GroupFormSection>
 
         {/* Personal Information - Natural Person */}
         {type_person === "NATURAL" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <GroupFormSection
+            title="Información de Persona"
+            icon={IdCardLanyard}
+            cols={{ md: 3 }}
+          >
             <FormField
               control={form.control}
               name="names"
@@ -509,11 +538,11 @@ export const PersonForm = ({
                   </FormControl>
                   <FormMessage />
                   {/* Fixed height container for feedback */}
-                  <div className="h-4 text-xs">
-                    {!errors.names && dirtyFields.names && (
+                  {!errors.names && dirtyFields.names && (
+                    <div className="h-4 text-xs">
                       <p className="text-primary">✓ Nombres válidos</p>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </FormItem>
               )}
             />
@@ -534,8 +563,6 @@ export const PersonForm = ({
                     />
                   </FormControl>
                   <FormMessage />
-                  {/* Fixed height container for consistency */}
-                  <div className="h-4"></div>
                 </FormItem>
               )}
             />
@@ -556,8 +583,6 @@ export const PersonForm = ({
                     />
                   </FormControl>
                   <FormMessage />
-                  {/* Fixed height container for consistency */}
-                  <div className="h-4"></div>
                 </FormItem>
               )}
             />
@@ -627,12 +652,16 @@ export const PersonForm = ({
                 </FormItem>
               )}
             /> */}
-          </div>
+          </GroupFormSection>
         )}
 
         {/* Business Information - Legal Person */}
         {type_person === "JURIDICA" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <GroupFormSection
+            title="Información de Documento y Persona"
+            icon={ListPlus}
+            cols={{ md: 3 }}
+          >
             <FormField
               control={form.control}
               name="business_name"
@@ -668,11 +697,11 @@ export const PersonForm = ({
                   </FormControl>
                   <FormMessage />
                   {/* Fixed height container for feedback */}
-                  <div className="h-4 text-xs">
-                    {!errors.business_name && dirtyFields.business_name && (
+                  {!errors.business_name && dirtyFields.business_name && (
+                    <div className="h-4 text-xs">
                       <p className="text-primary">✓ Razón social válida</p>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </FormItem>
               )}
             />
@@ -707,33 +736,38 @@ export const PersonForm = ({
                   </FormControl>
                   <FormMessage />
                   {/* Fixed height container for feedback */}
-                  <div className="h-4 text-xs">
-                    {!errors.commercial_name && dirtyFields.commercial_name && (
+                  {!errors.commercial_name && dirtyFields.commercial_name && (
+                    <div className="h-4 text-xs">
                       <p className="text-primary">✓ Nombre comercial válido</p>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </FormItem>
               )}
             />
-          </div>
+          </GroupFormSection>
         )}
 
-        {/* Contact Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className={errors.email ? "text-destructive" : ""}>
-                  Correo Electrónico {errors.email && "*"}
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="ejemplo@correo.com"
-                    {...field}
-                    className={`
+        {/* Optional Fields - Context specific */}
+        {(showJobPosition || showBusinessType || showZone || showPriceList) && (
+          <GroupFormSection
+            title="Información Adicional"
+            icon={Paperclip}
+            cols={{ md: 3 }}
+          >
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className={errors.email ? "text-destructive" : ""}>
+                    Correo Electrónico {errors.email && "*"}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="ejemplo@correo.com"
+                      {...field}
+                      className={`
                       ${
                         errors.email
                           ? "border-destructive focus-visible:ring-destructive"
@@ -745,32 +779,34 @@ export const PersonForm = ({
                           : ""
                       }
                     `}
-                  />
-                </FormControl>
-                <FormMessage />
-                {/* Fixed height container for feedback */}
-                <div className="h-4 text-xs">
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  {/* Fixed height container for feedback */}
                   {!errors.email && dirtyFields.email && (
-                    <p className="text-primary">✓ Correo electrónico válido</p>
+                    <div className="h-4 text-xs">
+                      <p className="text-primary">
+                        ✓ Correo electrónico válido
+                      </p>
+                    </div>
                   )}
-                </div>
-              </FormItem>
-            )}
-          />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className={errors.phone ? "text-destructive" : ""}>
-                  Teléfono {errors.phone && "*"}
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="987654321 (9 dígitos)"
-                    {...field}
-                    className={`
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className={errors.phone ? "text-destructive" : ""}>
+                    Teléfono {errors.phone && "*"}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="987654321 (9 dígitos)"
+                      {...field}
+                      className={`
                       ${
                         errors.phone
                           ? "border-destructive focus-visible:ring-destructive"
@@ -782,56 +818,50 @@ export const PersonForm = ({
                           : ""
                       }
                     `}
-                    maxLength={9}
-                    onChange={(e) => {
-                      // Only allow numbers
-                      const value = e.target.value.replace(/\D/g, "");
-                      field.onChange(value);
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-                {/* Fixed height container for feedback */}
-                <div className="h-4 text-xs">
+                      maxLength={9}
+                      onChange={(e) => {
+                        // Only allow numbers
+                        const value = e.target.value.replace(/\D/g, "");
+                        field.onChange(value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  {/* Fixed height container for feedback */}
                   {!errors.phone && dirtyFields.phone && (
-                    <p className="text-primary">✓ Teléfono válido</p>
+                    <div className="h-4 text-xs">
+                      <p className="text-primary">✓ Teléfono válido</p>
+                      {field.value &&
+                        field.value.length < 9 &&
+                        field.value.length > 0 && (
+                          <p className="text-amber-600">
+                            {9 - field.value.length} dígitos restantes
+                          </p>
+                        )}
+                    </div>
                   )}
-                  {field.value &&
-                    field.value.length < 9 &&
-                    field.value.length > 0 && (
-                      <p className="text-amber-600">
-                        {9 - field.value.length} dígitos restantes
-                      </p>
-                    )}
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Dirección</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Ingrese la dirección"
-                  {...field}
-                  className={fieldsFromSearch.address ? "bg-blue-50" : ""}
-                />
-              </FormControl>
-              <FormMessage />
-              {/* Fixed height container for consistency */}
-              <div className="h-4"></div>
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dirección</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Ingrese la dirección"
+                      {...field}
+                      className={fieldsFromSearch.address ? "bg-blue-50" : ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        {/* Optional Fields - Context specific */}
-        {(showJobPosition || showBusinessType || showZone || showPriceList) && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {showJobPosition && (
               <FormSelect
                 control={form.control}
@@ -915,7 +945,7 @@ export const PersonForm = ({
                 }
               />
             )}
-          </div>
+          </GroupFormSection>
         )}
 
         {/* Form Actions */}
@@ -936,14 +966,7 @@ export const PersonForm = ({
                 {isEditing ? "Actualizando..." : "Creando..."}
               </>
             ) : (
-              <>
-                {isEditing ? (
-                  <Save className="h-4 w-4" />
-                ) : (
-                  <UserPlus className="h-4 w-4" />
-                )}
-                {isEditing ? "Actualizar" : "Crear"} Persona
-              </>
+              <>{isEditing ? "Actualizar" : "Crear"} Persona</>
             )}
           </Button>
         </div>

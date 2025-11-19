@@ -23,7 +23,7 @@ export default function PersonTable({
         isLoading={isLoading}
         initialColumnVisibility={{
           email: false,
-          type_person: false,
+          type_person: true,
           birth_date: false,
           address: false,
         }}

@@ -55,7 +55,7 @@ export function FormSelect({
   control,
   disabled,
   tooltip,
-  withValue = true,
+  withValue = false,
   classNameOption,
   strictFilter = false,
 }: FormSelectProps) {
@@ -108,7 +108,7 @@ export function FormSelect({
               <PopoverTrigger asChild>
                 <FormControl>
                   <Button
-                    variant="input"
+                    variant={"outline"}
                     role="combobox"
                     disabled={disabled}
                     className={cn(

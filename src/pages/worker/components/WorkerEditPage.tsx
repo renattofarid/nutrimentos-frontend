@@ -19,6 +19,7 @@ import { WORKER, WORKER_ROLE_ID } from "../lib/worker.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import FormWrapper from "@/components/FormWrapper";
+import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
 
 const { MODEL } = WORKER;
 
@@ -68,7 +69,10 @@ export default function WorkerEditPage() {
       };
 
       // Only include names when NATURAL or when the document type is DNI
-      if (data.type_person === "NATURAL" || data.type_document === "DNI") {
+      if (
+        data.type_person === "NATURAL" ||
+        data.document_type_id === TYPE_DOCUMENT.DNI.id
+      ) {
         updatePersonData.names = data.names || "";
       }
 

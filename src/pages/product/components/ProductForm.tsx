@@ -85,7 +85,7 @@ export const ProductForm = ({
                   <FormLabel>Código</FormLabel>
                   <FormControl>
                     <Input
-                      variant="primary"
+                      variant="default"
                       placeholder="Ej: PROD-001"
                       {...field}
                     />
@@ -103,7 +103,7 @@ export const ProductForm = ({
                   <FormLabel>Nombre del Producto</FormLabel>
                   <FormControl>
                     <Input
-                      variant="primary"
+                      variant="default"
                       placeholder="Ej: Producto de ejemplo"
                       {...field}
                     />
@@ -228,7 +228,7 @@ export const ProductForm = ({
                   <FormLabel>Precio de Compra</FormLabel>
                   <FormControl>
                     <Input
-                      variant="primary"
+                      variant="default"
                       type="number"
                       step="0.01"
                       placeholder="50.00"
@@ -248,7 +248,7 @@ export const ProductForm = ({
                   <FormLabel>Precio de Venta</FormLabel>
                   <FormControl>
                     <Input
-                      variant="primary"
+                      variant="default"
                       type="number"
                       step="0.01"
                       placeholder="60.00"

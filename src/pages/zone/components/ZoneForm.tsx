@@ -58,7 +58,7 @@ export const ZoneForm = ({
                 <FormLabel>Nombre</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     placeholder="Ej: Zona 01"
                     {...field}
                   />
@@ -76,7 +76,7 @@ export const ZoneForm = ({
                 <FormLabel>Código</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     placeholder="Ej: Z 01"
                     className="font-mono"
                     maxLength={10}

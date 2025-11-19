@@ -5,13 +5,14 @@ import JobPositionModal from "./JobPositionModal";
 import { Plus } from "lucide-react";
 import { JOBPOSITION } from "../lib/jobposition.interface";
 import { useState } from "react";
+import ActionsWrapper from "@/components/ActionsWrapper";
 
 export default function JobPositionActions() {
   const [open, setOpen] = useState(false);
 
   const { MODEL } = JOBPOSITION;
   return (
-    <div className="flex items-center gap-2">
+    <ActionsWrapper>
       <Button
         size="sm"
         className="ml-auto"
@@ -25,6 +26,6 @@ export default function JobPositionActions() {
         open={open}
         onClose={() => setOpen(false)}
       />
-    </div>
+    </ActionsWrapper>
   );
 }

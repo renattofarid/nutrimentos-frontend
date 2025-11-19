@@ -22,6 +22,7 @@ export const PersonColumns = ({
     cell: ({ row }) => {
       const person = row.original;
       const typeDocument = person?.document_type_name;
+      const numberDocument = person?.number_document;
       return (
         <div>
           <div className="font-medium">
@@ -31,10 +32,13 @@ export const PersonColumns = ({
               ? person.names
               : typeDocument === "CE"
               ? person.names
-              : `${person.names} ${person.father_surname} ${person.mother_surname}`}
+              : person.business_name ??
+                `${person.names} ${person.father_surname} ${person.mother_surname}`}
           </div>
           <div className="text-sm text-muted-foreground">
-            {typeDocument}: {person.number_document}
+            {typeDocument &&
+              numberDocument &&
+              `${typeDocument}: ${person.number_document}`}
           </div>
         </div>
       );
@@ -55,9 +59,10 @@ export const PersonColumns = ({
   {
     accessorKey: "document_type_name",
     header: "Tipo Documento",
-    cell: ({ getValue }) => (
-      <Badge variant="outline">{getValue() as string}</Badge>
-    ),
+    cell: ({ row }) => {
+      const value = row.original.document_type_name;
+      return value && <Badge variant="outline">{value}</Badge>;
+    },
   },
   {
     accessorKey: "number_document",

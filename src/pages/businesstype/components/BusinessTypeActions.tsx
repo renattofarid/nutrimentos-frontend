@@ -5,13 +5,14 @@ import BusinessTypeModal from "./BusinessTypeModal";
 import { Plus } from "lucide-react";
 import { BUSINESSTYPE } from "../lib/businesstype.interface";
 import { useState } from "react";
+import ActionsWrapper from "@/components/ActionsWrapper";
 
 export default function BusinessTypeActions() {
   const [open, setOpen] = useState(false);
 
   const { MODEL } = BUSINESSTYPE;
   return (
-    <div className="flex items-center gap-2">
+    <ActionsWrapper>
       <Button
         size="sm"
         className="ml-auto"
@@ -25,6 +26,6 @@ export default function BusinessTypeActions() {
         open={open}
         onClose={() => setOpen(false)}
       />
-    </div>
+    </ActionsWrapper>
   );
 }

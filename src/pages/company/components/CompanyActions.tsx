@@ -5,13 +5,14 @@ import CompanyModal from "./CompanyModal";
 import { Plus } from "lucide-react";
 import { COMPANY } from "../lib/company.interface";
 import { useState } from "react";
+import ActionsWrapper from "@/components/ActionsWrapper";
 
 export default function CompanyActions() {
   const [open, setOpen] = useState(false);
 
   const { MODEL } = COMPANY;
   return (
-    <div className="flex items-center gap-2">
+    <ActionsWrapper>
       <Button
         size="sm"
         className="ml-auto"
@@ -25,6 +26,6 @@ export default function CompanyActions() {
         open={open}
         onClose={() => setOpen(false)}
       />
-    </div>
+    </ActionsWrapper>
   );
 }

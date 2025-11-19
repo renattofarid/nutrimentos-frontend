@@ -71,7 +71,7 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* Vista de Tabla para pantallas grandes */}
-      <div className="hidden md:block overflow-hidden rounded-2xl border shadow-xs w-full">
+      <div className="hidden md:block overflow-hidden rounded-md border shadow-xs w-full">
         <div className="overflow-x-auto w-full">
           <Table className="text-xs md:text-sm">
             <TableHeader className="bg-muted sticky top-0 z-10">

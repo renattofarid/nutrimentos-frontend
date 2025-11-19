@@ -74,7 +74,7 @@ export const SettingForm = ({
                 <FormLabel>Moneda por Defecto</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     {...field}
                     placeholder="Ej: USD, PEN, EUR"
                   />
@@ -92,7 +92,7 @@ export const SettingForm = ({
                 <FormLabel>Porcentaje de Impuesto (%)</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     {...field}
                     type="number"
                     step="0.01"

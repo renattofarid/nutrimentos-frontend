@@ -11,7 +11,7 @@ export default function PriceListActions() {
   };
 
   return (
-    <Button onClick={handleAdd}>
+    <Button size={"sm"} onClick={handleAdd}>
       <Plus className="h-4 w-4 mr-2" />
       Agregar Lista de Precio
     </Button>

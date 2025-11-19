@@ -5,13 +5,14 @@ import BrandModal from "./BrandModal";
 import { Plus } from "lucide-react";
 import { BRAND } from "../lib/brand.interface";
 import { useState } from "react";
+import ActionsWrapper from "@/components/ActionsWrapper";
 
 export default function BrandActions() {
   const [open, setOpen] = useState(false);
 
   const { MODEL } = BRAND;
   return (
-    <div className="flex items-center gap-2">
+    <ActionsWrapper>
       <Button
         size="sm"
         className="ml-auto"
@@ -25,6 +26,6 @@ export default function BrandActions() {
         open={open}
         onClose={() => setOpen(false)}
       />
-    </div>
+    </ActionsWrapper>
   );
 }

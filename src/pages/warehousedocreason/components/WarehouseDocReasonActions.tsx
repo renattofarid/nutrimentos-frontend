@@ -5,13 +5,14 @@ import WarehouseDocReasonModal from "./WarehouseDocReasonModal";
 import { Plus } from "lucide-react";
 import { WAREHOUSEDOCREASON } from "../lib/warehousedocreason.interface";
 import { useState } from "react";
+import ActionsWrapper from "@/components/ActionsWrapper";
 
 export default function WarehouseDocReasonActions() {
   const [open, setOpen] = useState(false);
 
   const { MODEL } = WAREHOUSEDOCREASON;
   return (
-    <div className="flex items-center gap-2">
+    <ActionsWrapper>
       <Button
         size="sm"
         className="ml-auto"
@@ -25,6 +26,6 @@ export default function WarehouseDocReasonActions() {
         open={open}
         onClose={() => setOpen(false)}
       />
-    </div>
+    </ActionsWrapper>
   );
 }

@@ -19,7 +19,7 @@ export default function DataTableColumnFilter<TData>({
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" size={"sm"}>
           <Columns />
           <span className="hidden lg:inline">Mostrar columnas</span>
           <span className="lg:hidden">Columnas</span>

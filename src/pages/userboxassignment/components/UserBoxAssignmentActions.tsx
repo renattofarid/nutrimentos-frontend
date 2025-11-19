@@ -5,13 +5,14 @@ import UserBoxAssignmentModal from "./UserBoxAssignmentModal";
 import { Plus } from "lucide-react";
 import { USERBOXASSIGNMENT } from "../lib/userboxassignment.interface";
 import { useState } from "react";
+import ActionsWrapper from "@/components/ActionsWrapper";
 
 export default function UserBoxAssignmentActions() {
   const [open, setOpen] = useState(false);
 
   const { MODEL } = USERBOXASSIGNMENT;
   return (
-    <div className="flex items-center gap-2">
+    <ActionsWrapper>
       <Button
         size="sm"
         className="ml-auto"
@@ -25,6 +26,6 @@ export default function UserBoxAssignmentActions() {
         open={open}
         onClose={() => setOpen(false)}
       />
-    </div>
+    </ActionsWrapper>
   );
 }

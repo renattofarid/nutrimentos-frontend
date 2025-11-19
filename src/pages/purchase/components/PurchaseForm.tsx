@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader, Plus, Trash2, Edit } from "lucide-react";
+import { Loader, Plus, Trash2, Edit, Users2 } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
@@ -45,6 +45,7 @@ import {
   PAYMENT_TYPES,
   type PurchaseResource,
 } from "../lib/purchase.interface";
+import { GroupFormSection } from "@/components/GroupFormSection";
 
 interface PurchaseFormProps {
   defaultValues: Partial<PurchaseSchema>;
@@ -543,318 +544,314 @@ export const PurchaseForm = ({
         className="space-y-6 w-full"
       >
         {/* Información General */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Información General</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Proveedor y Almacén */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FormSelect
-                control={form.control}
-                label="Empresa"
-                name="company_id"
-                placeholder="Seleccione una empresa"
-                options={
-                  companies?.map((company) => ({
-                    value: company.id.toString(),
-                    label: company.social_reason,
-                    description: company.ruc,
-                  })) || []
-                }
-                withValue={false}
-              />
+        <GroupFormSection
+          title="Información General"
+          icon={Users2}
+          cols={{ sm: 1, md: 2, lg: 3 }}
+        >
+          {/* Proveedor y Almacén */}
+          <FormSelect
+            control={form.control}
+            label="Empresa"
+            name="company_id"
+            placeholder="Seleccione una empresa"
+            options={
+              companies?.map((company) => ({
+                value: company.id.toString(),
+                label: company.social_reason,
+                description: company.ruc,
+              })) || []
+            }
+            withValue={false}
+          />
 
-              <FormSelect
-                control={form.control}
-                name="supplier_id"
-                label="Proveedor"
-                placeholder="Seleccione un proveedor"
-                options={suppliers.map((supplier) => ({
-                  value: supplier.id.toString(),
-                  label:
-                    supplier.business_name ??
-                    supplier.names +
-                      " " +
-                      supplier.father_surname +
-                      " " +
-                      supplier.mother_surname,
-                  description: supplier.number_document || undefined,
-                }))}
-                disabled={mode === "update"}
-              />
+          <FormSelect
+            control={form.control}
+            name="supplier_id"
+            label="Proveedor"
+            placeholder="Seleccione un proveedor"
+            options={suppliers.map((supplier) => ({
+              value: supplier.id.toString(),
+              label:
+                supplier.business_name ??
+                supplier.names +
+                  " " +
+                  supplier.father_surname +
+                  " " +
+                  supplier.mother_surname,
+              description: supplier.number_document || undefined,
+            }))}
+            disabled={mode === "update"}
+          />
 
-              <FormSelect
-                control={form.control}
-                name="warehouse_id"
-                label="Almacén"
-                placeholder="Seleccione un almacén"
-                options={warehouses.map((warehouse) => ({
-                  value: warehouse.id.toString(),
-                  label: warehouse.name,
-                  description: warehouse.address,
-                }))}
-                disabled={mode === "update"}
-              />
+          <FormSelect
+            control={form.control}
+            name="warehouse_id"
+            label="Almacén"
+            placeholder="Seleccione un almacén"
+            options={warehouses.map((warehouse) => ({
+              value: warehouse.id.toString(),
+              label: warehouse.name,
+              description: warehouse.address,
+            }))}
+            disabled={mode === "update"}
+          />
 
-              <FormSelect
-                control={form.control}
-                name="document_type"
-                label="Tipo de Documento"
-                placeholder="Seleccione"
-                options={DOCUMENT_TYPES.map((dt) => ({
-                  value: dt.value,
-                  label: dt.label,
-                }))}
-              />
+          <FormSelect
+            control={form.control}
+            name="document_type"
+            label="Tipo de Documento"
+            placeholder="Seleccione"
+            options={DOCUMENT_TYPES.map((dt) => ({
+              value: dt.value,
+              label: dt.label,
+            }))}
+          />
 
-              <DatePickerFormField
-                control={form.control}
-                name="issue_date"
-                label="Fecha de Emisión"
-                placeholder="Seleccione fecha"
-              />
+          <DatePickerFormField
+            control={form.control}
+            name="issue_date"
+            label="Fecha de Emisión"
+            placeholder="Seleccione fecha"
+          />
 
-              <DatePickerFormField
-                control={form.control}
-                name="reception_date"
-                label="Fecha de Recepción"
-                placeholder="Seleccione fecha"
-              />
+          <DatePickerFormField
+            control={form.control}
+            name="reception_date"
+            label="Fecha de Recepción"
+            placeholder="Seleccione fecha"
+          />
 
-              <DatePickerFormField
-                control={form.control}
-                name="due_date"
-                label="Fecha de Vencimiento"
-                placeholder="Seleccione fecha"
-              />
+          <DatePickerFormField
+            control={form.control}
+            name="due_date"
+            label="Fecha de Vencimiento"
+            placeholder="Seleccione fecha"
+          />
 
-              <FormSelect
-                control={form.control}
-                name="currency"
-                label="Moneda"
-                placeholder="Seleccione"
-                options={CURRENCIES.map((c) => ({
-                  value: c.value,
-                  label: c.label,
-                }))}
-              />
+          <FormSelect
+            control={form.control}
+            name="currency"
+            label="Moneda"
+            placeholder="Seleccione"
+            options={CURRENCIES.map((c) => ({
+              value: c.value,
+              label: c.label,
+            }))}
+          />
 
-              <FormField
-                control={form.control}
-                name="document_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Número de Documento</FormLabel>
-                    <FormControl>
-                      <Input
-                        variant="primary"
-                        placeholder="Ej: B001-00123"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <FormField
+            control={form.control}
+            name="document_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Número de Documento</FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Ej: B001-00123"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              <FormSelect
-                control={form.control}
-                name="payment_type"
-                label="Tipo de Pago"
-                placeholder="Seleccione"
-                options={PAYMENT_TYPES.map((pt) => ({
-                  value: pt.value,
-                  label: pt.label,
-                }))}
-              />
-            </div>
+          <FormSelect
+            control={form.control}
+            name="payment_type"
+            label="Tipo de Pago"
+            placeholder="Seleccione"
+            options={PAYMENT_TYPES.map((pt) => ({
+              value: pt.value,
+              label: pt.label,
+            }))}
+          />
 
-            {/* IGV */}
-            <FormSwitch
-              control={form.control}
-              name="include_igv"
-              text="Incluir IGV (18%)"
-              textDescription="Los precios ingresados NO incluyen IGV"
-              className="h-auto"
-            />
-          </CardContent>
-        </Card>
+          {/* IGV */}
+          <FormSwitch
+            control={form.control}
+            name="include_igv"
+            text="Incluir IGV (18%)"
+            textDescription="Los precios ingresados NO incluyen IGV"
+            className="h-auto"
+          />
+        </GroupFormSection>
 
         {/* Detalles */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Detalles de la Compra</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
-              <div className="md:col-span-2">
-                <Form {...detailTempForm}>
-                  <FormSelect
-                    control={detailTempForm.control}
-                    name="temp_product_id"
-                    label="Producto"
-                    placeholder="Seleccione"
-                    options={products.map((product) => ({
-                      value: product.id.toString(),
-                      label: product.name,
-                    }))}
-                  />
-                </Form>
-              </div>
-
-              <FormField
-                control={detailTempForm.control}
-                name="temp_quantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cantidad</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        variant="primary"
-                        placeholder="0"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={detailTempForm.control}
-                name="temp_unit_price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Precio Unit.</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.000001"
-                        variant="primary"
-                        placeholder="0.000000"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <div className="md:col-span-4 flex justify-end">
-                <Button
-                  type="button"
-                  variant="default"
-                  onClick={handleAddDetail}
-                  disabled={
-                    !currentDetail.product_id ||
-                    !currentDetail.quantity ||
-                    !currentDetail.unit_price
-                  }
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  {editingDetailIndex !== null ? "Actualizar" : "Agregar"}
-                </Button>
-              </div>
+        <GroupFormSection
+          title="Detalles de la Compra"
+          icon={Users2}
+          cols={{ sm: 1 }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
+            <div className="md:col-span-2">
+              <Form {...detailTempForm}>
+                <FormSelect
+                  control={detailTempForm.control}
+                  name="temp_product_id"
+                  label="Producto"
+                  placeholder="Seleccione"
+                  options={products.map((product) => ({
+                    value: product.id.toString(),
+                    label: product.name,
+                  }))}
+                />
+              </Form>
             </div>
 
-            {details.length > 0 ? (
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Producto</TableHead>
-                      <TableHead className="text-right">Cantidad</TableHead>
-                      <TableHead className="text-right">P. Unit.</TableHead>
-                      <TableHead className="text-right">Subtotal</TableHead>
-                      <TableHead className="text-right">Impuesto</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead className="text-center">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {details.map((detail, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{detail.product_name}</TableCell>
-                        <TableCell className="text-right">
-                          {detail.quantity}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {isNaN(parseFloat(detail.unit_price))
-                            ? detail.unit_price
-                            : parseFloat(detail.unit_price).toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {detail.subtotal.toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {parseFloat(detail.tax || "0").toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-right font-bold text-primary">
-                          {detail.total.toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex justify-center gap-2">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditDetail(index)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveDetail(index)}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-right font-bold">
-                        SUBTOTAL:
-                      </TableCell>
-                      <TableCell className="text-right font-bold">
-                        {calculateSubtotalTotal().toFixed(2)}
-                      </TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
+            <FormField
+              control={detailTempForm.control}
+              name="temp_quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cantidad</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      variant="default"
+                      placeholder="0"
+                      {...field}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-right font-bold">
-                        IGV (18%):
-                      </TableCell>
-                      <TableCell className="text-right font-bold">
-                        {calculateTaxTotal().toFixed(2)}
-                      </TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
+            <FormField
+              control={detailTempForm.control}
+              name="temp_unit_price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Precio Unit.</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.000001"
+                      variant="default"
+                      placeholder="0.000000"
+                      {...field}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-right font-bold">
-                        TOTAL:
+            <div className="md:col-span-4 flex justify-end">
+              <Button
+                type="button"
+                variant="default"
+                onClick={handleAddDetail}
+                disabled={
+                  !currentDetail.product_id ||
+                  !currentDetail.quantity ||
+                  !currentDetail.unit_price
+                }
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {editingDetailIndex !== null ? "Actualizar" : "Agregar"}
+              </Button>
+            </div>
+          </div>
+
+          {details.length > 0 ? (
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Producto</TableHead>
+                    <TableHead className="text-right">Cantidad</TableHead>
+                    <TableHead className="text-right">P. Unit.</TableHead>
+                    <TableHead className="text-right">Subtotal</TableHead>
+                    <TableHead className="text-right">Impuesto</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-center">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {details.map((detail, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{detail.product_name}</TableCell>
+                      <TableCell className="text-right">
+                        {detail.quantity}
                       </TableCell>
-                      <TableCell className="text-right font-bold text-lg text-primary">
-                        {calculateDetailsTotal().toFixed(2)}
+                      <TableCell className="text-right">
+                        {isNaN(parseFloat(detail.unit_price))
+                          ? detail.unit_price
+                          : parseFloat(detail.unit_price).toFixed(2)}
                       </TableCell>
-                      <TableCell></TableCell>
+                      <TableCell className="text-right">
+                        {detail.subtotal.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {parseFloat(detail.tax || "0").toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-primary">
+                        {detail.total.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center gap-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditDetail(index)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveDetail(index)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Badge variant="outline" className="text-lg p-3">
-                  No hay detalles agregados
-                </Badge>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-right font-bold">
+                      SUBTOTAL
+                    </TableCell>
+                    <TableCell className="text-right font-bold">
+                      {calculateSubtotalTotal().toFixed(2)}
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-right font-bold">
+                      IGV (18%)
+                    </TableCell>
+                    <TableCell className="text-right font-bold">
+                      {calculateTaxTotal().toFixed(2)}
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-right font-bold">
+                      TOTAL
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-lg text-primary">
+                      {calculateDetailsTotal().toFixed(2)}
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Badge variant="outline" className="text-lg p-3">
+                No hay detalles agregados
+              </Badge>
+            </div>
+          )}
+        </GroupFormSection>
 
         {/* Cuotas - Solo mostrar si es a crédito */}
         {selectedPaymentType === "CREDITO" && (
@@ -873,7 +870,7 @@ export const PurchaseForm = ({
                       <FormControl>
                         <Input
                           type="number"
-                          variant="primary"
+                          variant="default"
                           placeholder="0"
                           {...field}
                         />
@@ -892,7 +889,7 @@ export const PurchaseForm = ({
                         <Input
                           type="number"
                           step="0.01"
-                          variant="primary"
+                          variant="default"
                           placeholder="0.00"
                           {...field}
                         />

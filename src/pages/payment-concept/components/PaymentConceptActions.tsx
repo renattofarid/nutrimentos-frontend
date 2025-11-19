@@ -1,3 +1,4 @@
+import ActionsWrapper from "@/components/ActionsWrapper";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -9,11 +10,11 @@ export default function PaymentConceptActions({
   onCreatePaymentConcept,
 }: PaymentConceptActionsProps) {
   return (
-    <div className="flex justify-end">
-      <Button onClick={onCreatePaymentConcept}>
+    <ActionsWrapper>
+      <Button size="sm" className="ml-auto" onClick={onCreatePaymentConcept}>
         <Plus className="h-4 w-4 mr-2" />
         Agregar
       </Button>
-    </div>
+    </ActionsWrapper>
   );
 }

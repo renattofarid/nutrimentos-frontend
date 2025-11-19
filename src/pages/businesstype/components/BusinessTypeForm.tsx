@@ -58,7 +58,7 @@ export const BusinessTypeForm = ({
                 <FormLabel>Nombre</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     placeholder="Ej: Mayorista"
                     {...field}
                   />
@@ -76,7 +76,7 @@ export const BusinessTypeForm = ({
                 <FormLabel>Código</FormLabel>
                 <FormControl>
                   <Input
-                    variant="primary"
+                    variant="default"
                     placeholder="Ej: MAY"
                     className="font-mono uppercase"
                     maxLength={10}

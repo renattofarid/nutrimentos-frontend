@@ -5,7 +5,10 @@ interface DocumentTypeOptionsProps {
   setSearch: (search: string) => void;
 }
 
-export default function DocumentTypeOptions({ search, setSearch }: DocumentTypeOptionsProps) {
+export default function DocumentTypeOptions({
+  search,
+  setSearch,
+}: DocumentTypeOptionsProps) {
   return (
     <div className="flex items-center justify-between">
       <SearchInput
@@ -16,4 +19,3 @@ export default function DocumentTypeOptions({ search, setSearch }: DocumentTypeO
     </div>
   );
 }
-

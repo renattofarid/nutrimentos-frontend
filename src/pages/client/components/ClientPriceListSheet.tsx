@@ -6,12 +6,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Loader2, Package, DollarSign } from "lucide-react";
+import { Loader2, Package, DollarSign, AlertCircle } from "lucide-react";
 import { getClientPriceList } from "../lib/client.actions";
 import type { ClientPriceListData } from "../lib/client.interface";
 import { errorToast } from "@/lib/core.function";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import AssignPriceListModal from "./AssignPriceListModal";
 import {
   Table,
   TableBody,
@@ -37,17 +39,29 @@ export default function ClientPriceListSheet({
   const [priceListData, setPriceListData] =
     useState<ClientPriceListData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
 
   const fetchPriceList = async () => {
     setIsLoading(true);
+    setHasError(false);
+    setErrorStatus(null);
     try {
       const response = await getClientPriceList(personId);
       setPriceListData(response.data);
     } catch (error: any) {
       console.error("Error loading price list:", error);
-      errorToast(
-        error.response?.data?.message || "Error al cargar la lista de precios"
-      );
+      const status = error.response?.status;
+      setHasError(true);
+      setErrorStatus(status);
+
+      // Solo mostrar toast si no es un error 404 o 500 (que manejaremos en la UI)
+      if (status !== 404 && status !== 500) {
+        errorToast(
+          error.response?.data?.message || "Error al cargar la lista de precios"
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -58,6 +72,11 @@ export default function ClientPriceListSheet({
       fetchPriceList();
     }
   }, [open, personId]);
+
+  const handleAssignSuccess = () => {
+    setShowAssignModal(false);
+    fetchPriceList(); // Recargar la lista después de asignar
+  };
 
   const formatPrice = (price: string, currency: string) => {
     return `${currency} ${parseFloat(price).toFixed(2)}`;
@@ -83,10 +102,26 @@ export default function ClientPriceListSheet({
             <div className="flex items-center justify-center py-12">
               <Loader2 className="size-8 animate-spin text-muted-foreground" />
             </div>
-          ) : !priceListData ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Package className="size-12 mx-auto mb-4 opacity-50" />
-              <p>No se pudo cargar la lista de precios</p>
+          ) : hasError || !priceListData ? (
+            <div className="text-center py-12 space-y-4">
+              <AlertCircle className="size-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+              <div className="space-y-2">
+                <p className="text-lg font-semibold">
+                  {errorStatus === 404 || errorStatus === 500
+                    ? "Este cliente no tiene una lista de precios asignada"
+                    : "No se pudo cargar la lista de precios"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {errorStatus === 404 || errorStatus === 500
+                    ? "Puedes asignar una lista de precios para este cliente haciendo clic en el botón de abajo"
+                    : "Ocurrió un error al intentar cargar la información"}
+                </p>
+              </div>
+              {(errorStatus === 404 || errorStatus === 500) && (
+                <Button onClick={() => setShowAssignModal(true)} className="mt-4">
+                  Asignar Lista de Precios
+                </Button>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -194,6 +229,16 @@ export default function ClientPriceListSheet({
           )}
         </div>
       </SheetContent>
+
+      {showAssignModal && (
+        <AssignPriceListModal
+          open={showAssignModal}
+          onClose={() => setShowAssignModal(false)}
+          personId={personId}
+          personName={personName}
+          onSuccess={handleAssignSuccess}
+        />
+      )}
     </Sheet>
   );
 }

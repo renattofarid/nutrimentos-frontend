@@ -11,11 +11,13 @@ export const PersonColumns = ({
   onEdit,
   onDelete,
   onViewPriceList,
+  onAssignPriceList,
 }: // onManageRoles,
 {
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
   onViewPriceList?: (person: PersonResource) => void;
+  onAssignPriceList?: (person: PersonResource) => void;
   // onManageRoles: (person: PersonResource) => void;
 }): ColumnDef<PersonResource>[] => [
   {
@@ -128,6 +130,11 @@ export const PersonColumns = ({
             {onViewPriceList && (
               <DropdownMenuItem onClick={() => onViewPriceList(person)}>
                 Ver Lista de Precios
+              </DropdownMenuItem>
+            )}
+            {onAssignPriceList && (
+              <DropdownMenuItem onClick={() => onAssignPriceList(person)}>
+                Asignar Lista de Precios
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => onEdit(person.id)}>

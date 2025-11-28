@@ -1,6 +1,12 @@
 "use client";
 
-import { LayoutGrid, ShieldUser, Package } from "lucide-react";
+import {
+  LayoutGrid,
+  ShieldUser,
+  Package,
+  ShoppingBag,
+  DollarSign,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -39,6 +45,9 @@ import { PURCHASE } from "@/pages/purchase/lib/purchase.interface";
 import { hasAccessToRoute } from "@/App";
 import { useEffect, useState } from "react";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
+import { SaleRoute } from "@/pages/sale/lib/sale.interface";
+import { AccountsReceivableRoute } from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
+import { WAREHOUSE_PRODUCT } from "@/pages/warehouse-product/lib/warehouse-product.interface";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -184,6 +193,12 @@ const {
   MODEL: { name: PurchaseTitle },
 } = PURCHASE;
 
+const {
+  ICON_REACT: WarehouseProductIcon,
+  ROUTE: WarehouseProductRoute,
+  MODEL: { plural: WarehouseProductTitle },
+} = WAREHOUSE_PRODUCT;
+
 const data = {
   navMain: [
     {
@@ -240,6 +255,28 @@ const data = {
           title: PurchaseTitle,
           url: PurchaseRoute,
           icon: PurchaseIcon,
+        },
+        {
+          title: WarehouseProductTitle,
+          url: WarehouseProductRoute,
+          icon: WarehouseProductIcon,
+        },
+      ],
+    },
+    {
+      title: "Ventas",
+      url: "#",
+      icon: ShoppingBag,
+      items: [
+        {
+          title: "Ventas",
+          url: SaleRoute,
+          icon: ShoppingBag,
+        },
+        {
+          title: "Cuentas por Cobrar",
+          url: AccountsReceivableRoute,
+          icon: DollarSign,
         },
       ],
     },

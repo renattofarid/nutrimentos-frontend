@@ -71,6 +71,9 @@ import PurchaseAddPage from "./pages/purchase/components/PurchaseAddPage";
 import { PurchaseDetailViewPage } from "./pages/purchase/components/PurchaseDetailViewPage";
 import { PURCHASE } from "./pages/purchase/lib/purchase.interface";
 import PurchaseEditPage from "./pages/purchase/components/PurchaseEditPage";
+import { SaleRoute } from "./pages/sale/lib/sale.interface";
+import { SaleAddPage, SaleEditPage, SalePage } from "./pages/sale/components";
+import SaleManagePage from "./pages/sale/components/SaleManagePage";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -136,6 +139,7 @@ function ProtectedRoute({
 
   return <LayoutComponent>{children}</LayoutComponent>;
 }
+
 
 export default function App() {
   const { token } = useAuthStore();
@@ -515,6 +519,42 @@ export default function App() {
             element={
               <ProtectedRoute path={PriceListRoute}>
                 <PriceListEditPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={SaleRoute}
+            element={
+              <ProtectedRoute path={SaleRoute}>
+                <SalePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/ventas/agregar"
+            element={
+              <ProtectedRoute path={SaleRoute}>
+                <SaleAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/ventas/actualizar/:id"
+            element={
+              <ProtectedRoute path={SaleRoute}>
+                <SaleEditPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/ventas/gestionar/:id"
+            element={
+              <ProtectedRoute path={SaleRoute}>
+                <SaleManagePage />
               </ProtectedRoute>
             }
           />

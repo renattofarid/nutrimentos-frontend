@@ -138,6 +138,26 @@ export const GuideForm = ({
     form.setValue("transfer_date", formattedDate);
   }, [form]);
 
+  // Cargar detalles existentes en modo edición
+  useEffect(() => {
+    if (defaultValues.details && defaultValues.details.length > 0) {
+      const mappedDetails = defaultValues.details.map((detail: any) => {
+        const product = localProducts.find(
+          (p) => p.id.toString() === detail.product_id
+        );
+        return {
+          product_id: detail.product_id,
+          product_name: product?.name,
+          quantity: detail.quantity,
+          unit_code: detail.unit_code,
+          description: detail.description,
+        };
+      });
+      setDetails(mappedDetails);
+      form.setValue("details", mappedDetails);
+    }
+  }, [defaultValues.details, localProducts, form]);
+
   const handleAddDetail = () => {
     if (
       !currentDetail.product_id ||

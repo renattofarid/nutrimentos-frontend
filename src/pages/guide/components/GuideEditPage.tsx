@@ -98,7 +98,12 @@ export default function GuideEditPage() {
       total_weight: data.total_weight,
       total_packages: data.total_packages,
       observations: data.observations || "",
-      details: [],
+      details: data.details?.map((detail) => ({
+        product_id: detail.product_id.toString(),
+        quantity: detail.quantity.toString(),
+        unit_code: detail.unit_code,
+        description: detail.description,
+      })) || [],
     };
   };
 

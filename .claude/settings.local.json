@@ -6,7 +6,9 @@
       "Bash(touch:*)",
       "Bash(npm run build:*)",
       "Bash(git rm:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(dir:*)",
+      "Bash(nul)"
     ],
     "deny": [],
     "ask": []

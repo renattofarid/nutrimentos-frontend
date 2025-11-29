@@ -15,11 +15,6 @@ import {
   type CreateProductPriceRequest,
   type UpdateProductPriceRequest,
   type GetProductPricesProps,
-  type ProductComponentResponse,
-  type ProductComponentResourceById,
-  type CreateProductComponentRequest,
-  type UpdateProductComponentRequest,
-  type GetProductComponentsProps,
 } from "./product.interface";
 import type { AxiosRequestConfig } from "axios";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";

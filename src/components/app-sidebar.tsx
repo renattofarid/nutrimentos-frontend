@@ -42,10 +42,12 @@ import { SETTING } from "@/pages/setting/lib/setting.interface";
 import { DOCUMENT_TYPE } from "@/pages/document-type/lib/document-type.interface";
 import { PRICELIST } from "@/pages/pricelist/lib/pricelist.interface";
 import { PURCHASE } from "@/pages/purchase/lib/purchase.interface";
+import { GUIDE } from "@/pages/guide/lib/guide.interface";
 import { hasAccessToRoute } from "@/App";
 import { useEffect, useState } from "react";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
 import { SaleRoute } from "@/pages/sale/lib/sale.interface";
+import { BOX_SHIFT } from "@/pages/box-shift/lib/box-shift.interface";
 import { AccountsReceivableRoute } from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
 
 const {
@@ -192,6 +194,18 @@ const {
   MODEL: { name: PurchaseTitle },
 } = PURCHASE;
 
+const {
+  ICON_REACT: GuideIcon,
+  ROUTE: GuideRoute,
+  MODEL: { name: GuideTitle },
+} = GUIDE;
+
+const {
+  ICON_REACT: BoxShiftIcon,
+  ROUTE: BoxShiftRoute,
+  MODEL: { plural: BoxShiftTitle },
+} = BOX_SHIFT;
+
 const data = {
   navMain: [
     {
@@ -248,6 +262,16 @@ const data = {
           title: PurchaseTitle,
           url: PurchaseRoute,
           icon: PurchaseIcon,
+        },
+        {
+          title: GuideTitle,
+          url: GuideRoute,
+          icon: GuideIcon,
+        },
+        {
+          title: BoxShiftTitle,
+          url: BoxShiftRoute,
+          icon: BoxShiftIcon,
         },
       ],
     },

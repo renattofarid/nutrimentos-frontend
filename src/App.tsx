@@ -74,6 +74,12 @@ import PurchaseEditPage from "./pages/purchase/components/PurchaseEditPage";
 import { SaleRoute } from "./pages/sale/lib/sale.interface";
 import { SaleAddPage, SaleEditPage, SalePage } from "./pages/sale/components";
 import SaleManagePage from "./pages/sale/components/SaleManagePage";
+import GuidePage from "./pages/guide/components/GuidePage";
+import GuideAddPage from "./pages/guide/components/GuideAddPage";
+import GuideEditPage from "./pages/guide/components/GuideEditPage";
+import { GUIDE } from "./pages/guide/lib/guide.interface";
+import { BOX_SHIFT } from "./pages/box-shift/lib/box-shift.interface";
+import { BoxShiftDetailPage, BoxShiftPage } from "./pages/box-shift/components";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -100,6 +106,8 @@ const { ROUTE: DocumentTypeRoute } = DOCUMENT_TYPE;
 const { ROUTE: PurchaseRoute } = PURCHASE;
 const { ROUTE: PurchaseInstallmentRoute } = PURCHASE_INSTALLMENT;
 const { ROUTE: PriceListRoute } = PRICELIST;
+const { ROUTE: GuideRoute } = GUIDE;
+const { ROUTE: BoxShiftRoute } = BOX_SHIFT;
 
 export const hasAccessToRoute = (access: Access[], route: string): boolean => {
   const transformRoute = route.split("/").pop();
@@ -139,7 +147,6 @@ function ProtectedRoute({
 
   return <LayoutComponent>{children}</LayoutComponent>;
 }
-
 
 export default function App() {
   const { token } = useAuthStore();
@@ -555,6 +562,52 @@ export default function App() {
             element={
               <ProtectedRoute path={SaleRoute}>
                 <SaleManagePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={GuideRoute}
+            element={
+              <ProtectedRoute path={GuideRoute}>
+                <GuidePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={`${GuideRoute}/agregar`}
+            element={
+              <ProtectedRoute path={GuideRoute}>
+                <GuideAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={`${GuideRoute}/actualizar/:id`}
+            element={
+              <ProtectedRoute path={GuideRoute}>
+                <GuideEditPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rutas de Caja Chica */}
+          <Route
+            path={BoxShiftRoute}
+            element={
+              <ProtectedRoute path={BoxShiftRoute}>
+                <BoxShiftPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/turnos-caja/:id"
+            element={
+              <ProtectedRoute path={BoxShiftRoute}>
+                <BoxShiftDetailPage />
               </ProtectedRoute>
             }
           />

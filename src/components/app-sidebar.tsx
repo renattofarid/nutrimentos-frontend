@@ -221,63 +221,6 @@ const data = {
       icon: LayoutGrid,
     },
     {
-      title: "Gestión",
-      url: "#",
-      icon: CompanyIcon,
-      items: [
-        {
-          title: CompanyTitle,
-          url: CompanyRoute,
-          icon: CompanyIcon,
-        },
-        {
-          title: BranchTitle,
-          url: BranchRoute,
-          icon: BranchIcon,
-        },
-        {
-          title: WarehouseTitle,
-          url: WarehouseRoute,
-          icon: WarehouseIcon,
-        },
-        {
-          title: BoxTitle,
-          url: BoxRoute,
-          icon: BoxIcon,
-        },
-        {
-          title: PaymentConceptTitle,
-          url: PaymentConceptRoute,
-          icon: PaymentConceptIcon,
-        },
-        {
-          title: WarehouseDocReasonTitle,
-          url: WarehouseDocReasonRoute,
-          icon: WarehouseDocReasonIcon,
-        },
-        {
-          title: SettingTitle,
-          url: SettingRoute,
-          icon: SettingIcon,
-        },
-        {
-          title: DocumentTypeTitle,
-          url: DocumentTypeRoute,
-          icon: DocumentTypeIcon,
-        },
-        {
-          title: GuideTitle,
-          url: GuideRoute,
-          icon: GuideIcon,
-        },
-        {
-          title: BoxShiftTitle,
-          url: BoxShiftRoute,
-          icon: BoxShiftIcon,
-        },
-      ],
-    },
-    {
       title: "Ventas",
       url: "#",
       icon: ShoppingBag,
@@ -317,14 +260,14 @@ const data = {
       icon: Package,
       items: [
         {
-          title: CategoryTitle,
-          url: CategoryRoute,
-          icon: CategoryIcon,
-        },
-        {
           title: ProductTitle,
           url: ProductRoute,
           icon: ProductIcon,
+        },
+        {
+          title: CategoryTitle,
+          url: CategoryRoute,
+          icon: CategoryIcon,
         },
         {
           title: ProductTypeTitle,
@@ -342,11 +285,6 @@ const data = {
           icon: UnitIcon,
         },
         {
-          title: NationalityTitle,
-          url: NationalityRoute,
-          icon: NationalityIcon,
-        },
-        {
           title: PriceListTitle,
           url: PriceListRoute,
           icon: PriceListIcon,
@@ -354,9 +292,9 @@ const data = {
       ],
     },
     {
-      title: "Seguridad",
+      title: "Personas",
       url: "#",
-      icon: ShieldUser,
+      icon: ClientIcon,
       items: [
         {
           title: ClientTitle,
@@ -373,21 +311,104 @@ const data = {
           url: WorkerRoute,
           icon: WorkerIcon,
         },
+      ],
+    },
+    {
+      title: "Organización",
+      url: "#",
+      icon: CompanyIcon,
+      items: [
         {
-          title: BusinessTypeTitle,
-          url: BusinessTypeRoute,
-          icon: BusinessTypeIcon,
+          title: CompanyTitle,
+          url: CompanyRoute,
+          icon: CompanyIcon,
+        },
+        {
+          title: BranchTitle,
+          url: BranchRoute,
+          icon: BranchIcon,
+        },
+        {
+          title: WarehouseTitle,
+          url: WarehouseRoute,
+          icon: WarehouseIcon,
         },
         {
           title: ZoneTitle,
           url: ZoneRoute,
           icon: ZoneIcon,
         },
+      ],
+    },
+    {
+      title: "Operaciones",
+      url: "#",
+      icon: BoxIcon,
+      items: [
+        {
+          title: BoxTitle,
+          url: BoxRoute,
+          icon: BoxIcon,
+        },
+        {
+          title: BoxShiftTitle,
+          url: BoxShiftRoute,
+          icon: BoxShiftIcon,
+        },
+        {
+          title: GuideTitle,
+          url: GuideRoute,
+          icon: GuideIcon,
+        },
+        {
+          title: PaymentConceptTitle,
+          url: PaymentConceptRoute,
+          icon: PaymentConceptIcon,
+        },
+        {
+          title: WarehouseDocReasonTitle,
+          url: WarehouseDocReasonRoute,
+          icon: WarehouseDocReasonIcon,
+        },
+      ],
+    },
+    {
+      title: "Configuración",
+      url: "#",
+      icon: SettingIcon,
+      items: [
+        {
+          title: SettingTitle,
+          url: SettingRoute,
+          icon: SettingIcon,
+        },
+        {
+          title: NationalityTitle,
+          url: NationalityRoute,
+          icon: NationalityIcon,
+        },
+        {
+          title: BusinessTypeTitle,
+          url: BusinessTypeRoute,
+          icon: BusinessTypeIcon,
+        },
         {
           title: JobPositionTitle,
           url: JobPositionRoute,
           icon: JobPositionIcon,
         },
+        {
+          title: DocumentTypeTitle,
+          url: DocumentTypeRoute,
+          icon: DocumentTypeIcon,
+        },
+      ],
+    },
+    {
+      title: "Seguridad",
+      url: "#",
+      icon: ShieldUser,
+      items: [
         {
           title: UserTitle,
           url: UserRoute,

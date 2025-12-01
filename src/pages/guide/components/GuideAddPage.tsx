@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BackButton } from "@/components/BackButton";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { GuideForm } from "./GuideForm";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
@@ -20,12 +19,18 @@ import { CLIENT_ROLE_CODE } from "@/pages/client/lib/client.interface";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 import FormWrapper from "@/components/FormWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
-import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
+import {
+  ERROR_MESSAGE,
+  errorToast,
+  SUCCESS_MESSAGE,
+  successToast,
+} from "@/lib/core.function";
 import { useGuideStore } from "../lib/guide.store";
 import type { GuideSchema } from "../lib/guide.schema";
 import { GUIDE } from "../lib/guide.interface";
 
 export default function GuideAddPage() {
+  const { ROUTE, MODEL, ICON } = GUIDE;
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,8 +38,10 @@ export default function GuideAddPage() {
   const { data: branches, isLoading: branchesLoading } = useAllBranches();
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
-  const customers = useAllPersons({ role_names: [CLIENT_ROLE_CODE] });
-  const suppliers = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
+  const { data: customers } = useAllPersons({ role_names: [CLIENT_ROLE_CODE] });
+  const { data: suppliers } = useAllPersons({
+    role_names: [SUPPLIER_ROLE_CODE],
+  });
   const { data: motives, isLoading: motivesLoading } = useGuideMotives();
   const { data: categories, isLoading: categoriesLoading } = useAllCategories();
   const { data: brands, isLoading: brandsLoading } = useAllBrands();
@@ -94,8 +101,8 @@ export default function GuideAddPage() {
     setIsSubmitting(true);
     try {
       await createGuide(data);
-      successToast("Guía de remisión creada correctamente");
-      navigate(GUIDE.ROUTE);
+      successToast(SUCCESS_MESSAGE(MODEL, "create"));
+      navigate(ROUTE);
     } catch (error: any) {
       errorToast(error.response?.data?.message || ERROR_MESSAGE);
     } finally {
@@ -108,8 +115,7 @@ export default function GuideAddPage() {
       <FormWrapper>
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
-            <BackButton to={GUIDE.ROUTE} />
-            <TitleFormComponent title="Guía de Remisión" mode="create" />
+            <TitleFormComponent title={MODEL.name} mode="create" />
           </div>
         </div>
         <FormSkeleton />
@@ -121,7 +127,7 @@ export default function GuideAddPage() {
     <FormWrapper>
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
-          <TitleFormComponent title="Guía de Remisión" mode="create" />
+          <TitleFormComponent title={MODEL.name} mode="create" icon={ICON} />
         </div>
       </div>
 

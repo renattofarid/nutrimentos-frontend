@@ -22,7 +22,7 @@ export default function PurchaseAddPage() {
   const { MODEL, ICON } = PURCHASE;
 
   const { data: companies, isLoading: companiesLoading } = useAllCompanies();
-  const suppliers = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
+  const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
 
@@ -98,6 +98,7 @@ export default function PurchaseAddPage() {
             warehouses={warehouses}
             products={products}
             onCancel={() => navigate("/compras")}
+            onRefreshSuppliers={refetchSuppliers}
           />
         )}
     </FormWrapper>

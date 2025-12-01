@@ -3,7 +3,11 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BoxShiftOpenModal from "./BoxShiftOpenModal";
 
-export default function BoxShiftActions() {
+interface Props {
+  refetch: () => void;
+}
+
+export default function BoxShiftActions({ refetch }: Props) {
   const [openModal, setOpenModal] = useState(false);
 
   return (
@@ -18,7 +22,7 @@ export default function BoxShiftActions() {
         onOpenChange={setOpenModal}
         onSuccess={() => {
           setOpenModal(false);
-          window.location.reload();
+          refetch();
         }}
       />
     </>

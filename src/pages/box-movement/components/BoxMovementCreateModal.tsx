@@ -41,7 +41,7 @@ export default function BoxMovementCreateModal({
   onSuccess,
 }: BoxMovementCreateModalProps) {
   const { createBoxMovement, isSubmitting } = useBoxMovementStore();
-  const persons = useAllPersons();
+  const { data: persons } = useAllPersons();
 
   const form = useForm<BoxMovementSchemaCreate>({
     resolver: zodResolver(boxMovementSchemaCreate) as any,

@@ -34,8 +34,8 @@ export default function GuideEditPage() {
   const { data: branches, isLoading: branchesLoading } = useAllBranches();
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
-  const customers = useAllPersons({ role_names: [CLIENT_ROLE_CODE] });
-  const suppliers = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
+  const { data: customers } = useAllPersons({ role_names: [CLIENT_ROLE_CODE] });
+  const { data: suppliers } = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
   const { data: motives, isLoading: motivesLoading } = useGuideMotives();
   const { data: categories, isLoading: categoriesLoading } = useAllCategories();
   const { data: brands, isLoading: brandsLoading } = useAllBrands();

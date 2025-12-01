@@ -51,7 +51,9 @@ export default function BoxShiftPage() {
       successToast(SUCCESS_MESSAGE(MODEL, "delete"));
     } catch (error: any) {
       const errorMessage =
-        error?.response?.data?.message ?? error?.response?.data?.error ?? ERROR_MESSAGE(MODEL, "delete");
+        error?.response?.data?.message ??
+        error?.response?.data?.error ??
+        ERROR_MESSAGE(MODEL, "delete");
       errorToast(errorMessage);
     } finally {
       setDeleteId(null);
@@ -74,7 +76,7 @@ export default function BoxShiftPage() {
           subtitle={MODEL.description || ""}
           icon={ICON}
         />
-        <BoxShiftActions />
+        <BoxShiftActions refetch={refetch} />
       </div>
 
       <BoxShiftTable

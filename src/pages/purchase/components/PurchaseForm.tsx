@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader, Plus, Trash2, Edit, Users2 } from "lucide-react";
+import { Loader, Plus, Trash2, Edit, Users2, UserPlus } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
@@ -22,6 +22,7 @@ import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { CompanyResource } from "@/pages/company/lib/company.interface";
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
+import { SupplierDialog } from "@/pages/supplier/components/SupplierDialog";
 import {
   Table,
   TableBody,
@@ -58,6 +59,7 @@ interface PurchaseFormProps {
   products: ProductResource[];
   purchase?: PurchaseResource;
   companies?: CompanyResource[];
+  onRefreshSuppliers?: () => void;
 }
 
 interface DetailRow {
@@ -85,7 +87,11 @@ export const PurchaseForm = ({
   warehouses,
   products,
   companies,
+  onRefreshSuppliers,
 }: PurchaseFormProps) => {
+  // Estado para el diálogo de proveedor
+  const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
+
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
   const [includeIgv, setIncludeIgv] = useState<boolean>(
@@ -565,23 +571,37 @@ export const PurchaseForm = ({
             withValue={false}
           />
 
-          <FormSelect
-            control={form.control}
-            name="supplier_id"
-            label="Proveedor"
-            placeholder="Seleccione un proveedor"
-            options={suppliers.map((supplier) => ({
-              value: supplier.id.toString(),
-              label:
-                supplier.business_name ??
-                supplier.names +
-                  " " +
-                  supplier.father_surname +
-                  " " +
-                  supplier.mother_surname,
-              description: supplier.number_document || undefined,
-            }))}
-          />
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <FormSelect
+                control={form.control}
+                name="supplier_id"
+                label="Proveedor"
+                placeholder="Seleccione un proveedor"
+                options={suppliers.map((supplier) => ({
+                  value: supplier.id.toString(),
+                  label:
+                    supplier.business_name ??
+                    supplier.names +
+                      " " +
+                      supplier.father_surname +
+                      " " +
+                      supplier.mother_surname,
+                  description: supplier.number_document || undefined,
+                }))}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setIsSupplierDialogOpen(true)}
+              className="shrink-0"
+              title="Agregar nuevo proveedor"
+            >
+              <UserPlus className="h-4 w-4" />
+            </Button>
+          </div>
 
           <FormSelect
             control={form.control}
@@ -1034,6 +1054,15 @@ export const PurchaseForm = ({
           </Button>
         </div>
       </form>
+
+      {/* Diálogo para agregar proveedor */}
+      <SupplierDialog
+        open={isSupplierDialogOpen}
+        onOpenChange={setIsSupplierDialogOpen}
+        onSupplierCreated={() => {
+          onRefreshSuppliers?.();
+        }}
+      />
     </Form>
   );
 };

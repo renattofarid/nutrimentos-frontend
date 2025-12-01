@@ -82,7 +82,7 @@ export default function BoxShiftCloseModal({
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-md space-y-2">
+              <div className="bg-muted p-4 rounded-md space-y-2">
                 <div className="flex justify-between">
                   <span className="font-medium">Monto Inicial:</span>
                   <span>${shift?.started_amount.toFixed(2)}</span>

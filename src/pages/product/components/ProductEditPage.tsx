@@ -38,7 +38,7 @@ export default function ProductEditPage() {
   const { data: units } = useAllUnits();
   const { data: productTypes } = useAllProductTypes();
   const { data: nationalities } = useAllNationalities();
-  const suppliers = useAllPersons();
+  const { data: suppliers } = useAllPersons();
 
   useEffect(() => {
     const loadProductData = async () => {

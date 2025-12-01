@@ -25,7 +25,7 @@ export default function AssignClientModal({
   open,
   onClose,
 }: AssignClientModalProps) {
-  const persons = useAllPersons({ role_names: [CLIENT_ROLE_CODE] }); // Filtrar solo clientes
+  const { data: persons } = useAllPersons({ role_names: [CLIENT_ROLE_CODE] }); // Filtrar solo clientes
   const { assignClient, isSubmitting } = usePriceListStore();
 
   const form = useForm<AssignClientSchema>({

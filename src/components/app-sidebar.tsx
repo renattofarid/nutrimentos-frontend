@@ -49,6 +49,7 @@ import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
 import { SaleRoute } from "@/pages/sale/lib/sale.interface";
 import { BOX_SHIFT } from "@/pages/box-shift/lib/box-shift.interface";
 import { AccountsReceivableRoute } from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
+import { ACCOUNTS_PAYABLE } from "@/pages/accounts-payable/lib/accounts-payable.interface";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -206,6 +207,12 @@ const {
   MODEL: { plural: BoxShiftTitle },
 } = BOX_SHIFT;
 
+const {
+  ICON_REACT: AccountsPayableIcon,
+  ROUTE: AccountsPayableRoute,
+  MODEL: { name: AccountsPayableTitle },
+} = ACCOUNTS_PAYABLE;
+
 const data = {
   navMain: [
     {
@@ -259,11 +266,6 @@ const data = {
           icon: DocumentTypeIcon,
         },
         {
-          title: PurchaseTitle,
-          url: PurchaseRoute,
-          icon: PurchaseIcon,
-        },
-        {
           title: GuideTitle,
           url: GuideRoute,
           icon: GuideIcon,
@@ -289,6 +291,23 @@ const data = {
           title: "Cuentas por Cobrar",
           url: AccountsReceivableRoute,
           icon: DollarSign,
+        },
+      ],
+    },
+    {
+      title: "Compras",
+      url: "#",
+      icon: DollarSign,
+      items: [
+        {
+          title: PurchaseTitle,
+          url: PurchaseRoute,
+          icon: PurchaseIcon,
+        },
+        {
+          title: AccountsPayableTitle,
+          url: AccountsPayableRoute,
+          icon: AccountsPayableIcon,
         },
       ],
     },

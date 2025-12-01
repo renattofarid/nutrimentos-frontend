@@ -2,7 +2,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Wallet, Eye } from "lucide-react";
-import type { SaleInstallmentResource } from "@/pages/sale/lib/sale.interface";
+import type { PurchaseInstallmentResource } from "../lib/accounts-payable.interface";
 import { parse } from "date-fns";
 
 export const formatCurrency = (amount: number, currency: string) => {
@@ -12,7 +12,7 @@ export const formatCurrency = (amount: number, currency: string) => {
 export const matchCurrency = (currencyCode: string) => {
   const currency =
     currencyCode === "PEN"
-      ? "S/."
+      ? "S/"
       : currencyCode === "USD"
       ? "$"
       : currencyCode === "EUR"
@@ -30,7 +30,7 @@ export const formatDate = (dateString: string) => {
   });
 };
 
-export const getStatusBadge = (installment: SaleInstallmentResource) => {
+export const getStatusBadge = (installment: PurchaseInstallmentResource) => {
   const pendingAmount = parseFloat(installment.pending_amount);
 
   if (pendingAmount === 0 || installment.status === "PAGADO") {
@@ -44,22 +44,26 @@ export const getStatusBadge = (installment: SaleInstallmentResource) => {
   return <Badge variant="secondary">PENDIENTE</Badge>;
 };
 
-export const getAccountsReceivableColumns = (
-  onOpenPayment: (installment: SaleInstallmentResource) => void,
-  onOpenQuickView: (installment: SaleInstallmentResource) => void
-): ColumnDef<SaleInstallmentResource>[] => [
-  // {
-  //   accessorKey: "sale_correlativo",
-  //   header: "Venta",
-  //   cell: ({ row }) => (
-  //     <div className="flex flex-col">
-  //       <span className="font-semibold">{row.original.sale_correlativo}</span>
-  //       <span className="text-xs text-muted-foreground">
-  //         {row.original.correlativo}
-  //       </span>
-  //     </div>
-  //   ),
-  // },
+export const getAccountsPayableColumns = (
+  onOpenPayment: (installment: PurchaseInstallmentResource) => void,
+  onOpenQuickView: (installment: PurchaseInstallmentResource) => void
+): ColumnDef<PurchaseInstallmentResource>[] => [
+  {
+    accessorKey: "purchase_correlativo",
+    header: "Compra",
+    cell: ({ row }) => (
+      <div className="flex flex-col">
+        <span className="font-semibold">
+          {row.original.purchase_correlativo}
+        </span>
+        {row.original.supplier_name && (
+          <span className="text-xs text-muted-foreground">
+            {row.original.supplier_name}
+          </span>
+        )}
+      </div>
+    ),
+  },
   {
     accessorKey: "installment_number",
     header: "Cuota",
@@ -87,7 +91,7 @@ export const getAccountsReceivableColumns = (
                   (1000 * 60 * 60 * 24)
               );
 
-              if (row.original.status === "PAGADA") {
+              if (row.original.status === "PAGADO") {
                 return "Pagado";
               } else if (daysUntilDue > 0) {
                 return `${daysUntilDue} días para vencer`;
@@ -107,10 +111,7 @@ export const getAccountsReceivableColumns = (
     header: "Monto",
     cell: ({ row }) => (
       <div className="text-right font-semibold">
-        {formatCurrency(
-          parseFloat(row.original.amount),
-          matchCurrency("PEN")
-        )}
+        {formatCurrency(parseFloat(row.original.amount), matchCurrency("PEN"))}
       </div>
     ),
   },

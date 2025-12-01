@@ -80,6 +80,10 @@ import GuideEditPage from "./pages/guide/components/GuideEditPage";
 import { GUIDE } from "./pages/guide/lib/guide.interface";
 import { BOX_SHIFT } from "./pages/box-shift/lib/box-shift.interface";
 import { BoxShiftDetailPage, BoxShiftPage } from "./pages/box-shift/components";
+import AccountsReceivablePage from "./pages/accounts-receivable/components/AccountsReceivablePage";
+import { AccountsReceivableRoute } from "./pages/accounts-receivable/lib/accounts-receivable.interface";
+import AccountsPayablePage from "./pages/accounts-payable/components/AccountsPayablePage";
+import { ACCOUNTS_PAYABLE } from "./pages/accounts-payable/lib/accounts-payable.interface";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -108,6 +112,7 @@ const { ROUTE: PurchaseInstallmentRoute } = PURCHASE_INSTALLMENT;
 const { ROUTE: PriceListRoute } = PRICELIST;
 const { ROUTE: GuideRoute } = GUIDE;
 const { ROUTE: BoxShiftRoute } = BOX_SHIFT;
+const { ROUTE: AccountsPayableRoute } = ACCOUNTS_PAYABLE;
 
 export const hasAccessToRoute = (access: Access[], route: string): boolean => {
   const transformRoute = route.split("/").pop();
@@ -608,6 +613,26 @@ export default function App() {
             element={
               <ProtectedRoute path={BoxShiftRoute}>
                 <BoxShiftDetailPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rutas de Cuentas por Cobrar */}
+          <Route
+            path={AccountsReceivableRoute}
+            element={
+              <ProtectedRoute path={AccountsReceivableRoute}>
+                <AccountsReceivablePage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rutas de Cuentas por Pagar */}
+          <Route
+            path={AccountsPayableRoute}
+            element={
+              <ProtectedRoute path={AccountsPayableRoute}>
+                <AccountsPayablePage />
               </ProtectedRoute>
             }
           />

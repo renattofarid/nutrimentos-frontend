@@ -37,17 +37,18 @@ export default function PurchasePage() {
     useState<PurchaseInstallmentResource | null>(null);
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
 
-  const { data, meta, isLoading, refetch } = usePurchase();
+  const filterParams = {
+    page,
+    search,
+    per_page,
+    ...(selectedStatus && { status: selectedStatus }),
+    ...(selectedPaymentType && { payment_type: selectedPaymentType }),
+  };
+
+  const { data, meta, isLoading, refetch } = usePurchase(filterParams);
   const { removePurchase } = usePurchaseStore();
 
   useEffect(() => {
-    const filterParams = {
-      page,
-      search,
-      per_page,
-      ...(selectedStatus && { status: selectedStatus }),
-      ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-    };
     refetch(filterParams);
   }, [page, search, per_page, selectedStatus, selectedPaymentType]);
 

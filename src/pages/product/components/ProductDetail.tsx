@@ -2,13 +2,18 @@ import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProductStore } from "../lib/product.store";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Eye, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon } from "lucide-react";
 import { ProductImageGallery } from "./ProductImageGallery";
+import FormSkeleton from "@/components/FormSkeleton";
+import FormWrapper from "@/components/FormWrapper";
+import TitleFormComponent from "@/components/TitleFormComponent";
+import { PRODUCT } from "../lib/product.interface";
 
 export default function ProductDetail() {
+  const { ICON } = PRODUCT;
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { product, isFinding, fetchProduct } = useProductStore();
@@ -28,10 +33,7 @@ export default function ProductDetail() {
   if (isFinding) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando producto...</p>
-        </div>
+        <FormSkeleton />
       </div>
     );
   }
@@ -51,25 +53,23 @@ export default function ProductDetail() {
   }
 
   return (
-    <div className="space-y-6 mx-auto max-w-(--breakpoint-lg) w-full pb-10">
+    <FormWrapper>
+      <TitleFormComponent title="Detalle del Producto" icon={ICON} />
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5" />
-              Detalles del Producto
-            </CardTitle>
-            <Button variant="outline" onClick={handleBackToList}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver
-            </Button>
-          </div>
-        </CardHeader>
         <CardContent className="space-y-8">
           {/* Basic Information */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Información General</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Código
+                </label>
+                <p className="text-lg font-semibold font-mono">
+                  {product.codigo}
+                </p>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">
                   Nombre
@@ -102,25 +102,19 @@ export default function ProductDetail() {
                 <p className="font-medium">{product.brand_name}</p>
               </div>
 
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">
-                  Unidad
+                  Cantidad
                 </label>
-                <p className="font-medium">{product.unit_name}</p>
+                <p className="font-medium">{product.quantity}</p>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">
-                  Fecha de Creación
+                  Precio Venta
                 </label>
-                <p className="font-medium">
-                  {new Date(product.created_at).toLocaleDateString("es-ES", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </p>
-              </div>
+                <p className="font-medium">{product.price}</p>
+              </div> */}
             </div>
           </div>
 
@@ -136,6 +130,6 @@ export default function ProductDetail() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </FormWrapper>
   );
 }

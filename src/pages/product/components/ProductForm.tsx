@@ -20,7 +20,6 @@ import {
 } from "../lib/product.schema";
 import { Loader } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
-import type { ProductResource } from "../lib/product.interface";
 import type { CategoryResource } from "@/pages/category/lib/category.interface";
 import type { BrandResource } from "@/pages/brand/lib/brand.interface";
 import type { UnitResource } from "@/pages/unit/lib/unit.interface";
@@ -29,6 +28,7 @@ import type { ProductTypeResource } from "@/pages/product-type/lib/product-type.
 import type { NationalityResource } from "@/pages/nationality/lib/nationality.interface";
 import { Switch } from "@/components/ui/switch";
 import type { CompanyResource } from "@/pages/company/lib/company.interface";
+import type { ProductResource } from "../lib/product.interface";
 
 interface ProductFormProps {
   defaultValues: Partial<ProductSchema>;
@@ -88,6 +88,9 @@ export const ProductForm = ({
                       variant="default"
                       placeholder="Ej: PROD-001"
                       {...field}
+                      onChange={(e) =>
+                        field.onChange(e.target.value.toUpperCase())
+                      }
                     />
                   </FormControl>
                   <FormMessage />

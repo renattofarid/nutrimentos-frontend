@@ -1,6 +1,12 @@
 "use client";
 
-import { LayoutGrid, ShieldUser, Package } from "lucide-react";
+import {
+  LayoutGrid,
+  ShieldUser,
+  Package,
+  ShoppingBag,
+  DollarSign,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -36,9 +42,14 @@ import { SETTING } from "@/pages/setting/lib/setting.interface";
 import { DOCUMENT_TYPE } from "@/pages/document-type/lib/document-type.interface";
 import { PRICELIST } from "@/pages/pricelist/lib/pricelist.interface";
 import { PURCHASE } from "@/pages/purchase/lib/purchase.interface";
+import { GUIDE } from "@/pages/guide/lib/guide.interface";
 import { hasAccessToRoute } from "@/App";
 import { useEffect, useState } from "react";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
+import { SaleRoute } from "@/pages/sale/lib/sale.interface";
+import { BOX_SHIFT } from "@/pages/box-shift/lib/box-shift.interface";
+import { AccountsReceivableRoute } from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
+import { ACCOUNTS_PAYABLE } from "@/pages/accounts-payable/lib/accounts-payable.interface";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -184,6 +195,24 @@ const {
   MODEL: { name: PurchaseTitle },
 } = PURCHASE;
 
+const {
+  ICON_REACT: GuideIcon,
+  ROUTE: GuideRoute,
+  MODEL: { name: GuideTitle },
+} = GUIDE;
+
+const {
+  ICON_REACT: BoxShiftIcon,
+  ROUTE: BoxShiftRoute,
+  MODEL: { plural: BoxShiftTitle },
+} = BOX_SHIFT;
+
+const {
+  ICON_REACT: AccountsPayableIcon,
+  ROUTE: AccountsPayableRoute,
+  MODEL: { name: AccountsPayableTitle },
+} = ACCOUNTS_PAYABLE;
+
 const data = {
   navMain: [
     {
@@ -192,7 +221,100 @@ const data = {
       icon: LayoutGrid,
     },
     {
-      title: "Gestión",
+      title: "Ventas",
+      url: "#",
+      icon: ShoppingBag,
+      items: [
+        {
+          title: "Ventas",
+          url: SaleRoute,
+          icon: ShoppingBag,
+        },
+        {
+          title: "Cuentas por Cobrar",
+          url: AccountsReceivableRoute,
+          icon: DollarSign,
+        },
+      ],
+    },
+    {
+      title: "Compras",
+      url: "#",
+      icon: DollarSign,
+      items: [
+        {
+          title: PurchaseTitle,
+          url: PurchaseRoute,
+          icon: PurchaseIcon,
+        },
+        {
+          title: AccountsPayableTitle,
+          url: AccountsPayableRoute,
+          icon: AccountsPayableIcon,
+        },
+      ],
+    },
+    {
+      title: "Productos",
+      url: "#",
+      icon: Package,
+      items: [
+        {
+          title: ProductTitle,
+          url: ProductRoute,
+          icon: ProductIcon,
+        },
+        {
+          title: CategoryTitle,
+          url: CategoryRoute,
+          icon: CategoryIcon,
+        },
+        {
+          title: ProductTypeTitle,
+          url: ProductTypeRoute,
+          icon: ProductTypeIcon,
+        },
+        {
+          title: BrandTitle,
+          url: BrandRoute,
+          icon: BrandIcon,
+        },
+        {
+          title: UnitTitle,
+          url: UnitRoute,
+          icon: UnitIcon,
+        },
+        {
+          title: PriceListTitle,
+          url: PriceListRoute,
+          icon: PriceListIcon,
+        },
+      ],
+    },
+    {
+      title: "Personas",
+      url: "#",
+      icon: ClientIcon,
+      items: [
+        {
+          title: ClientTitle,
+          url: ClientRoute,
+          icon: ClientIcon,
+        },
+        {
+          title: SupplierTitle,
+          url: SupplierRoute,
+          icon: SupplierIcon,
+        },
+        {
+          title: WorkerTitle,
+          url: WorkerRoute,
+          icon: WorkerIcon,
+        },
+      ],
+    },
+    {
+      title: "Organización",
       url: "#",
       icon: CompanyIcon,
       items: [
@@ -212,9 +334,31 @@ const data = {
           icon: WarehouseIcon,
         },
         {
+          title: ZoneTitle,
+          url: ZoneRoute,
+          icon: ZoneIcon,
+        },
+      ],
+    },
+    {
+      title: "Operaciones",
+      url: "#",
+      icon: BoxIcon,
+      items: [
+        {
           title: BoxTitle,
           url: BoxRoute,
           icon: BoxIcon,
+        },
+        {
+          title: BoxShiftTitle,
+          url: BoxShiftRoute,
+          icon: BoxShiftIcon,
+        },
+        {
+          title: GuideTitle,
+          url: GuideRoute,
+          icon: GuideIcon,
         },
         {
           title: PaymentConceptTitle,
@@ -226,52 +370,17 @@ const data = {
           url: WarehouseDocReasonRoute,
           icon: WarehouseDocReasonIcon,
         },
+      ],
+    },
+    {
+      title: "Configuración",
+      url: "#",
+      icon: SettingIcon,
+      items: [
         {
           title: SettingTitle,
           url: SettingRoute,
           icon: SettingIcon,
-        },
-        {
-          title: DocumentTypeTitle,
-          url: DocumentTypeRoute,
-          icon: DocumentTypeIcon,
-        },
-        {
-          title: PurchaseTitle,
-          url: PurchaseRoute,
-          icon: PurchaseIcon,
-        },
-      ],
-    },
-    {
-      title: "Productos",
-      url: "#",
-      icon: Package,
-      items: [
-        {
-          title: CategoryTitle,
-          url: CategoryRoute,
-          icon: CategoryIcon,
-        },
-        {
-          title: ProductTitle,
-          url: ProductRoute,
-          icon: ProductIcon,
-        },
-        {
-          title: ProductTypeTitle,
-          url: ProductTypeRoute,
-          icon: ProductTypeIcon,
-        },
-        {
-          title: BrandTitle,
-          url: BrandRoute,
-          icon: BrandIcon,
-        },
-        {
-          title: UnitTitle,
-          url: UnitRoute,
-          icon: UnitIcon,
         },
         {
           title: NationalityTitle,
@@ -279,9 +388,19 @@ const data = {
           icon: NationalityIcon,
         },
         {
-          title: PriceListTitle,
-          url: PriceListRoute,
-          icon: PriceListIcon,
+          title: BusinessTypeTitle,
+          url: BusinessTypeRoute,
+          icon: BusinessTypeIcon,
+        },
+        {
+          title: JobPositionTitle,
+          url: JobPositionRoute,
+          icon: JobPositionIcon,
+        },
+        {
+          title: DocumentTypeTitle,
+          url: DocumentTypeRoute,
+          icon: DocumentTypeIcon,
         },
       ],
     },
@@ -290,36 +409,6 @@ const data = {
       url: "#",
       icon: ShieldUser,
       items: [
-        {
-          title: ClientTitle,
-          url: ClientRoute,
-          icon: ClientIcon,
-        },
-        {
-          title: SupplierTitle,
-          url: SupplierRoute,
-          icon: SupplierIcon,
-        },
-        {
-          title: WorkerTitle,
-          url: WorkerRoute,
-          icon: WorkerIcon,
-        },
-        {
-          title: BusinessTypeTitle,
-          url: BusinessTypeRoute,
-          icon: BusinessTypeIcon,
-        },
-        {
-          title: ZoneTitle,
-          url: ZoneRoute,
-          icon: ZoneIcon,
-        },
-        {
-          title: JobPositionTitle,
-          url: JobPositionRoute,
-          icon: JobPositionIcon,
-        },
         {
           title: UserTitle,
           url: UserRoute,

@@ -24,7 +24,7 @@ export const requiredStringId = (message: string) =>
     .string()
     .min(1, message)
     .max(100, message)
-    .refine((val) => val !== undefined && val !== "0", { message });
+    .refine((val) => val !== undefined, { message });
 
 export const requiredNumberId = (message: string) =>
   z.preprocess(
@@ -44,3 +44,12 @@ export const onlyLettersSchema = (field: string) =>
     })
     .optional()
     .or(z.literal("")); // si quieres permitir vacío explícito
+
+export const dateStringSchema = (field: string) =>
+  z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: `${field} no es una fecha válida`,
+    })
+    .optional()
+    .or(z.literal(""));

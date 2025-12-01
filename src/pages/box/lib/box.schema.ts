@@ -22,6 +22,7 @@ export const boxSchemaCreate = z.object({
       message: "La serie solo debe contener números",
     }),
   branch_id: requiredStringId("La sucursal es requerida"),
+  status: z.enum(["Activo", "Inactivo"]).default("Activo"),
 });
 
 export const boxSchemaUpdate = boxSchemaCreate.partial();

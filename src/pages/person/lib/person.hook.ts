@@ -26,7 +26,10 @@ export function useAllPersons(params?: Record<string, unknown>) {
     }
   }, [allPersons, fetchAllPersons]);
 
-  return allPersons;
+  return {
+    data: allPersons,
+    refetch: () => fetchAllPersons({ params }),
+  };
 }
 
 export function usePersonById(id: number) {

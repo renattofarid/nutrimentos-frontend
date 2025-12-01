@@ -37,7 +37,7 @@ export default function ProductAddPage() {
   const { data: units } = useAllUnits();
   const { data: productTypes } = useAllProductTypes();
   const { data: nationalities } = useAllNationalities();
-  const suppliers = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
+  const { data: suppliers } = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
 
   const getDefaultValues = (): Partial<ProductSchema> => ({
     codigo: "",

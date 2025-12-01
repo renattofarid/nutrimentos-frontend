@@ -22,7 +22,7 @@ export default function PurchaseEditPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: companies, isLoading: companiesLoading } = useAllCompanies();
-  const suppliers = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
+  const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
 
@@ -141,6 +141,7 @@ export default function PurchaseEditPage() {
             products={products}
             purchase={purchase}
             onCancel={() => navigate("/compras")}
+            onRefreshSuppliers={refetchSuppliers}
           />
         )}
     </FormWrapper>

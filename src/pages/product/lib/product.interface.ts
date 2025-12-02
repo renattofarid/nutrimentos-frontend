@@ -90,6 +90,13 @@ export interface ProductResource {
   nationality_id: number;
   nationality_name: string;
   created_at: string;
+  stock_warehouse: Stockwarehouse[];
+}
+
+export interface Stockwarehouse {
+  warehouse_id: number;
+  warehouse_name: string;
+  stock: number;
 }
 
 export interface ProductResourceById {

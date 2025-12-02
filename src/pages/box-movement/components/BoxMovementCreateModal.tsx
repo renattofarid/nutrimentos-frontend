@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo } from "react";
 import { useBoxMovementStore } from "../lib/box-movement.store";
 import {
   boxMovementSchemaCreate,
@@ -23,9 +24,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { successToast, errorToast } from "@/lib/core.function";
 import { FormSelect } from "@/components/FormSelect";
+import { useAuthStore } from "@/pages/auth/lib/auth.store";
+import { useAllClients } from "@/pages/client/lib/client.hook";
+import { useAllPaymentConcepts } from "@/pages/payment-concept/lib/payment-concept.hook";
 
 interface BoxMovementCreateModalProps {
   open: boolean;
@@ -41,14 +44,20 @@ export default function BoxMovementCreateModal({
   onSuccess,
 }: BoxMovementCreateModalProps) {
   const { createBoxMovement, isSubmitting } = useBoxMovementStore();
-  const { data: persons } = useAllPersons();
+  const { data: persons } = useAllClients();
+  const { user } = useAuthStore();
+
+  // Obtener las cajas aperturadas del usuario
+  const userBoxes = user?.boxes || [];
+  const defaultBoxId = userBoxes.length > 0 ? userBoxes[0].id : boxId;
 
   const form = useForm<BoxMovementSchemaCreate>({
     resolver: zodResolver(boxMovementSchemaCreate) as any,
     defaultValues: {
-      box_id: boxId,
+      box_id: defaultBoxId,
+      customer_id: 0,
+      payment_concept_id: 0,
       type: "INGRESO",
-      concept: "",
       amount_cash: 0,
       amount_deposit: 0,
       amount_yape: 0,
@@ -66,9 +75,17 @@ export default function BoxMovementCreateModal({
       form.reset();
       onSuccess();
     } catch (error: any) {
-      errorToast((error.response.data.message ?? error.response.data.error) || "Error al registrar movimiento");
+      errorToast(
+        (error.response.data.message ?? error.response.data.error) ||
+          "Error al registrar movimiento"
+      );
     }
   };
+
+  const typewatch = form.watch("type");
+
+  const conceptParams = useMemo(() => ({ type: typewatch }), [typewatch]);
+  const { data: concepts } = useAllPaymentConcepts(conceptParams);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -88,43 +105,54 @@ export default function BoxMovementCreateModal({
                 control={form.control}
                 label="Caja"
                 placeholder="Seleccione una caja"
-                options={[{ value: boxId.toString(), label: `Caja #${boxId}` }]}
+                options={userBoxes.map((box) => ({
+                  value: box.id.toString(),
+                  label: `${box.name} - ${box.serie}`,
+                }))}
               />
 
               <FormSelect
-                name="customer_id"
+                name="type"
                 control={form.control}
-                label="Cliente"
-                placeholder="Seleccione un cliente"
-                options={
-                  persons?.map((person) => ({
-                    value: person.id.toString(),
-                    label:
-                      person.names +
+                label="Tipo de Movimiento"
+                placeholder="Seleccione el tipo"
+                options={[
+                  { value: "INGRESO", label: "INGRESO" },
+                  { value: "EGRESO", label: "EGRESO" },
+                ]}
+              />
+            </div>
+
+            <FormSelect
+              name="customer_id"
+              control={form.control}
+              label="Cliente"
+              placeholder="Seleccione un cliente"
+              options={
+                persons?.map((person) => ({
+                  value: person.id.toString(),
+                  label:
+                    person.business_name ??
+                    person.names +
                       " " +
                       (person.father_surname ?? "") +
                       " " +
                       (person.mother_surname ?? ""),
-                  })) || []
-                }
-              />
-            </div>
+                })) || []
+              }
+            />
 
-            <FormField
+            <FormSelect
+              name="payment_concept_id"
               control={form.control}
-              name="concept"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Concepto</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Descripción del movimiento..."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Concepto de Pago"
+              placeholder="Seleccione un concepto de pago"
+              options={
+                concepts?.map((concept) => ({
+                  value: concept.id.toString(),
+                  label: concept.name,
+                })) || []
+              }
             />
 
             <div className="space-y-2">

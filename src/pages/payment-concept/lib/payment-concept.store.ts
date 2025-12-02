@@ -20,11 +20,14 @@ interface PaymentConceptStore {
   isFinding: boolean;
   error: string | null;
   isSubmitting: boolean;
-  fetchAllPaymentConcepts: () => Promise<void>;
+  fetchAllPaymentConcepts: (params?: Record<string, any>) => Promise<void>;
   fetchPaymentConcepts: (params?: Record<string, any>) => Promise<void>;
   fetchPaymentConcept: (id: number) => Promise<void>;
   createPaymentConcept: (data: PaymentConceptSchema) => Promise<void>;
-  updatePaymentConcept: (id: number, data: PaymentConceptSchema) => Promise<void>;
+  updatePaymentConcept: (
+    id: number,
+    data: PaymentConceptSchema
+  ) => Promise<void>;
 }
 
 export const usePaymentConceptStore = create<PaymentConceptStore>((set) => ({
@@ -48,10 +51,10 @@ export const usePaymentConceptStore = create<PaymentConceptStore>((set) => ({
     }
   },
 
-  fetchAllPaymentConcepts: async () => {
+  fetchAllPaymentConcepts: async (params?: Record<string, any>) => {
     set({ isLoadingAll: true, error: null });
     try {
-      const data = await getAllPaymentConcepts();
+      const data = await getAllPaymentConcepts({ params });
       set({ allPaymentConcepts: data, isLoadingAll: false });
     } catch (err) {
       set({ error: "Error al cargar conceptos de pago", isLoadingAll: false });

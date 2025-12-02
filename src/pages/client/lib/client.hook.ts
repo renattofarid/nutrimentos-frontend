@@ -30,3 +30,33 @@ export function useClients(params?: Record<string, unknown>) {
     },
   };
 }
+
+export function useAllClients(params?: Record<string, unknown>) {
+  const { allPersons, meta, isLoading, error, fetchAllPersons } =
+    usePersonStore();
+
+  useEffect(() => {
+    if (!allPersons) {
+      // Add role filter for clients
+      const clientParams = {
+        ...params,
+        role_names: [CLIENT_ROLE_CODE],
+      };
+      fetchAllPersons({ params: clientParams });
+    }
+  }, [allPersons, fetchAllPersons]);
+
+  return {
+    data: allPersons,
+    meta,
+    isLoading,
+    error,
+    refetch: (refetchParams?: Record<string, unknown>) => {
+      const clientParams = {
+        ...refetchParams,
+        role_names: [CLIENT_ROLE_CODE],
+      };
+      return fetchAllPersons({ params: clientParams });
+    },
+  };
+}

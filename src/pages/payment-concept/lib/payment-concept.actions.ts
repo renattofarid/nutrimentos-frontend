@@ -25,9 +25,12 @@ export async function getPaymentConcept({
   return data;
 }
 
-export async function getAllPaymentConcepts(): Promise<PaymentConceptResource[]> {
+export async function getAllPaymentConcepts({
+  params,
+}: getPaymentConceptProps): Promise<PaymentConceptResource[]> {
   const config: AxiosRequestConfig = {
     params: {
+      ...params,
       all: true,
     },
   };
@@ -38,7 +41,9 @@ export async function getAllPaymentConcepts(): Promise<PaymentConceptResource[]>
 export async function findPaymentConceptById(
   id: number
 ): Promise<PaymentConceptResourceById> {
-  const response = await api.get<PaymentConceptResourceById>(`${ENDPOINT}/${id}`);
+  const response = await api.get<PaymentConceptResourceById>(
+    `${ENDPOINT}/${id}`
+  );
   return response.data;
 }
 
@@ -53,7 +58,10 @@ export async function updatePaymentConcept(
   id: number,
   data: PaymentConceptSchema
 ): Promise<PaymentConceptResponse> {
-  const response = await api.put<PaymentConceptResponse>(`${ENDPOINT}/${id}`, data);
+  const response = await api.put<PaymentConceptResponse>(
+    `${ENDPOINT}/${id}`,
+    data
+  );
   return response.data;
 }
 

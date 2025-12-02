@@ -18,14 +18,14 @@ export function usePaymentConcept(params?: Record<string, unknown>) {
   };
 }
 
-export function useAllPaymentConcepts() {
-  const { allPaymentConcepts, fetchAllPaymentConcepts } = usePaymentConceptStore();
+export function useAllPaymentConcepts(params?: Record<string, unknown>) {
+  const { allPaymentConcepts, fetchAllPaymentConcepts } =
+    usePaymentConceptStore();
 
   useEffect(() => {
-    if (!allPaymentConcepts) {
-      fetchAllPaymentConcepts();
-    }
-  }, [allPaymentConcepts, fetchAllPaymentConcepts]);
+    fetchAllPaymentConcepts(params);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(params)]);
 
   return {
     data: allPaymentConcepts,

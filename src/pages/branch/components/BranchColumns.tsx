@@ -22,6 +22,13 @@ export const BranchColumns = ({
     ),
   },
   {
+    accessorKey: "company_social_reason",
+    header: "Razón Social Empresa",
+    cell: ({ getValue }) => (
+      <span className="font-semibold">{getValue() as string}</span>
+    ),
+  },
+  {
     accessorKey: "address",
     header: "Dirección",
     cell: ({ getValue }) => getValue() as string,
@@ -50,9 +57,7 @@ export const BranchColumns = ({
           ) : (
             <X className="h-4 w-4 text-red-600" />
           )}
-          <span className="text-sm">
-            {canInvoice ? "Sí" : "No"}
-          </span>
+          <span className="text-sm">{canInvoice ? "Sí" : "No"}</span>
         </div>
       );
     },

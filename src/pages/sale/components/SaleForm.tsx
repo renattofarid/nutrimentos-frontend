@@ -41,7 +41,6 @@ import { formatNumber } from "@/lib/formatCurrency";
 import { Badge } from "@/components/ui/badge";
 import {
   Empty,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -598,6 +597,7 @@ export const SaleForm = ({
               options={companies.map((company) => ({
                 value: company.id.toString(),
                 label: company.trade_name || company.social_reason,
+                description: company.ruc ?? `EMPRESA SIN RUC #${company.id}`,
               }))}
               disabled={mode === "update"}
             />
@@ -1052,11 +1052,13 @@ export const SaleForm = ({
                   </span>
                 </div>
                 {!paymentAmountsMatchTotal() && (
-                  <div className="p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded">
-                    <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                      ⚠️ El total pagado debe ser igual al total de la venta
-                    </p>
-                  </div>
+                  <Badge
+                    variant="amber"
+                    size="lg"
+                    className="w-full justify-center p-2"
+                  >
+                    ⚠️ El total pagado debe ser igual al total de la venta
+                  </Badge>
                 )}
               </div>
             )}

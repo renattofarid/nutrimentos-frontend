@@ -36,19 +36,23 @@ export interface SaleInstallmentResource {
 
 export interface SaleResource {
   id: number;
-  customer_id: number;
+  company_id: number;
+  branch_id: number;
   warehouse_id: number;
+  customer_id: number;
   user_id: number;
-  customer_fullname: string;
-  customer_document: string | null;
-  warehouse_name: string;
-  user_name: string;
   document_type: string;
   serie: string;
   numero: string;
   full_document_number: string;
   issue_date: string;
   payment_type: string;
+  subtotal: number;
+  discount_global: number;
+  tax_amount: number;
+  total_amount: number;
+  current_amount: number;
+  total_paid: number;
   amount_cash: number;
   amount_card: number;
   amount_yape: number;
@@ -56,36 +60,81 @@ export interface SaleResource {
   amount_deposit: number;
   amount_transfer: number;
   amount_other: number;
-  total_paid: number;
-  total_amount: number;
-  current_amount: number;
   currency: string;
   status: string;
-  observations: string | null;
-  customer: {
-    id: number;
-    document_type: string | null;
-    document_number: string | null;
-    first_name: string | null;
-    father_surname: string;
-    mother_surname: string;
-    business_name: string;
-    full_name: string;
-  };
-  warehouse: {
-    id: number;
-    name: string;
-    address: string;
-  };
-  user: {
-    id: number;
-    name: string;
-    email: string | null;
-  };
-  details?: SaleDetailResource[];
-  installments?: SaleInstallmentResource[];
+  is_electronic: number;
+  observations?: string;
+  warehouse: Warehouse;
+  customer: Customer;
+  user: User;
+  details: Detail[];
+  installments: Installment[];
   created_at: string;
   updated_at: string;
+}
+
+interface Installment {
+  id: number;
+  sale_id: number;
+  installment_number: string;
+  due_days: number;
+  due_date: string;
+  amount: number;
+  pending_amount: number;
+  paid_amount: number;
+  status: string;
+  is_overdue: boolean;
+  currency: string;
+  payments: any[];
+  created_at: string;
+}
+
+interface Detail {
+  id: number;
+  sale_id: number;
+  product_id: number;
+  quantity: number;
+  unit_price: number;
+  purchase_price: number;
+  discount: number;
+  discount_percentage: number;
+  subtotal: number;
+  tax: number;
+  total: number;
+  profit: number;
+  profit_percentage: number;
+  product: Product;
+  created_at: string;
+}
+
+interface Product {
+  id: number;
+  codigo: string;
+  name: string;
+  brand: string;
+  category: string;
+  unit: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email?: string;
+}
+
+interface Customer {
+  id: number;
+  names?: string;
+  father_surname?: string;
+  mother_surname?: string;
+  full_name: string;
+  number_document: string;
+  business_name: string;
+}
+
+interface Warehouse {
+  id: number;
+  name: string;
 }
 
 export interface SaleResourceById {

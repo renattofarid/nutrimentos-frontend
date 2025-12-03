@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { SaleResource } from "../lib/sale.interface";
-import { parse } from "date-fns";
 
 interface SaleColumnsProps {
   onEdit: (sale: SaleResource) => void;
@@ -67,33 +66,29 @@ export const getSaleColumns = ({
     accessorKey: "customer_fullname",
     header: "Cliente",
     cell: ({ row }) => (
-      <div
-        className="max-w-[200px] truncate"
-        title={row.original.customer_fullname}
-      >
-        {row.original.customer_fullname}
+      <div className="max-w-[200px] text-nowrap!">
+        {row.original.customer.business_name || row.original.customer.full_name}
       </div>
     ),
   },
   {
     accessorKey: "warehouse_name",
     header: "Almacén",
-    cell: ({ row }) => <span>{row.original.warehouse_name || "N/A"}</span>,
+    cell: ({ row }) => <span>{row.original.warehouse.name || "N/A"}</span>,
   },
   {
     accessorKey: "issue_date",
     header: "Fecha Emisión",
     cell: ({ row }) => {
-      // const date = new Date(row.original.issue_date);
-      const date = parse(row.original.issue_date, "yyyy-MM-dd", new Date());
+      const date = new Date(row.original.issue_date);
       return (
-        <span>
+        <Badge variant="outline">
           {date.toLocaleDateString("es-ES", {
             day: "2-digit",
             month: "2-digit",
             year: "numeric",
           })}
-        </span>
+        </Badge>
       );
     },
   },
@@ -199,14 +194,14 @@ export const getSaleColumns = ({
       }
 
       const hasPendingPayments = row.original.installments?.some(
-        (inst) => parseFloat(inst.pending_amount) > 0
+        (inst) => inst.pending_amount > 0
       );
 
       // Validar que la suma de cuotas sea igual al total de la venta
       const totalAmount = row.original.total_amount;
       const sumOfInstallments =
         row.original.installments?.reduce(
-          (sum, inst) => sum + parseFloat(inst.amount),
+          (sum, inst) => sum + inst.amount,
           0
         ) || 0;
       const isValid = Math.abs(totalAmount - sumOfInstallments) < 0.01;
@@ -285,7 +280,7 @@ export const getSaleColumns = ({
       // (si pending_amount es menor que amount, significa que tiene pagos)
       const hasPayments =
         row.original.installments?.some(
-          (inst) => parseFloat(inst.pending_amount) < parseFloat(inst.amount)
+          (inst) => inst.pending_amount < inst.amount
         ) ?? false;
 
       return (

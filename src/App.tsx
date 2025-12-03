@@ -33,7 +33,6 @@ import PaymentConceptPage from "./pages/payment-concept/components/PaymentConcep
 import BusinessTypePage from "./pages/businesstype/components/BusinessTypePage";
 import ZonePage from "./pages/zone/components/ZonePage";
 import JobPositionPage from "./pages/jobposition/components/JobPositionPage";
-import WarehouseDocReasonPage from "./pages/warehousedocreason/components/WarehouseDocReasonPage";
 import SettingPage from "./pages/setting/components/SettingPage";
 import DocumentTypePage from "./pages/document-type/components/DocumentTypePage";
 import PurchaseInstallmentPage from "./pages/purchaseinstallment/components/PurchaseInstallmentPage";
@@ -59,7 +58,6 @@ import { PAYMENT_CONCEPT } from "./pages/payment-concept/lib/payment-concept.int
 import { BUSINESSTYPE } from "./pages/businesstype/lib/businesstype.interface";
 import { ZONE } from "./pages/zone/lib/zone.interface";
 import { JOBPOSITION } from "./pages/jobposition/lib/jobposition.interface";
-import { WAREHOUSEDOCREASON } from "./pages/warehousedocreason/lib/warehousedocreason.interface";
 import { SETTING } from "./pages/setting/lib/setting.interface";
 import { DOCUMENT_TYPE } from "./pages/document-type/lib/document-type.interface";
 import { PURCHASE_INSTALLMENT } from "./pages/purchaseinstallment/lib/purchaseinstallment.interface";
@@ -105,7 +103,6 @@ const { ROUTE: PaymentConceptRoute } = PAYMENT_CONCEPT;
 const { ROUTE: BusinessTypeRoute } = BUSINESSTYPE;
 const { ROUTE: ZoneRoute } = ZONE;
 const { ROUTE: JobPositionRoute } = JOBPOSITION;
-const { ROUTE: WarehouseDocReasonRoute } = WAREHOUSEDOCREASON;
 const { ROUTE: SettingRoute } = SETTING;
 const { ROUTE: DocumentTypeRoute } = DOCUMENT_TYPE;
 const { ROUTE: PurchaseRoute } = PURCHASE;
@@ -433,15 +430,6 @@ export default function App() {
             element={
               <ProtectedRoute path={JobPositionRoute}>
                 <JobPositionPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path={WarehouseDocReasonRoute}
-            element={
-              <ProtectedRoute path={WarehouseDocReasonRoute}>
-                <WarehouseDocReasonPage />
               </ProtectedRoute>
             }
           />

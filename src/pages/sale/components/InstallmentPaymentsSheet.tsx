@@ -86,7 +86,7 @@ export default function InstallmentPaymentsSheet({
               Monto de la Cuota
             </span>
             <span className="font-semibold">
-              {currency} {parseFloat(installment.amount).toFixed(2)}
+              {currency} {installment.amount.toFixed(2)}
             </span>
           </div>
           <div className="flex justify-between">
@@ -95,12 +95,12 @@ export default function InstallmentPaymentsSheet({
             </span>
             <span
               className={`font-semibold ${
-                parseFloat(installment.pending_amount) === 0
+                installment.pending_amount === 0
                   ? "text-primary"
                   : "text-orange-600"
               }`}
             >
-              {currency} {parseFloat(installment.pending_amount).toFixed(2)}
+              {currency} {installment.pending_amount.toFixed(2)}
             </span>
           </div>
           <div className="flex justify-between">

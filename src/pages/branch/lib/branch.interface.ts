@@ -37,7 +37,7 @@ export const BRANCH: ModelComplete<BranchResource> = {
     id: 0,
     name: "",
     address: "",
-    is_invoice: 0,
+    is_invoice: false,
     responsible_id: 0,
     responsible_full_name: "",
     phone: "",
@@ -58,7 +58,7 @@ export interface BranchResource {
   id: number;
   name: string;
   address: string;
-  is_invoice: number;
+  is_invoice: boolean;
   responsible_id: number;
   responsible_full_name: string;
   phone: string;

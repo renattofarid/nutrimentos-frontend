@@ -21,16 +21,17 @@ export interface SaleDetailResource {
 
 export interface SaleInstallmentResource {
   id: number;
-  correlativo: string;
   sale_id: number;
-  sale_correlativo: string;
-  installment_number: number;
+  installment_number: string;
   due_days: number;
   due_date: string;
-  amount: string;
-  pending_amount: string;
+  amount: number;
+  pending_amount: number;
+  paid_amount: number;
   status: string;
+  is_overdue: boolean;
   currency: string;
+  payments: SalePaymentResource[];
   created_at: string;
 }
 
@@ -68,28 +69,12 @@ export interface SaleResource {
   customer: Customer;
   user: User;
   details: Detail[];
-  installments: Installment[];
+  installments: SaleInstallmentResource[];
   created_at: string;
   updated_at: string;
 }
 
-interface Installment {
-  id: number;
-  sale_id: number;
-  installment_number: string;
-  due_days: number;
-  due_date: string;
-  amount: number;
-  pending_amount: number;
-  paid_amount: number;
-  status: string;
-  is_overdue: boolean;
-  currency: string;
-  payments: any[];
-  created_at: string;
-}
-
-interface Detail {
+export interface Detail {
   id: number;
   sale_id: number;
   product_id: number;
@@ -107,7 +92,7 @@ interface Detail {
   created_at: string;
 }
 
-interface Product {
+export interface Product {
   id: number;
   codigo: string;
   name: string;
@@ -116,13 +101,13 @@ interface Product {
   unit: string;
 }
 
-interface User {
+export interface User {
   id: number;
   name: string;
   email?: string;
 }
 
-interface Customer {
+export interface Customer {
   id: number;
   names?: string;
   father_surname?: string;
@@ -132,7 +117,7 @@ interface Customer {
   business_name: string;
 }
 
-interface Warehouse {
+export interface Warehouse {
   id: number;
   name: string;
 }
@@ -320,11 +305,6 @@ export interface SalePaymentResource {
   created_at: string;
 }
 
-interface User {
-  id: number;
-  name: string;
-}
-
 export interface SalePaymentResponse {
   current_page: number;
   data: SalePaymentResource[];
@@ -391,7 +371,7 @@ export const SaleEditRoute = "/ventas/actualizar/:id";
 export const DOCUMENT_TYPES = [
   { value: "FACTURA", label: "Factura" },
   { value: "BOLETA", label: "Boleta" },
-  { value: "NOTA DE VENTA", label: "Boleta" },
+  { value: "NOTA DE VENTA", label: "Nota de Venta" },
   { value: "NOTA DE CREDITO", label: "Nota de Crédito Factura" },
   // { value: "GUIA", label: "Guía de Remisión" },
 ] as const;

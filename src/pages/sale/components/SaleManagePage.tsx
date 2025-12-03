@@ -87,7 +87,9 @@ export default function SaleManagePage() {
           <BackButton onClick={() => navigate("/ventas")} />
           <TitleComponent
             title={`Gestionar Venta #${sale.id}`}
-            subtitle={`${sale.full_document_number} - ${sale.customer_fullname}`}
+            subtitle={`${sale.full_document_number} - ${
+              sale.customer.business_name ?? sale.customer.full_name
+            }`}
             icon={"CreditCard"}
           />
         </div>
@@ -245,7 +247,9 @@ export default function SaleManagePage() {
           <CardContent className="space-y-2">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Nombre Completo</p>
-              <p className="font-semibold">{sale.customer_fullname}</p>
+              <p className="font-semibold">
+                {sale.customer.business_name ?? sale.customer.full_name}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -260,7 +264,7 @@ export default function SaleManagePage() {
           <CardContent className="space-y-2">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Nombre</p>
-              <p className="font-semibold">{sale.warehouse_name}</p>
+              <p className="font-semibold">{sale.warehouse.id}</p>
             </div>
           </CardContent>
         </Card>
@@ -304,7 +308,7 @@ export default function SaleManagePage() {
             ) : (
               <div className="space-y-3">
                 {sale.installments.map((installment) => {
-                  const isPending = parseFloat(installment.pending_amount) > 0;
+                  const isPending = installment.pending_amount > 0;
                   const isOverdue =
                     isPending &&
                     new Date(installment.due_date) < new Date() &&
@@ -354,8 +358,7 @@ export default function SaleManagePage() {
                                 Monto
                               </p>
                               <p className="font-semibold">
-                                {currency}{" "}
-                                {parseFloat(installment.amount).toFixed(2)}
+                                {currency} {installment.amount.toFixed(2)}
                               </p>
                             </div>
                             <div>
@@ -370,9 +373,7 @@ export default function SaleManagePage() {
                                 }`}
                               >
                                 {currency}{" "}
-                                {parseFloat(installment.pending_amount).toFixed(
-                                  2
-                                )}
+                                {installment.pending_amount.toFixed(2)}
                               </p>
                             </div>
                           </div>

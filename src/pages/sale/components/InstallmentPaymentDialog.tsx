@@ -104,7 +104,7 @@ export default function InstallmentPaymentDialog({
     if (!installment) return;
 
     const total = calculateTotal();
-    const pendingAmount = parseFloat(installment.pending_amount);
+    const pendingAmount = installment.pending_amount;
 
     if (total === 0) {
       errorToast("Debe ingresar al menos un monto de pago");
@@ -147,7 +147,7 @@ export default function InstallmentPaymentDialog({
   if (!installment) return null;
 
   const total = calculateTotal();
-  const pendingAmount = parseFloat(installment.pending_amount);
+  const pendingAmount = installment.pending_amount;
   const isSubmitting = form.formState.isSubmitting;
 
   return (
@@ -167,7 +167,7 @@ export default function InstallmentPaymentDialog({
                 Monto de la Cuota
               </span>
               <span className="font-semibold">
-                {currency} {parseFloat(installment.amount).toFixed(2)}
+                {currency} {installment.amount.toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between">

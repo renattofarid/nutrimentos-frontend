@@ -31,7 +31,7 @@ export const formatDate = (dateString: string) => {
 };
 
 export const getStatusBadge = (installment: SaleInstallmentResource) => {
-  const pendingAmount = parseFloat(installment.pending_amount);
+  const pendingAmount = installment.pending_amount;
 
   if (pendingAmount === 0 || installment.status === "PAGADO") {
     return <Badge variant="default">PAGADO</Badge>;
@@ -108,7 +108,7 @@ export const getAccountsReceivableColumns = (
     cell: ({ row }) => (
       <div className="text-right font-semibold">
         {formatCurrency(
-          parseFloat(row.original.amount),
+          row.original.amount,
           matchCurrency(row.original.currency || "PEN")
         )}
       </div>
@@ -118,7 +118,7 @@ export const getAccountsReceivableColumns = (
     accessorKey: "pending_amount",
     header: "Pendiente",
     cell: ({ row }) => {
-      const isPending = parseFloat(row.original.pending_amount) > 0;
+      const isPending = row.original.pending_amount > 0;
       return (
         <div
           className={`text-right font-semibold ${
@@ -126,7 +126,7 @@ export const getAccountsReceivableColumns = (
           }`}
         >
           {formatCurrency(
-            parseFloat(row.original.pending_amount),
+            row.original.pending_amount,
             matchCurrency(row.original.currency || "PEN")
           )}
         </div>
@@ -142,7 +142,7 @@ export const getAccountsReceivableColumns = (
     id: "actions",
     header: () => <div className="text-center">Acciones</div>,
     cell: ({ row }) => {
-      const isPending = parseFloat(row.original.pending_amount) > 0;
+      const isPending = row.original.pending_amount > 0;
       return (
         <div className="flex items-center justify-center gap-2">
           <Button

@@ -104,6 +104,11 @@ export const SaleForm = ({
   warehouses,
   products,
 }: SaleFormProps) => {
+  // Estados para filtrado en cascada
+  const [filteredBranches, setFilteredBranches] = useState<BranchResource[]>([]);
+  const [filteredWarehouses, setFilteredWarehouses] = useState<WarehouseResource[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<ProductResource[]>([]);
+
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
 
@@ -236,6 +241,31 @@ export const SaleForm = ({
   // Inicializar detalles y cuotas desde defaultValues (para modo edición)
   useEffect(() => {
     if (mode === "update" && defaultValues) {
+      // Inicializar filtros en modo edición
+      if (defaultValues.company_id) {
+        const filtered = branches.filter(
+          (branch) => branch.company_id.toString() === defaultValues.company_id
+        );
+        setFilteredBranches(filtered);
+      }
+
+      if (defaultValues.branch_id) {
+        const filtered = warehouses.filter(
+          (warehouse) => warehouse.branch_id.toString() === defaultValues.branch_id
+        );
+        setFilteredWarehouses(filtered);
+      }
+
+      if (defaultValues.warehouse_id) {
+        const filtered = products.filter((product) => {
+          const stockInWarehouse = product.stock_warehouse?.find(
+            (stock) => stock.warehouse_id.toString() === defaultValues.warehouse_id
+          );
+          return stockInWarehouse && stockInWarehouse.stock > 0;
+        });
+        setFilteredProducts(filtered);
+      }
+
       // Inicializar detalles
       if (defaultValues.details && defaultValues.details.length > 0) {
         const initialDetails = defaultValues.details.map((detail: any) => {
@@ -283,6 +313,83 @@ export const SaleForm = ({
 
   // Watch para el tipo de pago
   const selectedPaymentType = form.watch("payment_type");
+
+  // Watch para filtrado en cascada
+  const selectedCompanyId = form.watch("company_id");
+  const selectedBranchId = form.watch("branch_id");
+  const selectedWarehouseId = form.watch("warehouse_id");
+
+  // Efecto para filtrar branches cuando cambia company
+  useEffect(() => {
+    if (selectedCompanyId) {
+      const filtered = branches.filter(
+        (branch) => branch.company_id.toString() === selectedCompanyId
+      );
+      setFilteredBranches(filtered);
+
+      // Si el branch seleccionado no está en la nueva lista filtrada, limpiar
+      const currentBranchId = form.getValues("branch_id");
+      if (currentBranchId) {
+        const isValid = filtered.some(
+          (branch) => branch.id.toString() === currentBranchId
+        );
+        if (!isValid) {
+          form.setValue("branch_id", "");
+          form.setValue("warehouse_id", "");
+          setFilteredWarehouses([]);
+        }
+      }
+    } else {
+      setFilteredBranches([]);
+      form.setValue("branch_id", "");
+      form.setValue("warehouse_id", "");
+      setFilteredWarehouses([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCompanyId, branches]);
+
+  // Efecto para filtrar warehouses cuando cambia branch
+  useEffect(() => {
+    if (selectedBranchId) {
+      const filtered = warehouses.filter(
+        (warehouse) => warehouse.branch_id.toString() === selectedBranchId
+      );
+      setFilteredWarehouses(filtered);
+
+      // Si el warehouse seleccionado no está en la nueva lista filtrada, limpiar
+      const currentWarehouseId = form.getValues("warehouse_id");
+      if (currentWarehouseId) {
+        const isValid = filtered.some(
+          (warehouse) => warehouse.id.toString() === currentWarehouseId
+        );
+        if (!isValid) {
+          form.setValue("warehouse_id", "");
+        }
+      }
+    } else {
+      setFilteredWarehouses([]);
+      form.setValue("warehouse_id", "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBranchId, warehouses]);
+
+  // Efecto para filtrar productos cuando cambia warehouse
+  useEffect(() => {
+    if (selectedWarehouseId) {
+      const filtered = products.filter((product) => {
+        // Buscar si el producto tiene stock en el warehouse seleccionado
+        const stockInWarehouse = product.stock_warehouse?.find(
+          (stock) => stock.warehouse_id.toString() === selectedWarehouseId
+        );
+        // Solo incluir productos que tienen stock mayor a 0 en ese warehouse
+        return stockInWarehouse && stockInWarehouse.stock > 0;
+      });
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedWarehouseId, products]);
 
   // Establecer fecha de emisión automáticamente al cargar el formulario
   useEffect(() => {
@@ -607,11 +714,11 @@ export const SaleForm = ({
               name="branch_id"
               label="Sucursal"
               placeholder="Seleccione una sucursal"
-              options={branches.map((branch) => ({
+              options={filteredBranches.map((branch) => ({
                 value: branch.id.toString(),
                 label: branch.name,
               }))}
-              disabled={mode === "update"}
+              disabled={mode === "update" || !selectedCompanyId}
             />
 
             <FormSelect
@@ -637,11 +744,11 @@ export const SaleForm = ({
               name="warehouse_id"
               label="Almacén"
               placeholder="Seleccione un almacén"
-              options={warehouses.map((warehouse) => ({
+              options={filteredWarehouses.map((warehouse) => ({
                 value: warehouse.id.toString(),
                 label: warehouse.name,
               }))}
-              disabled={mode === "update"}
+              disabled={mode === "update" || !selectedBranchId}
             />
 
             <FormSelect
@@ -748,11 +855,24 @@ export const SaleForm = ({
                   control={detailTempForm.control}
                   name="temp_product_id"
                   label="Producto"
-                  placeholder="Seleccione"
-                  options={products.map((product) => ({
-                    value: product.id.toString(),
-                    label: product.name,
-                  }))}
+                  placeholder={
+                    selectedWarehouseId
+                      ? "Seleccione un producto"
+                      : "Primero seleccione un almacén"
+                  }
+                  options={filteredProducts.map((product) => {
+                    const stockInWarehouse = product.stock_warehouse?.find(
+                      (stock) => stock.warehouse_id.toString() === selectedWarehouseId
+                    );
+                    return {
+                      value: product.id.toString(),
+                      label: product.name,
+                      description: stockInWarehouse
+                        ? `Stock: ${stockInWarehouse.stock}`
+                        : undefined,
+                    };
+                  })}
+                  disabled={!selectedWarehouseId}
                 />
               </Form>
             </div>

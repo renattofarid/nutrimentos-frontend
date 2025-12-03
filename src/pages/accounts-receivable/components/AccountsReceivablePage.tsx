@@ -52,11 +52,10 @@ export default function AccountsReceivablePage() {
     }
 
     const searchLower = search.toLowerCase();
-    const filtered = installments.filter(
-      (inst) =>
-        inst.sale_correlativo.toLowerCase().includes(searchLower) ||
-        inst.correlativo.toLowerCase().includes(searchLower) ||
-        inst.installment_number.toString().includes(searchLower)
+    const filtered = installments.filter((inst) =>
+      // inst.sale_correlativo.toLowerCase().includes(searchLower) ||
+      // inst.correlativo.toLowerCase().includes(searchLower) ||
+      inst.installment_number.toString().includes(searchLower)
     );
     setFilteredInstallments(filtered);
   };
@@ -79,7 +78,7 @@ export default function AccountsReceivablePage() {
     > = {};
 
     installments.forEach((inst) => {
-      const pendingAmount = parseFloat(inst.pending_amount);
+      const pendingAmount = inst.pending_amount;
       const dueDate = new Date(inst.due_date);
       const currency = inst.currency || "S/";
 
@@ -148,7 +147,10 @@ export default function AccountsReceivablePage() {
       {Object.keys(summaryByCurrency).length > 0 ? (
         <div className="space-y-2">
           {Object.entries(summaryByCurrency).map(([currency, summary]) => (
-            <div key={currency} className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <div
+              key={currency}
+              className="grid grid-cols-2 md:grid-cols-5 gap-2"
+            >
               {/* Moneda */}
               <div className="p-2 bg-muted/30 rounded-lg flex items-center justify-center">
                 <p className="font-bold text-lg">{currency}</p>
@@ -169,9 +171,7 @@ export default function AccountsReceivablePage() {
 
               {/* Vencidas */}
               <div className="p-2 bg-destructive/5 hover:bg-destructive/10 transition-colors rounded-lg">
-                <p className="text-xs text-muted-foreground mb-0.5">
-                  Vencidas
-                </p>
+                <p className="text-xs text-muted-foreground mb-0.5">Vencidas</p>
                 <p className="text-sm font-bold text-destructive truncate">
                   {formatCurrency(summary.totalOverdue, currency)}
                 </p>
@@ -189,9 +189,7 @@ export default function AccountsReceivablePage() {
 
               {/* Total Cuotas */}
               <div className="p-2 bg-primary/5 hover:bg-primary/10 transition-colors rounded-lg">
-                <p className="text-xs text-muted-foreground mb-0.5">
-                  Cuotas
-                </p>
+                <p className="text-xs text-muted-foreground mb-0.5">Cuotas</p>
                 <p className="text-sm font-bold text-primary truncate">
                   {summary.totalInstallments}
                 </p>

@@ -109,7 +109,7 @@ export const getAccountsReceivableColumns = (
       <div className="text-right font-semibold">
         {formatCurrency(
           parseFloat(row.original.amount),
-          matchCurrency("PEN")
+          matchCurrency(row.original.currency || "PEN")
         )}
       </div>
     ),
@@ -127,7 +127,7 @@ export const getAccountsReceivableColumns = (
         >
           {formatCurrency(
             parseFloat(row.original.pending_amount),
-            matchCurrency("PEN")
+            matchCurrency(row.original.currency || "PEN")
           )}
         </div>
       );

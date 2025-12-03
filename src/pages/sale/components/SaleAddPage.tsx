@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BackButton } from "@/components/BackButton";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { SaleForm } from "./SaleForm";
 import { type SaleSchema } from "../lib/sale.schema";
@@ -15,8 +14,10 @@ import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import FormWrapper from "@/components/FormWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
+import { SALE } from "../lib/sale.interface";
 
 export const SaleAddPage = () => {
+  const { ICON } = SALE;
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,7 +29,12 @@ export const SaleAddPage = () => {
 
   const { createSale } = useSaleStore();
 
-  const isLoading = companiesLoading || branchesLoading || customersLoading || warehousesLoading || productsLoading;
+  const isLoading =
+    companiesLoading ||
+    branchesLoading ||
+    customersLoading ||
+    warehousesLoading ||
+    productsLoading;
 
   const getDefaultValues = (): Partial<SaleSchema> => ({
     company_id: "",
@@ -64,8 +70,7 @@ export const SaleAddPage = () => {
       <FormWrapper>
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
-            <BackButton to="/ventas" />
-            <TitleFormComponent title="Venta" mode="create" />
+            <TitleFormComponent title="Venta" mode="create" icon={ICON} />
           </div>
         </div>
         <FormSkeleton />
@@ -77,7 +82,7 @@ export const SaleAddPage = () => {
     <FormWrapper>
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
-          <TitleFormComponent title="Venta" mode="create" />
+          <TitleFormComponent title="Venta" mode="create" icon={ICON} />
         </div>
       </div>
 

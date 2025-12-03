@@ -18,8 +18,14 @@ import {
 import { usePurchase } from "@/pages/purchase/lib/purchase.hook";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { Badge } from "@/components/ui/badge";
-import { PurchaseStatusChart, PaymentTypeChart, MonthlyPurchasesChart } from "./charts";
+import {
+  PurchaseStatusChart,
+  PaymentTypeChart,
+  MonthlyPurchasesChart,
+} from "./charts";
 import { StatCard } from "./StatCard";
+import FormSkeleton from "@/components/FormSkeleton";
+import formatCurrency from "@/lib/formatCurrency";
 
 export default function HomePage() {
   const { data: purchases, isLoading: purchasesLoading } = usePurchase();
@@ -118,11 +124,7 @@ export default function HomePage() {
   }, [purchases, products]);
 
   if (purchasesLoading || productsLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">Cargando dashboard...</p>
-      </div>
-    );
+    return <FormSkeleton />;
   }
 
   return (
@@ -147,7 +149,7 @@ export default function HomePage() {
 
         <StatCard
           title="Monto Total"
-          value={`S/. ${stats.totalPurchaseAmount.toFixed(2)}`}
+          value={`S/ ${formatCurrency(stats.totalPurchaseAmount)}`}
           subtitle="En compras realizadas"
           icon={DollarSign}
           variant="secondary"
@@ -155,7 +157,7 @@ export default function HomePage() {
 
         <StatCard
           title="Saldo Pendiente"
-          value={`S/. ${stats.pendingAmount.toFixed(2)}`}
+          value={`S/ ${formatCurrency(stats.pendingAmount)}`}
           subtitle="Por pagar"
           icon={CreditCard}
           variant="warning"

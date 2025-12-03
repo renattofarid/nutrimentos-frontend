@@ -6,6 +6,7 @@ import { useExpiringAlerts } from "@/pages/purchaseinstallment/lib/purchaseinsta
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
+import FormSkeleton from "./FormSkeleton";
 
 export function NotificationBell() {
   const { data: alerts, isLoading } = useExpiringAlerts();
@@ -40,9 +41,7 @@ export function NotificationBell() {
           </div>
           <Separator />
           {isLoading ? (
-            <div className="text-sm text-muted-foreground text-center py-4">
-              Cargando...
-            </div>
+            <FormSkeleton />
           ) : alertCount === 0 ? (
             <div className="text-sm text-muted-foreground text-center py-4">
               No hay cuotas por vencer

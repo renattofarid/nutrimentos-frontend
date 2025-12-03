@@ -12,7 +12,7 @@ export interface PurchaseInstallmentResource {
   pending_amount: string;
   due_date: string;
   status: "PENDIENTE" | "PAGADO" | "VENCIDO" | "PARCIAL";
-  currency?: string;
+  currency: string;
   supplier_name?: string;
   created_at?: string;
   updated_at?: string;

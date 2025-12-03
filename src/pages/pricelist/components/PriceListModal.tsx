@@ -13,6 +13,7 @@ import {
   ERROR_MESSAGE,
 } from "@/lib/core.function";
 import { GeneralModal } from "@/components/GeneralModal";
+import FormSkeleton from "@/components/FormSkeleton";
 
 interface PriceListModalProps {
   id?: number | null;
@@ -118,9 +119,7 @@ export default function PriceListModal({
       maxWidth="4xl"
     >
       {isFinding && mode === "update" ? (
-        <div className="flex justify-center items-center py-8">
-          <p className="text-muted-foreground">Cargando...</p>
-        </div>
+        <FormSkeleton />
       ) : (
         <PriceListForm
           defaultValues={getDefaultValues()}

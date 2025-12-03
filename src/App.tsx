@@ -77,6 +77,7 @@ import SaleManagePage from "./pages/sale/components/SaleManagePage";
 import GuidePage from "./pages/guide/components/GuidePage";
 import GuideAddPage from "./pages/guide/components/GuideAddPage";
 import GuideEditPage from "./pages/guide/components/GuideEditPage";
+import GuideDetailPage from "./pages/guide/components/GuideDetailPage";
 import { GUIDE } from "./pages/guide/lib/guide.interface";
 import { BOX_SHIFT } from "./pages/box-shift/lib/box-shift.interface";
 import { BoxShiftDetailPage, BoxShiftPage } from "./pages/box-shift/components";
@@ -594,6 +595,15 @@ export default function App() {
             element={
               <ProtectedRoute path={GuideRoute}>
                 <GuideEditPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={`${GuideRoute}/:id`}
+            element={
+              <ProtectedRoute path={GuideRoute}>
+                <GuideDetailPage />
               </ProtectedRoute>
             }
           />

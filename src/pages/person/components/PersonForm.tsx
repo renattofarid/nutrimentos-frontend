@@ -295,9 +295,7 @@ export const PersonForm = ({
             control={form.control}
             name="document_type_id"
             label="Tipo de Documento"
-            placeholder={
-              isLoadingDocumentTypes ? "Cargando..." : "Seleccione tipo"
-            }
+            placeholder="Seleccione tipo"
             disabled={isWorker || isLoadingDocumentTypes} // Workers can only use DNI
             options={
               isLoadingDocumentTypes
@@ -867,9 +865,7 @@ export const PersonForm = ({
                 control={form.control}
                 name="job_position_id"
                 label="Cargo / Puesto de Trabajo"
-                placeholder={
-                  isLoadingJobPositions ? "Cargando..." : "Seleccione cargo"
-                }
+                placeholder="Seleccione cargo"
                 disabled={isLoadingJobPositions}
                 options={
                   isLoadingJobPositions
@@ -887,11 +883,7 @@ export const PersonForm = ({
                 control={form.control}
                 name="business_type_id"
                 label="Tipo de Negocio"
-                placeholder={
-                  isLoadingBusinessTypes
-                    ? "Cargando..."
-                    : "Seleccione tipo de negocio"
-                }
+                placeholder="Seleccione tipo de negocio"
                 disabled={isLoadingBusinessTypes}
                 options={
                   isLoadingBusinessTypes
@@ -909,7 +901,7 @@ export const PersonForm = ({
                 control={form.control}
                 name="zone_id"
                 label="Zona"
-                placeholder={isLoadingZones ? "Cargando..." : "Seleccione zona"}
+                placeholder="Seleccione zona"
                 disabled={isLoadingZones}
                 options={
                   isLoadingZones
@@ -927,11 +919,7 @@ export const PersonForm = ({
                 control={form.control}
                 name="client_category_id"
                 label="Lista de Precio"
-                placeholder={
-                  isLoadingPriceLists
-                    ? "Cargando..."
-                    : "Seleccione lista de precio"
-                }
+                placeholder="Seleccione lista de precio"
                 disabled={isLoadingPriceLists}
                 options={
                   isLoadingPriceLists

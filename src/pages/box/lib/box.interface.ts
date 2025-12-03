@@ -52,7 +52,7 @@ export interface BoxResponse {
 export interface BoxResource {
   id: number;
   name: string;
-  status: string;
+  status: "Activo" | "Inactivo";
   serie: string;
   branch_id: number;
   created_at: string;

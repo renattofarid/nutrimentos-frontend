@@ -572,7 +572,7 @@ export const PurchaseForm = ({
           />
 
           <div className="flex gap-2 items-end">
-            <div className="flex-1">
+            <div className="truncate! flex-1">
               <FormSelect
                 control={form.control}
                 name="supplier_id"
@@ -596,7 +596,6 @@ export const PurchaseForm = ({
               variant="outline"
               size="icon"
               onClick={() => setIsSupplierDialogOpen(true)}
-              className="shrink-0"
               title="Agregar nuevo proveedor"
             >
               <UserPlus className="h-4 w-4" />

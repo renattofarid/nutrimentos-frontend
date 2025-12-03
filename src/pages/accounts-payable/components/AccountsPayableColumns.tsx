@@ -111,7 +111,10 @@ export const getAccountsPayableColumns = (
     header: "Monto",
     cell: ({ row }) => (
       <div className="text-right font-semibold">
-        {formatCurrency(parseFloat(row.original.amount), matchCurrency("PEN"))}
+        {formatCurrency(
+          parseFloat(row.original.amount),
+          matchCurrency(row.original.currency || "PEN")
+        )}
       </div>
     ),
   },
@@ -128,7 +131,7 @@ export const getAccountsPayableColumns = (
         >
           {formatCurrency(
             parseFloat(row.original.pending_amount),
-            matchCurrency("PEN")
+            matchCurrency(row.original.currency || "PEN")
           )}
         </div>
       );

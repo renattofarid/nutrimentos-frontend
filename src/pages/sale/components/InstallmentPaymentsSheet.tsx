@@ -10,6 +10,7 @@ import type {
 } from "../lib/sale.interface";
 import { getAllSalePayments } from "../lib/sale.actions";
 import GeneralSheet from "@/components/GeneralSheet";
+import FormSkeleton from "@/components/FormSkeleton";
 
 interface InstallmentPaymentsSheetProps {
   open: boolean;
@@ -135,9 +136,7 @@ export default function InstallmentPaymentsSheet({
           </h3>
 
           {isLoading ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Cargando pagos...</p>
-            </div>
+            <FormSkeleton />
           ) : payments.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">

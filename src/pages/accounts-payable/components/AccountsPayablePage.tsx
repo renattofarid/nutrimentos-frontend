@@ -143,9 +143,7 @@ export default function AccountsPayablePage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-4">
                 <DollarSign className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-lg">
-                  Resumen en {currency}
-                </h3>
+                <h3 className="font-semibold text-lg">Resumen en {currency}</h3>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">

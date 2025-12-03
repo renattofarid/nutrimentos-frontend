@@ -122,7 +122,9 @@ export const BoxForm = ({
             render={({ field }) => (
               <FormItem className="flex flex-row items-center justify-between">
                 <div className="space-y-0.5">
-                  <FormLabel className="text-base font-semibold">Estado</FormLabel>
+                  <FormLabel className="text-base font-semibold">
+                    Estado
+                  </FormLabel>
                   <div className="text-sm text-muted-foreground">
                     {field.value === "Activo" ? "Activo" : "Inactivo"}
                   </div>
@@ -130,7 +132,9 @@ export const BoxForm = ({
                 <FormControl>
                   <Switch
                     checked={field.value === "Activo"}
-                    onCheckedChange={(checked) => field.onChange(checked ? "Activo" : "Inactivo")}
+                    onCheckedChange={(checked) =>
+                      field.onChange(checked ? "Activo" : "Inactivo")
+                    }
                   />
                 </FormControl>
               </FormItem>

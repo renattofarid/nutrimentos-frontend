@@ -12,6 +12,7 @@ import {
   SUCCESS_MESSAGE,
   ERROR_MESSAGE,
 } from "@/lib/core.function";
+import FormSkeleton from "@/components/FormSkeleton";
 
 const { MODEL, ICON, TITLES } = PRICELIST;
 
@@ -45,10 +46,7 @@ export default function PriceListEditPage() {
       successToast(SUCCESS_MESSAGE(MODEL, "update"));
       navigate(PRICELIST.ROUTE);
     } catch (error: any) {
-      errorToast(
-        error.response?.data?.message,
-        ERROR_MESSAGE(MODEL, "update")
-      );
+      errorToast(error.response?.data?.message, ERROR_MESSAGE(MODEL, "update"));
     }
   };
 
@@ -94,9 +92,7 @@ export default function PriceListEditPage() {
         />
         <Card>
           <CardContent className="pt-6">
-            <div className="flex justify-center items-center py-12">
-              <p className="text-muted-foreground">Cargando...</p>
-            </div>
+            <FormSkeleton />
           </CardContent>
         </Card>
       </div>

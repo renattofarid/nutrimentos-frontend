@@ -12,6 +12,7 @@ import BoxMovementTable from "@/pages/box-movement/components/BoxMovementTable";
 import { BoxMovementColumns } from "@/pages/box-movement/components/BoxMovementColumns";
 import { useState } from "react";
 import BoxMovementCreateModal from "@/pages/box-movement/components/BoxMovementCreateModal";
+import FormSkeleton from "@/components/FormSkeleton";
 
 export default function BoxShiftDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,12 +21,16 @@ export default function BoxShiftDetailPage() {
   const [createMovementModal, setCreateMovementModal] = useState(false);
 
   const { data: shift, isFinding } = useBoxShiftById(shiftId);
-  const { data: movements, isLoading: loadingMovements, refetch } = useBoxMovement({
+  const {
+    data: movements,
+    isLoading: loadingMovements,
+    refetch,
+  } = useBoxMovement({
     box_shift_id: shiftId,
   });
 
   if (isFinding) {
-    return <div className="text-center py-8">Cargando turno...</div>;
+    return <FormSkeleton />;
   }
 
   if (!shift) {
@@ -36,7 +41,11 @@ export default function BoxShiftDetailPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(BOX_SHIFT.ROUTE)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(BOX_SHIFT.ROUTE)}
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <TitleComponent
@@ -45,7 +54,10 @@ export default function BoxShiftDetailPage() {
             icon={BOX_SHIFT.ICON}
           />
         </div>
-        <Badge variant={shift.is_open ? "default" : "secondary"} className="text-lg px-4 py-2">
+        <Badge
+          variant={shift.is_open ? "default" : "secondary"}
+          className="text-lg px-4 py-2"
+        >
           {shift.status}
         </Badge>
       </div>
@@ -56,7 +68,9 @@ export default function BoxShiftDetailPage() {
             <CardTitle className="text-sm font-medium">Monto Inicial</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatCurrency(shift.started_amount)}</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(shift.started_amount)}
+            </p>
             <p className="text-xs text-gray-500 mt-1">
               Apertura: {new Date(shift.open_date).toLocaleString("es-ES")}
             </p>
@@ -98,7 +112,11 @@ export default function BoxShiftDetailPage() {
                 <p className="text-sm mt-2">
                   Cierre: {formatCurrency(shift.closed_amount)}
                 </p>
-                <p className={`text-sm ${shift.difference !== 0 ? 'text-red-600' : 'text-green-600'}`}>
+                <p
+                  className={`text-sm ${
+                    shift.difference !== 0 ? "text-red-600" : "text-green-600"
+                  }`}
+                >
                   Diferencia: {formatCurrency(shift.difference)}
                 </p>
               </>

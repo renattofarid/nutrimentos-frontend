@@ -41,6 +41,7 @@ export default function BoxModal({ id, open, title, mode, onClose }: Props) {
     name: data?.name || "",
     serie: data?.serie || "",
     branch_id: data?.branch_id?.toString() || "",
+    status: data?.status || "Activo",
   });
 
   const { isSubmitting, updateBox, createBox } = useBoxStore();

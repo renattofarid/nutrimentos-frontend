@@ -69,10 +69,7 @@ export default function SalePage() {
     // Validar que la suma de cuotas sea igual al total de la venta
     const totalAmount = sale.total_amount;
     const sumOfInstallments =
-      sale.installments?.reduce(
-        (sum, inst) => sum + parseFloat(inst.amount),
-        0
-      ) || 0;
+      sale.installments?.reduce((sum, inst) => sum + inst.amount, 0) || 0;
 
     if (Math.abs(totalAmount - sumOfInstallments) > 0.01) {
       errorToast(
@@ -87,7 +84,7 @@ export default function SalePage() {
 
     // Tomar la primera cuota pendiente si existe
     const pendingInstallment = sale.installments?.find(
-      (inst) => parseFloat(inst.pending_amount) > 0
+      (inst) => inst.pending_amount > 0
     );
 
     if (pendingInstallment) {

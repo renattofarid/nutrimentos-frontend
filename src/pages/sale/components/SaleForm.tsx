@@ -18,7 +18,15 @@ import {
   saleSchemaUpdate,
   type SaleSchema,
 } from "../lib/sale.schema";
-import { Loader, Plus, Trash2, Edit } from "lucide-react";
+import {
+  Loader,
+  Plus,
+  Trash2,
+  Pencil,
+  Users2,
+  CreditCard,
+  ListChecks,
+} from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import type { SaleResource } from "../lib/sale.interface";
@@ -32,6 +40,13 @@ import { formatDecimalTrunc } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatCurrency";
 import { Badge } from "@/components/ui/badge";
 import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import {
   Table,
   TableBody,
   TableCell,
@@ -39,13 +54,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DOCUMENT_TYPES,
   PAYMENT_TYPES,
   CURRENCIES,
 } from "../lib/sale.interface";
 import { errorToast } from "@/lib/core.function";
+import { GroupFormSection } from "@/components/GroupFormSection";
 
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
@@ -89,6 +104,11 @@ export const SaleForm = ({
   warehouses,
   products,
 }: SaleFormProps) => {
+  // Estados para filtrado en cascada
+  const [filteredBranches, setFilteredBranches] = useState<BranchResource[]>([]);
+  const [filteredWarehouses, setFilteredWarehouses] = useState<WarehouseResource[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<ProductResource[]>([]);
+
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
 
@@ -221,6 +241,31 @@ export const SaleForm = ({
   // Inicializar detalles y cuotas desde defaultValues (para modo edición)
   useEffect(() => {
     if (mode === "update" && defaultValues) {
+      // Inicializar filtros en modo edición
+      if (defaultValues.company_id) {
+        const filtered = branches.filter(
+          (branch) => branch.company_id.toString() === defaultValues.company_id
+        );
+        setFilteredBranches(filtered);
+      }
+
+      if (defaultValues.branch_id) {
+        const filtered = warehouses.filter(
+          (warehouse) => warehouse.branch_id.toString() === defaultValues.branch_id
+        );
+        setFilteredWarehouses(filtered);
+      }
+
+      if (defaultValues.warehouse_id) {
+        const filtered = products.filter((product) => {
+          const stockInWarehouse = product.stock_warehouse?.find(
+            (stock) => stock.warehouse_id.toString() === defaultValues.warehouse_id
+          );
+          return stockInWarehouse && stockInWarehouse.stock > 0;
+        });
+        setFilteredProducts(filtered);
+      }
+
       // Inicializar detalles
       if (defaultValues.details && defaultValues.details.length > 0) {
         const initialDetails = defaultValues.details.map((detail: any) => {
@@ -268,6 +313,83 @@ export const SaleForm = ({
 
   // Watch para el tipo de pago
   const selectedPaymentType = form.watch("payment_type");
+
+  // Watch para filtrado en cascada
+  const selectedCompanyId = form.watch("company_id");
+  const selectedBranchId = form.watch("branch_id");
+  const selectedWarehouseId = form.watch("warehouse_id");
+
+  // Efecto para filtrar branches cuando cambia company
+  useEffect(() => {
+    if (selectedCompanyId) {
+      const filtered = branches.filter(
+        (branch) => branch.company_id.toString() === selectedCompanyId
+      );
+      setFilteredBranches(filtered);
+
+      // Si el branch seleccionado no está en la nueva lista filtrada, limpiar
+      const currentBranchId = form.getValues("branch_id");
+      if (currentBranchId) {
+        const isValid = filtered.some(
+          (branch) => branch.id.toString() === currentBranchId
+        );
+        if (!isValid) {
+          form.setValue("branch_id", "");
+          form.setValue("warehouse_id", "");
+          setFilteredWarehouses([]);
+        }
+      }
+    } else {
+      setFilteredBranches([]);
+      form.setValue("branch_id", "");
+      form.setValue("warehouse_id", "");
+      setFilteredWarehouses([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCompanyId, branches]);
+
+  // Efecto para filtrar warehouses cuando cambia branch
+  useEffect(() => {
+    if (selectedBranchId) {
+      const filtered = warehouses.filter(
+        (warehouse) => warehouse.branch_id.toString() === selectedBranchId
+      );
+      setFilteredWarehouses(filtered);
+
+      // Si el warehouse seleccionado no está en la nueva lista filtrada, limpiar
+      const currentWarehouseId = form.getValues("warehouse_id");
+      if (currentWarehouseId) {
+        const isValid = filtered.some(
+          (warehouse) => warehouse.id.toString() === currentWarehouseId
+        );
+        if (!isValid) {
+          form.setValue("warehouse_id", "");
+        }
+      }
+    } else {
+      setFilteredWarehouses([]);
+      form.setValue("warehouse_id", "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBranchId, warehouses]);
+
+  // Efecto para filtrar productos cuando cambia warehouse
+  useEffect(() => {
+    if (selectedWarehouseId) {
+      const filtered = products.filter((product) => {
+        // Buscar si el producto tiene stock en el warehouse seleccionado
+        const stockInWarehouse = product.stock_warehouse?.find(
+          (stock) => stock.warehouse_id.toString() === selectedWarehouseId
+        );
+        // Solo incluir productos que tienen stock mayor a 0 en ese warehouse
+        return stockInWarehouse && stockInWarehouse.stock > 0;
+      });
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedWarehouseId, products]);
 
   // Establecer fecha de emisión automáticamente al cargar el formulario
   useEffect(() => {
@@ -568,87 +690,147 @@ export const SaleForm = ({
         className="space-y-6 w-full"
       >
         {/* Información General */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Información General</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FormSelect
-                control={form.control}
-                name="company_id"
-                label="Empresa"
-                placeholder="Seleccione una empresa"
-                options={companies.map((company) => ({
-                  value: company.id.toString(),
-                  label: company.trade_name || company.social_reason,
-                }))}
-                disabled={mode === "update"}
-              />
+        <GroupFormSection
+          title="Información General"
+          icon={Users2}
+          cols={{ sm: 1 }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <FormSelect
+              control={form.control}
+              name="company_id"
+              label="Empresa"
+              placeholder="Seleccione una empresa"
+              options={companies.map((company) => ({
+                value: company.id.toString(),
+                label: company.trade_name || company.social_reason,
+                description: company.ruc ?? `EMPRESA SIN RUC #${company.id}`,
+              }))}
+              disabled={mode === "update"}
+            />
 
-              <FormSelect
-                control={form.control}
-                name="branch_id"
-                label="Sucursal"
-                placeholder="Seleccione una sucursal"
-                options={branches.map((branch) => ({
-                  value: branch.id.toString(),
-                  label: branch.name,
-                }))}
-                disabled={mode === "update"}
-              />
+            <FormSelect
+              control={form.control}
+              name="branch_id"
+              label="Sucursal"
+              placeholder="Seleccione una sucursal"
+              options={filteredBranches.map((branch) => ({
+                value: branch.id.toString(),
+                label: branch.name,
+              }))}
+              disabled={mode === "update" || !selectedCompanyId}
+            />
 
-              <FormSelect
-                control={form.control}
-                name="customer_id"
-                label="Cliente"
-                placeholder="Seleccione un cliente"
-                options={customers.map((customer) => ({
-                  value: customer.id.toString(),
-                  label:
-                    customer.business_name ??
-                    customer.names +
-                      " " +
-                      customer.father_surname +
-                      " " +
-                      customer.mother_surname,
-                }))}
-                disabled={mode === "update"}
-              />
+            <FormSelect
+              control={form.control}
+              name="customer_id"
+              label="Cliente"
+              placeholder="Seleccione un cliente"
+              options={customers.map((customer) => ({
+                value: customer.id.toString(),
+                label:
+                  customer.business_name ??
+                  customer.names +
+                    " " +
+                    customer.father_surname +
+                    " " +
+                    customer.mother_surname,
+              }))}
+              disabled={mode === "update"}
+            />
 
-              <FormSelect
-                control={form.control}
-                name="warehouse_id"
-                label="Almacén"
-                placeholder="Seleccione un almacén"
-                options={warehouses.map((warehouse) => ({
-                  value: warehouse.id.toString(),
-                  label: warehouse.name,
-                }))}
-                disabled={mode === "update"}
-              />
+            <FormSelect
+              control={form.control}
+              name="warehouse_id"
+              label="Almacén"
+              placeholder="Seleccione un almacén"
+              options={filteredWarehouses.map((warehouse) => ({
+                value: warehouse.id.toString(),
+                label: warehouse.name,
+              }))}
+              disabled={mode === "update" || !selectedBranchId}
+            />
 
-              <FormSelect
-                control={form.control}
-                name="document_type"
-                label="Tipo de Documento"
-                placeholder="Seleccione tipo"
-                options={DOCUMENT_TYPES.map((dt) => ({
-                  value: dt.value,
-                  label: dt.label,
-                }))}
-              />
+            <FormSelect
+              control={form.control}
+              name="document_type"
+              label="Tipo de Documento"
+              placeholder="Seleccione tipo"
+              options={DOCUMENT_TYPES.map((dt) => ({
+                value: dt.value,
+                label: dt.label,
+              }))}
+            />
 
+            <FormField
+              control={form.control}
+              name="serie"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Serie</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ej: F001" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="numero"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ej: 00000001" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DatePickerFormField
+              control={form.control}
+              name="issue_date"
+              label="Fecha de Emisión"
+              placeholder="Seleccione fecha"
+              dateFormat="dd/MM/yyyy"
+            />
+
+            <FormSelect
+              control={form.control}
+              name="payment_type"
+              label="Tipo de Pago"
+              placeholder="Seleccione tipo"
+              options={PAYMENT_TYPES.map((pt) => ({
+                value: pt.value,
+                label: pt.label,
+              }))}
+            />
+
+            <FormSelect
+              control={form.control}
+              name="currency"
+              label="Moneda"
+              placeholder="Seleccione moneda"
+              options={CURRENCIES.map((c) => ({
+                value: c.value,
+                label: c.label,
+              }))}
+            />
+
+            <div className="md:col-span-2 lg:col-span-3">
               <FormField
                 control={form.control}
-                name="serie"
+                name="observations"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Serie</FormLabel>
+                    <FormLabel>Observaciones</FormLabel>
                     <FormControl>
-                      <Input
-                        variant="primary"
-                        placeholder="Ej: F001"
+                      <Textarea
+                        placeholder="Ingrese observaciones adicionales"
+                        className="resize-none"
                         {...field}
                       />
                     </FormControl>
@@ -656,288 +838,398 @@ export const SaleForm = ({
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="numero"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Número</FormLabel>
-                    <FormControl>
-                      <Input
-                        variant="primary"
-                        placeholder="Ej: 00000001"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <DatePickerFormField
-                control={form.control}
-                name="issue_date"
-                label="Fecha de Emisión"
-                placeholder="Seleccione fecha"
-                dateFormat="dd/MM/yyyy"
-              />
-
-              <FormSelect
-                control={form.control}
-                name="payment_type"
-                label="Tipo de Pago"
-                placeholder="Seleccione tipo"
-                options={PAYMENT_TYPES.map((pt) => ({
-                  value: pt.value,
-                  label: pt.label,
-                }))}
-              />
-
-              <FormSelect
-                control={form.control}
-                name="currency"
-                label="Moneda"
-                placeholder="Seleccione moneda"
-                options={CURRENCIES.map((c) => ({
-                  value: c.value,
-                  label: c.label,
-                }))}
-              />
-
-              <div className="md:col-span-2 lg:col-span-3">
-                <FormField
-                  control={form.control}
-                  name="observations"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Observaciones</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Ingrese observaciones adicionales"
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </GroupFormSection>
+
+        {/* Detalles */}
+        <GroupFormSection
+          title="Detalles de la Venta"
+          icon={ListChecks}
+          cols={{ sm: 1 }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 bg-sidebar rounded-lg">
+            <div className="md:col-span-3">
+              <Form {...detailTempForm}>
+                <FormSelect
+                  control={detailTempForm.control}
+                  name="temp_product_id"
+                  label="Producto"
+                  placeholder={
+                    selectedWarehouseId
+                      ? "Seleccione un producto"
+                      : "Primero seleccione un almacén"
+                  }
+                  options={filteredProducts.map((product) => {
+                    const stockInWarehouse = product.stock_warehouse?.find(
+                      (stock) => stock.warehouse_id.toString() === selectedWarehouseId
+                    );
+                    return {
+                      value: product.id.toString(),
+                      label: product.name,
+                      description: stockInWarehouse
+                        ? `Stock: ${stockInWarehouse.stock}`
+                        : undefined,
+                    };
+                  })}
+                  disabled={!selectedWarehouseId}
+                />
+              </Form>
+            </div>
+
+            <FormField
+              control={detailTempForm.control}
+              name="temp_quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cantidad</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="0" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={detailTempForm.control}
+              name="temp_unit_price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Precio Unit.</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.000001"
+                      placeholder="0.000000"
+                      {...field}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <div className="md:col-span-1 flex items-end justify-end">
+              <Button
+                type="button"
+                size={"sm"}
+                variant="default"
+                onClick={handleAddDetail}
+                disabled={
+                  !currentDetail.product_id ||
+                  !currentDetail.quantity ||
+                  !currentDetail.unit_price
+                }
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {editingDetailIndex !== null ? "Actualizar" : "Agregar"}
+              </Button>
+            </div>
+          </div>
+
+          {details.length > 0 ? (
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Producto</TableHead>
+                    <TableHead className="text-right">Cantidad</TableHead>
+                    <TableHead className="text-right">P. Unit.</TableHead>
+                    <TableHead className="text-right">Subtotal</TableHead>
+                    <TableHead className="text-right">IGV (18%)</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-center">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {details.map((detail, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{detail.product_name}</TableCell>
+                      <TableCell className="text-right">
+                        {detail.quantity}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatNumber(parseFloat(detail.unit_price))}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatNumber(detail.subtotal)}
+                      </TableCell>
+                      <TableCell className="text-right text-orange-600">
+                        {formatNumber(detail.igv)}
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-primary">
+                        {formatNumber(detail.total)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center gap-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditDetail(index)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveDetail(index)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-right font-bold">
+                      TOTALES:
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-lg">
+                      {formatNumber(calculateDetailsSubtotal())}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-lg text-orange-600">
+                      {formatNumber(calculateDetailsIGV())}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-lg text-primary">
+                      {formatNumber(calculateDetailsTotal())}
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <Empty className="border border-dashed">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <ListChecks />
+                </EmptyMedia>
+                <EmptyTitle>No hay detalles agregados</EmptyTitle>
+                <EmptyDescription>
+                  Agregue productos a la venta utilizando el formulario
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )}
+        </GroupFormSection>
 
         {/* Métodos de Pago - Solo mostrar si es al contado */}
         {mode === "create" && selectedPaymentType === "CONTADO" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Métodos de Pago (Obligatorio)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <FormField
-                  control={form.control}
-                  name="amount_cash"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monto en Efectivo</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          variant="primary"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <GroupFormSection
+            title="Métodos de Pago"
+            icon={CreditCard}
+            cols={{ sm: 1 }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <FormField
+                control={form.control}
+                name="amount_cash"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monto en Efectivo</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="amount_card"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monto con Tarjeta</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          variant="primary"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="amount_card"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monto con Tarjeta</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="amount_yape"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monto Yape</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          variant="primary"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="amount_yape"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monto Yape</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="amount_plin"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monto Plin</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          variant="primary"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="amount_plin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monto Plin</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="amount_deposit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monto Depósito</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          variant="primary"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="amount_deposit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monto Depósito</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="amount_transfer"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monto Transferencia</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          variant="primary"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="amount_transfer"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monto Transferencia</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="amount_other"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Otro Método</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          variant="primary"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="amount_other"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Otro Método</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-              {/* Mostrar total de pagos vs total de venta */}
-              {details.length > 0 && (
-                <div className="mt-4 p-4 bg-sidebar rounded-lg space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">Total de la Venta:</span>
-                    <span className="text-lg font-bold text-primary">
-                      {formatNumber(calculateDetailsTotal())}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">Total Pagado:</span>
-                    <span className="text-lg font-bold text-blue-600">
-                      {formatNumber(calculatePaymentTotal())}
-                    </span>
-                  </div>
-                  {!paymentAmountsMatchTotal() && (
-                    <div className="p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded">
-                      <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                        ⚠️ El total pagado debe ser igual al total de la venta
-                      </p>
-                    </div>
-                  )}
+            {/* Mostrar total de pagos vs total de venta */}
+            {details.length > 0 && (
+              <div className="mt-4 p-4 bg-sidebar rounded-lg space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold">Total de la Venta:</span>
+                  <span className="text-lg font-bold text-primary">
+                    {formatNumber(calculateDetailsTotal())}
+                  </span>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold">Total Pagado:</span>
+                  <span className="text-lg font-bold text-blue-600">
+                    {formatNumber(calculatePaymentTotal())}
+                  </span>
+                </div>
+                {!paymentAmountsMatchTotal() && (
+                  <Badge
+                    variant="amber"
+                    size="lg"
+                    className="w-full justify-center p-2"
+                  >
+                    ⚠️ El total pagado debe ser igual al total de la venta
+                  </Badge>
+                )}
+              </div>
+            )}
+          </GroupFormSection>
         )}
 
-        {/* Detalles */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Detalles de la Venta</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        {/* Cuotas - Solo mostrar si es a crédito */}
+        {selectedPaymentType === "CREDITO" && (
+          <GroupFormSection
+            title="Cuotas de Pago"
+            icon={ListChecks}
+            cols={{ sm: 1 }}
+          >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
-              <div className="md:col-span-2">
-                <Form {...detailTempForm}>
-                  <FormSelect
-                    control={detailTempForm.control}
-                    name="temp_product_id"
-                    label="Producto"
-                    placeholder="Seleccione"
-                    options={products.map((product) => ({
-                      value: product.id.toString(),
-                      label: product.name,
-                    }))}
-                  />
-                </Form>
-              </div>
-
               <FormField
-                control={detailTempForm.control}
-                name="temp_quantity"
+                control={installmentTempForm.control}
+                name="temp_installment_number"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cantidad</FormLabel>
+                    <FormLabel>Número de Cuota</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="1" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={installmentTempForm.control}
+                name="temp_due_days"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Días de Vencimiento</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="30" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={installmentTempForm.control}
+                name="temp_amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monto</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
-                        variant="primary"
-                        placeholder="0"
+                        step="0.01"
+                        placeholder="0.00"
                         {...field}
                       />
                     </FormControl>
@@ -945,296 +1237,107 @@ export const SaleForm = ({
                 )}
               />
 
-              <FormField
-                control={detailTempForm.control}
-                name="temp_unit_price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Precio Unit.</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.000001"
-                        variant="primary"
-                        placeholder="0.000000"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <div className="md:col-span-4 flex items-center justify-end">
+              <div className="flex items-end justify-end">
                 <Button
                   type="button"
                   variant="default"
-                  onClick={handleAddDetail}
+                  size={"sm"}
+                  onClick={handleAddInstallment}
                   disabled={
-                    !currentDetail.product_id ||
-                    !currentDetail.quantity ||
-                    !currentDetail.unit_price
+                    !currentInstallment.installment_number ||
+                    !currentInstallment.due_days ||
+                    !currentInstallment.amount
                   }
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  {editingDetailIndex !== null ? "Actualizar" : "Agregar"}
+                  {editingInstallmentIndex !== null ? "Actualizar" : "Agregar"}
                 </Button>
               </div>
             </div>
 
-            {details.length > 0 ? (
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Producto</TableHead>
-                      <TableHead className="text-right">Cantidad</TableHead>
-                      <TableHead className="text-right">P. Unit.</TableHead>
-                      <TableHead className="text-right">Subtotal</TableHead>
-                      <TableHead className="text-right">IGV (18%)</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead className="text-center">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {details.map((detail, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{detail.product_name}</TableCell>
-                        <TableCell className="text-right">
-                          {detail.quantity}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatNumber(parseFloat(detail.unit_price))}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatNumber(detail.subtotal)}
-                        </TableCell>
-                        <TableCell className="text-right text-orange-600">
-                          {formatNumber(detail.igv)}
-                        </TableCell>
-                        <TableCell className="text-right font-bold text-primary">
-                          {formatNumber(detail.total)}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex justify-center gap-2">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditDetail(index)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveDetail(index)}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </TableCell>
+            {installments.length > 0 ? (
+              <>
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Cuota #</TableHead>
+                        <TableHead className="text-right">
+                          Días Vencimiento
+                        </TableHead>
+                        <TableHead className="text-right">Monto</TableHead>
+                        <TableHead className="text-center">Acciones</TableHead>
                       </TableRow>
-                    ))}
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-right font-bold">
-                        TOTALES:
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-lg">
-                        {formatNumber(calculateDetailsSubtotal())}
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-lg text-orange-600">
-                        {formatNumber(calculateDetailsIGV())}
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-lg text-primary">
-                        {formatNumber(calculateDetailsTotal())}
-                      </TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Badge variant="outline" className="text-lg p-3">
-                  No hay detalles agregados
-                </Badge>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Cuotas - Solo mostrar si es a crédito */}
-        {selectedPaymentType === "CREDITO" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Cuotas (Obligatorio)</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
-                <FormField
-                  control={installmentTempForm.control}
-                  name="temp_installment_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número de Cuota</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          variant="primary"
-                          placeholder="1"
-                          {...field}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={installmentTempForm.control}
-                  name="temp_due_days"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Días de Vencimiento</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          variant="primary"
-                          placeholder="30"
-                          {...field}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={installmentTempForm.control}
-                  name="temp_amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monto</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          variant="primary"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex items-end">
-                  <Button
-                    type="button"
-                    variant="default"
-                    onClick={handleAddInstallment}
-                    disabled={
-                      !currentInstallment.installment_number ||
-                      !currentInstallment.due_days ||
-                      !currentInstallment.amount
-                    }
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    {editingInstallmentIndex !== null
-                      ? "Actualizar"
-                      : "Agregar"}
-                  </Button>
+                    </TableHeader>
+                    <TableBody>
+                      {installments.map((inst, index) => (
+                        <TableRow key={index}>
+                          <TableCell>Cuota {inst.installment_number}</TableCell>
+                          <TableCell className="text-right">
+                            {inst.due_days} días
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {formatDecimalTrunc(parseFloat(inst.amount), 6)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex justify-center gap-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditInstallment(index)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveInstallment(index)}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      <TableRow>
+                        <TableCell colSpan={2} className="text-right font-bold">
+                          TOTAL CUOTAS:
+                        </TableCell>
+                        <TableCell className="text-right font-bold text-lg text-blue-600">
+                          {formatDecimalTrunc(calculateInstallmentsTotal(), 6)}
+                        </TableCell>
+                        <TableCell></TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
                 </div>
-              </div>
-
-              {installments.length > 0 ? (
-                <>
-                  <div className="border rounded-lg overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Cuota #</TableHead>
-                          <TableHead className="text-right">
-                            Días Vencimiento
-                          </TableHead>
-                          <TableHead className="text-right">Monto</TableHead>
-                          <TableHead className="text-center">
-                            Acciones
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {installments.map((inst, index) => (
-                          <TableRow key={index}>
-                            <TableCell>
-                              Cuota {inst.installment_number}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {inst.due_days} días
-                            </TableCell>
-                            <TableCell className="text-right font-semibold">
-                              {formatDecimalTrunc(parseFloat(inst.amount), 6)}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="flex justify-center gap-2">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEditInstallment(index)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveInstallment(index)}
-                                >
-                                  <Trash2 className="h-4 w-4 text-red-500" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        <TableRow>
-                          <TableCell
-                            colSpan={2}
-                            className="text-right font-bold"
-                          >
-                            TOTAL CUOTAS:
-                          </TableCell>
-                          <TableCell className="text-right font-bold text-lg text-blue-600">
-                            {formatDecimalTrunc(
-                              calculateInstallmentsTotal(),
-                              6
-                            )}
-                          </TableCell>
-                          <TableCell></TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
+                {!installmentsMatchTotal() && (
+                  <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+                    <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
+                      ⚠️ El total de cuotas (
+                      {formatNumber(calculateInstallmentsTotal())}) debe ser
+                      igual al total de la venta (
+                      {formatNumber(calculateDetailsTotal())})
+                    </p>
                   </div>
-                  {!installmentsMatchTotal() && (
-                    <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-                      <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                        ⚠️ El total de cuotas (
-                        {formatNumber(calculateInstallmentsTotal())}) debe ser
-                        igual al total de la venta (
-                        {formatNumber(calculateDetailsTotal())})
-                      </p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Badge variant="outline" className="text-lg p-3">
-                    No hay cuotas agregadas
-                  </Badge>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </>
+            ) : (
+              <Empty className="border border-dashed">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <CreditCard />
+                  </EmptyMedia>
+                  <EmptyTitle>No hay cuotas agregadas</EmptyTitle>
+                  <EmptyDescription>
+                    Agregue las cuotas de pago utilizando el formulario
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
+          </GroupFormSection>
         )}
 
         {/* <pre>

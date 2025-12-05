@@ -12,17 +12,20 @@ import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 import { usePurchaseStore } from "../lib/purchase.store";
-import type { PurchaseResource } from "../lib/purchase.interface";
+import { PURCHASE, type PurchaseResource } from "../lib/purchase.interface";
 import type { PurchaseSchema } from "../lib/purchase.schema";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
 
 export default function PurchaseEditPage() {
+  const { ICON } = PURCHASE;
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: companies, isLoading: companiesLoading } = useAllCompanies();
-  const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
+  const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({
+    role_names: [SUPPLIER_ROLE_CODE],
+  });
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
 
@@ -93,7 +96,7 @@ export default function PurchaseEditPage() {
       <FormWrapper>
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
-            <TitleFormComponent title="Compra" mode="edit" />
+            <TitleFormComponent title="Compra" mode="edit" icon={ICON} />
           </div>
         </div>
         <FormSkeleton />
@@ -105,7 +108,7 @@ export default function PurchaseEditPage() {
     return (
       <FormWrapper>
         <div className="flex items-center gap-4 mb-6">
-          <TitleFormComponent title="Compra" mode="edit" />
+          <TitleFormComponent title="Compra" mode="edit" icon={ICON} />
         </div>
         <div className="text-center py-8">
           <p className="text-muted-foreground">Compra no encontrada</p>
@@ -118,7 +121,7 @@ export default function PurchaseEditPage() {
     <FormWrapper>
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
-          <TitleFormComponent title="Compra" mode="edit" />
+          <TitleFormComponent title="Compra" mode="edit" icon={ICON} />
         </div>
       </div>
 

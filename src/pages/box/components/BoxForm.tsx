@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import {
   boxSchemaCreate,
   boxSchemaUpdate,
@@ -47,7 +46,6 @@ export const BoxForm = ({
       name: "",
       serie: "",
       branch_id: "",
-      status: "Activo",
       ...defaultValues,
     },
     mode: "onChange",
@@ -112,30 +110,6 @@ export const BoxForm = ({
               disabled={loadingBranches}
             />
           </div>
-        </div>
-
-        {/* Estado */}
-        <div className="bg-sidebar p-4 rounded-lg">
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base font-semibold">Estado</FormLabel>
-                  <div className="text-sm text-muted-foreground">
-                    {field.value === "Activo" ? "Activo" : "Inactivo"}
-                  </div>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value === "Activo"}
-                    onCheckedChange={(checked) => field.onChange(checked ? "Activo" : "Inactivo")}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
         </div>
 
         <div className="flex gap-4 w-full justify-end">

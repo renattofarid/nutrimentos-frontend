@@ -221,12 +221,10 @@ export default function SaleDetailSheet({
               <p className="text-xs text-muted-foreground">Nombre Completo</p>
               <p className="font-semibold text-lg">{sale.customer.full_name}</p>
             </div>
-            {sale.customer.document_number && (
+            {sale.customer.number_document && (
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Documento</p>
-                <p className="font-medium">
-                  {sale.customer.document_type} {sale.customer.document_number}
-                </p>
+                <p className="font-medium">{sale.customer.number_document}</p>
               </div>
             )}
           </CardContent>
@@ -243,9 +241,9 @@ export default function SaleDetailSheet({
             </CardHeader>
             <CardContent className="space-y-1">
               <p className="font-semibold">{sale.warehouse.name}</p>
-              <p className="text-sm text-muted-foreground">
+              {/* <p className="text-sm text-muted-foreground">
                 {sale.warehouse.address}
-              </p>
+              </p> */}
             </CardContent>
           </Card>
 
@@ -360,7 +358,7 @@ export default function SaleDetailSheet({
                             #{index + 1}
                           </Badge>
                           <p className="font-semibold text-sm leading-tight">
-                            {detail.product_name}
+                            {detail.product.name}
                           </p>
                         </div>
                         <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
@@ -369,7 +367,7 @@ export default function SaleDetailSheet({
                               Cantidad:
                             </span>
                             <span className="ml-1 font-medium">
-                              {parseFloat(detail.quantity).toFixed(2)}
+                              {detail.quantity.toFixed(2)}
                             </span>
                           </div>
                           <div>
@@ -377,18 +375,17 @@ export default function SaleDetailSheet({
                               P. Unit:
                             </span>
                             <span className="ml-1 font-medium">
-                              {currency}{" "}
-                              {parseFloat(detail.unit_price).toFixed(2)}
+                              {currency} {detail.unit_price.toFixed(2)}
                             </span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
                         <p className="font-bold text-lg">
-                          {currency} {parseFloat(detail.total).toFixed(2)}
+                          {currency} {detail.total.toFixed(2)}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          IGV: {currency} {parseFloat(detail.tax).toFixed(2)}
+                          IGV: {currency} {detail.tax.toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -443,17 +440,17 @@ export default function SaleDetailSheet({
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-lg">
-                          {currency} {parseFloat(installment.amount).toFixed(2)}
+                          {currency} {installment.amount.toFixed(2)}
                         </p>
                         <p
                           className={`text-sm font-medium ${
-                            parseFloat(installment.pending_amount) === 0
+                            installment.pending_amount === 0
                               ? "text-primary"
                               : "text-orange-600"
                           }`}
                         >
                           Pendiente: {currency}{" "}
-                          {parseFloat(installment.pending_amount).toFixed(2)}
+                          {installment.pending_amount.toFixed(2)}
                         </p>
                       </div>
                     </div>

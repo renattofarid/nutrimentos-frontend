@@ -29,6 +29,7 @@ interface PersonStore {
   personRoleDetails: PersonRoleDetailResource[] | null;
   meta: Meta | null;
   isLoading: boolean;
+  isLoadingAll: boolean;
   isFinding: boolean;
   isSubmitting: boolean;
   isLoadingRoles: boolean;
@@ -57,6 +58,7 @@ export const usePersonStore = create<PersonStore>((set) => ({
   personRoleDetails: null,
   meta: null,
   isLoading: false,
+  isLoadingAll: false,
   isFinding: false,
   isSubmitting: false,
   isLoadingRoles: false,
@@ -74,12 +76,12 @@ export const usePersonStore = create<PersonStore>((set) => ({
   },
 
   fetchAllPersons: async ({ params }: GetPersonsProps) => {
-    set({ error: null });
+    set({ isLoadingAll: true, error: null });
     try {
       const data = await getAllPersons({ params });
-      set({ allPersons: data });
+      set({ allPersons: data, isLoadingAll: false });
     } catch {
-      set({ error: "Error al cargar todas las personas" });
+      set({ error: "Error al cargar todas las personas", isLoadingAll: false });
     }
   },
 

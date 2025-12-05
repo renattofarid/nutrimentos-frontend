@@ -137,7 +137,7 @@ export default function InstallmentPaymentManagementSheet({
     if (!installment) return;
 
     const total = calculateTotal();
-    const pendingAmount = parseFloat(installment.pending_amount);
+    const pendingAmount = installment.pending_amount;
 
     if (total === 0) {
       errorToast("Debe ingresar al menos un monto de pago");
@@ -187,9 +187,9 @@ export default function InstallmentPaymentManagementSheet({
 
   if (!installment) return null;
 
-  const isPending = parseFloat(installment.pending_amount) > 0;
+  const isPending = installment.pending_amount > 0;
   const total = calculateTotal();
-  const pendingAmount = parseFloat(installment.pending_amount);
+  const pendingAmount = installment.pending_amount;
   const isSubmitting = form.formState.isSubmitting;
 
   return (
@@ -207,7 +207,9 @@ export default function InstallmentPaymentManagementSheet({
             <div className="flex justify-between items-center mb-3">
               <div>
                 <p className="text-xs text-muted-foreground">Venta</p>
-                <p className="font-semibold">{installment.sale_correlativo}</p>
+                <p className="font-semibold">
+                  {installment.installment_number}
+                </p>
               </div>
               <Badge
                 variant={
@@ -230,17 +232,14 @@ export default function InstallmentPaymentManagementSheet({
                   Monto Total
                 </span>
                 <p className="font-semibold">
-                  {currency} {parseFloat(installment.amount).toFixed(2)}
+                  {currency} {installment.amount.toFixed(2)}
                 </p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">Pagado</span>
                 <p className="font-semibold text-primary">
                   {currency}{" "}
-                  {(
-                    parseFloat(installment.amount) -
-                    parseFloat(installment.pending_amount)
-                  ).toFixed(2)}
+                  {(installment.amount - installment.pending_amount).toFixed(2)}
                 </p>
               </div>
               <div>
@@ -250,7 +249,7 @@ export default function InstallmentPaymentManagementSheet({
                     isPending ? "text-orange-600" : "text-primary"
                   }`}
                 >
-                  {currency} {parseFloat(installment.pending_amount).toFixed(2)}
+                  {currency} {installment.pending_amount.toFixed(2)}
                 </p>
               </div>
             </div>

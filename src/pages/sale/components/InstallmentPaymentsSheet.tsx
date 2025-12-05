@@ -10,6 +10,7 @@ import type {
 } from "../lib/sale.interface";
 import { getAllSalePayments } from "../lib/sale.actions";
 import GeneralSheet from "@/components/GeneralSheet";
+import FormSkeleton from "@/components/FormSkeleton";
 
 interface InstallmentPaymentsSheetProps {
   open: boolean;
@@ -85,7 +86,7 @@ export default function InstallmentPaymentsSheet({
               Monto de la Cuota
             </span>
             <span className="font-semibold">
-              {currency} {parseFloat(installment.amount).toFixed(2)}
+              {currency} {installment.amount.toFixed(2)}
             </span>
           </div>
           <div className="flex justify-between">
@@ -94,12 +95,12 @@ export default function InstallmentPaymentsSheet({
             </span>
             <span
               className={`font-semibold ${
-                parseFloat(installment.pending_amount) === 0
+                installment.pending_amount === 0
                   ? "text-primary"
                   : "text-orange-600"
               }`}
             >
-              {currency} {parseFloat(installment.pending_amount).toFixed(2)}
+              {currency} {installment.pending_amount.toFixed(2)}
             </span>
           </div>
           <div className="flex justify-between">
@@ -135,9 +136,7 @@ export default function InstallmentPaymentsSheet({
           </h3>
 
           {isLoading ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Cargando pagos...</p>
-            </div>
+            <FormSkeleton />
           ) : payments.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">

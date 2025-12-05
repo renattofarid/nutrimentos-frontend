@@ -37,7 +37,6 @@ import { PAYMENT_CONCEPT } from "@/pages/payment-concept/lib/payment-concept.int
 import { BUSINESSTYPE } from "@/pages/businesstype/lib/businesstype.interface";
 import { ZONE } from "@/pages/zone/lib/zone.interface";
 import { JOBPOSITION } from "@/pages/jobposition/lib/jobposition.interface";
-import { WAREHOUSEDOCREASON } from "@/pages/warehousedocreason/lib/warehousedocreason.interface";
 import { SETTING } from "@/pages/setting/lib/setting.interface";
 import { DOCUMENT_TYPE } from "@/pages/document-type/lib/document-type.interface";
 import { PRICELIST } from "@/pages/pricelist/lib/pricelist.interface";
@@ -164,12 +163,6 @@ const {
   ROUTE: JobPositionRoute,
   MODEL: { name: JobPositionTitle },
 } = JOBPOSITION;
-
-const {
-  ICON_REACT: WarehouseDocReasonIcon,
-  ROUTE: WarehouseDocReasonRoute,
-  MODEL: { name: WarehouseDocReasonTitle },
-} = WAREHOUSEDOCREASON;
 
 const {
   ICON_REACT: SettingIcon,
@@ -364,11 +357,6 @@ const data = {
           title: PaymentConceptTitle,
           url: PaymentConceptRoute,
           icon: PaymentConceptIcon,
-        },
-        {
-          title: WarehouseDocReasonTitle,
-          url: WarehouseDocReasonRoute,
-          icon: WarehouseDocReasonIcon,
         },
       ],
     },

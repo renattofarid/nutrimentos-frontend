@@ -1,8 +1,15 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { TrendingUp, TrendingDown } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, Rectangle, XAxis, YAxis } from "recharts"
+import * as React from "react";
+import { TrendingUp, TrendingDown } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Rectangle,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import {
   Card,
@@ -11,23 +18,22 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import type {
-  ChartConfig,
-} from "@/components/ui/chart"
+} from "@/components/ui/card";
+import type { ChartConfig } from "@/components/ui/chart";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
+import formatCurrency from "@/lib/formatCurrency";
 
 interface MonthlyData {
-  month: string
-  total: number
+  month: string;
+  total: number;
 }
 
 interface MonthlyPurchasesChartProps {
-  data: MonthlyData[]
+  data: MonthlyData[];
 }
 
 const chartConfig = {
@@ -35,7 +41,7 @@ const chartConfig = {
     label: "Total",
     color: "var(--chart-1)",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 export function MonthlyPurchasesChart({ data }: MonthlyPurchasesChartProps) {
   // Transformar datos al formato necesario
@@ -47,39 +53,39 @@ export function MonthlyPurchasesChart({ data }: MonthlyPurchasesChartProps) {
         fill: "var(--chart-1)",
       })),
     [data]
-  )
+  );
 
   // Calcular el índice de la barra activa (última barra con datos)
   const activeIndex = React.useMemo(
     () => (chartData.length > 0 ? chartData.length - 1 : 0),
     [chartData]
-  )
+  );
 
   // Calcular el cambio porcentual del último mes
   const trendData = React.useMemo(() => {
     if (chartData.length < 2) {
-      return { percentage: 0, isPositive: true }
+      return { percentage: 0, isPositive: true };
     }
 
-    const currentMonth = chartData[chartData.length - 1]?.total || 0
-    const previousMonth = chartData[chartData.length - 2]?.total || 0
+    const currentMonth = chartData[chartData.length - 1]?.total || 0;
+    const previousMonth = chartData[chartData.length - 2]?.total || 0;
 
     if (previousMonth === 0) {
-      return { percentage: 0, isPositive: true }
+      return { percentage: 0, isPositive: true };
     }
 
-    const change = ((currentMonth - previousMonth) / previousMonth) * 100
+    const change = ((currentMonth - previousMonth) / previousMonth) * 100;
     return {
       percentage: Math.abs(change),
       isPositive: change >= 0,
-    }
-  }, [chartData])
+    };
+  }, [chartData]);
 
   // Calcular el total de todos los meses
   const totalAmount = React.useMemo(
     () => chartData.reduce((sum, item) => sum + item.total, 0),
     [chartData]
-  )
+  );
 
   if (chartData.length === 0) {
     return (
@@ -96,7 +102,7 @@ export function MonthlyPurchasesChart({ data }: MonthlyPurchasesChartProps) {
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -122,7 +128,7 @@ export function MonthlyPurchasesChart({ data }: MonthlyPurchasesChartProps) {
               tickLine={false}
               axisLine={false}
               tick={{ fontSize: 12 }}
-              tickFormatter={(value) => `S/. ${value.toLocaleString()}`}
+              tickFormatter={(value) => `S/ ${formatCurrency(Number(value))}`}
             />
             <ChartTooltip
               cursor={false}
@@ -133,7 +139,7 @@ export function MonthlyPurchasesChart({ data }: MonthlyPurchasesChartProps) {
                     <div className="flex items-center gap-2">
                       <span className="font-medium">Total:</span>
                       <span className="font-bold">
-                        S/. {Number(value).toFixed(2)}
+                        S/ {formatCurrency(Number(value))}
                       </span>
                     </div>
                   )}
@@ -154,7 +160,7 @@ export function MonthlyPurchasesChart({ data }: MonthlyPurchasesChartProps) {
                     strokeDasharray={4}
                     strokeDashoffset={4}
                   />
-                )
+                );
               }}
             />
           </BarChart>
@@ -179,5 +185,5 @@ export function MonthlyPurchasesChart({ data }: MonthlyPurchasesChartProps) {
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }

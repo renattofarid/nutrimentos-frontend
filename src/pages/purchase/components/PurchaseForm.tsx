@@ -31,7 +31,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { errorToast } from "@/lib/core.function";
 import { format } from "date-fns";
@@ -572,7 +571,7 @@ export const PurchaseForm = ({
           />
 
           <div className="flex gap-2 items-end">
-            <div className="flex-1">
+            <div className="truncate! flex-1">
               <FormSelect
                 control={form.control}
                 name="supplier_id"
@@ -596,7 +595,6 @@ export const PurchaseForm = ({
               variant="outline"
               size="icon"
               onClick={() => setIsSupplierDialogOpen(true)}
-              className="shrink-0"
               title="Agregar nuevo proveedor"
             >
               <UserPlus className="h-4 w-4" />
@@ -874,151 +872,151 @@ export const PurchaseForm = ({
 
         {/* Cuotas - Solo mostrar si es a crédito */}
         {selectedPaymentType === "CREDITO" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Cuotas (Obligatorio)</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-sidebar rounded-lg">
-                <FormField
-                  control={installmentTempForm.control}
-                  name="temp_due_days"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Días de Vencimiento</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          variant="default"
-                          placeholder="0"
-                          {...field}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+          <GroupFormSection
+            title="Cuotas de Pago"
+            icon={Users2}
+            cols={{ sm: 1 }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-sidebar rounded-lg">
+              <FormField
+                control={installmentTempForm.control}
+                name="temp_due_days"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Días de Vencimiento</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        variant="default"
+                        placeholder="0"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={installmentTempForm.control}
-                  name="temp_amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monto</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          variant="default"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={installmentTempForm.control}
+                name="temp_amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monto</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        variant="default"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
-                <div className="flex items-end">
-                  <Button
-                    type="button"
-                    variant="default"
-                    onClick={handleAddInstallment}
-                    disabled={
-                      !currentInstallment.due_days || !currentInstallment.amount
-                    }
-                    className="w-full"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    {editingInstallmentIndex !== null
-                      ? "Actualizar"
-                      : "Agregar"}
-                  </Button>
-                </div>
+              <div className="flex items-end">
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={handleAddInstallment}
+                  disabled={
+                    !currentInstallment.due_days || !currentInstallment.amount
+                  }
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {editingInstallmentIndex !== null ? "Actualizar" : "Agregar"}
+                </Button>
               </div>
+            </div>
 
-              {installments.length > 0 ? (
-                <>
-                  <div className="border rounded-lg overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Cuota #</TableHead>
-                          <TableHead className="text-right">
-                            Días Vencimiento
-                          </TableHead>
-                          <TableHead className="text-right">Monto</TableHead>
-                          <TableHead className="text-center">
-                            Acciones
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {installments.map((inst, index) => (
-                          <TableRow key={index}>
-                            <TableCell>Cuota {index + 1}</TableCell>
-                            <TableCell className="text-right">
-                              {inst.due_days} días
-                            </TableCell>
-                            <TableCell className="text-right font-semibold">
-                              {parseFloat(inst.amount).toFixed(2)}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="flex justify-center gap-2">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEditInstallment(index)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveInstallment(index)}
-                                >
-                                  <Trash2 className="h-4 w-4 text-red-500" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        <TableRow>
-                          <TableCell
-                            colSpan={2}
-                            className="text-right font-bold"
-                          >
-                            TOTAL CUOTAS:
+            {installments.length > 0 ? (
+              <>
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Cuota #</TableHead>
+                        <TableHead className="text-right">
+                          Días Vencimiento
+                        </TableHead>
+                        <TableHead className="text-right">Monto</TableHead>
+                        <TableHead className="text-center">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {installments.map((inst, index) => (
+                        <TableRow key={index}>
+                          <TableCell>Cuota {index + 1}</TableCell>
+                          <TableCell className="text-right">
+                            {inst.due_days} días
                           </TableCell>
-                          <TableCell className="text-right font-bold text-lg text-blue-600">
-                            {calculateInstallmentsTotal().toFixed(2)}
+                          <TableCell className="text-right font-semibold">
+                            {parseFloat(inst.amount).toFixed(2)}
                           </TableCell>
-                          <TableCell></TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex justify-center gap-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditInstallment(index)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveInstallment(index)}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-                  {/* Advertencia de validación */}
-                  {!installmentsMatchTotal() && (
-                    <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-                      <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                        ⚠️ El total de cuotas (
-                        {calculateInstallmentsTotal().toFixed(2)}) debe ser
-                        igual al total de la compra (
-                        {calculateDetailsTotal().toFixed(2)}).
-                      </p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Badge variant="outline" className="text-lg p-3">
-                    No hay cuotas agregadas
-                  </Badge>
+                      ))}
+                      <TableRow>
+                        <TableCell colSpan={2} className="text-right font-bold">
+                          TOTAL CUOTAS:
+                        </TableCell>
+                        <TableCell className="text-right font-bold text-lg text-blue-600">
+                          {calculateInstallmentsTotal().toFixed(2)}
+                        </TableCell>
+                        <TableCell></TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                {/* Advertencia de validación */}
+                {!installmentsMatchTotal() && (
+                  <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+                    <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
+                      ⚠️ El total de cuotas (
+                      {calculateInstallmentsTotal().toFixed(2)}) debe ser igual
+                      al total de la compra (
+                      {calculateDetailsTotal().toFixed(2)}).
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Badge variant="outline" className="text-lg p-3">
+                  No hay cuotas agregadas
+                </Badge>
+              </div>
+            )}
+          </GroupFormSection>
+          // <Card>
+          //   <CardHeader>
+          //     <CardTitle>Cuotas (Obligatorio)</CardTitle>
+          //   </CardHeader>
+          //   <CardContent className="space-y-4">
+
+          //   </CardContent>
+          // </Card>
         )}
 
         {/* <pre>

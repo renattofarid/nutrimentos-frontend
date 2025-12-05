@@ -102,19 +102,29 @@ export default function ProductDetail() {
                 <p className="font-medium">{product.brand_name}</p>
               </div>
 
-              {/* <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2 lg:col-span-3">
                 <label className="text-sm font-medium text-muted-foreground">
-                  Cantidad
+                  Stock por Almacén
                 </label>
-                <p className="font-medium">{product.quantity}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {product.stock_warehouse.map((warehouse) => (
+                    <div
+                      key={warehouse.warehouse_id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <span className="font-medium text-sm">
+                        {warehouse.warehouse_name}
+                      </span>
+                      <Badge
+                        variant="secondary"
+                        className="text-sm font-semibold"
+                      >
+                        {warehouse.stock}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
               </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Precio Venta
-                </label>
-                <p className="font-medium">{product.price}</p>
-              </div> */}
             </div>
           </div>
 

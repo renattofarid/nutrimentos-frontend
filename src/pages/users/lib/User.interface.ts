@@ -98,4 +98,5 @@ interface Person {
   email: string;
   ocupation: string;
   status: string;
+  company_id: number;
 }

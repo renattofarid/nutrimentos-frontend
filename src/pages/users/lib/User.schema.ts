@@ -58,6 +58,8 @@ export const userCreateSchema = z
         (val) => /^[0-9]{8,11}$/.test(val),
         "El número de documento debe tener entre 8 y 11 dígitos"
       ),
+
+    company_id: requiredStringId("Debe seleccionar una empresa válida"),
   })
   .superRefine((data, ctx) => {
     // Validación condicional para business_name

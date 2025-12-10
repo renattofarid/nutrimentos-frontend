@@ -6,8 +6,6 @@ import {
   Package,
   ShoppingBag,
   DollarSign,
-  Activity,
-  Warehouse,
 } from "lucide-react";
 import {
   Sidebar,
@@ -351,16 +349,6 @@ const data = {
           title: WarehouseDocumentTitle,
           url: WarehouseDocumentRoute,
           icon: WarehouseDocumentIcon,
-        },
-        {
-          title: "Kardex",
-          url: "/kardex",
-          icon: Activity,
-        },
-        {
-          title: "Inventario Valorizado",
-          url: "/inventario-valorizado",
-          icon: Warehouse,
         },
         {
           title: BoxTitle,

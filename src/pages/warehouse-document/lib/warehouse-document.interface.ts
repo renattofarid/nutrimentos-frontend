@@ -35,19 +35,21 @@ export const WAREHOUSE_DOCUMENT: ModelComplete<WarehouseDocumentSchema> = {
     },
   },
   EMPTY: {
-    warehouse_id: "",
+    warehouse_origin_id: "",
     document_type: "",
     motive: "",
-    document_number: "",
-    person_id: "",
+    warehouse_dest_id: "",
+    responsible_origin_id: "",
+    responsible_dest_id: "",
     movement_date: "",
+    purchase_id: "",
     observations: "",
     details: [],
   },
 };
 
 // Document Types
-export type DocumentType = "INGRESO" | "SALIDA";
+export type DocumentType = "INGRESO" | "SALIDA" | "TRASLADO" | "AJUSTE";
 // | "ENTRADA_DEVOLUCION"
 // | "ENTRADA_AJUSTE"
 // | "ENTRADA_TRANSFERENCIA"
@@ -63,7 +65,9 @@ export type DocumentMotive =
   | "COMPRA"
   | "VENTA"
   | "DEVOLUCION"
-  | "AJUSTE"
+  | "TRASLADO_INTERNO"
+  | "AJUSTE_STOCK"
+  | "OTRO"
   | "TRANSFERENCIA"
   | "MERMA"
   | "DONACION"
@@ -78,7 +82,7 @@ export interface WarehouseDocumentDetail {
   product_id: number;
   product_name: string;
   quantity: number;
-  unit_cost: number;
+  unit_price: number;
   total_cost: number;
   observations: string;
 }
@@ -131,34 +135,38 @@ export interface WarehouseDocumentResourceById {
 
 // Request Types
 export interface CreateWarehouseDocumentRequest {
-  warehouse_id: number;
+  warehouse_origin_id: number;
   document_type: DocumentType;
   motive: DocumentMotive;
-  document_number: string;
-  person_id: number;
+  warehouse_dest_id?: number; // Opcional, requerido solo para TRASLADO
+  responsible_origin_id: number;
+  responsible_dest_id?: number; // Opcional, requerido solo para TRASLADO
   movement_date: string;
+  purchase_id?: number; // Opcional
   observations?: string;
   details: {
     product_id: number;
     quantity: number;
-    unit_cost: number;
+    unit_price: number;
     observations?: string;
   }[];
 }
 
 export interface UpdateWarehouseDocumentRequest {
-  warehouse_id?: number;
+  warehouse_origin_id?: number;
   document_type?: DocumentType;
   motive?: DocumentMotive;
-  document_number?: string;
-  person_id?: number;
-  document_date?: string;
+  warehouse_dest_id?: number;
+  responsible_origin_id?: number;
+  responsible_dest_id?: number;
+  movement_date?: string;
+  purchase_id?: number;
   observations?: string;
   details?: {
     id?: number;
     product_id: number;
     quantity: number;
-    unit_cost: number;
+    unit_price: number;
     observations?: string;
   }[];
 }

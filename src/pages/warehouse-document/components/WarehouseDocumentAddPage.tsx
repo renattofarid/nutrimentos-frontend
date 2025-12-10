@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import WarehouseDocumentForm from "./WarehouseDocumentForm";
 import TitleComponent from "@/components/TitleComponent";
 import { BackButton } from "@/components/BackButton";
-import PageWrapper from "@/components/PageWrapper";
 import { WAREHOUSE_DOCUMENT } from "../lib/warehouse-document.interface";
 import type { WarehouseDocumentSchema } from "../lib/warehouse-document.schema";
 import { storeWarehouseDocument } from "../lib/warehouse-document.actions";
@@ -27,17 +26,23 @@ export default function WarehouseDocumentAddPage() {
     setIsSubmitting(true);
     try {
       const payload = {
-        warehouse_id: parseInt(data.warehouse_id),
+        warehouse_origin_id: parseInt(data.warehouse_origin_id),
         document_type: data.document_type as any,
         motive: data.motive as any,
-        document_number: data.document_number,
-        person_id: parseInt(data.person_id),
+        warehouse_dest_id: data.warehouse_dest_id
+          ? parseInt(data.warehouse_dest_id)
+          : undefined,
+        responsible_origin_id: parseInt(data.responsible_origin_id),
+        responsible_dest_id: data.responsible_dest_id
+          ? parseInt(data.responsible_dest_id)
+          : undefined,
         movement_date: data.movement_date,
+        purchase_id: data.purchase_id ? parseInt(data.purchase_id) : undefined,
         observations: data.observations,
         details: data.details.map((detail) => ({
           product_id: parseInt(detail.product_id),
           quantity: detail.quantity,
-          unit_cost: detail.unit_cost,
+          unit_price: detail.unit_price,
           observations: detail.observations,
         })),
       };
@@ -54,6 +59,10 @@ export default function WarehouseDocumentAddPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleCancel = () => {
+    navigate("/documentos-almacen");
   };
 
   return (
@@ -77,6 +86,7 @@ export default function WarehouseDocumentAddPage() {
             warehouses={warehouses}
             persons={persons}
             products={products}
+            onCancel={handleCancel}
           />
         )}
       </div>

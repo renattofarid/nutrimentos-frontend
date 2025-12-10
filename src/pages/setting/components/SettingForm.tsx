@@ -56,14 +56,14 @@ export const SettingForm = ({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sidebar p-4 rounded-lg">
           <FormSelect
-            label={"Sucursal"}
+            label={"Tienda"}
             name={"branch_id"}
             control={form.control}
             options={branches.map((branch) => ({
               label: branch.name,
               value: branch.id.toString(),
             }))}
-            placeholder="Seleccione una sucursal"
+            placeholder="Seleccione una tienda"
           />
 
           <FormField

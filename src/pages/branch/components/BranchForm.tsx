@@ -94,7 +94,7 @@ export const BranchForm = ({
                 <FormControl>
                   <Input
                     variant="default"
-                    placeholder="Ej: Sucursal Lima Centro"
+                    placeholder="Ej: Tienda Lima Centro"
                     {...field}
                   />
                 </FormControl>
@@ -150,7 +150,7 @@ export const BranchForm = ({
                   <Input
                     variant="default"
                     type="email"
-                    placeholder="Ej: sucursal.lima@empresa.com"
+                    placeholder="Ej: tienda.lima@empresa.com"
                     {...field}
                   />
                 </FormControl>
@@ -184,7 +184,7 @@ export const BranchForm = ({
                 <div className="space-y-1 leading-none">
                   <FormLabel>¿Emite factura?</FormLabel>
                   <p className="text-sm text-muted-foreground">
-                    Marque si esta sucursal puede emitir facturas
+                    Marque si esta tienda puede emitir facturas
                   </p>
                 </div>
                 <FormMessage />

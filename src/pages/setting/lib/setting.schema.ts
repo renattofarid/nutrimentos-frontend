@@ -2,7 +2,7 @@ import { requiredStringId } from "@/lib/core.schema";
 import { z } from "zod";
 
 export const settingSchemaCreate = z.object({
-  branch_id: requiredStringId("La sucursal es requerida"),
+  branch_id: requiredStringId("La tienda es requerida"),
   allow_multiple_prices: z.boolean(),
   allow_invoice: z.boolean(),
   allow_negative_stock: z.boolean(),

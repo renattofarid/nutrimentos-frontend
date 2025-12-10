@@ -14,7 +14,7 @@ export default function BranchOptions({
       <SearchInput
         value={search}
         onChange={setSearch}
-        placeholder="Buscar sucursal"
+        placeholder="Buscar tienda"
       />
     </div>
   );

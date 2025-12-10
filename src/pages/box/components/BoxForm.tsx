@@ -51,7 +51,7 @@ export const BoxForm = ({
     mode: "onChange",
   });
 
-  // Preparar opciones para el selector de sucursales
+  // Preparar opciones para el selector de tiendas
   const branchOptions =
     branches?.map((branch) => ({
       value: branch.id.toString(),
@@ -103,8 +103,8 @@ export const BoxForm = ({
           <div className="col-span-full">
             <FormSelect
               name="branch_id"
-              label="Sucursal"
-              placeholder="Seleccione una sucursal"
+              label="Tienda"
+              placeholder="Seleccione una tienda"
               options={branchOptions}
               control={form.control}
               disabled={loadingBranches}

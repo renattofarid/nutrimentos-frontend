@@ -712,8 +712,8 @@ export const SaleForm = ({
             <FormSelect
               control={form.control}
               name="branch_id"
-              label="Sucursal"
-              placeholder="Seleccione una sucursal"
+              label="Tienda"
+              placeholder="Seleccione una tienda"
               options={filteredBranches.map((branch) => ({
                 value: branch.id.toString(),
                 label: branch.name,

@@ -17,7 +17,7 @@ export const guideDetailSchema = z.object({
 // Schema principal para crear/actualizar guía
 export const guideSchema = z.object({
   company_id: requiredStringId("Debe seleccionar una empresa"),
-  branch_id: requiredStringId("Debe seleccionar una sucursal"),
+  branch_id: requiredStringId("Debe seleccionar una tienda"),
   warehouse_id: requiredStringId("Debe seleccionar un almacén"),
   sale_id: z.string().optional(),
   customer_id: requiredStringId("Debe seleccionar un cliente"),

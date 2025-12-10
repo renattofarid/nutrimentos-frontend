@@ -2,14 +2,14 @@ import type { ModelComplete } from "@/lib/core.interface";
 import type { Links, Meta } from "@/lib/pagination.interface";
 import { Building2 } from "lucide-react";
 
-const ROUTE = "/sucursal";
-const NAME = "Sucursal";
+const ROUTE = "/tienda";
+const NAME = "Tienda";
 
 export const BRANCH: ModelComplete<BranchResource> = {
   MODEL: {
     name: NAME,
-    description: "Gestión de sucursales de la empresa.",
-    plural: "Sucursales",
+    description: "Gestión de tiendas de la empresa.",
+    plural: "Tiendas",
     gender: false,
   },
   ICON: "Building2",

@@ -26,9 +26,7 @@ export const warehouseDocumentSchemaCreate = z
       .min(1, { message: "Debe seleccionar un tipo de documento" }),
     motive: z.string().min(1, { message: "Debe seleccionar un motivo" }),
     warehouse_dest_id: z.string().optional(),
-    responsible_origin_id: requiredStringId(
-      "Debe seleccionar un responsable de origen"
-    ),
+    responsible_origin_id: z.string().optional(),
     responsible_dest_id: z.string().optional(),
     movement_date: z
       .string()
@@ -63,6 +61,18 @@ export const warehouseDocumentSchemaCreate = z
     {
       message: "Debe seleccionar un almacén de destino para traslados",
       path: ["warehouse_dest_id"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.document_type === "TRASLADO") {
+        return !!data.responsible_origin_id;
+      }
+      return true;
+    },
+    {
+      message: "Debe seleccionar un responsable de origen para traslados",
+      path: ["responsible_origin_id"],
     }
   )
   .refine(

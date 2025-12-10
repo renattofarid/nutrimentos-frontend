@@ -44,6 +44,16 @@ export const branchSchemaCreate = z.object({
     .max(255, {
       message: "El email no puede tener más de 255 caracteres",
     }),
+  serie: z
+    .number({
+      error: "La serie es requerida",
+    })
+    .int({
+      message: "La serie debe ser un número entero",
+    })
+    .min(1, {
+      message: "La serie debe ser mayor a 0",
+    }),
   company_id: requiredStringId("empresa"),
 });
 

@@ -192,44 +192,44 @@ export default function WarehouseDocumentForm({
           />
 
           {isTraslado && (
-            <FormSelect
-              control={form.control}
-              name="warehouse_dest_id"
-              label="Almacén de Destino"
-              placeholder="Seleccione un almacén"
-              options={warehouses.map((w) => ({
-                value: w.id.toString(),
-                label: w.name,
-              }))}
-            />
-          )}
+            <>
+              <FormSelect
+                control={form.control}
+                name="warehouse_dest_id"
+                label="Almacén de Destino"
+                placeholder="Seleccione un almacén"
+                options={warehouses.map((w) => ({
+                  value: w.id.toString(),
+                  label: w.name,
+                }))}
+              />
 
-          <FormSelect
-            control={form.control}
-            name="responsible_origin_id"
-            label="Responsable de Origen"
-            placeholder="Seleccione una persona"
-            options={persons.map((p) => ({
-              value: p.id.toString(),
-              label: `${p.names} ${p.father_surname ?? ""} ${
-                p.mother_surname ?? ""
-              }`.trim(),
-            }))}
-          />
+              <FormSelect
+                control={form.control}
+                name="responsible_origin_id"
+                label="Responsable de Origen"
+                placeholder="Seleccione una persona"
+                options={persons.map((p) => ({
+                  value: p.id.toString(),
+                  label: `${p.names} ${p.father_surname ?? ""} ${
+                    p.mother_surname ?? ""
+                  }`.trim(),
+                }))}
+              />
 
-          {isTraslado && (
-            <FormSelect
-              control={form.control}
-              name="responsible_dest_id"
-              label="Responsable de Destino"
-              placeholder="Seleccione una persona"
-              options={persons.map((p) => ({
-                value: p.id.toString(),
-                label: `${p.names} ${p.father_surname ?? ""} ${
-                  p.mother_surname ?? ""
-                }`.trim(),
-              }))}
-            />
+              <FormSelect
+                control={form.control}
+                name="responsible_dest_id"
+                label="Responsable de Destino"
+                placeholder="Seleccione una persona"
+                options={persons.map((p) => ({
+                  value: p.id.toString(),
+                  label: `${p.names} ${p.father_surname ?? ""} ${
+                    p.mother_surname ?? ""
+                  }`.trim(),
+                }))}
+              />
+            </>
           )}
 
           <FormSelect

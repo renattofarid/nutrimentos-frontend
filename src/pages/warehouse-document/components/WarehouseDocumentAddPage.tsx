@@ -11,6 +11,7 @@ import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { successToast, errorToast } from "@/lib/core.function";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
+import FormWrapper from "@/components/FormWrapper";
 
 const { ICON, EMPTY, TITLES } = WAREHOUSE_DOCUMENT;
 
@@ -31,7 +32,7 @@ export default function WarehouseDocumentAddPage() {
         motive: data.motive as any,
         document_number: data.document_number,
         person_id: parseInt(data.person_id),
-        document_date: data.document_date,
+        movement_date: data.movement_date,
         observations: data.observations,
         details: data.details.map((detail) => ({
           product_id: parseInt(detail.product_id),
@@ -46,7 +47,9 @@ export default function WarehouseDocumentAddPage() {
       navigate("/documentos-almacen");
     } catch (error: any) {
       const errorMessage =
-        (error.response.data.message ?? error.response.data.error) ?? "Error al crear el documento";
+        error.response.data.message ??
+        error.response.data.error ??
+        "Error al crear el documento";
       errorToast(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -54,7 +57,7 @@ export default function WarehouseDocumentAddPage() {
   };
 
   return (
-    <PageWrapper>
+    <FormWrapper>
       <div className="space-y-4">
         <div className="flex items-center gap-4">
           <BackButton />
@@ -77,6 +80,6 @@ export default function WarehouseDocumentAddPage() {
           />
         )}
       </div>
-    </PageWrapper>
+    </FormWrapper>
   );
 }

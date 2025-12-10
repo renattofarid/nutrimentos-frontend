@@ -17,7 +17,7 @@ import { login } from "../lib/auth.actions";
 import { errorToast, successToast } from "@/lib/core.function";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useAllCompanies } from "@/pages/company/lib/company.hook";
+import { useAllCompaniesList } from "@/pages/company/lib/company.hook";
 import { FormSelect } from "@/components/FormSelect";
 import { useMemo } from "react";
 
@@ -37,7 +37,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { data: companies, isLoading: isLoadingCompanies } = useAllCompanies();
+  const { data: companies, isLoading: isLoadingCompanies } =
+    useAllCompaniesList();
 
   const companyOptions = useMemo(() => {
     if (!companies) return [];
@@ -47,13 +48,6 @@ export default function LoginPage() {
       description: company.ruc,
     }));
   }, [companies]);
-
-  console.log("Companies:", companyOptions);
-
-  const companiesMock = [
-    { value: "1", label: "Empresa A", description: "RUC: 1234567890" },
-    { value: "2", label: "Empresa B", description: "RUC: 0987654321" },
-  ];
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -169,7 +163,7 @@ export default function LoginPage() {
                       ? "Cargando empresas..."
                       : "Selecciona una empresa"
                   }
-                  options={companiesMock}
+                  options={companyOptions}
                   control={form.control}
                   disabled={isLoadingCompanies}
                 />

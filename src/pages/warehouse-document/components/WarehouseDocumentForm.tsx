@@ -4,7 +4,6 @@ import { warehouseDocumentSchemaCreate } from "../lib/warehouse-document.schema"
 import type { WarehouseDocumentSchema } from "../lib/warehouse-document.schema";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import FormWrapper from "@/components/FormWrapper";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +15,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { DOCUMENT_TYPES, DOCUMENT_MOTIVES } from "../lib/warehouse-document.constants";
+import {
+  DOCUMENT_TYPES,
+  DOCUMENT_MOTIVES,
+} from "../lib/warehouse-document.constants";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
@@ -51,7 +53,7 @@ export default function WarehouseDocumentForm({
       motive: "",
       document_number: "",
       person_id: "",
-      document_date: "",
+      movement_date: "",
       observations: "",
       details: [],
     },
@@ -72,226 +74,217 @@ export default function WarehouseDocumentForm({
   };
 
   return (
-    <FormWrapper>
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit as any)}
-          className="space-y-6"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormSelect
-              control={form.control}
-              name="warehouse_id"
-              label="Almacén"
-              placeholder="Seleccione un almacén"
-              options={warehouses.map((w) => ({
-                value: w.id.toString(),
-                label: w.name,
-              }))}
-            />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <FormSelect
+            control={form.control}
+            name="warehouse_id"
+            label="Almacén"
+            placeholder="Seleccione un almacén"
+            options={warehouses.map((w) => ({
+              value: w.id.toString(),
+              label: w.name,
+            }))}
+          />
 
-            <FormSelect
-              control={form.control}
-              name="document_type"
-              label="Tipo de Documento"
-              placeholder="Seleccione el tipo"
-              options={DOCUMENT_TYPES.map((type) => ({
-                value: type.value,
-                label: type.label,
-              }))}
-            />
+          <FormSelect
+            control={form.control}
+            name="document_type"
+            label="Tipo de Documento"
+            placeholder="Seleccione el tipo"
+            options={DOCUMENT_TYPES.map((type) => ({
+              value: type.value,
+              label: type.label,
+            }))}
+          />
 
-            <FormSelect
-              control={form.control}
-              name="motive"
-              label="Motivo"
-              placeholder="Seleccione el motivo"
-              options={DOCUMENT_MOTIVES.map((motive) => ({
-                value: motive.value,
-                label: motive.label,
-              }))}
-            />
-
-            <FormField
-              control={form.control}
-              name="document_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Número de Documento</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: AJ-000123" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormSelect
-              control={form.control}
-              name="person_id"
-              label="Persona Responsable"
-              placeholder="Seleccione una persona"
-              options={persons.map((p) => ({
-                value: p.id.toString(),
-                label: `${p.names} ${p.father_surname ?? ""} ${
-                  p.mother_surname ?? ""
-                }`.trim(),
-              }))}
-            />
-
-            <DatePickerFormField
-              control={form.control}
-              name="document_date"
-              label="Fecha del Documento"
-            />
-          </div>
+          <FormSelect
+            control={form.control}
+            name="motive"
+            label="Motivo"
+            placeholder="Seleccione el motivo"
+            options={DOCUMENT_MOTIVES.map((motive) => ({
+              value: motive.value,
+              label: motive.label,
+            }))}
+          />
 
           <FormField
             control={form.control}
-            name="observations"
+            name="document_number"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Observaciones</FormLabel>
+                <FormLabel>Número de Documento</FormLabel>
                 <FormControl>
-                  <Textarea
-                    placeholder="Observaciones adicionales"
-                    className="resize-none"
-                    {...field}
-                  />
+                  <Input placeholder="Ej: AJ-000123" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Detalles del Documento</CardTitle>
-                <Button type="button" onClick={addDetail} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Agregar Producto
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {fields.map((field, index) => (
-                  <Card key={field.id} className="p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div className="md:col-span-2">
-                        <FormSelect
-                          control={form.control}
-                          name={`details.${index}.product_id`}
-                          label="Producto"
-                          placeholder="Seleccione producto"
-                          options={products.map((p) => ({
-                            value: p.id.toString(),
-                            label: p.name,
-                          }))}
-                        />
-                      </div>
+          <FormSelect
+            control={form.control}
+            name="person_id"
+            label="Persona Responsable"
+            placeholder="Seleccione una persona"
+            options={persons.map((p) => ({
+              value: p.id.toString(),
+              label: `${p.names} ${p.father_surname ?? ""} ${
+                p.mother_surname ?? ""
+              }`.trim(),
+            }))}
+          />
 
-                      <FormField
+          <DatePickerFormField
+            control={form.control}
+            name="movement_date"
+            label="Fecha del Movimiento"
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="observations"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Observaciones</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Observaciones adicionales"
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Detalles del Documento</CardTitle>
+              <Button type="button" onClick={addDetail} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar Producto
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {fields.map((field, index) => (
+                <Card key={field.id} className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="md:col-span-2">
+                      <FormSelect
                         control={form.control}
-                        name={`details.${index}.quantity`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Cantidad</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                {...field}
-                                onChange={(e) =>
-                                  field.onChange(
-                                    parseFloat(e.target.value) || 0
-                                  )
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        name={`details.${index}.product_id`}
+                        label="Producto"
+                        placeholder="Seleccione producto"
+                        options={products.map((p) => ({
+                          value: p.id.toString(),
+                          label: p.name,
+                        }))}
                       />
-
-                      <FormField
-                        control={form.control}
-                        name={`details.${index}.unit_cost`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Costo Unitario</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                {...field}
-                                onChange={(e) =>
-                                  field.onChange(
-                                    parseFloat(e.target.value) || 0
-                                  )
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="md:col-span-3">
-                        <FormField
-                          control={form.control}
-                          name={`details.${index}.observations`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Observaciones</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Observaciones del producto"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div className="flex items-end">
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => remove(index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
                     </div>
-                  </Card>
-                ))}
 
-                {fields.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No hay productos agregados. Haga clic en "Agregar Producto"
-                    para comenzar.
+                    <FormField
+                      control={form.control}
+                      name={`details.${index}.quantity`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cantidad</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(parseFloat(e.target.value) || 0)
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name={`details.${index}.unit_cost`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Costo Unitario</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(parseFloat(e.target.value) || 0)
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="md:col-span-3">
+                      <FormField
+                        control={form.control}
+                        name={`details.${index}.observations`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Observaciones</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Observaciones del producto"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="flex items-end">
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => remove(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                </Card>
+              ))}
 
-          <div className="flex justify-end gap-2">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting
-                ? "Guardando..."
-                : mode === "create"
-                ? "Crear Documento"
-                : "Actualizar Documento"}
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </FormWrapper>
+              {fields.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No hay productos agregados. Haga clic en "Agregar Producto"
+                  para comenzar.
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-2">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting
+              ? "Guardando..."
+              : mode === "create"
+              ? "Crear Documento"
+              : "Actualizar Documento"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

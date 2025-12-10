@@ -40,7 +40,7 @@ export const WAREHOUSE_DOCUMENT: ModelComplete<WarehouseDocumentSchema> = {
     motive: "",
     document_number: "",
     person_id: "",
-    document_date: "",
+    movement_date: "",
     observations: "",
     details: [],
   },
@@ -48,16 +48,16 @@ export const WAREHOUSE_DOCUMENT: ModelComplete<WarehouseDocumentSchema> = {
 
 // Document Types
 export type DocumentType = "INGRESO" | "SALIDA";
-  // | "ENTRADA_DEVOLUCION"
-  // | "ENTRADA_AJUSTE"
-  // | "ENTRADA_TRANSFERENCIA"
-  // | "ENTRADA_DONACION"
-  // | "SALIDA_DEVOLUCION"
-  // | "SALIDA_AJUSTE"
-  // | "SALIDA_TRANSFERENCIA"
-  // | "SALIDA_MERMA"
-  // | "SALIDA_DONACION"
-  // | "SALIDA_USO_INTERNO";
+// | "ENTRADA_DEVOLUCION"
+// | "ENTRADA_AJUSTE"
+// | "ENTRADA_TRANSFERENCIA"
+// | "ENTRADA_DONACION"
+// | "SALIDA_DEVOLUCION"
+// | "SALIDA_AJUSTE"
+// | "SALIDA_TRANSFERENCIA"
+// | "SALIDA_MERMA"
+// | "SALIDA_DONACION"
+// | "SALIDA_USO_INTERNO";
 
 export type DocumentMotive =
   | "COMPRA"
@@ -86,24 +86,36 @@ export interface WarehouseDocumentDetail {
 // Warehouse Document Resource
 export interface WarehouseDocumentResource {
   id: number;
-  correlativo: string;
-  warehouse_id: number;
-  warehouse_name: string;
+  company: Company;
   document_type: DocumentType;
   motive: DocumentMotive;
   document_number: string;
-  destination_warehouse_id: null;
-  destination_warehouse_name: null;
-  person_id: number;
-  person_fullname: string;
-  user_id: number;
-  user_name: string;
-  document_date: string;
-  posting_date: null;
+  movement_date: string;
+  warehouse_origin: Warehouse;
+  warehouse_destination: null;
+  responsible_origin: null;
+  responsible_destination: null;
+  purchase: null;
   status: DocumentStatus;
   observations: string;
-  details: WarehouseDocumentDetail[];
+  user: User;
   created_at: string;
+  updated_at: string;
+}
+
+interface Company {
+  id: number;
+  name: string;
+}
+
+interface Warehouse {
+  id: number;
+  name: string;
+}
+
+interface User {
+  id: number;
+  name: string;
 }
 
 // API Responses
@@ -124,7 +136,7 @@ export interface CreateWarehouseDocumentRequest {
   motive: DocumentMotive;
   document_number: string;
   person_id: number;
-  document_date: string;
+  movement_date: string;
   observations?: string;
   details: {
     product_id: number;

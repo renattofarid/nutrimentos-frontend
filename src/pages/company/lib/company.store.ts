@@ -2,6 +2,7 @@ import { create } from "zustand";
 import {
   findCompanyById,
   getAllCompanies,
+  getAllCompaniesList,
   getCompany,
   storeCompany,
   updateCompany,
@@ -12,15 +13,18 @@ import type { CompanyResource } from "./company.interface";
 
 interface CompanyStore {
   allCompanies: CompanyResource[] | null;
+  allCompaniesList: CompanyResource[] | null;
   companies: CompanyResource[] | null;
   company: CompanyResource | null;
   meta: Meta | null;
   isLoadingAll: boolean;
+  isLoadingAllList: boolean;
   isLoading: boolean;
   isFinding: boolean;
   error: string | null;
   isSubmitting: boolean;
   fetchAllCompanies: () => Promise<void>;
+  fetchAllCompaniesList: () => Promise<void>;
   fetchCompanies: (params?: Record<string, any>) => Promise<void>;
   fetchCompany: (id: number) => Promise<void>;
   createCompany: (data: CompanySchema) => Promise<void>;
@@ -29,10 +33,12 @@ interface CompanyStore {
 
 export const useCompanyStore = create<CompanyStore>((set) => ({
   allCompanies: null,
+  allCompaniesList: null,
   company: null,
   companies: null,
   meta: null,
   isLoadingAll: false,
+  isLoadingAllList: false,
   isLoading: false,
   isFinding: false,
   isSubmitting: false,
@@ -55,6 +61,16 @@ export const useCompanyStore = create<CompanyStore>((set) => ({
       set({ allCompanies: data, isLoadingAll: false });
     } catch (err) {
       set({ error: "Error al cargar empresas", isLoadingAll: false });
+    }
+  },
+
+  fetchAllCompaniesList: async () => {
+    set({ isLoadingAllList: true, error: null });
+    try {
+      const data = await getAllCompaniesList();
+      set({ allCompaniesList: data, isLoadingAllList: false });
+    } catch (err) {
+      set({ error: "Error al cargar empresas", isLoadingAllList: false });
     }
   },
 

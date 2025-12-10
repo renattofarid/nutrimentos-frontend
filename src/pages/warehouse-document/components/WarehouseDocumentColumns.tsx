@@ -12,6 +12,7 @@ import {
   getDocumentStatusVariant,
 } from "../lib/warehouse-document.constants";
 import { CheckCircle, XCircle } from "lucide-react";
+import { parse } from "date-fns";
 
 export const WarehouseDocumentColumns = ({
   onEdit,
@@ -34,13 +35,14 @@ export const WarehouseDocumentColumns = ({
     ),
   },
   {
-    accessorKey: "warehouse_name",
+    accessorKey: "warehouse_origin.name",
     header: "Almacén",
-    cell: ({ getValue }) => (
-      <Badge variant="outline" className="font-medium">
-        {getValue() as string}
-      </Badge>
-    ),
+    cell: ({ getValue }) =>
+      getValue() && (
+        <Badge variant="outline" className="font-medium">
+          {getValue() as string}
+        </Badge>
+      ),
   },
   {
     accessorKey: "document_type",
@@ -49,12 +51,28 @@ export const WarehouseDocumentColumns = ({
       const type = row.original.document_type;
       const isEntry = type.startsWith("ENTRADA_");
       return (
-        <Badge
-          variant={isEntry ? "default" : "secondary"}
-          className="font-medium"
-        >
-          {getDocumentTypeLabel(type)}
-        </Badge>
+        type && (
+          <Badge
+            variant={isEntry ? "default" : "secondary"}
+            className="font-medium"
+          >
+            {getDocumentTypeLabel(type)}
+          </Badge>
+        )
+      );
+    },
+  },
+  {
+    accessorKey: "motive",
+    header: "Motivo",
+    cell: ({ row }) => {
+      const motive = row.original.motive;
+      return (
+        motive && (
+          <Badge variant="outline" className="font-medium">
+            {motive}
+          </Badge>
+        )
       );
     },
   },
@@ -64,10 +82,10 @@ export const WarehouseDocumentColumns = ({
     cell: ({ getValue }) => getValue() as string,
   },
   {
-    accessorKey: "document_date",
-    header: "Fecha del Documento",
+    accessorKey: "movement_date",
+    header: "Fecha del Movimiento",
     cell: ({ getValue }) => {
-      const date = new Date(getValue() as string);
+      const date = parse(getValue() as string, "yyyy-MM-dd", new Date());
       return date.toLocaleDateString("es-ES", {
         year: "numeric",
         month: "short",
@@ -91,6 +109,18 @@ export const WarehouseDocumentColumns = ({
   {
     accessorKey: "created_at",
     header: "Fecha de Creación",
+    cell: ({ getValue }) => {
+      const date = new Date(getValue() as string);
+      return date.toLocaleDateString("es-ES", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    },
+  },
+  {
+    accessorKey: "updated_at",
+    header: "Fecha de Actualización",
     cell: ({ getValue }) => {
       const date = new Date(getValue() as string);
       return date.toLocaleDateString("es-ES", {

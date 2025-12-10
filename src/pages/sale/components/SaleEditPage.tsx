@@ -24,7 +24,11 @@ export const SaleEditPage = () => {
 
   const { data: companies, isLoading: companiesLoading } = useAllCompanies();
   const { data: branches, isLoading: branchesLoading } = useAllBranches();
-  const { data: customers, isLoading: customersLoading } = useClients();
+  const {
+    data: customers,
+    isLoading: customersLoading,
+    refetch: onRefreshClients,
+  } = useClients();
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
 
@@ -164,6 +168,7 @@ export const SaleEditPage = () => {
               products={products}
               sale={sale}
               onCancel={() => navigate("/ventas")}
+              onRefreshClients={onRefreshClients}
             />
           )}
       </div>

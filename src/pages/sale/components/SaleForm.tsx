@@ -26,6 +26,7 @@ import {
   Users2,
   CreditCard,
   ListChecks,
+  UserPlus,
 } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
@@ -61,6 +62,7 @@ import {
 } from "../lib/sale.interface";
 import { errorToast } from "@/lib/core.function";
 import { GroupFormSection } from "@/components/GroupFormSection";
+import { ClientDialog } from "@/pages/client/components/ClientDialog";
 
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
@@ -74,6 +76,7 @@ interface SaleFormProps {
   warehouses: WarehouseResource[];
   products: ProductResource[];
   sale?: SaleResource;
+  onRefreshClients: () => void;
 }
 
 interface DetailRow {
@@ -103,11 +106,20 @@ export const SaleForm = ({
   customers,
   warehouses,
   products,
+  onRefreshClients,
 }: SaleFormProps) => {
   // Estados para filtrado en cascada
-  const [filteredBranches, setFilteredBranches] = useState<BranchResource[]>([]);
-  const [filteredWarehouses, setFilteredWarehouses] = useState<WarehouseResource[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<ProductResource[]>([]);
+  const [filteredBranches, setFilteredBranches] = useState<BranchResource[]>(
+    []
+  );
+  const [filteredWarehouses, setFilteredWarehouses] = useState<
+    WarehouseResource[]
+  >([]);
+  const [filteredProducts, setFilteredProducts] = useState<ProductResource[]>(
+    []
+  );
+
+  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
 
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
@@ -251,7 +263,8 @@ export const SaleForm = ({
 
       if (defaultValues.branch_id) {
         const filtered = warehouses.filter(
-          (warehouse) => warehouse.branch_id.toString() === defaultValues.branch_id
+          (warehouse) =>
+            warehouse.branch_id.toString() === defaultValues.branch_id
         );
         setFilteredWarehouses(filtered);
       }
@@ -259,7 +272,8 @@ export const SaleForm = ({
       if (defaultValues.warehouse_id) {
         const filtered = products.filter((product) => {
           const stockInWarehouse = product.stock_warehouse?.find(
-            (stock) => stock.warehouse_id.toString() === defaultValues.warehouse_id
+            (stock) =>
+              stock.warehouse_id.toString() === defaultValues.warehouse_id
           );
           return stockInWarehouse && stockInWarehouse.stock > 0;
         });
@@ -721,23 +735,40 @@ export const SaleForm = ({
               disabled={mode === "update" || !selectedCompanyId}
             />
 
-            <FormSelect
-              control={form.control}
-              name="customer_id"
-              label="Cliente"
-              placeholder="Seleccione un cliente"
-              options={customers.map((customer) => ({
-                value: customer.id.toString(),
-                label:
-                  customer.business_name ??
-                  customer.names +
-                    " " +
-                    customer.father_surname +
-                    " " +
-                    customer.mother_surname,
-              }))}
-              disabled={mode === "update"}
-            />
+            <div className="flex gap-2 items-end">
+              <div className="truncate! flex-1">
+                <FormSelect
+                  control={form.control}
+                  name="customer_id"
+                  label="Cliente"
+                  placeholder="Seleccione un cliente"
+                  options={customers.map((customer) => ({
+                    value: customer.id.toString(),
+                    label:
+                      customer.business_name ??
+                      customer.names +
+                        " " +
+                        customer.father_surname +
+                        " " +
+                        customer.mother_surname,
+                    description:
+                      (customer.number_document ?? "-") +
+                      " | " +
+                      (customer.zone_name ?? "-"),
+                  }))}
+                  disabled={mode === "update"}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setIsClientDialogOpen(true)}
+                title="Agregar nuevo cliente"
+              >
+                <UserPlus className="h-4 w-4" />
+              </Button>
+            </div>
 
             <FormSelect
               control={form.control}
@@ -862,7 +893,8 @@ export const SaleForm = ({
                   }
                   options={filteredProducts.map((product) => {
                     const stockInWarehouse = product.stock_warehouse?.find(
-                      (stock) => stock.warehouse_id.toString() === selectedWarehouseId
+                      (stock) =>
+                        stock.warehouse_id.toString() === selectedWarehouseId
                     );
                     return {
                       value: product.id.toString(),
@@ -1375,6 +1407,14 @@ export const SaleForm = ({
           </Button>
         </div>
       </form>
+      {/* Diálogo para agregar proveedor */}
+      <ClientDialog
+        open={isClientDialogOpen}
+        onOpenChange={setIsClientDialogOpen}
+        onClientCreated={() => {
+          onRefreshClients?.();
+        }}
+      />
     </Form>
   );
 };

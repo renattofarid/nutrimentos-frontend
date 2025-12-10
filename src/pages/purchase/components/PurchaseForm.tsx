@@ -609,7 +609,10 @@ export const PurchaseForm = ({
                       supplier.father_surname +
                       " " +
                       supplier.mother_surname,
-                  description: supplier.number_document || undefined,
+                  description:
+                    (supplier.number_document ?? "-") +
+                    " | " +
+                    (supplier.zone_name ?? "-"),
                 }))}
               />
             </div>

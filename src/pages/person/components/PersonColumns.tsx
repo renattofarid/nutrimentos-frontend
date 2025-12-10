@@ -76,6 +76,13 @@ export const PersonColumns = ({
     ),
   },
   {
+    accessorKey: "zone_name",
+    header: "Zona",
+    cell: ({ getValue }) => (
+      <span className="text-sm">{getValue() as string}</span>
+    ),
+  },
+  {
     accessorKey: "email",
     header: "Email",
     cell: ({ getValue }) => (

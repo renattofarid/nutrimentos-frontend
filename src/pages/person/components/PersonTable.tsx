@@ -7,6 +7,7 @@ interface Props {
   data: PersonResource[];
   children?: React.ReactNode;
   isLoading?: boolean;
+  isClientTable: boolean;
 }
 
 export default function PersonTable({
@@ -14,6 +15,7 @@ export default function PersonTable({
   data,
   children,
   isLoading,
+  isClientTable = false,
 }: Props) {
   return (
     <div className="border-none text-muted-foreground max-w-full">
@@ -26,6 +28,7 @@ export default function PersonTable({
           type_person: true,
           birth_date: false,
           address: false,
+          zone_name: isClientTable,
         }}
       >
         {children}

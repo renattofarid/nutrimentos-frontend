@@ -12,13 +12,26 @@ import BoxMovementTable from "@/pages/box-movement/components/BoxMovementTable";
 import { BoxMovementColumns } from "@/pages/box-movement/components/BoxMovementColumns";
 import { useState } from "react";
 import BoxMovementCreateModal from "@/pages/box-movement/components/BoxMovementCreateModal";
+import BoxMovementDetailSheet from "@/pages/box-movement/components/BoxMovementDetailSheet";
 import FormSkeleton from "@/components/FormSkeleton";
+import type { BoxMovementResource } from "@/pages/box-movement/lib/box-movement.interface";
 
 export default function BoxShiftDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const shiftId = parseInt(id || "0");
   const [createMovementModal, setCreateMovementModal] = useState(false);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [selectedMovement, setSelectedMovement] =
+    useState<BoxMovementResource | null>(null);
+
+  const handleViewMovement = (id: number) => {
+    const movement = movements?.find((m) => m.id === id);
+    if (movement) {
+      setSelectedMovement(movement);
+      setDetailSheetOpen(true);
+    }
+  };
 
   const { data: shift, isFinding } = useBoxShiftById(shiftId);
   const {
@@ -137,19 +150,21 @@ export default function BoxShiftDetailPage() {
       )}
 
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
           <h2 className="text-xl font-semibold">Movimientos del Turno</h2>
           {shift.is_open && (
-            <Button onClick={() => setCreateMovementModal(true)}>
-              Registrar Movimiento
-            </Button>
+            <div className="w-full flex justify-end">
+              <Button size={"sm"} onClick={() => setCreateMovementModal(true)}>
+                Registrar Movimiento
+              </Button>
+            </div>
           )}
         </div>
 
         <BoxMovementTable
           columns={BoxMovementColumns({
             onDelete: () => {},
-            onView: () => {},
+            onView: handleViewMovement,
           })}
           data={movements || []}
           isLoading={loadingMovements}
@@ -167,6 +182,12 @@ export default function BoxShiftDetailPage() {
           }}
         />
       )}
+
+      <BoxMovementDetailSheet
+        open={detailSheetOpen}
+        onOpenChange={setDetailSheetOpen}
+        movement={selectedMovement}
+      />
     </div>
   );
 }

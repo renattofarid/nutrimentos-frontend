@@ -6,13 +6,7 @@ import {
   boxMovementSchemaCreate,
   type BoxMovementSchemaCreate,
 } from "../lib/box-movement.schema";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { GeneralModal } from "@/components/GeneralModal";
 import {
   Form,
   FormControl,
@@ -26,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { successToast, errorToast } from "@/lib/core.function";
 import { FormSelect } from "@/components/FormSelect";
-import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import { useAllClients } from "@/pages/client/lib/client.hook";
 import { useAllPaymentConcepts } from "@/pages/payment-concept/lib/payment-concept.hook";
 
@@ -45,11 +38,9 @@ export default function BoxMovementCreateModal({
 }: BoxMovementCreateModalProps) {
   const { createBoxMovement, isSubmitting } = useBoxMovementStore();
   const { data: persons } = useAllClients();
-  const { user } = useAuthStore();
 
   // Obtener las cajas aperturadas del usuario
-  const userBoxes = user?.boxes || [];
-  const defaultBoxId = userBoxes.length > 0 ? userBoxes[0].id : boxId;
+  const defaultBoxId = boxId;
 
   const form = useForm<BoxMovementSchemaCreate>({
     resolver: zodResolver(boxMovementSchemaCreate) as any,
@@ -68,7 +59,7 @@ export default function BoxMovementCreateModal({
     },
   });
 
-  const onSubmit = async (data: BoxMovementSchemaCreate) => {
+  const onSubmit = async (data: BoxMovementSchemaCreate): Promise<void> => {
     try {
       await createBoxMovement(data);
       successToast("Movimiento registrado exitosamente");
@@ -99,18 +90,7 @@ export default function BoxMovementCreateModal({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormSelect
-                name="box_id"
-                control={form.control}
-                label="Caja"
-                placeholder="Seleccione una caja"
-                options={userBoxes.map((box) => ({
-                  value: box.id.toString(),
-                  label: `${box.name} - ${box.serie}`,
-                }))}
-              />
-
+            <div className="grid grid-cols-1 gap-4">
               <FormSelect
                 name="type"
                 control={form.control}

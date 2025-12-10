@@ -206,6 +206,12 @@ export const PurchaseForm = ({
       mode === "create" ? purchaseSchemaCreate : purchaseSchemaUpdate
     ),
     defaultValues: {
+      discount_global: 0,
+      freight_cost: 0,
+      loading_cost: 0,
+      include_cost_account: true,
+      reference_number: "",
+      observations: "",
       ...defaultValues,
     },
     mode: "onChange",
@@ -701,6 +707,24 @@ export const PurchaseForm = ({
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="reference_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Número de Referencia</FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Número de referencia (opcional)"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormSelect
             control={form.control}
             name="payment_type"
@@ -712,6 +736,84 @@ export const PurchaseForm = ({
             }))}
           />
 
+          <FormField
+            control={form.control}
+            name="discount_global"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Descuento Global</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    variant="default"
+                    placeholder="0.00"
+                    {...field}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === "" ? 0 : parseFloat(e.target.value)
+                      )
+                    }
+                    value={field.value ?? 0}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="freight_cost"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Costo de Flete</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    variant="default"
+                    placeholder="0.00"
+                    {...field}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === "" ? 0 : parseFloat(e.target.value)
+                      )
+                    }
+                    value={field.value ?? 0}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="loading_cost"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Costo de Estiba</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    variant="default"
+                    placeholder="0.00"
+                    {...field}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === "" ? 0 : parseFloat(e.target.value)
+                      )
+                    }
+                    value={field.value ?? 0}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* IGV */}
           <FormSwitch
             control={form.control}
@@ -720,6 +822,34 @@ export const PurchaseForm = ({
             textDescription="Los precios ingresados NO incluyen IGV"
             className="h-auto"
           />
+
+          <FormSwitch
+            control={form.control}
+            name="include_cost_account"
+            text="Incluir Cuenta de Costos"
+            textDescription="Activar para incluir en contabilidad"
+            className="h-auto"
+          />
+
+          <div className="md:col-span-3">
+            <FormField
+              control={form.control}
+              name="observations"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Observaciones</FormLabel>
+                  <FormControl>
+                    <Input
+                      variant="default"
+                      placeholder="Observaciones adicionales (opcional)"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </GroupFormSection>
 
         {/* Detalles */}

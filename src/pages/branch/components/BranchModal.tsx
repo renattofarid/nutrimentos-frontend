@@ -43,7 +43,7 @@ export default function BranchModal({ id, open, title, mode, onClose }: Props) {
     name: data?.name || "",
     address: data?.address || "",
     serie: data?.serie || 0,
-    is_invoice: data?.is_invoice || false,
+    is_invoice: data?.is_invoice ? Boolean(data.is_invoice) : false,
     responsible_id: user?.id || data?.responsible_id || 0,
     phone: data?.phone || "",
     email: data?.email || "",

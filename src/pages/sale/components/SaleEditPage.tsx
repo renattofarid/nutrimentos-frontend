@@ -24,7 +24,11 @@ export const SaleEditPage = () => {
 
   const { data: companies, isLoading: companiesLoading } = useAllCompanies();
   const { data: branches, isLoading: branchesLoading } = useAllBranches();
-  const { data: customers, isLoading: customersLoading } = useClients();
+  const {
+    data: customers,
+    isLoading: customersLoading,
+    refetch: onRefreshClients,
+  } = useClients();
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
 
@@ -69,8 +73,6 @@ export const SaleEditPage = () => {
     customer_id: data.customer_id?.toString(),
     warehouse_id: data.warehouse_id?.toString(),
     document_type: data.document_type,
-    serie: data.serie,
-    numero: data.numero,
     issue_date: data.issue_date.split("T")[0],
     payment_type: data.payment_type,
     currency: data.currency,
@@ -164,6 +166,7 @@ export const SaleEditPage = () => {
               products={products}
               sale={sale}
               onCancel={() => navigate("/ventas")}
+              onRefreshClients={onRefreshClients}
             />
           )}
       </div>

@@ -50,14 +50,12 @@ export type SaleInstallmentSchema = z.infer<typeof saleInstallmentSchema>;
 
 export const saleSchemaCreate = z.object({
   company_id: requiredStringId("Debe seleccionar una empresa"),
-  branch_id: requiredStringId("Debe seleccionar una sucursal"),
+  branch_id: requiredStringId("Debe seleccionar una tienda"),
   customer_id: requiredStringId("Debe seleccionar un cliente"),
   warehouse_id: requiredStringId("Debe seleccionar un almacén"),
   document_type: z
     .string()
     .min(1, { message: "Debe seleccionar un tipo de documento" }),
-  serie: z.string().min(1, { message: "La serie es requerida" }).max(10),
-  numero: z.string().min(1, { message: "El número es requerido" }).max(20),
   issue_date: z
     .string()
     .min(1, { message: "La fecha de emisión es requerida" })

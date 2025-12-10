@@ -83,6 +83,9 @@ import AccountsReceivablePage from "./pages/accounts-receivable/components/Accou
 import { AccountsReceivableRoute } from "./pages/accounts-receivable/lib/accounts-receivable.interface";
 import AccountsPayablePage from "./pages/accounts-payable/components/AccountsPayablePage";
 import { ACCOUNTS_PAYABLE } from "./pages/accounts-payable/lib/accounts-payable.interface";
+import { ValuatedInventoryPage, WarehouseDocumentAddPage, WarehouseDocumentEditPage, WarehouseDocumentPage, WarehouseKardexPage } from "./pages/warehouse-document/components";
+import { WAREHOUSE_DOCUMENT } from "./pages/warehouse-document/lib/warehouse-document.interface";
+import WarehouseDocumentDetailPage from "./pages/warehouse-document/components/WarehouseDocumentDetailPage";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -111,6 +114,7 @@ const { ROUTE: PriceListRoute } = PRICELIST;
 const { ROUTE: GuideRoute } = GUIDE;
 const { ROUTE: BoxShiftRoute } = BOX_SHIFT;
 const { ROUTE: AccountsPayableRoute } = ACCOUNTS_PAYABLE;
+const { ROUTE: WarehouseDocumentRoute } = WAREHOUSE_DOCUMENT;
 
 export const hasAccessToRoute = (access: Access[], route: string): boolean => {
   const transformRoute = route.split("/").pop();
@@ -304,6 +308,59 @@ export default function App() {
             element={
               <ProtectedRoute path={ProductTypeRoute}>
                 <ProductTypePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={WarehouseDocumentRoute}
+            element={
+              <ProtectedRoute path={WarehouseDocumentRoute}>
+                <WarehouseDocumentPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/documentos-almacen/agregar"
+            element={
+              <ProtectedRoute path={WarehouseDocumentRoute}>
+                <WarehouseDocumentAddPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/documentos-almacen/:id"
+            element={
+              <ProtectedRoute path={WarehouseDocumentRoute}>
+                <WarehouseDocumentDetailPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/documentos-almacen/actualizar/:id"
+            element={
+              <ProtectedRoute path={WarehouseDocumentRoute}>
+                <WarehouseDocumentEditPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/kardex"
+            element={
+              <ProtectedRoute path="/kardex">
+                <WarehouseKardexPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/inventario-valorizado"
+            element={
+              <ProtectedRoute path="/inventario-valorizado">
+                <ValuatedInventoryPage />
               </ProtectedRoute>
             }
           />

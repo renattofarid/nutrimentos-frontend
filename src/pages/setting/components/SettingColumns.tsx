@@ -21,7 +21,7 @@ export const SettingColumns = ({
   },
   {
     accessorKey: "branch_name",
-    header: "Sucursal",
+    header: "Tienda",
   },
   {
     accessorKey: "default_currency",

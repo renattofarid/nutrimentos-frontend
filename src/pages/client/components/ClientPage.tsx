@@ -32,8 +32,9 @@ export default function ClientPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [roleAssignmentPerson, setRoleAssignmentPerson] =
     useState<PersonResource | null>(null);
-  const [priceListPerson, setPriceListPerson] =
-    useState<PersonResource | null>(null);
+  const [priceListPerson, setPriceListPerson] = useState<PersonResource | null>(
+    null
+  );
   const [assignPriceListPerson, setAssignPriceListPerson] =
     useState<PersonResource | null>(null);
   const { data, meta, isLoading, refetch } = useClients();
@@ -99,6 +100,7 @@ export default function ClientPage() {
           onAssignPriceList: handleAssignPriceList,
           // onManageRoles: handleManageRoles,
         })}
+        isClientTable
         data={data || []}
       >
         <PersonOptions search={search} setSearch={setSearch} />
@@ -156,8 +158,8 @@ export default function ClientPage() {
           open={true}
           onOpenChange={(open) => !open && setDeleteId(null)}
           onConfirm={handleDelete}
-        // title={`Eliminar ${MODEL.name}`}
-        // description={`¿Está seguro de que desea eliminar este ${MODEL.name.toLowerCase()}? Esta acción no se puede deshacer.`}
+          // title={`Eliminar ${MODEL.name}`}
+          // description={`¿Está seguro de que desea eliminar este ${MODEL.name.toLowerCase()}? Esta acción no se puede deshacer.`}
         />
       )}
     </div>

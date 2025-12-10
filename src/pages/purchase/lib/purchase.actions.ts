@@ -265,3 +265,31 @@ export const deletePurchasePayment = async (
   );
   return response.data;
 };
+
+// ============================================
+// PURCHASE - Export Actions
+// ============================================
+
+export interface ExportPurchasesParams {
+  company_id?: number;
+  document_number?: string;
+  document_type?: string;
+  end_date?: string;
+  export?: "excel" | "pdf";
+  payment_type?: string;
+  reference_number?: string;
+  start_date?: string;
+  status?: string;
+  supplier_id?: number;
+  warehouse_id?: number;
+}
+
+export const exportPurchases = async (
+  params?: ExportPurchasesParams
+): Promise<Blob> => {
+  const response = await api.get(`${PURCHASE_ENDPOINT}/export`, {
+    params: { ...params, export: "excel" },
+    responseType: "blob",
+  });
+  return response.data;
+};

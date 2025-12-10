@@ -17,6 +17,9 @@ import { login } from "../lib/auth.actions";
 import { errorToast, successToast } from "@/lib/core.function";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAllCompanies } from "@/pages/company/lib/company.hook";
+import { FormSelect } from "@/components/FormSelect";
+import { useMemo } from "react";
 
 const formSchema = z.object({
   username: z
@@ -27,18 +30,37 @@ const formSchema = z.object({
     .string()
     .nonempty("La contraseña no puede estar vacía")
     .max(50, "La contraseña no puede tener más de 50 caracteres"),
+  company_id: z.string().nonempty("Debe seleccionar una empresa"),
 });
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { data: companies, isLoading: isLoadingCompanies } = useAllCompanies();
+
+  const companyOptions = useMemo(() => {
+    if (!companies) return [];
+    return companies.map((company) => ({
+      value: company.id.toString(),
+      label: company.trade_name || company.social_reason,
+      description: company.ruc,
+    }));
+  }, [companies]);
+
+  console.log("Companies:", companyOptions);
+
+  const companiesMock = [
+    { value: "1", label: "Empresa A", description: "RUC: 1234567890" },
+    { value: "2", label: "Empresa B", description: "RUC: 0987654321" },
+  ];
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "",
       password: "",
+      company_id: "1",
     },
   });
 
@@ -47,6 +69,7 @@ export default function LoginPage() {
       await login({
         username: data.username,
         password: data.password,
+        company_id: Number(data.company_id),
       });
       successToast("Inicio de sesión exitoso");
       navigate("/inicio");
@@ -136,6 +159,19 @@ export default function LoginPage() {
                       <FormMessage className="text-xs" />
                     </FormItem>
                   )}
+                />
+
+                <FormSelect
+                  name="company_id"
+                  label="Empresa"
+                  placeholder={
+                    isLoadingCompanies
+                      ? "Cargando empresas..."
+                      : "Selecciona una empresa"
+                  }
+                  options={companiesMock}
+                  control={form.control}
+                  disabled={isLoadingCompanies}
                 />
               </div>
 

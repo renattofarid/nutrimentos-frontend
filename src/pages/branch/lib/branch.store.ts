@@ -44,7 +44,7 @@ export const useBranchStore = create<BranchStore>((set) => ({
       const { data, meta } = await getBranch({ params });
       set({ branches: data, meta: meta, isLoading: false });
     } catch (err) {
-      set({ error: "Error al cargar sucursales", isLoading: false });
+      set({ error: "Error al cargar tiendas", isLoading: false });
     }
   },
 
@@ -54,7 +54,7 @@ export const useBranchStore = create<BranchStore>((set) => ({
       const data = await getAllBranches();
       set({ allBranches: data, isLoadingAll: false });
     } catch (err) {
-      set({ error: "Error al cargar sucursales", isLoadingAll: false });
+      set({ error: "Error al cargar tiendas", isLoadingAll: false });
     }
   },
 
@@ -64,7 +64,7 @@ export const useBranchStore = create<BranchStore>((set) => ({
       const { data } = await findBranchById(id);
       set({ branch: data, isFinding: false });
     } catch (err) {
-      set({ error: "Error al cargar la sucursal", isFinding: false });
+      set({ error: "Error al cargar la tienda", isFinding: false });
     }
   },
 
@@ -73,7 +73,7 @@ export const useBranchStore = create<BranchStore>((set) => ({
     try {
       await storeBranch(data);
     } catch (err) {
-      set({ error: "Error al crear la Sucursal" });
+      set({ error: "Error al crear la Tienda" });
       throw err;
     } finally {
       set({ isSubmitting: false });
@@ -85,7 +85,7 @@ export const useBranchStore = create<BranchStore>((set) => ({
     try {
       await updateBranch(id, data);
     } catch (err) {
-      set({ error: "Error al actualizar la Sucursal" });
+      set({ error: "Error al actualizar la Tienda" });
       throw err;
     } finally {
       set({ isSubmitting: false });

@@ -23,7 +23,11 @@ export const SaleAddPage = () => {
 
   const { data: companies, isLoading: companiesLoading } = useAllCompanies();
   const { data: branches, isLoading: branchesLoading } = useAllBranches();
-  const { data: customers, isLoading: customersLoading } = useClients();
+  const {
+    data: customers,
+    isLoading: customersLoading,
+    refetch: onRefreshClients,
+  } = useClients();
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
 
@@ -42,8 +46,6 @@ export const SaleAddPage = () => {
     customer_id: "",
     warehouse_id: "",
     document_type: "",
-    serie: "",
-    numero: "",
     issue_date: "",
     payment_type: "",
     currency: "",
@@ -107,6 +109,7 @@ export const SaleAddPage = () => {
             warehouses={warehouses}
             products={products}
             onCancel={() => navigate("/ventas")}
+            onRefreshClients={onRefreshClients}
           />
         )}
     </FormWrapper>

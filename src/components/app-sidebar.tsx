@@ -6,6 +6,8 @@ import {
   Package,
   ShoppingBag,
   DollarSign,
+  Activity,
+  Warehouse,
 } from "lucide-react";
 import {
   Sidebar,
@@ -49,6 +51,7 @@ import { SaleRoute } from "@/pages/sale/lib/sale.interface";
 import { BOX_SHIFT } from "@/pages/box-shift/lib/box-shift.interface";
 import { AccountsReceivableRoute } from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
 import { ACCOUNTS_PAYABLE } from "@/pages/accounts-payable/lib/accounts-payable.interface";
+import { WAREHOUSE_DOCUMENT } from "@/pages/warehouse-document/lib/warehouse-document.interface";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -187,6 +190,12 @@ const {
   ROUTE: PurchaseRoute,
   MODEL: { name: PurchaseTitle },
 } = PURCHASE;
+
+const {
+  ICON_REACT: WarehouseDocumentIcon,
+  ROUTE: WarehouseDocumentRoute,
+  MODEL: { plural: WarehouseDocumentTitle },
+} = WAREHOUSE_DOCUMENT;
 
 const {
   ICON_REACT: GuideIcon,
@@ -338,6 +347,21 @@ const data = {
       url: "#",
       icon: BoxIcon,
       items: [
+        {
+          title: WarehouseDocumentTitle,
+          url: WarehouseDocumentRoute,
+          icon: WarehouseDocumentIcon,
+        },
+        {
+          title: "Kardex",
+          url: "/kardex",
+          icon: Activity,
+        },
+        {
+          title: "Inventario Valorizado",
+          url: "/inventario-valorizado",
+          icon: Warehouse,
+        },
         {
           title: BoxTitle,
           url: BoxRoute,

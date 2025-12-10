@@ -15,6 +15,7 @@ import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { usePurchaseStore } from "../lib/purchase.store";
 import type { PurchaseSchema } from "../lib/purchase.schema";
 import { PURCHASE } from "../lib/purchase.interface";
+import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 
 export default function PurchaseAddPage() {
   const navigate = useNavigate();
@@ -22,14 +23,21 @@ export default function PurchaseAddPage() {
   const { MODEL, ICON } = PURCHASE;
 
   const { data: companies, isLoading: companiesLoading } = useAllCompanies();
-  const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
+  const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({
+    role_names: [SUPPLIER_ROLE_CODE],
+  });
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
+  const { data: branches, isLoading: branchesLoading } = useAllBranches();
   const { data: products, isLoading: productsLoading } = useAllProducts();
 
   const { createPurchase } = usePurchaseStore();
 
   const isLoading =
-    companiesLoading || !suppliers || warehousesLoading || productsLoading;
+    companiesLoading ||
+    !suppliers ||
+    warehousesLoading ||
+    productsLoading ||
+    branchesLoading;
 
   const getDefaultValues = (): Partial<PurchaseSchema> => ({
     company_id: "",
@@ -97,6 +105,7 @@ export default function PurchaseAddPage() {
             suppliers={suppliers}
             warehouses={warehouses}
             products={products}
+            branches={branches ?? []}
             onCancel={() => navigate("/compras")}
             onRefreshSuppliers={refetchSuppliers}
           />

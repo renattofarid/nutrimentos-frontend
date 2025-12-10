@@ -21,7 +21,7 @@ export const boxSchemaCreate = z.object({
     .regex(/^[0-9]+$/, {
       message: "La serie solo debe contener números",
     }),
-  branch_id: requiredStringId("La sucursal es requerida"),
+  branch_id: requiredStringId("La tienda es requerida"),
   status: z.enum(["Activo", "Inactivo"]).default("Activo"),
 });
 

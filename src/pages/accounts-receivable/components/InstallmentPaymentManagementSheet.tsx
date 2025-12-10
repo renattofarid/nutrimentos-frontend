@@ -28,7 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Wallet, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import type { SaleInstallmentResource } from "@/pages/sale/lib/sale.interface";
 import { deleteInstallmentPayment } from "../lib/accounts-receivable.actions";
 import { createSalePayment } from "@/pages/sale/lib/sale.actions";
@@ -198,7 +198,7 @@ export default function InstallmentPaymentManagementSheet({
         open={open}
         onClose={onClose}
         title={`Gestionar Cuota ${installment.installment_number}`}
-        icon={<Wallet className="h-5 w-5" />}
+        icon="Wallet"
         className="overflow-y-auto w-full sm:max-w-3xl p-4"
       >
         <div className="space-y-6">

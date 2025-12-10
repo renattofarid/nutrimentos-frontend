@@ -52,6 +52,7 @@ export type PurchaseInstallmentSchema = z.infer<
 
 export const purchaseSchemaCreate = z.object({
   company_id: requiredStringId("Debe seleccionar una empresa"),
+  branch_id: requiredStringId("Debe seleccionar una tienda"),
   supplier_id: optionalStringId("Proveedor inválido"),
   warehouse_id: requiredStringId("Debe seleccionar un almacén"),
   purchase_order_id: z.string().optional().nullable(),
@@ -62,6 +63,7 @@ export const purchaseSchemaCreate = z.object({
     .string()
     .min(1, { message: "El número de documento es requerido" })
     .max(50),
+  reference_number: z.string().optional().default(""),
   issue_date: z
     .string()
     .min(1, { message: "La fecha de emisión es requerida" })
@@ -84,7 +86,12 @@ export const purchaseSchemaCreate = z.object({
     .string()
     .min(1, { message: "Debe seleccionar un tipo de pago" }),
   include_igv: z.boolean(),
+  include_cost_account: z.boolean().optional().default(true),
   currency: z.string().min(1, { message: "Debe seleccionar una moneda" }),
+  discount_global: z.number().optional().default(0),
+  freight_cost: z.number().optional().default(0),
+  loading_cost: z.number().optional().default(0),
+  observations: z.string().optional().default(""),
   details: z
     .array(purchaseDetailSchema)
     .min(1, { message: "Debe agregar al menos un detalle" }),

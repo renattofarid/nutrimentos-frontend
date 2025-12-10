@@ -35,7 +35,7 @@ const PRICE_CATEGORIES = [
 // Schema de validación para el formulario
 const productPriceSchema = z.object({
   product_id: z.number(),
-  branch_id: z.string().min(1, "Debe seleccionar una sucursal"),
+  branch_id: z.string().min(1, "Debe seleccionar una tienda"),
   category: z.enum(["LISTA 1", "LISTA 2", "LISTA 3", "LISTA 4", "LISTA 5"]),
   price_soles: z.number().min(0, "El precio en soles debe ser mayor o igual a 0"),
   price_usd: z.number().min(0, "El precio en USD debe ser mayor o igual a 0"),
@@ -209,7 +209,7 @@ export function ProductPriceManager({
                   </div>
 
                   <div className="flex-1 min-w-0 space-y-2">
-                    {/* Nombre de sucursal y categoría */}
+                    {/* Nombre de tienda y categoría */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       <h4 className="font-medium text-sm sm:text-base truncate min-w-0 max-w-full">
                         {price.branch_name}
@@ -272,7 +272,7 @@ export function ProductPriceManager({
             No hay precios configurados
           </h3>
           <p className="text-muted-foreground mb-4 text-sm sm:text-base max-w-md mx-auto">
-            Configura los precios para este producto por sucursal y categoría
+            Configura los precios para este producto por tienda y categoría
           </p>
           <Button
             variant="outline"
@@ -300,8 +300,8 @@ export function ProductPriceManager({
                   <FormSelect
                     control={form.control}
                     name="branch_id"
-                    label="Sucursal"
-                    placeholder="Seleccionar sucursal"
+                    label="Tienda"
+                    placeholder="Seleccionar tienda"
                     options={branches?.map((branch) => ({
                       value: branch.id.toString(),
                       label: branch.name,

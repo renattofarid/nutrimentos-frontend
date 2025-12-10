@@ -51,7 +51,7 @@ export const warehouseSchemaCreate = z.object({
     .max(255, {
       message: "El email no puede tener más de 255 caracteres",
     }),
-  branch_id: requiredStringId("sucursal"),
+  branch_id: requiredStringId("tienda"),
   is_accounting: z.boolean({
     error: "Debe especificar si lleva contabilidad",
   }),

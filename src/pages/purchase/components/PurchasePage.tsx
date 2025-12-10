@@ -21,6 +21,7 @@ import type {
 import { usePurchase } from "../lib/purchase.hook";
 import { usePurchaseStore } from "../lib/purchase.store";
 import { PurchaseTable } from "./PurchaseTable";
+import { exportPurchases } from "../lib/purchase.actions";
 
 export default function PurchasePage() {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ export default function PurchasePage() {
   const [selectedInstallment, setSelectedInstallment] =
     useState<PurchaseInstallmentResource | null>(null);
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const filterParams = {
     page,
@@ -161,6 +163,41 @@ export default function PurchasePage() {
     await refetch(filterParams);
   };
 
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const exportParams = {
+        ...(selectedStatus && { status: selectedStatus }),
+        ...(selectedPaymentType && { payment_type: selectedPaymentType }),
+      };
+
+      const blob = await exportPurchases(exportParams);
+
+      // Crear un enlace de descarga
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+
+      // Generar nombre de archivo con fecha actual
+      const fecha = new Date().toISOString().split("T")[0];
+      link.download = `compras_${fecha}.xlsx`;
+
+      document.body.appendChild(link);
+      link.click();
+
+      // Limpiar
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      successToast("Exportación exitosa", "El archivo Excel se ha descargado correctamente");
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message ?? "Error al exportar el archivo";
+      errorToast(errorMessage);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -169,7 +206,11 @@ export default function PurchasePage() {
           subtitle="Gestión de compras y pagos"
           icon="ShoppingCart"
         />
-        <PurchaseActions onCreatePurchase={handleCreatePurchase} />
+        <PurchaseActions
+          onCreatePurchase={handleCreatePurchase}
+          onExport={handleExport}
+          isExporting={isExporting}
+        />
       </div>
 
       <PurchaseTable

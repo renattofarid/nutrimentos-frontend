@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CreditCard } from "lucide-react";
 import type {
   SaleInstallmentResource,
   SalePaymentResource,
@@ -75,7 +74,7 @@ export default function InstallmentPaymentsSheet({
       open={open}
       onClose={onClose}
       title={`Pagos de Cuota ${installment.installment_number}`}
-      icon={<CreditCard className="h-5 w-5" />}
+      icon="CreditCard"
       className="overflow-y-auto w-full p-4 sm:max-w-2xl"
     >
       <div className="space-y-6">

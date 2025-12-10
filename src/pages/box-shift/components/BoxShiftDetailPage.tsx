@@ -153,7 +153,7 @@ export default function BoxShiftDetailPage() {
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
           <h2 className="text-xl font-semibold">Movimientos del Turno</h2>
           {shift.is_open && (
-            <div className="w-full flex justify-end">
+            <div className="w-full md:w-auto flex justify-end">
               <Button size={"sm"} onClick={() => setCreateMovementModal(true)}>
                 Registrar Movimiento
               </Button>

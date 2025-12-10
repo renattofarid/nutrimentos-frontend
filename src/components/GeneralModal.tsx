@@ -99,7 +99,7 @@ export function GeneralModal({
           className={cn(
             sizes[size],
             className,
-            "px-4 pb-4 flex flex-col max-h-[96vh]"
+            "pb-0 flex flex-col max-h-[96vh]"
           )}
         >
           <DrawerHeader className="flex-shrink-0 p-2">
@@ -109,10 +109,10 @@ export function GeneralModal({
                   <IconComponent className="size-5" />
                 </div>
               )}
-              <div>
+              <div className="flex flex-col items-start">
                 {title && <DrawerTitle>{title}</DrawerTitle>}
                 {subtitle && (
-                  <p className="text-sm text-start text-muted-foreground">
+                  <p className="text-xs text-start text-muted-foreground">
                     {subtitle}
                   </p>
                 )}
@@ -121,7 +121,7 @@ export function GeneralModal({
             <DrawerClose onClick={onClose} />
           </DrawerHeader>
           <div
-            className="mt-4 overflow-y-auto flex-1 min-h-0"
+            className="mt-4 overflow-y-auto flex-1 min-h-0 py-4 px-4"
             data-vaul-no-drag
           >
             {children}

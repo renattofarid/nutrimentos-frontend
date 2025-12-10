@@ -52,6 +52,7 @@ export type PurchaseInstallmentSchema = z.infer<
 
 export const purchaseSchemaCreate = z.object({
   company_id: requiredStringId("Debe seleccionar una empresa"),
+  branch_id: requiredStringId("Debe seleccionar una sucursal"),
   supplier_id: optionalStringId("Proveedor inválido"),
   warehouse_id: requiredStringId("Debe seleccionar un almacén"),
   purchase_order_id: z.string().optional().nullable(),

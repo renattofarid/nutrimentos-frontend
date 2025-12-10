@@ -46,6 +46,7 @@ import {
   type PurchaseResource,
 } from "../lib/purchase.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
+import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 
 interface PurchaseFormProps {
   defaultValues: Partial<PurchaseSchema>;
@@ -58,6 +59,7 @@ interface PurchaseFormProps {
   products: ProductResource[];
   purchase?: PurchaseResource;
   companies?: CompanyResource[];
+  branches?: BranchResource[];
   onRefreshSuppliers?: () => void;
 }
 
@@ -86,6 +88,7 @@ export const PurchaseForm = ({
   warehouses,
   products,
   companies,
+  branches,
   onRefreshSuppliers,
 }: PurchaseFormProps) => {
   // Estado para el diálogo de proveedor
@@ -542,6 +545,11 @@ export const PurchaseForm = ({
     });
   };
 
+  const selectedCompanyId = form.watch("company_id");
+  const branchesFiltered = branches?.filter(
+    (b) => b.company_id.toString() === selectedCompanyId
+  );
+
   return (
     <Form {...form}>
       <form
@@ -554,7 +562,6 @@ export const PurchaseForm = ({
           icon={Users2}
           cols={{ sm: 1, md: 2, lg: 3 }}
         >
-          {/* Proveedor y Almacén */}
           <FormSelect
             control={form.control}
             label="Empresa"
@@ -570,6 +577,22 @@ export const PurchaseForm = ({
             withValue={false}
           />
 
+          <FormSelect
+            control={form.control}
+            label="Sucursal"
+            name="branch_id"
+            placeholder="Seleccione una sucursal"
+            options={
+              branchesFiltered?.map((branch) => ({
+                value: branch.id.toString(),
+                label: branch.name,
+                description: branch.address,
+              })) || []
+            }
+            withValue={false}
+          />
+
+          {/* Proveedor y Almacén */}
           <div className="flex gap-2 items-end">
             <div className="truncate! flex-1">
               <FormSelect

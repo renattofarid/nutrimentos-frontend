@@ -6,6 +6,7 @@ import type { AuthResponse } from "./auth.interface";
 export interface LoginBody {
   username: string;
   password: string;
+  company_id: number;
 }
 
 export async function login(body: LoginBody): Promise<AuthResponse> {

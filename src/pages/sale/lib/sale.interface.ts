@@ -173,8 +173,6 @@ export interface CreateSaleRequest {
   customer_id: number;
   warehouse_id: number;
   document_type: string;
-  serie: string;
-  numero: string;
   issue_date: string;
   payment_type: string;
   currency: string;
@@ -194,8 +192,6 @@ export interface UpdateSaleRequest {
   customer_id?: number;
   warehouse_id?: number;
   document_type?: string;
-  serie?: string;
-  numero?: string;
   issue_date?: string;
   payment_type?: string;
   currency?: string;

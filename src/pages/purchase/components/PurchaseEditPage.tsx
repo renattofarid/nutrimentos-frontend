@@ -15,6 +15,7 @@ import { usePurchaseStore } from "../lib/purchase.store";
 import { PURCHASE, type PurchaseResource } from "../lib/purchase.interface";
 import type { PurchaseSchema } from "../lib/purchase.schema";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
+import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 
 export default function PurchaseEditPage() {
   const { ICON } = PURCHASE;
@@ -28,6 +29,7 @@ export default function PurchaseEditPage() {
   });
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
+  const { data: branches, isLoading: branchesLoading } = useAllBranches();
 
   const { updatePurchase, fetchPurchase, purchase, isFinding } =
     usePurchaseStore();
@@ -37,6 +39,7 @@ export default function PurchaseEditPage() {
     !suppliers ||
     warehousesLoading ||
     productsLoading ||
+    branchesLoading ||
     isFinding;
 
   useEffect(() => {
@@ -143,6 +146,7 @@ export default function PurchaseEditPage() {
             warehouses={warehouses}
             products={products}
             purchase={purchase}
+            branches={branches ?? []}
             onCancel={() => navigate("/compras")}
             onRefreshSuppliers={refetchSuppliers}
           />

@@ -59,7 +59,7 @@ interface PurchaseFormProps {
   products: ProductResource[];
   purchase?: PurchaseResource;
   companies?: CompanyResource[];
-  branches?: BranchResource[];
+  branches: BranchResource[];
   onRefreshSuppliers?: () => void;
 }
 

@@ -7,7 +7,7 @@ interface Props {
   data: PersonResource[];
   children?: React.ReactNode;
   isLoading?: boolean;
-  isClientTable: boolean;
+  isClientTable?: boolean;
 }
 
 export default function PersonTable({

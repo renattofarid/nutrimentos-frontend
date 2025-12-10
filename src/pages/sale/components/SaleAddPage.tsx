@@ -46,8 +46,6 @@ export const SaleAddPage = () => {
     customer_id: "",
     warehouse_id: "",
     document_type: "",
-    serie: "",
-    numero: "",
     issue_date: "",
     payment_type: "",
     currency: "",

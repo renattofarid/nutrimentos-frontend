@@ -20,7 +20,6 @@ import { DatePickerFormField } from "@/components/DatePickerFormField";
 import type { SaleInstallmentResource } from "../lib/sale.interface";
 import { createSalePayment } from "../lib/sale.actions";
 import { errorToast, successToast } from "@/lib/core.function";
-import { Wallet } from "lucide-react";
 import { dateStringSchema } from "@/lib/core.schema";
 import { format } from "date-fns";
 
@@ -156,7 +155,7 @@ export default function InstallmentPaymentDialog({
       onClose={onClose}
       title={`Registrar Pago - Cuota ${installment.installment_number}`}
       className="w-full sm:max-w-2xl overflow-y-auto p-4"
-      icon={<Wallet className="w-5 h-5" />}
+      icon="Wallet"
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

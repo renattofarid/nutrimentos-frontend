@@ -73,8 +73,6 @@ export const SaleEditPage = () => {
     customer_id: data.customer_id?.toString(),
     warehouse_id: data.warehouse_id?.toString(),
     document_type: data.document_type,
-    serie: data.serie,
-    numero: data.numero,
     issue_date: data.issue_date.split("T")[0],
     payment_type: data.payment_type,
     currency: data.currency,

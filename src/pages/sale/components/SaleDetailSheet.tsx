@@ -2,7 +2,6 @@ import GeneralSheet from "@/components/GeneralSheet";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  ShoppingBag,
   FileText,
   User,
   Warehouse,
@@ -56,7 +55,7 @@ export default function SaleDetailSheet({
       open={open}
       onClose={onClose}
       title={`Venta #${sale.id}`}
-      icon={<ShoppingBag className="h-5 w-5" />}
+      icon="ShoppingBag"
       className="overflow-y-auto p-2 !gap-0 w-full sm:max-w-3xl"
     >
       <div className="space-y-4 p-4">

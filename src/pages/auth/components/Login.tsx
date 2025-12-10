@@ -30,9 +30,7 @@ const formSchema = z.object({
     .string()
     .nonempty("La contraseña no puede estar vacía")
     .max(50, "La contraseña no puede tener más de 50 caracteres"),
-  company_id: z
-    .string()
-    .nonempty("Debe seleccionar una empresa"),
+  company_id: z.string().nonempty("Debe seleccionar una empresa"),
 });
 
 export default function LoginPage() {
@@ -49,6 +47,13 @@ export default function LoginPage() {
       description: company.ruc,
     }));
   }, [companies]);
+
+  console.log("Companies:", companyOptions);
+
+  const companiesMock = [
+    { value: "1", label: "Empresa A", description: "RUC: 1234567890" },
+    { value: "2", label: "Empresa B", description: "RUC: 0987654321" },
+  ];
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -164,7 +169,7 @@ export default function LoginPage() {
                       ? "Cargando empresas..."
                       : "Selecciona una empresa"
                   }
-                  options={companyOptions}
+                  options={companiesMock}
                   control={form.control}
                   disabled={isLoadingCompanies}
                 />

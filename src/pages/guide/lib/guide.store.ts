@@ -138,9 +138,13 @@ export const useGuideStore = create<GuideStore>((set) => ({
         driver_name: data.driver_name || null,
         driver_license: data.driver_license || null,
         origin_address: data.origin_address,
-        origin_ubigeo: data.origin_ubigeo,
+        ubigeo_origin_id: data.ubigeo_origin_id
+          ? Number(data.ubigeo_origin_id)
+          : 0,
         destination_address: data.destination_address,
-        destination_ubigeo: data.destination_ubigeo,
+        ubigeo_destination_id: data.ubigeo_destination_id
+          ? Number(data.ubigeo_destination_id)
+          : 0,
         unit_measurement: data.unit_measurement,
         total_weight: Number(data.total_weight),
         total_packages: Number(data.total_packages),
@@ -206,12 +210,14 @@ export const useGuideStore = create<GuideStore>((set) => ({
           driver_license: data.driver_license || null,
         }),
         ...(data.origin_address && { origin_address: data.origin_address }),
-        ...(data.origin_ubigeo && { origin_ubigeo: data.origin_ubigeo }),
+        ...(data.ubigeo_origin_id && {
+          ubigeo_origin_id: Number(data.ubigeo_origin_id),
+        }),
         ...(data.destination_address && {
           destination_address: data.destination_address,
         }),
-        ...(data.destination_ubigeo && {
-          destination_ubigeo: data.destination_ubigeo,
+        ...(data.ubigeo_destination_id && {
+          ubigeo_destination_id: Number(data.ubigeo_destination_id),
         }),
         ...(data.unit_measurement && {
           unit_measurement: data.unit_measurement,

@@ -157,9 +157,9 @@ export interface CreateGuideRequest {
   driver_name?: string | null;
   driver_license?: string | null;
   origin_address: string;
-  origin_ubigeo: string;
+  ubigeo_origin_id: number;
   destination_address: string;
-  destination_ubigeo: string;
+  ubigeo_destination_id: number;
   unit_measurement: string;
   total_weight: number;
   total_packages: number;
@@ -188,9 +188,9 @@ export interface UpdateGuideRequest {
   driver_name?: string | null;
   driver_license?: string | null;
   origin_address?: string;
-  origin_ubigeo?: string;
+  ubigeo_origin_id?: number;
   destination_address?: string;
-  destination_ubigeo?: string;
+  ubigeo_destination_id?: number;
   unit_measurement?: string;
   total_weight?: number;
   total_packages?: number;

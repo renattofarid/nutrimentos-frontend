@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback } from "react";
 import {
   Form,
   FormField,
@@ -22,11 +23,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader, Plus, Trash2, Pencil, Truck, MapPin } from "lucide-react";
+import { Loader, Plus, Trash2, Pencil, Truck, MapPin, Search } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
+import { SelectSearchForm } from "@/components/SelectSearchForm";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { guideSchema, type GuideSchema } from "../lib/guide.schema";
+import { searchUbigeos } from "../lib/ubigeo.actions";
+import type { UbigeoResource } from "../lib/ubigeo.interface";
+import { searchRUC, searchDNI, isValidData } from "@/lib/document-search.service";
 import {
   MODALITIES,
   CARRIER_DOCUMENT_TYPES,
@@ -91,6 +96,50 @@ export const GuideForm = ({
   });
   const [localProducts] = useState<ProductResource[]>(products);
 
+  // Estado local para ubigeos de origen
+  const [originUbigeos, setOriginUbigeos] = useState<UbigeoResource[]>([]);
+  const [isSearchingOrigin, setIsSearchingOrigin] = useState(false);
+
+  // Estado local para ubigeos de destino
+  const [destinationUbigeos, setDestinationUbigeos] = useState<UbigeoResource[]>([]);
+  const [isSearchingDestination, setIsSearchingDestination] = useState(false);
+
+  const formatUbigeoLabel = (ubigeo: UbigeoResource): string => {
+    const parts = ubigeo.cadena.split("-");
+    if (parts.length >= 4) {
+      return `${parts[1]} > ${parts[2]} > ${parts[3]}`;
+    }
+    return ubigeo.cadena;
+  };
+
+  // Función para buscar ubigeos de origen
+  const handleSearchOriginUbigeos = useCallback(async (cadena?: string) => {
+    setIsSearchingOrigin(true);
+    try {
+      const response = await searchUbigeos(cadena, 15);
+      setOriginUbigeos(response.data);
+    } catch (error) {
+      console.error("Error searching origin ubigeos:", error);
+      setOriginUbigeos([]);
+    } finally {
+      setIsSearchingOrigin(false);
+    }
+  }, []);
+
+  // Función para buscar ubigeos de destino
+  const handleSearchDestinationUbigeos = useCallback(async (cadena?: string) => {
+    setIsSearchingDestination(true);
+    try {
+      const response = await searchUbigeos(cadena, 15);
+      setDestinationUbigeos(response.data);
+    } catch (error) {
+      console.error("Error searching destination ubigeos:", error);
+      setDestinationUbigeos([]);
+    } finally {
+      setIsSearchingDestination(false);
+    }
+  }, []);
+
   const detailTempForm = useForm({
     defaultValues: {
       temp_product_id: currentDetail.product_id,
@@ -115,6 +164,15 @@ export const GuideForm = ({
   const selectedDescription = detailTempForm.watch("temp_description");
 
   const selectedBranchId = form.watch("branch_id");
+  const carrierRuc = form.watch("carrier_ruc");
+  const carrierDocumentType = form.watch("carrier_document_type");
+
+  // Sincronizar carrier_ruc con carrier_document_number cuando el tipo es RUC
+  useEffect(() => {
+    if (carrierDocumentType === "RUC" && carrierRuc) {
+      form.setValue("carrier_document_number", carrierRuc);
+    }
+  }, [carrierRuc, carrierDocumentType, form]);
 
   // Inicializar detalles y cuotas desde defaultValues (para modo edición)
   useEffect(() => {
@@ -171,6 +229,44 @@ export const GuideForm = ({
     selectedUnitCode,
     selectedDescription,
   ]);
+
+  // Función para buscar RUC del transportista
+  const handleSearchCarrierRUC = async () => {
+    const ruc = form.getValues("carrier_ruc");
+    if (!ruc || ruc.length !== 11) {
+      return;
+    }
+
+    try {
+      const result = await searchRUC({ search: ruc });
+      if (result && isValidData(result.message) && result.data) {
+        form.setValue("carrier_name", result.data.business_name || "");
+        form.setValue("carrier_document_number", result.data.number_document || "");
+        form.setValue("carrier_document_type", "RUC");
+      }
+    } catch (error) {
+      console.error("Error searching RUC:", error);
+    }
+  };
+
+  // Función para buscar DNI del conductor
+  const handleSearchDriverDNI = async () => {
+    const dni = form.getValues("driver_document_number");
+    if (!dni || dni.length !== 8) {
+      return;
+    }
+
+    try {
+      const result = await searchDNI({ search: dni });
+      if (result && isValidData(result.message) && result.data) {
+        const fullName = `${result.data.names} ${result.data.father_surname} ${result.data.mother_surname}`;
+        form.setValue("driver_name", fullName.trim());
+        form.setValue("driver_document_type", "DNI");
+      }
+    } catch (error) {
+      console.error("Error searching DNI:", error);
+    }
+  };
 
   // Establecer fechas automáticamente
   useEffect(() => {
@@ -270,11 +366,43 @@ export const GuideForm = ({
       description: d.description,
     }));
 
-    onSubmit({
-      ...data,
+    // Crear payload con los campos parseados correctamente
+    const payload = {
+      branch_id: parseInt(data.branch_id),
+      warehouse_id: parseInt(data.warehouse_id),
+      sale_id: data.sale_id ? parseInt(data.sale_id) : null,
+      customer_id: parseInt(data.customer_id),
+      issue_date: data.issue_date,
+      transfer_date: data.transfer_date,
+      modality: data.modality,
+      motive_id: parseInt(data.motive_id),
+      sale_document_number: data.sale_document_number,
+      carrier_document_type: data.carrier_document_type,
+      carrier_document_number: data.carrier_document_number,
+      carrier_name: data.carrier_name,
+      carrier_ruc: data.carrier_ruc,
+      carrier_mtc_number: data.carrier_mtc_number,
+      vehicle_plate: data.vehicle_plate || null,
+      driver_document_type: data.driver_document_type || null,
+      driver_document_number: data.driver_document_number || null,
+      driver_name: data.driver_name || null,
+      driver_license: data.driver_license || null,
+      origin_address: data.origin_address,
+      ubigeo_origin_id: parseInt(data.ubigeo_origin_id),
+      destination_address: data.destination_address,
+      ubigeo_destination_id: parseInt(data.ubigeo_destination_id),
+      unit_measurement: data.unit_measurement,
+      total_weight: data.total_weight,
+      total_packages: data.total_packages,
+      observations: data.observations || "",
       details: formattedDetails,
-    });
+    };
+
+    console.log("✅ Payload final siendo enviado:", payload);
+    onSubmit(payload);
   };
+
+  const selectedWarehouseId = form.watch("warehouse_id");
 
   return (
     <Form {...form}>
@@ -408,8 +536,14 @@ export const GuideForm = ({
                     variant="default"
                     placeholder="Ej: 20123456789"
                     {...field}
+                    disabled={carrierDocumentType === "RUC"}
                   />
                 </FormControl>
+                {carrierDocumentType === "RUC" && (
+                  <p className="text-xs text-muted-foreground">
+                    Se sincroniza automáticamente con el RUC
+                  </p>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -439,13 +573,24 @@ export const GuideForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>RUC del Transportista</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: 20123456789"
-                    {...field}
-                  />
-                </FormControl>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <Input
+                      variant="default"
+                      placeholder="Ej: 20123456789"
+                      {...field}
+                    />
+                  </FormControl>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleSearchCarrierRUC}
+                    disabled={!field.value || field.value.length !== 11}
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -512,14 +657,25 @@ export const GuideForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Número de Documento</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: 12345678"
-                    {...field}
-                    value={field.value ?? ""}
-                  />
-                </FormControl>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <Input
+                      variant="default"
+                      placeholder="Ej: 12345678"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  </FormControl>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleSearchDriverDNI}
+                    disabled={!field.value || field.value.length !== 8}
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -584,22 +740,21 @@ export const GuideForm = ({
             )}
           />
 
-          <FormField
+          <SelectSearchForm<UbigeoResource>
+            name="ubigeo_origin_id"
+            label="Ubigeo de Origen"
+            placeholder="Buscar ubigeo..."
             control={form.control}
-            name="origin_ubigeo"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Ubigeo de Origen</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: 150101"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            searchPlaceholder="Buscar por nombre o código..."
+            emptyMessage="No se encontraron ubigeos"
+            minSearchLength={2}
+            debounceMs={300}
+            items={originUbigeos}
+            isSearching={isSearchingOrigin}
+            onSearch={handleSearchOriginUbigeos}
+            getItemId={(ubigeo) => ubigeo.id}
+            formatLabel={formatUbigeoLabel}
+            formatDescription={(ubigeo) => ubigeo.ubigeo_code}
           />
 
           <FormField
@@ -616,22 +771,21 @@ export const GuideForm = ({
             )}
           />
 
-          <FormField
+          <SelectSearchForm<UbigeoResource>
+            name="ubigeo_destination_id"
+            label="Ubigeo de Destino"
+            placeholder="Buscar ubigeo..."
             control={form.control}
-            name="destination_ubigeo"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Ubigeo de Destino</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: 150102"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            searchPlaceholder="Buscar por nombre o código..."
+            emptyMessage="No se encontraron ubigeos"
+            minSearchLength={2}
+            debounceMs={300}
+            items={destinationUbigeos}
+            isSearching={isSearchingDestination}
+            onSearch={handleSearchDestinationUbigeos}
+            getItemId={(ubigeo) => ubigeo.id}
+            formatLabel={formatUbigeoLabel}
+            formatDescription={(ubigeo) => ubigeo.ubigeo_code}
           />
         </GroupFormSection>
 
@@ -708,11 +862,19 @@ export const GuideForm = ({
                   name="temp_product_id"
                   label="Producto"
                   placeholder="Seleccione un producto"
-                  options={localProducts.map((product) => ({
-                    value: product.id.toString(),
-                    label: product.name,
-                    description: product.codigo,
-                  }))}
+                  options={products.map((product) => {
+                    const stockInWarehouse = product.stock_warehouse?.find(
+                      (stock) =>
+                        stock.warehouse_id.toString() === selectedWarehouseId
+                    );
+                    return {
+                      value: product.id.toString(),
+                      label: product.name,
+                      description: `${product.codigo} | Stock: ${
+                        stockInWarehouse?.stock ?? 0
+                      }`,
+                    };
+                  })}
                 />
               </Form>
             </div>

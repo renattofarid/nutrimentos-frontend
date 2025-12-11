@@ -14,28 +14,27 @@ import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 import { usePurchaseStore } from "../lib/purchase.store";
 import { PURCHASE, type PurchaseResource } from "../lib/purchase.interface";
 import type { PurchaseSchema } from "../lib/purchase.schema";
-import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
+import { useAuthStore } from "@/pages/auth/lib/auth.store";
 
 export default function PurchaseEditPage() {
   const { ICON } = PURCHASE;
+  const { user } = useAuthStore();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const { data: companies, isLoading: companiesLoading } = useAllCompanies();
   const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({
     role_names: [SUPPLIER_ROLE_CODE],
   });
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
-  const { data: branches, isLoading: branchesLoading } = useAllBranches();
-
+  const { data: branches, isLoading: branchesLoading } = useAllBranches({
+    company_id: user?.company_id.toString(),
+  });
   const { updatePurchase, fetchPurchase, purchase, isFinding } =
     usePurchaseStore();
 
   const isLoading =
-    companiesLoading ||
     !suppliers ||
     warehousesLoading ||
     productsLoading ||
@@ -54,7 +53,6 @@ export default function PurchaseEditPage() {
     data: PurchaseResource
   ): Partial<PurchaseSchema> => {
     return {
-      company_id: data.company_id?.toString(),
       supplier_id: data.supplier_id?.toString(),
       warehouse_id: data.warehouse_id?.toString(),
       purchase_order_id: data.purchase_order_id?.toString() || "",
@@ -128,9 +126,7 @@ export default function PurchaseEditPage() {
         </div>
       </div>
 
-      {companies &&
-        companies.length > 0 &&
-        suppliers &&
+      {suppliers &&
         suppliers.length > 0 &&
         warehouses &&
         warehouses.length > 0 &&
@@ -141,7 +137,6 @@ export default function PurchaseEditPage() {
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
             mode="update"
-            companies={companies}
             suppliers={suppliers}
             warehouses={warehouses}
             products={products}

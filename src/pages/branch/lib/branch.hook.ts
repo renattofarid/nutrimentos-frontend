@@ -2,8 +2,7 @@ import { useEffect } from "react";
 import { useBranchStore } from "./branch.store";
 
 export function useBranch(params?: Record<string, unknown>) {
-  const { branches, meta, isLoading, error, fetchBranches } =
-    useBranchStore();
+  const { branches, meta, isLoading, error, fetchBranches } = useBranchStore();
 
   useEffect(() => {
     if (!branches) fetchBranches(params);
@@ -18,12 +17,12 @@ export function useBranch(params?: Record<string, unknown>) {
   };
 }
 
-export function useAllBranches() {
+export function useAllBranches(params?: Record<string, unknown>) {
   const { allBranches, isLoadingAll, error, fetchAllBranches } =
     useBranchStore();
 
   useEffect(() => {
-    if (!allBranches) fetchAllBranches();
+    if (!allBranches) fetchAllBranches(params);
   }, [allBranches, fetchAllBranches]);
 
   return {

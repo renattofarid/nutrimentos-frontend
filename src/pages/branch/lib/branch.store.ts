@@ -20,7 +20,7 @@ interface BranchStore {
   isFinding: boolean;
   error: string | null;
   isSubmitting: boolean;
-  fetchAllBranches: () => Promise<void>;
+  fetchAllBranches: (params?: Record<string, any>) => Promise<void>;
   fetchBranches: (params?: Record<string, any>) => Promise<void>;
   fetchBranch: (id: number) => Promise<void>;
   createBranch: (data: BranchSchema) => Promise<void>;
@@ -48,10 +48,10 @@ export const useBranchStore = create<BranchStore>((set) => ({
     }
   },
 
-  fetchAllBranches: async () => {
+  fetchAllBranches: async (params?: Record<string, any>) => {
     set({ isLoadingAll: true, error: null });
     try {
-      const data = await getAllBranches();
+      const data = await getAllBranches({ params });
       set({ allBranches: data, isLoadingAll: false });
     } catch (err) {
       set({ error: "Error al cargar tiendas", isLoadingAll: false });

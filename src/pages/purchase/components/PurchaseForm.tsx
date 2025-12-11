@@ -87,7 +87,6 @@ export const PurchaseForm = ({
   suppliers,
   warehouses,
   products,
-  companies,
   branches,
   onRefreshSuppliers,
 }: PurchaseFormProps) => {
@@ -551,11 +550,6 @@ export const PurchaseForm = ({
     });
   };
 
-  const selectedCompanyId = form.watch("company_id");
-  const branchesFiltered = branches?.filter(
-    (b) => b.company_id.toString() === selectedCompanyId
-  );
-
   return (
     <Form {...form}>
       <form
@@ -570,26 +564,11 @@ export const PurchaseForm = ({
         >
           <FormSelect
             control={form.control}
-            label="Empresa"
-            name="company_id"
-            placeholder="Seleccione una empresa"
-            options={
-              companies?.map((company) => ({
-                value: company.id.toString(),
-                label: company.social_reason,
-                description: company.ruc,
-              })) || []
-            }
-            withValue={false}
-          />
-
-          <FormSelect
-            control={form.control}
             label="Tienda"
             name="branch_id"
             placeholder="Seleccione una tienda"
             options={
-              branchesFiltered?.map((branch) => ({
+              branches?.map((branch) => ({
                 value: branch.id.toString(),
                 label: branch.name,
                 description: branch.address,

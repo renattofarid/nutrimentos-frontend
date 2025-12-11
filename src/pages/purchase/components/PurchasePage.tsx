@@ -22,6 +22,7 @@ import { usePurchase } from "../lib/purchase.hook";
 import { usePurchaseStore } from "../lib/purchase.store";
 import { PurchaseTable } from "./PurchaseTable";
 import { exportPurchases } from "../lib/purchase.actions";
+import { useAuthStore } from "@/pages/auth/lib/auth.store";
 
 export default function PurchasePage() {
   const navigate = useNavigate();
@@ -38,8 +39,10 @@ export default function PurchasePage() {
     useState<PurchaseInstallmentResource | null>(null);
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const { user } = useAuthStore();
 
   const filterParams = {
+    company_id: user?.company_id.toString(),
     page,
     search,
     per_page,
@@ -189,9 +192,13 @@ export default function PurchasePage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      successToast("Exportación exitosa", "El archivo Excel se ha descargado correctamente");
+      successToast(
+        "Exportación exitosa",
+        "El archivo Excel se ha descargado correctamente"
+      );
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message ?? "Error al exportar el archivo";
+      const errorMessage =
+        error.response?.data?.message ?? "Error al exportar el archivo";
       errorToast(errorMessage);
     } finally {
       setIsExporting(false);

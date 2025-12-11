@@ -10,13 +10,14 @@ export interface User {
   id: number;
   name: string;
   username: string;
+  company_id: number;
+  company: string;
   person_id: number;
   person: Person;
   rol_id: number;
   rol_name: string;
   boxes: Box[];
 }
-
 export interface Person {
   id: number;
   number_document: string;

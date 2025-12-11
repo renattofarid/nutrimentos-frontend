@@ -14,6 +14,7 @@ import { GUIDE_ENDPOINT, GUIDE_MOTIVE_ENDPOINT } from "./guide.interface";
 // ============================================
 
 export interface GetGuidesParams {
+  company_id?: number;
   page?: number;
   per_page?: number;
   search?: string;
@@ -40,9 +41,7 @@ export const getAllGuides = async (): Promise<GuideResource[]> => {
   return response.data;
 };
 
-export const findGuideById = async (
-  id: number
-): Promise<GuideResourceById> => {
+export const findGuideById = async (id: number): Promise<GuideResourceById> => {
   const response = await api.get<GuideResourceById>(`${GUIDE_ENDPOINT}/${id}`);
   return response.data;
 };
@@ -65,9 +64,7 @@ export const updateGuide = async (
   return response.data;
 };
 
-export const deleteGuide = async (
-  id: number
-): Promise<{ message: string }> => {
+export const deleteGuide = async (id: number): Promise<{ message: string }> => {
   const response = await api.delete<{ message: string }>(
     `${GUIDE_ENDPOINT}/${id}`
   );
@@ -80,5 +77,44 @@ export const deleteGuide = async (
 
 export const getGuideMotives = async (): Promise<GuideMotiveResponse> => {
   const response = await api.get<GuideMotiveResponse>(GUIDE_MOTIVE_ENDPOINT);
+  return response.data;
+};
+
+// ============================================
+// GUIDE EXPORTS - Excel & PDF
+// ============================================
+
+export interface ExportGuidesParams {
+  branch_id?: number | null;
+  company_id?: number | null;
+  customer_id?: number | null;
+  end_date?: string | null;
+  modality?: string | null;
+  motive_id?: number | null;
+  numero?: string | null;
+  sale_id?: number | null;
+  serie?: string | null;
+  start_date?: string | null;
+  status?: string | null;
+  warehouse_id?: number | null;
+}
+
+export const exportGuidesToExcel = async (
+  params?: ExportGuidesParams
+): Promise<Blob> => {
+  const response = await api.get(`${GUIDE_ENDPOINT}/export`, {
+    params,
+    responseType: "blob",
+  });
+  return response.data;
+};
+
+export const exportGuidesToPDF = async (
+  params?: ExportGuidesParams
+): Promise<Blob> => {
+  const response = await api.get(`${GUIDE_ENDPOINT}/export-pdf`, {
+    params,
+    responseType: "blob",
+  });
   return response.data;
 };

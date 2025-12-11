@@ -1,7 +1,6 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import TitleComponent from "@/components/TitleComponent";
 import {
-  ArrowLeft,
   FileText,
   Calendar,
   Truck,
@@ -16,7 +15,6 @@ import {
   Flag,
   FileCheck,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGuideById } from "../lib/guide.hook";
@@ -27,7 +25,6 @@ import { BackButton } from "@/components/BackButton";
 
 export default function GuideDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { data: guide, isFinding } = useGuideById(Number(id));
 
   const { MODEL, ICON, ROUTE } = GUIDE;

@@ -38,7 +38,6 @@ import {
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
-import type { CompanyResource } from "@/pages/company/lib/company.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
@@ -49,7 +48,6 @@ interface GuideFormProps {
   onCancel?: () => void;
   isSubmitting?: boolean;
   mode?: "create" | "update";
-  companies: CompanyResource[];
   branches: BranchResource[];
   warehouses: WarehouseResource[];
   products: ProductResource[];
@@ -72,13 +70,15 @@ export const GuideForm = ({
   onSubmit,
   isSubmitting = false,
   mode = "create",
-  companies,
   branches,
   warehouses,
   products,
   customers,
   motives,
 }: GuideFormProps) => {
+  const [filteredWarehouses, setFilteredWarehouses] = useState<
+    WarehouseResource[]
+  >([]);
   const [details, setDetails] = useState<DetailRow[]>([]);
   const [editingDetailIndex, setEditingDetailIndex] = useState<number | null>(
     null
@@ -113,6 +113,48 @@ export const GuideForm = ({
   const selectedQuantity = detailTempForm.watch("temp_quantity");
   const selectedUnitCode = detailTempForm.watch("temp_unit_code");
   const selectedDescription = detailTempForm.watch("temp_description");
+
+  const selectedBranchId = form.watch("branch_id");
+
+  // Inicializar detalles y cuotas desde defaultValues (para modo edición)
+  useEffect(() => {
+    if (mode === "update" && defaultValues) {
+      if (defaultValues.branch_id) {
+        const filtered = warehouses.filter(
+          (warehouse) =>
+            warehouse.branch_id.toString() === defaultValues.branch_id
+        );
+        setFilteredWarehouses(filtered);
+      }
+      // Disparar validación después de setear valores en modo edición
+      form.trigger();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (selectedBranchId) {
+      const filtered = warehouses.filter(
+        (warehouse) => warehouse.branch_id.toString() === selectedBranchId
+      );
+      setFilteredWarehouses(filtered);
+
+      // Si el warehouse seleccionado no está en la nueva lista filtrada, limpiar
+      const currentWarehouseId = form.getValues("warehouse_id");
+      if (currentWarehouseId) {
+        const isValid = filtered.some(
+          (warehouse) => warehouse.id.toString() === currentWarehouseId
+        );
+        if (!isValid) {
+          form.setValue("warehouse_id", "");
+        }
+      }
+    } else {
+      setFilteredWarehouses([]);
+      form.setValue("warehouse_id", "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBranchId, warehouses]);
 
   // Observers para detalles
   useEffect(() => {
@@ -248,24 +290,13 @@ export const GuideForm = ({
         >
           <FormSelect
             control={form.control}
-            name="company_id"
-            label="Empresa"
-            placeholder="Seleccione una empresa"
-            options={companies.map((company) => ({
-              value: company.id.toString(),
-              label: company.social_reason,
-              description: company.ruc,
-            }))}
-          />
-
-          <FormSelect
-            control={form.control}
             name="branch_id"
             label="Tienda"
             placeholder="Seleccione una tienda"
             options={branches.map((branch) => ({
               value: branch.id.toString(),
               label: branch.name,
+              description: branch.address,
             }))}
           />
 
@@ -274,7 +305,7 @@ export const GuideForm = ({
             name="warehouse_id"
             label="Almacén"
             placeholder="Seleccione un almacén"
-            options={warehouses.map((warehouse) => ({
+            options={filteredWarehouses.map((warehouse) => ({
               value: warehouse.id.toString(),
               label: warehouse.name,
               description: warehouse.address,
@@ -302,7 +333,6 @@ export const GuideForm = ({
             options={motives.map((motive) => ({
               value: motive.id.toString(),
               label: motive.name,
-              description: motive.code,
             }))}
           />
 

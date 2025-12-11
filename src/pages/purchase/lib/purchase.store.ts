@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import type {
   PurchaseResource,
-  Meta,
   CreatePurchaseRequest,
   UpdatePurchaseRequest,
 } from "./purchase.interface";
@@ -22,6 +21,7 @@ import {
   successToast,
 } from "@/lib/core.function";
 import { PURCHASE } from "./purchase.interface";
+import type { Meta } from "@/lib/pagination.interface";
 
 const { MODEL } = PURCHASE;
 
@@ -79,14 +79,7 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await getPurchases(params);
-      const meta: Meta = {
-        current_page: response.current_page,
-        from: response.from,
-        last_page: response.last_page,
-        per_page: response.per_page,
-        to: response.to,
-        total: response.total,
-      };
+      const meta = response.meta;
       set({ purchases: response.data, meta, isLoading: false });
     } catch (error) {
       set({ error: "Error al cargar las compras", isLoading: false });

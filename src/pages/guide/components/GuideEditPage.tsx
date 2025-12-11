@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { GuideForm } from "./GuideForm";
-import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
@@ -29,7 +28,6 @@ export default function GuideEditPage() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { MODEL, ROUTE, ICON } = GUIDE;
-  const { data: companies, isLoading: companiesLoading } = useAllCompanies();
   const { data: branches, isLoading: branchesLoading } = useAllBranches();
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
@@ -47,7 +45,6 @@ export default function GuideEditPage() {
   const { updateGuide, fetchGuide, guide, isFinding } = useGuideStore();
 
   const isLoading =
-    companiesLoading ||
     branchesLoading ||
     warehousesLoading ||
     productsLoading ||
@@ -71,7 +68,6 @@ export default function GuideEditPage() {
 
   const mapGuideToForm = (data: GuideResource): Partial<GuideSchema> => {
     return {
-      company_id: data.company_id?.toString(),
       branch_id: data.branch_id?.toString(),
       warehouse_id: data.warehouse_id?.toString(),
       sale_id: data.sale_id?.toString() || "",
@@ -145,9 +141,7 @@ export default function GuideEditPage() {
         </div>
       </div>
 
-      {companies &&
-        companies.length > 0 &&
-        branches &&
+      {branches &&
         branches.length > 0 &&
         warehouses &&
         warehouses.length > 0 &&
@@ -176,7 +170,6 @@ export default function GuideEditPage() {
             onCancel={() => navigate(ROUTE)}
             isSubmitting={isSubmitting}
             mode="update"
-            companies={companies}
             branches={branches}
             warehouses={warehouses}
             products={products}

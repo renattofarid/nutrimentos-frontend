@@ -90,6 +90,10 @@ export const PurchaseForm = ({
   branches,
   onRefreshSuppliers,
 }: PurchaseFormProps) => {
+  const [filteredWarehouses, setFilteredWarehouses] = useState<
+    WarehouseResource[]
+  >([]);
+
   // Estado para el diálogo de proveedor
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
 
@@ -200,6 +204,16 @@ export const PurchaseForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAmount]);
 
+  useEffect(() => {
+    if (selectedAmount !== currentInstallment.amount) {
+      setCurrentInstallment((prev) => ({
+        ...prev,
+        amount: selectedAmount || "",
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAmount]);
+
   const form = useForm({
     resolver: zodResolver(
       mode === "create" ? purchaseSchemaCreate : purchaseSchemaUpdate
@@ -215,6 +229,48 @@ export const PurchaseForm = ({
     },
     mode: "onChange",
   });
+
+  const selectedBranchId = form.watch("branch_id");
+
+  // Inicializar detalles y cuotas desde defaultValues (para modo edición)
+  useEffect(() => {
+    if (mode === "update" && defaultValues) {
+      if (defaultValues.branch_id) {
+        const filtered = warehouses.filter(
+          (warehouse) =>
+            warehouse.branch_id.toString() === defaultValues.branch_id
+        );
+        setFilteredWarehouses(filtered);
+      }
+      // Disparar validación después de setear valores en modo edición
+      form.trigger();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (selectedBranchId) {
+      const filtered = warehouses.filter(
+        (warehouse) => warehouse.branch_id.toString() === selectedBranchId
+      );
+      setFilteredWarehouses(filtered);
+
+      // Si el warehouse seleccionado no está en la nueva lista filtrada, limpiar
+      const currentWarehouseId = form.getValues("warehouse_id");
+      if (currentWarehouseId) {
+        const isValid = filtered.some(
+          (warehouse) => warehouse.id.toString() === currentWarehouseId
+        );
+        if (!isValid) {
+          form.setValue("warehouse_id", "");
+        }
+      }
+    } else {
+      setFilteredWarehouses([]);
+      form.setValue("warehouse_id", "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBranchId, warehouses]);
 
   // Watch para el tipo de pago y el switch de IGV
   const selectedPaymentType = form.watch("payment_type");
@@ -515,7 +571,11 @@ export const PurchaseForm = ({
     }
 
     // Validar que las cuotas coincidan con el total SOLO si es a crédito
-    if (selectedPaymentType === "CREDITO" && installments.length > 0 && !installmentsMatchTotal()) {
+    if (
+      selectedPaymentType === "CREDITO" &&
+      installments.length > 0 &&
+      !installmentsMatchTotal()
+    ) {
       errorToast(
         `El total de cuotas (${calculateInstallmentsTotal()}) debe ser igual al total de la compra (${calculatePurchaseTotal()})`
       );
@@ -636,7 +696,7 @@ export const PurchaseForm = ({
             name="warehouse_id"
             label="Almacén"
             placeholder="Seleccione un almacén"
-            options={warehouses.map((warehouse) => ({
+            options={filteredWarehouses.map((warehouse) => ({
               value: warehouse.id.toString(),
               label: warehouse.name,
               description: warehouse.address,

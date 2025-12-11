@@ -73,28 +73,9 @@ export interface PurchaseResourceById {
 // ===== API RESPONSES =====
 
 export interface PurchaseResponse {
-  current_page: number;
   data: PurchaseResource[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: { url: string | null; label: string; active: boolean }[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
-}
-
-export interface Meta {
-  current_page: number;
-  from: number;
-  last_page: number;
-  per_page: number;
-  to: number;
-  total: number;
+  meta: Meta;
+  links: Links;
 }
 
 // ===== CREATE/UPDATE REQUESTS =====
@@ -181,19 +162,9 @@ export interface UpdatePurchaseDetailRequest {
 // ===== INSTALLMENT MANAGEMENT =====
 
 export interface PurchaseInstallmentResponse {
-  current_page: number;
   data: PurchaseInstallmentResource[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: { url: string | null; label: string; active: boolean }[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
+  meta: Meta;
+  links: Links;
 }
 
 export interface PurchaseInstallmentResourceById {
@@ -238,19 +209,9 @@ export interface PurchasePaymentResource {
 }
 
 export interface PurchasePaymentResponse {
-  current_page: number;
   data: PurchasePaymentResource[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: { url: string | null; label: string; active: boolean }[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
+  meta: Meta;
+  links: Links;
 }
 
 export interface PurchasePaymentResourceById {
@@ -343,6 +304,7 @@ export const INSTALLMENT_STATUSES = [
 import type { ModelComplete } from "@/lib/core.interface";
 import { ShoppingCart, CreditCard, Wallet } from "lucide-react";
 import type { PurchaseSchema } from "./purchase.schema";
+import type { Links, Meta } from "@/lib/pagination.interface";
 
 const NAME = "Compra";
 const NAME_INSTALLMENT = "Cuota de Compra";

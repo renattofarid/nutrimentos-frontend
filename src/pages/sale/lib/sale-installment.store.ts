@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import type {
   SaleInstallmentResource,
-  Meta,
   CreateSaleInstallmentRequestFull,
   UpdateSaleInstallmentRequest,
 } from "./sale.interface";
@@ -15,6 +14,7 @@ import {
 } from "./sale.actions";
 import { ERROR_MESSAGE, SUCCESS_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { SALE_INSTALLMENT } from "./sale.interface";
+import type { Meta } from "@/lib/pagination.interface";
 
 const { MODEL } = SALE_INSTALLMENT;
 
@@ -52,14 +52,7 @@ export const useSaleInstallmentStore = create<SaleInstallmentStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await getSaleInstallments(params);
-      const meta: Meta = {
-        current_page: response.current_page,
-        from: response.from,
-        last_page: response.last_page,
-        per_page: response.per_page,
-        to: response.to,
-        total: response.total,
-      };
+      const meta = response.meta;
       set({ installments: response.data, meta, isLoading: false });
     } catch (error) {
       set({ error: "Error al cargar las cuotas", isLoading: false });

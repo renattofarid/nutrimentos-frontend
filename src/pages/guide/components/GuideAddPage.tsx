@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { GuideForm } from "./GuideForm";
-import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
@@ -28,14 +27,17 @@ import {
 import { useGuideStore } from "../lib/guide.store";
 import type { GuideSchema } from "../lib/guide.schema";
 import { GUIDE } from "../lib/guide.interface";
+import { useAuthStore } from "@/pages/auth/lib/auth.store";
 
 export default function GuideAddPage() {
   const { ROUTE, MODEL, ICON } = GUIDE;
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuthStore();
 
-  const { data: companies, isLoading: companiesLoading } = useAllCompanies();
-  const { data: branches, isLoading: branchesLoading } = useAllBranches();
+  const { data: branches, isLoading: branchesLoading } = useAllBranches({
+    company_id: user?.company_id,
+  });
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
   const { data: customers } = useAllPersons({ role_names: [CLIENT_ROLE_CODE] });
@@ -52,7 +54,6 @@ export default function GuideAddPage() {
   const { createGuide } = useGuideStore();
 
   const isLoading =
-    companiesLoading ||
     branchesLoading ||
     warehousesLoading ||
     productsLoading ||
@@ -66,7 +67,6 @@ export default function GuideAddPage() {
     !nationalities;
 
   const getDefaultValues = (): Partial<GuideSchema> => ({
-    company_id: "",
     branch_id: "",
     warehouse_id: "",
     sale_id: "",
@@ -131,9 +131,7 @@ export default function GuideAddPage() {
         </div>
       </div>
 
-      {companies &&
-        companies.length > 0 &&
-        branches &&
+      {branches &&
         branches.length > 0 &&
         warehouses &&
         warehouses.length > 0 &&
@@ -161,7 +159,6 @@ export default function GuideAddPage() {
             onCancel={() => navigate(GUIDE.ROUTE)}
             isSubmitting={isSubmitting}
             mode="create"
-            companies={companies}
             branches={branches}
             warehouses={warehouses}
             products={products}

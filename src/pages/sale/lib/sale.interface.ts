@@ -191,19 +191,9 @@ export interface UpdateSaleRequest {
 // ===== DETAIL MANAGEMENT =====
 
 export interface SaleDetailResponse {
-  current_page: number;
   data: SaleDetailResource[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: { url: string | null; label: string; active: boolean }[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
+  meta: Meta;
+  links: Links;
 }
 
 export interface SaleDetailResourceById {
@@ -226,19 +216,9 @@ export interface UpdateSaleDetailRequest {
 // ===== INSTALLMENT MANAGEMENT =====
 
 export interface SaleInstallmentResponse {
-  current_page: number;
   data: SaleInstallmentResource[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: { url: string | null; label: string; active: boolean }[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
+  meta: Meta;
+  links: Links;
 }
 
 export interface SaleInstallmentResourceById {
@@ -282,19 +262,9 @@ export interface SalePaymentResource {
 }
 
 export interface SalePaymentResponse {
-  current_page: number;
   data: SalePaymentResource[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: { url: string | null; label: string; active: boolean }[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
+  meta: Meta;
+  links: Links;
 }
 
 export interface SalePaymentResourceById {

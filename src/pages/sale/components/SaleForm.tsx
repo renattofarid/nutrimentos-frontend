@@ -108,6 +108,7 @@ export const SaleForm = ({
   const [filteredWarehouses, setFilteredWarehouses] = useState<
     WarehouseResource[]
   >([]);
+
   const [filteredProducts, setFilteredProducts] = useState<ProductResource[]>(
     []
   );

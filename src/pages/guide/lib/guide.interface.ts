@@ -118,32 +118,13 @@ export interface GuideResourceById {
 // ===== API RESPONSES =====
 
 export interface GuideResponse {
-  current_page: number;
   data: GuideResource[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: { url: string | null; label: string; active: boolean }[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
+  meta: Meta;
+  links: Links;
 }
 
 export interface GuideMotiveResponse {
   data: GuideMotiveResource[];
-}
-
-export interface Meta {
-  current_page: number;
-  from: number;
-  last_page: number;
-  per_page: number;
-  to: number;
-  total: number;
 }
 
 // ===== CREATE/UPDATE REQUESTS =====
@@ -156,7 +137,6 @@ export interface CreateGuideDetailRequest {
 }
 
 export interface CreateGuideRequest {
-  company_id: number;
   branch_id: number;
   warehouse_id: number;
   sale_id?: number | null;
@@ -188,7 +168,6 @@ export interface CreateGuideRequest {
 }
 
 export interface UpdateGuideRequest {
-  company_id?: number;
   branch_id?: number;
   warehouse_id?: number;
   sale_id?: number | null;
@@ -272,6 +251,7 @@ export const GUIDE_STATUSES = [
 import type { ModelComplete } from "@/lib/core.interface";
 import { Truck } from "lucide-react";
 import type { GuideSchema } from "./guide.schema";
+import type { Links, Meta } from "@/lib/pagination.interface";
 
 const NAME = "Guía de Remisión";
 

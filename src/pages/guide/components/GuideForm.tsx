@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback } from "react";
 import {
   Form,
   FormField,
@@ -24,9 +25,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Loader, Plus, Trash2, Pencil, Truck, MapPin } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
+import { SelectSearchForm } from "@/components/SelectSearchForm";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { guideSchema, type GuideSchema } from "../lib/guide.schema";
+import { searchUbigeos } from "../lib/ubigeo.actions";
+import type { UbigeoResource } from "../lib/ubigeo.interface";
 import {
   MODALITIES,
   CARRIER_DOCUMENT_TYPES,
@@ -90,6 +94,50 @@ export const GuideForm = ({
     description: "",
   });
   const [localProducts] = useState<ProductResource[]>(products);
+
+  // Estado local para ubigeos de origen
+  const [originUbigeos, setOriginUbigeos] = useState<UbigeoResource[]>([]);
+  const [isSearchingOrigin, setIsSearchingOrigin] = useState(false);
+
+  // Estado local para ubigeos de destino
+  const [destinationUbigeos, setDestinationUbigeos] = useState<UbigeoResource[]>([]);
+  const [isSearchingDestination, setIsSearchingDestination] = useState(false);
+
+  const formatUbigeoLabel = (ubigeo: UbigeoResource): string => {
+    const parts = ubigeo.cadena.split("-");
+    if (parts.length >= 4) {
+      return `${parts[1]} > ${parts[2]} > ${parts[3]}`;
+    }
+    return ubigeo.cadena;
+  };
+
+  // Función para buscar ubigeos de origen
+  const handleSearchOriginUbigeos = useCallback(async (cadena?: string) => {
+    setIsSearchingOrigin(true);
+    try {
+      const response = await searchUbigeos(cadena, 15);
+      setOriginUbigeos(response.data);
+    } catch (error) {
+      console.error("Error searching origin ubigeos:", error);
+      setOriginUbigeos([]);
+    } finally {
+      setIsSearchingOrigin(false);
+    }
+  }, []);
+
+  // Función para buscar ubigeos de destino
+  const handleSearchDestinationUbigeos = useCallback(async (cadena?: string) => {
+    setIsSearchingDestination(true);
+    try {
+      const response = await searchUbigeos(cadena, 15);
+      setDestinationUbigeos(response.data);
+    } catch (error) {
+      console.error("Error searching destination ubigeos:", error);
+      setDestinationUbigeos([]);
+    } finally {
+      setIsSearchingDestination(false);
+    }
+  }, []);
 
   const detailTempForm = useForm({
     defaultValues: {
@@ -272,6 +320,8 @@ export const GuideForm = ({
 
     onSubmit({
       ...data,
+      origin_ubigeo_id: parseInt(data.origin_ubigeo_id),
+      destination_ubigeo_id: parseInt(data.destination_ubigeo_id),
       details: formattedDetails,
     });
   };
@@ -586,22 +636,21 @@ export const GuideForm = ({
             )}
           />
 
-          <FormField
+          <SelectSearchForm<UbigeoResource>
+            name="origin_ubigeo_id"
+            label="Ubigeo de Origen"
+            placeholder="Buscar ubigeo..."
             control={form.control}
-            name="origin_ubigeo"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Ubigeo de Origen</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: 150101"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            searchPlaceholder="Buscar por nombre o código..."
+            emptyMessage="No se encontraron ubigeos"
+            minSearchLength={2}
+            debounceMs={300}
+            items={originUbigeos}
+            isSearching={isSearchingOrigin}
+            onSearch={handleSearchOriginUbigeos}
+            getItemId={(ubigeo) => ubigeo.id}
+            formatLabel={formatUbigeoLabel}
+            formatDescription={(ubigeo) => ubigeo.ubigeo_code}
           />
 
           <FormField
@@ -618,22 +667,21 @@ export const GuideForm = ({
             )}
           />
 
-          <FormField
+          <SelectSearchForm<UbigeoResource>
+            name="destination_ubigeo_id"
+            label="Ubigeo de Destino"
+            placeholder="Buscar ubigeo..."
             control={form.control}
-            name="destination_ubigeo"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Ubigeo de Destino</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: 150102"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            searchPlaceholder="Buscar por nombre o código..."
+            emptyMessage="No se encontraron ubigeos"
+            minSearchLength={2}
+            debounceMs={300}
+            items={destinationUbigeos}
+            isSearching={isSearchingDestination}
+            onSearch={handleSearchDestinationUbigeos}
+            getItemId={(ubigeo) => ubigeo.id}
+            formatLabel={formatUbigeoLabel}
+            formatDescription={(ubigeo) => ubigeo.ubigeo_code}
           />
         </GroupFormSection>
 

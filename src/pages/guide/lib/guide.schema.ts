@@ -36,9 +36,9 @@ export const guideSchema = z.object({
   driver_name: z.string().optional(),
   driver_license: z.string().optional(),
   origin_address: z.string().min(1, { message: "La dirección de origen es requerida" }),
-  origin_ubigeo: z.string().min(6, { message: "El ubigeo debe tener 6 dígitos" }).max(6, { message: "El ubigeo debe tener 6 dígitos" }),
+  origin_ubigeo_id: requiredStringId("Debe seleccionar un ubigeo de origen"),
   destination_address: z.string().min(1, { message: "La dirección de destino es requerida" }),
-  destination_ubigeo: z.string().min(6, { message: "El ubigeo debe tener 6 dígitos" }).max(6, { message: "El ubigeo debe tener 6 dígitos" }),
+  destination_ubigeo_id: requiredStringId("Debe seleccionar un ubigeo de destino"),
   unit_measurement: z.string().min(1, { message: "La unidad de medida es requerida" }),
   total_weight: z
     .string()

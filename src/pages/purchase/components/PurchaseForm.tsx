@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader, Plus, Trash2, Edit, Users2, UserPlus } from "lucide-react";
+import { Loader, Plus, Trash2, Pencil, Users2, UserPlus } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
@@ -701,7 +701,6 @@ export const PurchaseForm = ({
               label: warehouse.name,
               description: warehouse.address,
             }))}
-            disabled={mode === "update"}
           />
 
           <FormSelect
@@ -1029,7 +1028,7 @@ export const PurchaseForm = ({
                             size="sm"
                             onClick={() => handleEditDetail(index)}
                           >
-                            <Edit className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
                             type="button"
@@ -1177,7 +1176,7 @@ export const PurchaseForm = ({
                                 size="sm"
                                 onClick={() => handleEditInstallment(index)}
                               >
-                                <Edit className="h-4 w-4" />
+                                <Pencil className="h-4 w-4" />
                               </Button>
                               <Button
                                 type="button"

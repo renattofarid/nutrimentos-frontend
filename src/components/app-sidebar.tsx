@@ -458,7 +458,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <TeamSwitcher />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent >
         <NavMain items={filteredNav} />
       </SidebarContent>
       <SidebarFooter className="flex md:hidden">

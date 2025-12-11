@@ -7,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { usePurchasePaymentStore } from "../lib/purchase-payment.store";
 import { useState } from "react";
@@ -44,7 +44,10 @@ export function PurchasePaymentTable({
   };
 
   const calculateTotal = () => {
-    return payments.reduce((sum, payment) => sum + parseFloat(payment.total_paid.toString()), 0);
+    return payments.reduce(
+      (sum, payment) => sum + parseFloat(payment.total_paid.toString()),
+      0
+    );
   };
 
   if (!payments || payments.length === 0) {
@@ -95,29 +98,47 @@ export function PurchasePaymentTable({
                   {payment.reference_number}
                 </TableCell>
                 <TableCell className="text-right">
-                  {parseFloat(payment.amount_cash.toString()) > 0 ? parseFloat(payment.amount_cash.toString()).toFixed(2) : "-"}
+                  {parseFloat(payment.amount_cash.toString()) > 0
+                    ? parseFloat(payment.amount_cash.toString()).toFixed(2)
+                    : "-"}
                 </TableCell>
                 <TableCell className="text-right">
-                  {parseFloat(payment.amount_yape.toString()) > 0 ? parseFloat(payment.amount_yape.toString()).toFixed(2) : "-"}
+                  {parseFloat(payment.amount_yape.toString()) > 0
+                    ? parseFloat(payment.amount_yape.toString()).toFixed(2)
+                    : "-"}
                 </TableCell>
                 <TableCell className="text-right">
-                  {parseFloat(payment.amount_plin.toString()) > 0 ? parseFloat(payment.amount_plin.toString()).toFixed(2) : "-"}
+                  {parseFloat(payment.amount_plin.toString()) > 0
+                    ? parseFloat(payment.amount_plin.toString()).toFixed(2)
+                    : "-"}
                 </TableCell>
                 <TableCell className="text-right">
-                  {parseFloat(payment.amount_deposit.toString()) > 0 ? parseFloat(payment.amount_deposit.toString()).toFixed(2) : "-"}
+                  {parseFloat(payment.amount_deposit.toString()) > 0
+                    ? parseFloat(payment.amount_deposit.toString()).toFixed(2)
+                    : "-"}
                 </TableCell>
                 <TableCell className="text-right">
-                  {parseFloat(payment.amount_transfer.toString()) > 0 ? parseFloat(payment.amount_transfer.toString()).toFixed(2) : "-"}
+                  {parseFloat(payment.amount_transfer.toString()) > 0
+                    ? parseFloat(payment.amount_transfer.toString()).toFixed(2)
+                    : "-"}
                 </TableCell>
                 <TableCell className="text-right font-bold text-primary">
                   {parseFloat(payment.total_paid.toString()).toFixed(2)}
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="flex justify-center gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onEdit(payment.id)}>
-                      <Edit className="h-4 w-4" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEdit(payment.id)}
+                    >
+                      <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setDeleteId(payment.id)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeleteId(payment.id)}
+                    >
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                   </div>

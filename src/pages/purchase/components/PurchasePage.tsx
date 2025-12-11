@@ -22,6 +22,7 @@ import { usePurchase } from "../lib/purchase.hook";
 import { usePurchaseStore } from "../lib/purchase.store";
 import { PurchaseTable } from "./PurchaseTable";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
+import PageWrapper from "@/components/PageWrapper";
 
 export default function PurchasePage() {
   const navigate = useNavigate();
@@ -285,7 +286,7 @@ export default function PurchasePage() {
   ]);
 
   return (
-    <div className="space-y-4">
+    <PageWrapper>
       <div className="flex justify-between items-center">
         <TitleComponent
           title="Compras"
@@ -382,6 +383,6 @@ export default function PurchasePage() {
         installment={selectedInstallment}
         onPaymentSuccess={handlePaymentSuccess}
       />
-    </div>
+    </PageWrapper>
   );
 }

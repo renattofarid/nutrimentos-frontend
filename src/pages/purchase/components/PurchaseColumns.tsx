@@ -13,7 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  Edit,
+  Pencil,
   MoreVertical,
   Trash2,
   Eye,
@@ -49,17 +49,17 @@ export const getPurchaseColumns = ({
     ),
   },
   {
-    accessorKey: "document_type",
-    header: "Tipo Doc.",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.document_type}</span>
-    ),
-  },
-  {
     accessorKey: "document_number",
     header: "Número Doc.",
     cell: ({ row }) => (
-      <span className="font-medium">{row.original.document_number}</span>
+      <div className="flex flex-col">
+        <span className="font-medium text-xs text-muted-foreground">
+          {row.original.document_type}
+        </span>
+        <span className="font-mono font-semibold">
+          {row.original.document_number}
+        </span>
+      </div>
     ),
   },
   {
@@ -286,7 +286,7 @@ export const getPurchaseColumns = ({
               onClick={() => !isPaid && onEdit(row.original)}
               disabled={isPaid}
             >
-              <Edit className="mr-2 h-4 w-4" />
+              <Pencil className="mr-2 h-4 w-4" />
               Editar {isPaid && "(Pagado)"}
             </DropdownMenuItem>
             <DropdownMenuItem

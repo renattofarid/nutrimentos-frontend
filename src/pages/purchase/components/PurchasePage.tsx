@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import TitleComponent from "@/components/TitleComponent";
 import { PurchaseActions } from "./PurchaseActions";
@@ -21,7 +21,6 @@ import type {
 import { usePurchase } from "../lib/purchase.hook";
 import { usePurchaseStore } from "../lib/purchase.store";
 import { PurchaseTable } from "./PurchaseTable";
-import { exportPurchases } from "../lib/purchase.actions";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 
 export default function PurchasePage() {
@@ -46,7 +45,6 @@ export default function PurchasePage() {
   const [selectedInstallment, setSelectedInstallment] =
     useState<PurchaseInstallmentResource | null>(null);
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
   const { user } = useAuthStore();
 
   const { data, meta, isLoading, refetch } = usePurchase({
@@ -238,51 +236,53 @@ export default function PurchasePage() {
     });
   };
 
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      const exportParams = {
-        company_id: user?.company_id,
-        ...(document_type && { document_type }),
-        ...(document_number && { document_number }),
-        ...(reference_number && { reference_number }),
-        ...(payment_type && { payment_type }),
-        ...(status && { status }),
-        ...(warehouse_id && { warehouse_id: Number(warehouse_id) }),
-        ...(start_date && { start_date: start_date.toISOString().split("T")[0] }),
-        ...(end_date && { end_date: end_date.toISOString().split("T")[0] }),
-      };
+  // Construir el endpoint con query params para exportación
+  const exportEndpoint = useMemo(() => {
+    const params = new URLSearchParams();
 
-      const blob = await exportPurchases(exportParams);
-
-      // Crear un enlace de descarga
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-
-      // Generar nombre de archivo con fecha actual
-      const fecha = new Date().toISOString().split("T")[0];
-      link.download = `compras_${fecha}.xlsx`;
-
-      document.body.appendChild(link);
-      link.click();
-
-      // Limpiar
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      successToast(
-        "Exportación exitosa",
-        "El archivo Excel se ha descargado correctamente"
-      );
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message ?? "Error al exportar el archivo";
-      errorToast(errorMessage);
-    } finally {
-      setIsExporting(false);
+    if (user?.company_id) {
+      params.append("company_id", user.company_id.toString());
     }
-  };
+    if (document_type) {
+      params.append("document_type", document_type);
+    }
+    if (document_number) {
+      params.append("document_number", document_number);
+    }
+    if (reference_number) {
+      params.append("reference_number", reference_number);
+    }
+    if (payment_type) {
+      params.append("payment_type", payment_type);
+    }
+    if (status) {
+      params.append("status", status);
+    }
+    if (warehouse_id) {
+      params.append("warehouse_id", warehouse_id);
+    }
+    if (start_date) {
+      params.append("start_date", start_date.toISOString().split("T")[0]);
+    }
+    if (end_date) {
+      params.append("end_date", end_date.toISOString().split("T")[0]);
+    }
+
+    const queryString = params.toString();
+    const baseExcelUrl = "/purchase/export";
+
+    return queryString ? `${baseExcelUrl}?${queryString}` : baseExcelUrl;
+  }, [
+    user?.company_id,
+    document_type,
+    document_number,
+    reference_number,
+    payment_type,
+    status,
+    warehouse_id,
+    start_date,
+    end_date,
+  ]);
 
   return (
     <div className="space-y-4">
@@ -294,8 +294,7 @@ export default function PurchasePage() {
         />
         <PurchaseActions
           onCreatePurchase={handleCreatePurchase}
-          onExport={handleExport}
-          isExporting={isExporting}
+          excelEndpoint={exportEndpoint}
         />
       </div>
 

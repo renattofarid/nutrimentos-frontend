@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSale } from "../lib/sale.hook";
 import SaleTable from "./SaleTable";
 import SaleActions from "./SaleActions";
@@ -197,6 +197,54 @@ export default function SalePage() {
     onQuickPay: handleQuickPay,
   });
 
+  // Construir el endpoint con query params para exportación
+  const exportEndpoint = useMemo(() => {
+    const params = new URLSearchParams();
+
+    if (company_id) {
+      params.append("company_id", company_id.toString());
+    }
+    if (branch_id) {
+      params.append("branch_id", branch_id);
+    }
+    if (document_type) {
+      params.append("document_type", document_type);
+    }
+    if (status) {
+      params.append("status", status);
+    }
+    if (warehouse_id) {
+      params.append("warehouse_id", warehouse_id);
+    }
+    if (start_date) {
+      params.append("start_date", start_date.toISOString().split("T")[0]);
+    }
+    if (end_date) {
+      params.append("end_date", end_date.toISOString().split("T")[0]);
+    }
+    if (numero) {
+      params.append("numero", numero);
+    }
+    if (serie) {
+      params.append("serie", serie);
+    }
+
+    const queryString = params.toString();
+    const baseExcelUrl = "/sales/export";
+
+    return queryString ? `${baseExcelUrl}?${queryString}` : baseExcelUrl;
+  }, [
+    company_id,
+    branch_id,
+    document_type,
+    status,
+    warehouse_id,
+    start_date,
+    end_date,
+    numero,
+    serie,
+  ]);
+
   return (
     <PageWrapper>
       <div className="flex items-center justify-between">
@@ -205,7 +253,7 @@ export default function SalePage() {
           subtitle="Administrar todas las ventas registradas en el sistema"
           icon={ICON}
         />
-        <SaleActions />
+        <SaleActions excelEndpoint={exportEndpoint} />
       </div>
 
       <SaleTable columns={columns} data={sales || []} isLoading={isLoading}>

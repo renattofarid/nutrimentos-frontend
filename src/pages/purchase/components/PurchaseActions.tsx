@@ -1,29 +1,23 @@
 import ActionsWrapper from "@/components/ActionsWrapper";
 import { Button } from "@/components/ui/button";
-import { Plus, FileDown } from "lucide-react";
+import { Plus } from "lucide-react";
+import ExportButtons from "@/components/ExportButtons";
 
 interface PurchaseActionsProps {
   onCreatePurchase: () => void;
-  onExport: () => void;
-  isExporting?: boolean;
+  excelEndpoint?: string;
 }
 
 export const PurchaseActions = ({
   onCreatePurchase,
-  onExport,
-  isExporting = false
+  excelEndpoint,
 }: PurchaseActionsProps) => {
   return (
     <ActionsWrapper>
-      <Button
-        onClick={onExport}
-        size="sm"
-        variant="outline"
-        disabled={isExporting}
-      >
-        <FileDown className="mr-2 h-4 w-4" />
-        {isExporting ? "Exportando..." : "Exportar Excel"}
-      </Button>
+      <ExportButtons
+        excelEndpoint={excelEndpoint}
+        excelFileName={`compras_${new Date().toISOString().split("T")[0]}.xlsx`}
+      />
       <Button onClick={onCreatePurchase} size="sm">
         <Plus className="mr-2 h-4 w-4" />
         Crear Compra

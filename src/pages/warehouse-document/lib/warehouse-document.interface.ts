@@ -91,8 +91,8 @@ export interface WarehouseDocumentDetail {
 export interface WarehouseDocumentResource {
   id: number;
   company: Company;
-  document_type: string;
-  motive: string;
+  document_type: DocumentType;
+  motive: DocumentMotive;
   document_number: string;
   movement_date: string;
   warehouse_origin: Warehouse;
@@ -100,10 +100,10 @@ export interface WarehouseDocumentResource {
   responsible_origin: Company;
   responsible_destination?: Company;
   purchase: Purchase;
-  status: string;
+  status: DocumentStatus;
   observations: string;
   details: Detail[];
-  user: Company;
+  user: User;
   created_at: string;
   updated_at: string;
 }

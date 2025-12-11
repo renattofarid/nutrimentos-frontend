@@ -38,6 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { parse } from "date-fns";
 
 const { ROUTE } = WAREHOUSE_DOCUMENT;
 
@@ -203,9 +204,54 @@ export default function WarehouseDocumentDetailPage() {
                 </p>
               </div>
               <div>
-                <span className="text-sm text-muted-foreground">Almacén</span>
-                <p className="font-semibold">{document.warehouse_name}</p>
+                <span className="text-sm text-muted-foreground">
+                  Almacén de Origen
+                </span>
+                <p className="font-semibold">
+                  {document.warehouse_origin.name}
+                </p>
               </div>
+              {document.warehouse_destination && (
+                <div>
+                  <span className="text-sm text-muted-foreground">
+                    Almacén de Destino
+                  </span>
+                  <p className="font-semibold">
+                    {document.warehouse_destination?.name || "N/A"}
+                  </p>
+                </div>
+              )}
+              {document.responsible_origin && (
+                <div>
+                  <span className="text-sm text-muted-foreground">
+                    Responsable de Origen
+                  </span>
+                  <p className="font-semibold">
+                    {document.responsible_origin?.name || "N/A"}
+                  </p>
+                </div>
+              )}
+              {document.responsible_destination && (
+                <div>
+                  <span className="text-sm text-muted-foreground">
+                    Responsable de Destino
+                  </span>
+                  <p className="font-semibold">
+                    {document.responsible_destination?.name || "N/A"}
+                  </p>
+                </div>
+              )}
+              {document.purchase && (
+                <div>
+                  <span className="text-sm text-muted-foreground">
+                    Compra Asociada
+                  </span>
+                  <p className="font-semibold">
+                    {document.purchase?.document_number || "N/A"}
+                  </p>
+                </div>
+              )}
+
               <div>
                 <span className="text-sm text-muted-foreground">
                   Tipo de Documento
@@ -218,23 +264,18 @@ export default function WarehouseDocumentDetailPage() {
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">
-                  Responsable
-                </span>
-                <p className="font-semibold">{document.person_fullname}</p>
-              </div>
-              <div>
-                <span className="text-sm text-muted-foreground">
                   Fecha del Documento
                 </span>
                 <p className="font-semibold">
-                  {new Date(document.document_date).toLocaleDateString(
-                    "es-ES",
-                    {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    }
-                  )}
+                  {parse(
+                    document.movement_date,
+                    "yyyy-MM-dd",
+                    new Date()
+                  ).toLocaleDateString("es-ES", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
                 </p>
               </div>
               <div>
@@ -305,18 +346,15 @@ export default function WarehouseDocumentDetailPage() {
                         <TableCell className="font-medium">
                           {index + 1}
                         </TableCell>
-                        <TableCell>{detail.product_name}</TableCell>
+                        <TableCell>{detail.product.name}</TableCell>
                         <TableCell className="text-right">
                           {detail.quantity}
                         </TableCell>
                         <TableCell className="text-right">
-                          S/. {Number(detail.unit_cost).toFixed(2)}
+                          S/. {Number(detail.unit_price).toFixed(2)}
                         </TableCell>
                         <TableCell className="text-right font-semibold">
-                          S/. {(detail.quantity * detail.unit_cost).toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {detail.observations || "-"}
+                          S/. {(detail.quantity * detail.unit_price).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -332,7 +370,7 @@ export default function WarehouseDocumentDetailPage() {
                         {document.details
                           .reduce(
                             (sum, detail) =>
-                              sum + detail.quantity * detail.unit_cost,
+                              sum + detail.quantity * detail.unit_price,
                             0
                           )
                           .toFixed(2)}

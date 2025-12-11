@@ -29,7 +29,17 @@ export default function SalePage() {
   const { user } = useAuthStore();
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
-  const [search, setSearch] = useState("");
+
+  // Filters
+  const [branch_id, setBranchId] = useState("");
+  const [document_type, setDocumentType] = useState("");
+  const [status, setStatus] = useState("");
+  const [warehouse_id, setWarehouseId] = useState("");
+  const [start_date, setStartDate] = useState<Date | undefined>();
+  const [end_date, setEndDate] = useState<Date | undefined>();
+  const [numero, setNumero] = useState("");
+  const [serie, setSerie] = useState("");
+
   const [openDelete, setOpenDelete] = useState(false);
   const [saleToDelete, setSaleToDelete] = useState<number | null>(null);
   const [openDetailSheet, setOpenDetailSheet] = useState(false);
@@ -48,7 +58,14 @@ export default function SalePage() {
     company_id,
     page,
     per_page,
-    search,
+    branch_id: branch_id ? Number(branch_id) : undefined,
+    document_type: document_type || undefined,
+    status: status || undefined,
+    warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+    start_date: start_date?.toISOString().split("T")[0],
+    end_date: end_date?.toISOString().split("T")[0],
+    numero: numero || undefined,
+    serie: serie || undefined,
   });
 
   // Effect para resetear a página 1 cuando cambian los filtros
@@ -56,12 +73,47 @@ export default function SalePage() {
     if (page !== 1) {
       setPage(1);
     }
-  }, [search, company_id, per_page]);
+  }, [
+    branch_id,
+    document_type,
+    status,
+    warehouse_id,
+    start_date,
+    end_date,
+    numero,
+    serie,
+    company_id,
+    per_page,
+  ]);
 
   // Effect para hacer el refetch cuando cambian los parámetros
   useEffect(() => {
-    refetch({ company_id, page, per_page, search });
-  }, [company_id, page, per_page, search]);
+    refetch({
+      company_id,
+      page,
+      per_page,
+      branch_id: branch_id ? Number(branch_id) : undefined,
+      document_type: document_type || undefined,
+      status: status || undefined,
+      warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+      start_date: start_date?.toISOString().split("T")[0],
+      end_date: end_date?.toISOString().split("T")[0],
+      numero: numero || undefined,
+      serie: serie || undefined,
+    });
+  }, [
+    company_id,
+    page,
+    per_page,
+    branch_id,
+    document_type,
+    status,
+    warehouse_id,
+    start_date,
+    end_date,
+    numero,
+    serie,
+  ]);
 
   const { removeSale } = useSaleStore();
 
@@ -157,7 +209,26 @@ export default function SalePage() {
       </div>
 
       <SaleTable columns={columns} data={sales || []} isLoading={isLoading}>
-        <SaleOptions search={search} setSearch={setSearch} />
+        <SaleOptions
+          branch_id={branch_id}
+          setBranchId={setBranchId}
+          document_type={document_type}
+          setDocumentType={setDocumentType}
+          status={status}
+          setStatus={setStatus}
+          warehouse_id={warehouse_id}
+          setWarehouseId={setWarehouseId}
+          start_date={start_date}
+          end_date={end_date}
+          onDateChange={(from, to) => {
+            setStartDate(from);
+            setEndDate(to);
+          }}
+          numero={numero}
+          setNumero={setNumero}
+          serie={serie}
+          setSerie={setSerie}
+        />
       </SaleTable>
 
       <DataTablePagination

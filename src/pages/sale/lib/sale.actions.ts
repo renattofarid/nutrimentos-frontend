@@ -39,9 +39,12 @@ export interface GetSalesParams {
   payment_type?: string;
   document_type?: string;
   customer_id?: number;
+  branch_id?: number;
   warehouse_id?: number;
-  date_from?: string;
-  date_to?: string;
+  start_date?: string;
+  end_date?: string;
+  numero?: string;
+  serie?: string;
   company_id?: number;
 }
 

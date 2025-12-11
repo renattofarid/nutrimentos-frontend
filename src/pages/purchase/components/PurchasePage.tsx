@@ -26,11 +26,19 @@ import { useAuthStore } from "@/pages/auth/lib/auth.store";
 
 export default function PurchasePage() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
-  const [selectedStatus, setSelectedStatus] = useState("");
-  const [selectedPaymentType, setSelectedPaymentType] = useState("");
+
+  // Filters
+  const [document_type, setDocumentType] = useState("");
+  const [document_number, setDocumentNumber] = useState("");
+  const [reference_number, setReferenceNumber] = useState("");
+  const [payment_type, setPaymentType] = useState("");
+  const [status, setStatus] = useState("");
+  const [warehouse_id, setWarehouseId] = useState("");
+  const [start_date, setStartDate] = useState<Date | undefined>();
+  const [end_date, setEndDate] = useState<Date | undefined>();
+
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [selectedPurchase, setSelectedPurchase] =
     useState<PurchaseResource | null>(null);
@@ -41,34 +49,84 @@ export default function PurchasePage() {
   const [isExporting, setIsExporting] = useState(false);
   const { user } = useAuthStore();
 
-  const filterParams = {
-    company_id: user?.company_id.toString(),
+  const { data, meta, isLoading, refetch } = usePurchase({
+    company_id: user?.company_id,
     page,
-    search,
     per_page,
-    ...(selectedStatus && { status: selectedStatus }),
-    ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-  };
-
-  const { data, meta, isLoading, refetch } = usePurchase(filterParams);
+    document_type: document_type || undefined,
+    document_number: document_number || undefined,
+    reference_number: reference_number || undefined,
+    payment_type: payment_type || undefined,
+    status: status || undefined,
+    warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+    start_date: start_date?.toISOString().split("T")[0],
+    end_date: end_date?.toISOString().split("T")[0],
+  });
   const { removePurchase } = usePurchaseStore();
 
+  // Effect para resetear a página 1 cuando cambian los filtros
   useEffect(() => {
-    refetch(filterParams);
-  }, [page, search, per_page, selectedStatus, selectedPaymentType]);
+    if (page !== 1) {
+      setPage(1);
+    }
+  }, [
+    document_type,
+    document_number,
+    reference_number,
+    payment_type,
+    status,
+    warehouse_id,
+    start_date,
+    end_date,
+    per_page,
+  ]);
+
+  // Effect para hacer el refetch cuando cambian los parámetros
+  useEffect(() => {
+    refetch({
+      company_id: user?.company_id,
+      page,
+      per_page,
+      document_type: document_type || undefined,
+      document_number: document_number || undefined,
+      reference_number: reference_number || undefined,
+      payment_type: payment_type || undefined,
+      status: status || undefined,
+      warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+      start_date: start_date?.toISOString().split("T")[0],
+      end_date: end_date?.toISOString().split("T")[0],
+    });
+  }, [
+    page,
+    per_page,
+    document_type,
+    document_number,
+    reference_number,
+    payment_type,
+    status,
+    warehouse_id,
+    start_date,
+    end_date,
+    user?.company_id,
+  ]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
       await removePurchase(deleteId);
-      const filterParams = {
+      await refetch({
+        company_id: user?.company_id,
         page,
-        search,
         per_page,
-        ...(selectedStatus && { status: selectedStatus }),
-        ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-      };
-      await refetch(filterParams);
+        document_type: document_type || undefined,
+        document_number: document_number || undefined,
+        reference_number: reference_number || undefined,
+        payment_type: payment_type || undefined,
+        status: status || undefined,
+        warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+        start_date: start_date?.toISOString().split("T")[0],
+        end_date: end_date?.toISOString().split("T")[0],
+      });
       successToast(
         SUCCESS_MESSAGE({ name: "Compra", gender: false }, "delete")
       );
@@ -131,47 +189,68 @@ export default function PurchasePage() {
   const handleCloseManagementSheet = async () => {
     setIsManagementSheetOpen(false);
     setSelectedPurchase(null);
-    const filterParams = {
+    await refetch({
+      company_id: user?.company_id,
       page,
-      search,
       per_page,
-      ...(selectedStatus && { status: selectedStatus }),
-      ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-    };
-    await refetch(filterParams);
+      document_type: document_type || undefined,
+      document_number: document_number || undefined,
+      reference_number: reference_number || undefined,
+      payment_type: payment_type || undefined,
+      status: status || undefined,
+      warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+      start_date: start_date?.toISOString().split("T")[0],
+      end_date: end_date?.toISOString().split("T")[0],
+    });
   };
 
   const handleClosePaymentSheet = async () => {
     setIsPaymentSheetOpen(false);
     setSelectedInstallment(null);
-    const filterParams = {
+    await refetch({
+      company_id: user?.company_id,
       page,
-      search,
       per_page,
-      ...(selectedStatus && { status: selectedStatus }),
-      ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-    };
-    await refetch(filterParams);
+      document_type: document_type || undefined,
+      document_number: document_number || undefined,
+      reference_number: reference_number || undefined,
+      payment_type: payment_type || undefined,
+      status: status || undefined,
+      warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+      start_date: start_date?.toISOString().split("T")[0],
+      end_date: end_date?.toISOString().split("T")[0],
+    });
   };
 
   const handlePaymentSuccess = async () => {
-    // Refrescar los datos inmediatamente después de un pago exitoso
-    const filterParams = {
+    await refetch({
+      company_id: user?.company_id,
       page,
-      search,
       per_page,
-      ...(selectedStatus && { status: selectedStatus }),
-      ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-    };
-    await refetch(filterParams);
+      document_type: document_type || undefined,
+      document_number: document_number || undefined,
+      reference_number: reference_number || undefined,
+      payment_type: payment_type || undefined,
+      status: status || undefined,
+      warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+      start_date: start_date?.toISOString().split("T")[0],
+      end_date: end_date?.toISOString().split("T")[0],
+    });
   };
 
   const handleExport = async () => {
     setIsExporting(true);
     try {
       const exportParams = {
-        ...(selectedStatus && { status: selectedStatus }),
-        ...(selectedPaymentType && { payment_type: selectedPaymentType }),
+        company_id: user?.company_id,
+        ...(document_type && { document_type }),
+        ...(document_number && { document_number }),
+        ...(reference_number && { reference_number }),
+        ...(payment_type && { payment_type }),
+        ...(status && { status }),
+        ...(warehouse_id && { warehouse_id: Number(warehouse_id) }),
+        ...(start_date && { start_date: start_date.toISOString().split("T")[0] }),
+        ...(end_date && { end_date: end_date.toISOString().split("T")[0] }),
       };
 
       const blob = await exportPurchases(exportParams);
@@ -230,12 +309,24 @@ export default function PurchasePage() {
         isLoading={isLoading}
       >
         <PurchaseOptions
-          search={search}
-          setSearch={setSearch}
-          selectedStatus={selectedStatus}
-          setSelectedStatus={setSelectedStatus}
-          selectedPaymentType={selectedPaymentType}
-          setSelectedPaymentType={setSelectedPaymentType}
+          document_type={document_type}
+          setDocumentType={setDocumentType}
+          document_number={document_number}
+          setDocumentNumber={setDocumentNumber}
+          reference_number={reference_number}
+          setReferenceNumber={setReferenceNumber}
+          payment_type={payment_type}
+          setPaymentType={setPaymentType}
+          status={status}
+          setStatus={setStatus}
+          warehouse_id={warehouse_id}
+          setWarehouseId={setWarehouseId}
+          start_date={start_date}
+          end_date={end_date}
+          onDateChange={(from, to) => {
+            setStartDate(from);
+            setEndDate(to);
+          }}
         />
       </PurchaseTable>
 
@@ -261,14 +352,19 @@ export default function PurchasePage() {
         onClose={handleCloseManagementSheet}
         purchase={selectedPurchase}
         onPurchaseUpdate={async () => {
-          const filterParams = {
+          await refetch({
+            company_id: user?.company_id,
             page,
-            search,
             per_page,
-            ...(selectedStatus && { status: selectedStatus }),
-            ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-          };
-          await refetch(filterParams);
+            document_type: document_type || undefined,
+            document_number: document_number || undefined,
+            reference_number: reference_number || undefined,
+            payment_type: payment_type || undefined,
+            status: status || undefined,
+            warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+            start_date: start_date?.toISOString().split("T")[0],
+            end_date: end_date?.toISOString().split("T")[0],
+          });
           // Actualizar el selectedPurchase con los datos más recientes del store
           if (selectedPurchase && data) {
             const updatedPurchase = data.find(

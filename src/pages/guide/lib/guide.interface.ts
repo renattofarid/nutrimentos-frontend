@@ -5,16 +5,14 @@
 // ===== API RESOURCES =====
 
 export interface GuideDetailResource {
-  id?: number;
+  id: number;
+  sale_shipping_guide_id: number;
   product_id: number;
   quantity: number;
   unit_code: string;
   description: string;
-  product?: {
-    id: number;
-    name: string;
-    codigo: string;
-  };
+  product: Product;
+  created_at: string;
 }
 
 export interface GuideMotiveResource {
@@ -28,7 +26,7 @@ export interface GuideResource {
   company_id: number;
   branch_id: number;
   warehouse_id: number;
-  sale_id: number | null;
+  sale_id?: string;
   customer_id: number;
   user_id: number;
   serie: string;
@@ -44,11 +42,11 @@ export interface GuideResource {
   carrier_name: string;
   carrier_ruc: string;
   carrier_mtc_number: string;
-  vehicle_plate: string | null;
-  driver_document_type: string | null;
-  driver_document_number: string | null;
-  driver_name: string | null;
-  driver_license: string | null;
+  vehicle_plate?: string;
+  driver_document_type?: string;
+  driver_document_number?: string;
+  driver_name?: string;
+  driver_license?: string;
   origin_address: string;
   origin_ubigeo: string;
   destination_address: string;
@@ -59,18 +57,58 @@ export interface GuideResource {
   status: string;
   is_electronic: boolean;
   observations: string;
+  ubigeo_origin_id: number;
+  ubigeo_destination_id: number;
+  company: Company;
+  branch: Branch;
+  warehouse: Branch;
+  customer: Customer;
+  user: User;
+  motive: GuideMotiveResource;
+  sale?: string;
+  details: GuideDetailResource[];
+  electronic_document?: string;
   created_at: string;
   updated_at: string;
-  details?: GuideDetailResource[];
-  motive?: GuideMotiveResource;
-  customer?: {
-    id: number;
-    fullname: string;
-  };
-  warehouse?: {
-    id: number;
-    name: string;
-  };
+}
+
+interface Product {
+  id: number;
+  codigo: string;
+  name: string;
+  brand: string;
+  category: string;
+  unit: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email?: string;
+}
+
+interface Customer {
+  id: number;
+  names: string;
+  father_surname: string;
+  mother_surname: string;
+  full_name: string;
+  number_document: string;
+  business_name: string;
+  address: string;
+}
+
+interface Branch {
+  id: number;
+  name: string;
+  address: string;
+}
+
+interface Company {
+  id: number;
+  social_reason: string;
+  trade_name: string;
+  ruc: string;
 }
 
 export interface GuideResourceById {

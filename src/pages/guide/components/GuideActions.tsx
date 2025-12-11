@@ -7,7 +7,7 @@ export default function GuideActions() {
   const navigate = useNavigate();
 
   return (
-    <Button onClick={() => navigate(GUIDE.ROUTE_ADD)}>
+    <Button size={"sm"} onClick={() => navigate(GUIDE.ROUTE_ADD)}>
       <Plus className="mr-2 h-4 w-4" />
       Agregar {GUIDE.MODEL.name}
     </Button>

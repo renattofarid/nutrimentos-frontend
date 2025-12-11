@@ -115,7 +115,7 @@ export default function GuideAddPage() {
       <FormWrapper>
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
-            <TitleFormComponent title={MODEL.name} mode="create" />
+            <TitleFormComponent title={MODEL.name} mode="create" icon={ICON} />
           </div>
         </div>
         <FormSkeleton />

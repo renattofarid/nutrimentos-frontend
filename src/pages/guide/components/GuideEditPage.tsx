@@ -21,21 +21,22 @@ import FormWrapper from "@/components/FormWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { useGuideStore } from "../lib/guide.store";
-import type { GuideResource } from "../lib/guide.interface";
+import { GUIDE, type GuideResource } from "../lib/guide.interface";
 import type { GuideSchema } from "../lib/guide.schema";
-import { GUIDE } from "../lib/guide.interface";
 
 export default function GuideEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const { MODEL, ROUTE, ICON } = GUIDE;
   const { data: companies, isLoading: companiesLoading } = useAllCompanies();
   const { data: branches, isLoading: branchesLoading } = useAllBranches();
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
   const { data: customers } = useAllPersons({ role_names: [CLIENT_ROLE_CODE] });
-  const { data: suppliers } = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
+  const { data: suppliers } = useAllPersons({
+    role_names: [SUPPLIER_ROLE_CODE],
+  });
   const { data: motives, isLoading: motivesLoading } = useGuideMotives();
   const { data: categories, isLoading: categoriesLoading } = useAllCategories();
   const { data: brands, isLoading: brandsLoading } = useAllBrands();
@@ -62,7 +63,7 @@ export default function GuideEditPage() {
 
   useEffect(() => {
     if (!id) {
-      navigate(GUIDE.ROUTE);
+      navigate(ROUTE);
       return;
     }
     fetchGuide(Number(id));
@@ -98,12 +99,13 @@ export default function GuideEditPage() {
       total_weight: data.total_weight,
       total_packages: data.total_packages,
       observations: data.observations || "",
-      details: data.details?.map((detail) => ({
-        product_id: detail.product_id.toString(),
-        quantity: detail.quantity.toString(),
-        unit_code: detail.unit_code,
-        description: detail.description,
-      })) || [],
+      details:
+        data.details?.map((detail) => ({
+          product_id: detail.product_id.toString(),
+          quantity: detail.quantity.toString(),
+          unit_code: detail.unit_code,
+          description: detail.description,
+        })) || [],
     };
   };
 
@@ -114,7 +116,7 @@ export default function GuideEditPage() {
     try {
       await updateGuide(Number(id), data);
       successToast("Guía de remisión actualizada correctamente");
-      navigate(GUIDE.ROUTE);
+      navigate(ROUTE);
     } catch (error: any) {
       errorToast(error.response?.data?.message || ERROR_MESSAGE);
     } finally {
@@ -127,7 +129,7 @@ export default function GuideEditPage() {
       <FormWrapper>
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
-            <TitleFormComponent title="Guía de Remisión" mode="edit" />
+            <TitleFormComponent title={MODEL.name} mode="edit" icon={ICON} />
           </div>
         </div>
         <FormSkeleton />
@@ -139,7 +141,7 @@ export default function GuideEditPage() {
     <FormWrapper>
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
-          <TitleFormComponent title="Guía de Remisión" mode="edit" />
+          <TitleFormComponent title={MODEL.name} mode="edit" icon={ICON} />
         </div>
       </div>
 
@@ -171,7 +173,7 @@ export default function GuideEditPage() {
           <GuideForm
             defaultValues={mapGuideToForm(guide)}
             onSubmit={handleSubmit}
-            onCancel={() => navigate(GUIDE.ROUTE)}
+            onCancel={() => navigate(ROUTE)}
             isSubmitting={isSubmitting}
             mode="update"
             companies={companies}

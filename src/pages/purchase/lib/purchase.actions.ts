@@ -30,14 +30,15 @@ import {
 export interface GetPurchasesParams {
   page?: number;
   per_page?: number;
-  search?: string;
-  status?: string;
-  payment_type?: string;
+  company_id?: number;
+  document_number?: string;
   document_type?: string;
-  supplier_id?: number;
+  end_date?: string;
+  payment_type?: string;
+  reference_number?: string;
+  start_date?: string;
+  status?: string;
   warehouse_id?: number;
-  date_from?: string;
-  date_to?: string;
 }
 
 export const getPurchases = async (

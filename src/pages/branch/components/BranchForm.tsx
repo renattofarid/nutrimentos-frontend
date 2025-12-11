@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { FormSwitch } from "@/components/FormSwitch";
 import {
   branchSchemaCreate,
   branchSchemaUpdate,
@@ -53,6 +53,7 @@ export const BranchForm = ({
     defaultValues: {
       name: "",
       address: "",
+      serie: 0,
       phone: "",
       email: "",
       is_invoice: false,
@@ -123,6 +124,26 @@ export const BranchForm = ({
 
           <FormField
             control={form.control}
+            name="serie"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Serie</FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    type="number"
+                    placeholder="Ej: 10"
+                    {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="phone"
             render={({ field }) => (
               <FormItem>
@@ -170,27 +191,15 @@ export const BranchForm = ({
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="is_invoice"
-            render={({ field }) => (
-              <FormItem className="col-span-2 flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>¿Emite factura?</FormLabel>
-                  <p className="text-sm text-muted-foreground">
-                    Marque si esta tienda puede emitir facturas
-                  </p>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="col-span-full">
+            <FormSwitch
+              control={form.control}
+              name="is_invoice"
+              text="¿Emite factura?"
+              textDescription="Marque si esta tienda puede emitir facturas"
+              className="h-auto py-2"
+            />
+          </div>
         </div>
 
         <div className="flex gap-4 w-full justify-end">
@@ -198,10 +207,7 @@ export const BranchForm = ({
             Cancelar
           </Button>
 
-          <Button
-            type="submit"
-            disabled={isSubmitting || !form.formState.isValid}
-          >
+          <Button type="submit" disabled={isSubmitting}>
             <Loader
               className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`}
             />

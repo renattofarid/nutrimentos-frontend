@@ -63,6 +63,13 @@ export const BranchColumns = ({
     },
   },
   {
+    accessorKey: "serie",
+    header: "Serie",
+    cell: ({ getValue }) => (
+      <span className="font-medium">{getValue() as number}</span>
+    ),
+  },
+  {
     accessorKey: "responsible_full_name",
     header: "Responsable",
     cell: ({ getValue }) => {

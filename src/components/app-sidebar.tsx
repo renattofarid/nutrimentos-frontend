@@ -6,8 +6,6 @@ import {
   Package,
   ShoppingBag,
   DollarSign,
-  Activity,
-  Warehouse,
 } from "lucide-react";
 import {
   Sidebar,
@@ -353,16 +351,6 @@ const data = {
           icon: WarehouseDocumentIcon,
         },
         {
-          title: "Kardex",
-          url: "/kardex",
-          icon: Activity,
-        },
-        {
-          title: "Inventario Valorizado",
-          url: "/inventario-valorizado",
-          icon: Warehouse,
-        },
-        {
           title: BoxTitle,
           url: BoxRoute,
           icon: BoxIcon,
@@ -470,7 +458,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <TeamSwitcher />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent >
         <NavMain items={filteredNav} />
       </SidebarContent>
       <SidebarFooter className="flex md:hidden">

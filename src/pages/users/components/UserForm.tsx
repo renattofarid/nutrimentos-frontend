@@ -18,7 +18,7 @@ import {
 } from "../lib/User.schema";
 import { FormSelect } from "@/components/FormSelect";
 import type { TypeUserResource } from "@/pages/type-users/lib/typeUser.interface";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import React from "react";
 import {
   searchDNI,
@@ -26,6 +26,7 @@ import {
   isValidData,
 } from "@/lib/document-search.service";
 import { Search } from "lucide-react";
+import { useAllCompanies } from "@/pages/company/lib/company.hook";
 
 interface MetricFormProps {
   defaultValues: Partial<UserSchema>;
@@ -44,6 +45,12 @@ export const UserForm = ({
   mode = "create",
   typeUsers,
 }: MetricFormProps) => {
+  const {
+    data: companies,
+    isLoading: loadingCompanies,
+    refetch,
+  } = useAllCompanies();
+
   const form = useForm({
     resolver: zodResolver(
       mode === "create" ? userCreateSchema : userUpdateSchema
@@ -57,6 +64,10 @@ export const UserForm = ({
   const type_person = form.watch("type_person");
   const type_document = form.watch("type_document");
   const number_document = form.watch("number_document");
+
+  useEffect(() => {
+    refetch();
+  }, []);
 
   const [isSearching, setIsSearching] = useState(false);
   const [fieldsFromSearch, setFieldsFromSearch] = useState({
@@ -120,11 +131,18 @@ export const UserForm = ({
     }
   }, [type_person, type_document, form]);
 
+  // Preparar opciones para el selector de empresas
+  const companyOptions =
+    companies?.map((company) => ({
+      value: company.id.toString(),
+      label: company.trade_name || company.social_reason,
+    })) || [];
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
         <div className="bg-tertiary rounded-lg p-6 space-y-4">
-          <div className="grid grid-cols-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormSelect
               control={form.control}
               name="rol_id"
@@ -134,6 +152,15 @@ export const UserForm = ({
                 value: type.id.toString(),
                 label: type.name,
               }))}
+            />
+
+            <FormSelect
+              control={form.control}
+              name="company_id"
+              label="Empresa"
+              placeholder="Seleccione una empresa"
+              options={companyOptions}
+              disabled={loadingCompanies}
             />
           </div>
 

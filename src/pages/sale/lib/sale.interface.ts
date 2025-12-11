@@ -129,28 +129,9 @@ export interface SaleResourceById {
 // ===== API RESPONSES =====
 
 export interface SaleResponse {
-  current_page: number;
   data: SaleResource[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: { url: string | null; label: string; active: boolean }[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
-}
-
-export interface Meta {
-  current_page: number;
-  from: number;
-  last_page: number;
-  per_page: number;
-  to: number;
-  total: number;
+  meta: Meta;
+  links: Links;
 }
 
 // ===== CREATE/UPDATE REQUESTS =====
@@ -168,7 +149,6 @@ export interface CreateSaleInstallmentRequest {
 }
 
 export interface CreateSaleRequest {
-  company_id: number;
   branch_id: number;
   customer_id: number;
   warehouse_id: number;
@@ -211,19 +191,9 @@ export interface UpdateSaleRequest {
 // ===== DETAIL MANAGEMENT =====
 
 export interface SaleDetailResponse {
-  current_page: number;
   data: SaleDetailResource[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: { url: string | null; label: string; active: boolean }[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
+  meta: Meta;
+  links: Links;
 }
 
 export interface SaleDetailResourceById {
@@ -246,19 +216,9 @@ export interface UpdateSaleDetailRequest {
 // ===== INSTALLMENT MANAGEMENT =====
 
 export interface SaleInstallmentResponse {
-  current_page: number;
   data: SaleInstallmentResource[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: { url: string | null; label: string; active: boolean }[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
+  meta: Meta;
+  links: Links;
 }
 
 export interface SaleInstallmentResourceById {
@@ -302,19 +262,9 @@ export interface SalePaymentResource {
 }
 
 export interface SalePaymentResponse {
-  current_page: number;
   data: SalePaymentResource[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: { url: string | null; label: string; active: boolean }[];
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
+  meta: Meta;
+  links: Links;
 }
 
 export interface SalePaymentResourceById {
@@ -400,6 +350,7 @@ export const INSTALLMENT_STATUSES = [
 import type { ModelComplete } from "@/lib/core.interface";
 import type { SaleSchema } from "./sale.schema";
 import { ShoppingBag, PackageOpen, CreditCard, Wallet } from "lucide-react";
+import type { Links, Meta } from "@/lib/pagination.interface";
 
 const NAME = "Venta";
 const NAME_DETAIL = "Detalle de Venta";

@@ -25,6 +25,7 @@ interface SearchableSelectProps {
   className?: string;
   classNameOption?: string;
   withValue?: boolean;
+  widthPopover?: string;
 }
 
 export function SearchableSelect({
@@ -36,6 +37,7 @@ export function SearchableSelect({
   className,
   classNameOption,
   withValue = true,
+  widthPopover = "!w-(--radix-popover-trigger-width)",
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");
@@ -110,7 +112,7 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="p-0 !w-(--radix-popover-trigger-width)"
+        className={cn("p-0", widthPopover)}
         onWheel={(e) => e.stopPropagation()}
         onWheelCapture={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}

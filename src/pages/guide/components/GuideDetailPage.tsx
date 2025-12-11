@@ -1,8 +1,6 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import TitleComponent from "@/components/TitleComponent";
 import {
-  Loader,
-  ArrowLeft,
   FileText,
   Calendar,
   Truck,
@@ -17,28 +15,22 @@ import {
   Flag,
   FileCheck,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGuideById } from "../lib/guide.hook";
-import {
-  GUIDE,
-  type GuideDetailResource,
-} from "../lib/guide.interface";
+import { GUIDE, type GuideDetailResource } from "../lib/guide.interface";
+import FormWrapper from "@/components/FormWrapper";
+import FormSkeleton from "@/components/FormSkeleton";
+import { BackButton } from "@/components/BackButton";
 
 export default function GuideDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { data: guide, isFinding } = useGuideById(Number(id));
 
   const { MODEL, ICON, ROUTE } = GUIDE;
 
   if (isFinding || !guide) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader className="w-8 h-8 animate-spin" />
-      </div>
-    );
+    return <FormSkeleton />;
   }
 
   const statusVariants: Record<
@@ -78,17 +70,14 @@ export default function GuideDetailPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
+    <FormWrapper>
+      <div className="flex justify-between items-center gap-2">
+        <BackButton to={ROUTE} />
         <TitleComponent
           title={`${MODEL.name} - ${guide.full_document_number}`}
           subtitle={`Detalle de la ${MODEL.name.toLowerCase()}`}
           icon={ICON}
         />
-        <Button variant="outline" onClick={() => navigate(ROUTE)}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver
-        </Button>
       </div>
 
       <div className="space-y-4">
@@ -224,17 +213,21 @@ export default function GuideDetailPage() {
 
         {/* Cliente y Almacén */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="!gap-0">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Cliente
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1">
-              <p className="font-semibold text-lg">{guide.customer?.fullname}</p>
-            </CardContent>
-          </Card>
+          {guide.customer && (
+            <Card className="!gap-0">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Cliente
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                <p className="font-semibold text-lg">
+                  {guide.customer?.full_name ?? guide.customer?.business_name}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="!gap-0">
             <CardHeader className="pb-3">
@@ -309,7 +302,9 @@ export default function GuideDetailPage() {
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Tipo de Documento</p>
+                <p className="text-xs text-muted-foreground">
+                  Tipo de Documento
+                </p>
                 <Badge variant="outline">{guide.carrier_document_type}</Badge>
               </div>
               <div className="space-y-1">
@@ -354,7 +349,9 @@ export default function GuideDetailPage() {
                     <p className="text-xs text-muted-foreground">
                       Tipo de Documento
                     </p>
-                    <Badge variant="outline">{guide.driver_document_type}</Badge>
+                    <Badge variant="outline">
+                      {guide.driver_document_type}
+                    </Badge>
                   </div>
                 )}
                 {guide.driver_document_number && (
@@ -519,6 +516,6 @@ export default function GuideDetailPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </FormWrapper>
   );
 }

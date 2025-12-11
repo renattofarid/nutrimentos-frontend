@@ -21,7 +21,10 @@ export default function WarehouseDocumentTable({
         columns={columns}
         data={data}
         isLoading={isLoading}
-        initialColumnVisibility={{}}
+        initialColumnVisibility={{
+          created_at: false,
+          updated_at: false,
+        }}
       >
         {children}
       </DataTable>

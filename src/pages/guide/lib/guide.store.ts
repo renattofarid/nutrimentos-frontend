@@ -2,7 +2,6 @@ import { create } from "zustand";
 import type {
   GuideResource,
   GuideMotiveResource,
-  Meta,
   CreateGuideRequest,
   UpdateGuideRequest,
 } from "./guide.interface";
@@ -17,13 +16,9 @@ import {
   type GetGuidesParams,
 } from "./guide.actions";
 import type { GuideSchema } from "./guide.schema";
-import {
-  ERROR_MESSAGE,
-  SUCCESS_MESSAGE,
-  errorToast,
-  successToast,
-} from "@/lib/core.function";
+import { ERROR_MESSAGE, errorToast } from "@/lib/core.function";
 import { GUIDE } from "./guide.interface";
+import type { Meta } from "@/lib/pagination.interface";
 
 const { MODEL } = GUIDE;
 
@@ -83,14 +78,7 @@ export const useGuideStore = create<GuideStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await getGuides(params);
-      const meta: Meta = {
-        current_page: response.current_page,
-        from: response.from,
-        last_page: response.last_page,
-        per_page: response.per_page,
-        to: response.to,
-        total: response.total,
-      };
+      const meta = response.meta;
       set({ guides: response.data, meta, isLoading: false });
     } catch (error) {
       set({ error: "Error al cargar las guías", isLoading: false });
@@ -130,7 +118,6 @@ export const useGuideStore = create<GuideStore>((set) => ({
     set({ isSubmitting: true, error: null });
     try {
       const request: CreateGuideRequest = {
-        company_id: Number(data.company_id),
         branch_id: Number(data.branch_id),
         warehouse_id: Number(data.warehouse_id),
         sale_id: data.sale_id ? Number(data.sale_id) : null,
@@ -168,10 +155,8 @@ export const useGuideStore = create<GuideStore>((set) => ({
 
       await storeGuide(request);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "create"));
     } catch (error) {
       set({ error: ERROR_MESSAGE(MODEL, "create"), isSubmitting: false });
-      errorToast(ERROR_MESSAGE(MODEL, "create"));
       throw error;
     }
   },
@@ -181,7 +166,6 @@ export const useGuideStore = create<GuideStore>((set) => ({
     set({ isSubmitting: true, error: null });
     try {
       const request: UpdateGuideRequest = {
-        ...(data.company_id && { company_id: Number(data.company_id) }),
         ...(data.branch_id && { branch_id: Number(data.branch_id) }),
         ...(data.warehouse_id && { warehouse_id: Number(data.warehouse_id) }),
         ...(data.sale_id !== undefined && {
@@ -251,10 +235,8 @@ export const useGuideStore = create<GuideStore>((set) => ({
 
       await updateGuide(id, request);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "update"));
     } catch (error) {
       set({ error: ERROR_MESSAGE(MODEL, "update"), isSubmitting: false });
-      errorToast(ERROR_MESSAGE(MODEL, "update"));
       throw error;
     }
   },
@@ -265,10 +247,8 @@ export const useGuideStore = create<GuideStore>((set) => ({
     try {
       await deleteGuide(id);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "delete"));
     } catch (error) {
       set({ error: ERROR_MESSAGE(MODEL, "delete"), isSubmitting: false });
-      errorToast(ERROR_MESSAGE(MODEL, "delete"));
       throw error;
     }
   },

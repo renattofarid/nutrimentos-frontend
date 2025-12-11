@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import TitleComponent from "@/components/TitleComponent";
 import { PurchaseActions } from "./PurchaseActions";
@@ -21,15 +21,24 @@ import type {
 import { usePurchase } from "../lib/purchase.hook";
 import { usePurchaseStore } from "../lib/purchase.store";
 import { PurchaseTable } from "./PurchaseTable";
-import { exportPurchases } from "../lib/purchase.actions";
+import { useAuthStore } from "@/pages/auth/lib/auth.store";
+import PageWrapper from "@/components/PageWrapper";
 
 export default function PurchasePage() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
-  const [selectedStatus, setSelectedStatus] = useState("");
-  const [selectedPaymentType, setSelectedPaymentType] = useState("");
+
+  // Filters
+  const [document_type, setDocumentType] = useState("");
+  const [document_number, setDocumentNumber] = useState("");
+  const [reference_number, setReferenceNumber] = useState("");
+  const [payment_type, setPaymentType] = useState("");
+  const [status, setStatus] = useState("");
+  const [warehouse_id, setWarehouseId] = useState("");
+  const [start_date, setStartDate] = useState<Date | undefined>();
+  const [end_date, setEndDate] = useState<Date | undefined>();
+
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [selectedPurchase, setSelectedPurchase] =
     useState<PurchaseResource | null>(null);
@@ -37,35 +46,86 @@ export default function PurchasePage() {
   const [selectedInstallment, setSelectedInstallment] =
     useState<PurchaseInstallmentResource | null>(null);
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
+  const { user } = useAuthStore();
 
-  const filterParams = {
+  const { data, meta, isLoading, refetch } = usePurchase({
+    company_id: user?.company_id,
     page,
-    search,
     per_page,
-    ...(selectedStatus && { status: selectedStatus }),
-    ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-  };
-
-  const { data, meta, isLoading, refetch } = usePurchase(filterParams);
+    document_type: document_type || undefined,
+    document_number: document_number || undefined,
+    reference_number: reference_number || undefined,
+    payment_type: payment_type || undefined,
+    status: status || undefined,
+    warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+    start_date: start_date?.toISOString().split("T")[0],
+    end_date: end_date?.toISOString().split("T")[0],
+  });
   const { removePurchase } = usePurchaseStore();
 
+  // Effect para resetear a página 1 cuando cambian los filtros
   useEffect(() => {
-    refetch(filterParams);
-  }, [page, search, per_page, selectedStatus, selectedPaymentType]);
+    if (page !== 1) {
+      setPage(1);
+    }
+  }, [
+    document_type,
+    document_number,
+    reference_number,
+    payment_type,
+    status,
+    warehouse_id,
+    start_date,
+    end_date,
+    per_page,
+  ]);
+
+  // Effect para hacer el refetch cuando cambian los parámetros
+  useEffect(() => {
+    refetch({
+      company_id: user?.company_id,
+      page,
+      per_page,
+      document_type: document_type || undefined,
+      document_number: document_number || undefined,
+      reference_number: reference_number || undefined,
+      payment_type: payment_type || undefined,
+      status: status || undefined,
+      warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+      start_date: start_date?.toISOString().split("T")[0],
+      end_date: end_date?.toISOString().split("T")[0],
+    });
+  }, [
+    page,
+    per_page,
+    document_type,
+    document_number,
+    reference_number,
+    payment_type,
+    status,
+    warehouse_id,
+    start_date,
+    end_date,
+    user?.company_id,
+  ]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
       await removePurchase(deleteId);
-      const filterParams = {
+      await refetch({
+        company_id: user?.company_id,
         page,
-        search,
         per_page,
-        ...(selectedStatus && { status: selectedStatus }),
-        ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-      };
-      await refetch(filterParams);
+        document_type: document_type || undefined,
+        document_number: document_number || undefined,
+        reference_number: reference_number || undefined,
+        payment_type: payment_type || undefined,
+        status: status || undefined,
+        warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+        start_date: start_date?.toISOString().split("T")[0],
+        end_date: end_date?.toISOString().split("T")[0],
+      });
       successToast(
         SUCCESS_MESSAGE({ name: "Compra", gender: false }, "delete")
       );
@@ -128,78 +188,105 @@ export default function PurchasePage() {
   const handleCloseManagementSheet = async () => {
     setIsManagementSheetOpen(false);
     setSelectedPurchase(null);
-    const filterParams = {
+    await refetch({
+      company_id: user?.company_id,
       page,
-      search,
       per_page,
-      ...(selectedStatus && { status: selectedStatus }),
-      ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-    };
-    await refetch(filterParams);
+      document_type: document_type || undefined,
+      document_number: document_number || undefined,
+      reference_number: reference_number || undefined,
+      payment_type: payment_type || undefined,
+      status: status || undefined,
+      warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+      start_date: start_date?.toISOString().split("T")[0],
+      end_date: end_date?.toISOString().split("T")[0],
+    });
   };
 
   const handleClosePaymentSheet = async () => {
     setIsPaymentSheetOpen(false);
     setSelectedInstallment(null);
-    const filterParams = {
+    await refetch({
+      company_id: user?.company_id,
       page,
-      search,
       per_page,
-      ...(selectedStatus && { status: selectedStatus }),
-      ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-    };
-    await refetch(filterParams);
+      document_type: document_type || undefined,
+      document_number: document_number || undefined,
+      reference_number: reference_number || undefined,
+      payment_type: payment_type || undefined,
+      status: status || undefined,
+      warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+      start_date: start_date?.toISOString().split("T")[0],
+      end_date: end_date?.toISOString().split("T")[0],
+    });
   };
 
   const handlePaymentSuccess = async () => {
-    // Refrescar los datos inmediatamente después de un pago exitoso
-    const filterParams = {
+    await refetch({
+      company_id: user?.company_id,
       page,
-      search,
       per_page,
-      ...(selectedStatus && { status: selectedStatus }),
-      ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-    };
-    await refetch(filterParams);
+      document_type: document_type || undefined,
+      document_number: document_number || undefined,
+      reference_number: reference_number || undefined,
+      payment_type: payment_type || undefined,
+      status: status || undefined,
+      warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+      start_date: start_date?.toISOString().split("T")[0],
+      end_date: end_date?.toISOString().split("T")[0],
+    });
   };
 
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      const exportParams = {
-        ...(selectedStatus && { status: selectedStatus }),
-        ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-      };
+  // Construir el endpoint con query params para exportación
+  const exportEndpoint = useMemo(() => {
+    const params = new URLSearchParams();
 
-      const blob = await exportPurchases(exportParams);
-
-      // Crear un enlace de descarga
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-
-      // Generar nombre de archivo con fecha actual
-      const fecha = new Date().toISOString().split("T")[0];
-      link.download = `compras_${fecha}.xlsx`;
-
-      document.body.appendChild(link);
-      link.click();
-
-      // Limpiar
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      successToast("Exportación exitosa", "El archivo Excel se ha descargado correctamente");
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message ?? "Error al exportar el archivo";
-      errorToast(errorMessage);
-    } finally {
-      setIsExporting(false);
+    if (user?.company_id) {
+      params.append("company_id", user.company_id.toString());
     }
-  };
+    if (document_type) {
+      params.append("document_type", document_type);
+    }
+    if (document_number) {
+      params.append("document_number", document_number);
+    }
+    if (reference_number) {
+      params.append("reference_number", reference_number);
+    }
+    if (payment_type) {
+      params.append("payment_type", payment_type);
+    }
+    if (status) {
+      params.append("status", status);
+    }
+    if (warehouse_id) {
+      params.append("warehouse_id", warehouse_id);
+    }
+    if (start_date) {
+      params.append("start_date", start_date.toISOString().split("T")[0]);
+    }
+    if (end_date) {
+      params.append("end_date", end_date.toISOString().split("T")[0]);
+    }
+
+    const queryString = params.toString();
+    const baseExcelUrl = "/purchase/export";
+
+    return queryString ? `${baseExcelUrl}?${queryString}` : baseExcelUrl;
+  }, [
+    user?.company_id,
+    document_type,
+    document_number,
+    reference_number,
+    payment_type,
+    status,
+    warehouse_id,
+    start_date,
+    end_date,
+  ]);
 
   return (
-    <div className="space-y-4">
+    <PageWrapper>
       <div className="flex justify-between items-center">
         <TitleComponent
           title="Compras"
@@ -208,8 +295,7 @@ export default function PurchasePage() {
         />
         <PurchaseActions
           onCreatePurchase={handleCreatePurchase}
-          onExport={handleExport}
-          isExporting={isExporting}
+          excelEndpoint={exportEndpoint}
         />
       </div>
 
@@ -223,12 +309,24 @@ export default function PurchasePage() {
         isLoading={isLoading}
       >
         <PurchaseOptions
-          search={search}
-          setSearch={setSearch}
-          selectedStatus={selectedStatus}
-          setSelectedStatus={setSelectedStatus}
-          selectedPaymentType={selectedPaymentType}
-          setSelectedPaymentType={setSelectedPaymentType}
+          document_type={document_type}
+          setDocumentType={setDocumentType}
+          document_number={document_number}
+          setDocumentNumber={setDocumentNumber}
+          reference_number={reference_number}
+          setReferenceNumber={setReferenceNumber}
+          payment_type={payment_type}
+          setPaymentType={setPaymentType}
+          status={status}
+          setStatus={setStatus}
+          warehouse_id={warehouse_id}
+          setWarehouseId={setWarehouseId}
+          start_date={start_date}
+          end_date={end_date}
+          onDateChange={(from, to) => {
+            setStartDate(from);
+            setEndDate(to);
+          }}
         />
       </PurchaseTable>
 
@@ -254,14 +352,19 @@ export default function PurchasePage() {
         onClose={handleCloseManagementSheet}
         purchase={selectedPurchase}
         onPurchaseUpdate={async () => {
-          const filterParams = {
+          await refetch({
+            company_id: user?.company_id,
             page,
-            search,
             per_page,
-            ...(selectedStatus && { status: selectedStatus }),
-            ...(selectedPaymentType && { payment_type: selectedPaymentType }),
-          };
-          await refetch(filterParams);
+            document_type: document_type || undefined,
+            document_number: document_number || undefined,
+            reference_number: reference_number || undefined,
+            payment_type: payment_type || undefined,
+            status: status || undefined,
+            warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+            start_date: start_date?.toISOString().split("T")[0],
+            end_date: end_date?.toISOString().split("T")[0],
+          });
           // Actualizar el selectedPurchase con los datos más recientes del store
           if (selectedPurchase && data) {
             const updatedPurchase = data.find(
@@ -280,6 +383,6 @@ export default function PurchasePage() {
         installment={selectedInstallment}
         onPaymentSuccess={handlePaymentSuccess}
       />
-    </div>
+    </PageWrapper>
   );
 }

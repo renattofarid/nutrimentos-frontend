@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGuides } from "../lib/guide.hook";
 import TitleComponent from "@/components/TitleComponent";
@@ -17,6 +17,7 @@ import { GuideColumns } from "./GuideColumns";
 import DataTablePagination from "@/components/DataTablePagination";
 import { GUIDE } from "../lib/guide.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import { useAuthStore } from "@/pages/auth/lib/auth.store";
 
 const { MODEL, ICON } = GUIDE;
 
@@ -26,8 +27,14 @@ export default function GuidePage() {
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const { user } = useAuthStore();
 
-  const { data, meta, isLoading, refetch } = useGuides({ page, search, per_page });
+  const { data, meta, isLoading, refetch } = useGuides({
+    company_id: user?.company_id,
+    page,
+    search,
+    per_page,
+  });
   const { removeGuide } = useGuideStore();
 
   const handleEdit = (id: number) => {
@@ -45,14 +52,25 @@ export default function GuidePage() {
       await refetch();
       successToast(SUCCESS_MESSAGE(MODEL, "delete"));
     } catch (error: any) {
-      errorToast(
-        error.response?.data?.message,
-        ERROR_MESSAGE(MODEL, "delete")
-      );
+      errorToast(error.response?.data?.message, ERROR_MESSAGE(MODEL, "delete"));
     } finally {
       setDeleteId(null);
     }
   };
+
+  // Construir el endpoint con query params para exportación
+  const exportEndpoint = useMemo(() => {
+    const params = new URLSearchParams();
+
+    if (user?.company_id) {
+      params.append("company_id", user.company_id.toString());
+    }
+
+    const queryString = params.toString();
+    const baseExcelUrl = "/guide/export";
+
+    return queryString ? `${baseExcelUrl}?${queryString}` : baseExcelUrl;
+  }, [user?.company_id]);
 
   return (
     <div className="space-y-4">
@@ -62,7 +80,7 @@ export default function GuidePage() {
           subtitle={MODEL.description}
           icon={ICON}
         />
-        <GuideActions />
+        <GuideActions excelEndpoint={exportEndpoint} />
       </div>
 
       <GuideTable

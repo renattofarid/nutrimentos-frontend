@@ -34,6 +34,22 @@ export function useAllCompanies() {
   };
 }
 
+export function useAllCompaniesList() {
+  const { allCompaniesList, isLoadingAllList, error, fetchAllCompaniesList } =
+    useCompanyStore();
+
+  useEffect(() => {
+    if (!allCompaniesList) fetchAllCompaniesList();
+  }, [allCompaniesList, fetchAllCompaniesList]);
+
+  return {
+    data: allCompaniesList,
+    isLoading: isLoadingAllList,
+    error,
+    refetch: fetchAllCompaniesList,
+  };
+}
+
 export function useCompanyById(id: number) {
   const { company, isFinding, error, fetchCompany } = useCompanyStore();
 

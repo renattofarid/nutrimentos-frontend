@@ -23,9 +23,9 @@ export const GuideColumns = ({
     accessorKey: "full_document_number",
     header: "N° Documento",
     cell: ({ getValue }) => (
-      <span className="font-mono text-sm font-semibold">
+      <Badge variant={"outline"} className="font-mono text-xs font-semibold">
         {getValue() as string}
-      </span>
+      </Badge>
     ),
   },
   {
@@ -65,11 +65,7 @@ export const GuideColumns = ({
     header: "Cliente",
     cell: ({ row }) => {
       const customer = row.original.customer;
-      return (
-        <span className="text-sm">
-          {customer?.fullname || "-"}
-        </span>
-      );
+      return <span className="text-sm">{customer?.full_name || "-"}</span>;
     },
   },
   {

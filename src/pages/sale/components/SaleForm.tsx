@@ -34,7 +34,6 @@ import type { SaleResource } from "../lib/sale.interface";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
-import type { CompanyResource } from "@/pages/company/lib/company.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import { useState, useEffect } from "react";
 import { formatDecimalTrunc } from "@/lib/utils";
@@ -70,7 +69,6 @@ interface SaleFormProps {
   onCancel?: () => void;
   isSubmitting?: boolean;
   mode?: "create" | "update";
-  companies: CompanyResource[];
   branches: BranchResource[];
   customers: PersonResource[];
   warehouses: WarehouseResource[];
@@ -101,20 +99,16 @@ export const SaleForm = ({
   onSubmit,
   isSubmitting = false,
   mode = "create",
-  companies,
   branches,
   customers,
   warehouses,
   products,
   onRefreshClients,
 }: SaleFormProps) => {
-  // Estados para filtrado en cascada
-  const [filteredBranches, setFilteredBranches] = useState<BranchResource[]>(
-    []
-  );
   const [filteredWarehouses, setFilteredWarehouses] = useState<
     WarehouseResource[]
   >([]);
+
   const [filteredProducts, setFilteredProducts] = useState<ProductResource[]>(
     []
   );
@@ -253,14 +247,6 @@ export const SaleForm = ({
   // Inicializar detalles y cuotas desde defaultValues (para modo edición)
   useEffect(() => {
     if (mode === "update" && defaultValues) {
-      // Inicializar filtros en modo edición
-      if (defaultValues.company_id) {
-        const filtered = branches.filter(
-          (branch) => branch.company_id.toString() === defaultValues.company_id
-        );
-        setFilteredBranches(filtered);
-      }
-
       if (defaultValues.branch_id) {
         const filtered = warehouses.filter(
           (warehouse) =>
@@ -329,38 +315,8 @@ export const SaleForm = ({
   const selectedPaymentType = form.watch("payment_type");
 
   // Watch para filtrado en cascada
-  const selectedCompanyId = form.watch("company_id");
   const selectedBranchId = form.watch("branch_id");
   const selectedWarehouseId = form.watch("warehouse_id");
-
-  // Efecto para filtrar branches cuando cambia company
-  useEffect(() => {
-    if (selectedCompanyId) {
-      const filtered = branches.filter(
-        (branch) => branch.company_id.toString() === selectedCompanyId
-      );
-      setFilteredBranches(filtered);
-
-      // Si el branch seleccionado no está en la nueva lista filtrada, limpiar
-      const currentBranchId = form.getValues("branch_id");
-      if (currentBranchId) {
-        const isValid = filtered.some(
-          (branch) => branch.id.toString() === currentBranchId
-        );
-        if (!isValid) {
-          form.setValue("branch_id", "");
-          form.setValue("warehouse_id", "");
-          setFilteredWarehouses([]);
-        }
-      }
-    } else {
-      setFilteredBranches([]);
-      form.setValue("branch_id", "");
-      form.setValue("warehouse_id", "");
-      setFilteredWarehouses([]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCompanyId, branches]);
 
   // Efecto para filtrar warehouses cuando cambia branch
   useEffect(() => {
@@ -712,27 +668,17 @@ export const SaleForm = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <FormSelect
               control={form.control}
-              name="company_id"
-              label="Empresa"
-              placeholder="Seleccione una empresa"
-              options={companies.map((company) => ({
-                value: company.id.toString(),
-                label: company.trade_name || company.social_reason,
-                description: company.ruc ?? `EMPRESA SIN RUC #${company.id}`,
-              }))}
-              disabled={mode === "update"}
-            />
-
-            <FormSelect
-              control={form.control}
               name="branch_id"
               label="Tienda"
               placeholder="Seleccione una tienda"
-              options={filteredBranches.map((branch) => ({
-                value: branch.id.toString(),
-                label: branch.name,
-              }))}
-              disabled={mode === "update" || !selectedCompanyId}
+              options={
+                branches?.map((branch) => ({
+                  value: branch.id.toString(),
+                  label: branch.name,
+                  description: branch.address,
+                })) || []
+              }
+              disabled={mode === "update"}
             />
 
             <div className="flex gap-2 items-end">
@@ -799,6 +745,9 @@ export const SaleForm = ({
               label="Fecha de Emisión"
               placeholder="Seleccione fecha"
               dateFormat="dd/MM/yyyy"
+              disabledRange={{
+                after: new Date(),
+              }}
             />
 
             <FormSelect

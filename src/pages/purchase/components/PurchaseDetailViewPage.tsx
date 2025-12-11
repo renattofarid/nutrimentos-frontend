@@ -9,7 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PackageOpen, CreditCard, Wallet, Edit, RefreshCw } from "lucide-react";
+import {
+  PackageOpen,
+  CreditCard,
+  Wallet,
+  Pencil,
+  RefreshCw,
+} from "lucide-react";
 import { PurchaseDetailTable } from "./PurchaseDetailTable";
 import { InstallmentPaymentsSheet } from "./sheets/InstallmentPaymentsSheet";
 import { errorToast, successToast } from "@/lib/core.function";
@@ -124,7 +130,7 @@ export const PurchaseDetailViewPage = () => {
             <TitleComponent title={`Compra ${purchase.correlativo}`} />
           </div>
           <Button onClick={handleEditPurchase} variant="outline">
-            <Edit className="h-4 w-4 mr-2" />
+            <Pencil className="h-4 w-4 mr-2" />
             Editar
           </Button>
         </div>

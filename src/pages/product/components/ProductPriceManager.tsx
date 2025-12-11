@@ -7,11 +7,17 @@ import { useProductPriceStore } from "../lib/product-price.store";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import { FormSelect } from "@/components/FormSelect";
-import { Plus, Trash2, Edit, DollarSign } from "lucide-react";
+import { Plus, Trash2, Pencil, DollarSign } from "lucide-react";
 import { successToast, errorToast } from "@/lib/core.function";
 import type {
   CreateProductPriceRequest,
@@ -37,7 +43,9 @@ const productPriceSchema = z.object({
   product_id: z.number(),
   branch_id: z.string().min(1, "Debe seleccionar una tienda"),
   category: z.enum(["LISTA 1", "LISTA 2", "LISTA 3", "LISTA 4", "LISTA 5"]),
-  price_soles: z.number().min(0, "El precio en soles debe ser mayor o igual a 0"),
+  price_soles: z
+    .number()
+    .min(0, "El precio en soles debe ser mayor o igual a 0"),
   price_usd: z.number().min(0, "El precio en USD debe ser mayor o igual a 0"),
 });
 
@@ -248,7 +256,7 @@ export function ProductPriceManager({
                     onClick={() => handleEdit(price)}
                     className="gap-2 flex-1 sm:flex-none"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Pencil className="h-4 w-4" />
                     <span>Editar</span>
                   </Button>
                   <Button
@@ -296,16 +304,21 @@ export function ProductPriceManager({
             </CardHeader>
             <CardContent className="pt-0">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                <form
+                  onSubmit={form.handleSubmit(handleSubmit)}
+                  className="space-y-4"
+                >
                   <FormSelect
                     control={form.control}
                     name="branch_id"
                     label="Tienda"
                     placeholder="Seleccionar tienda"
-                    options={branches?.map((branch) => ({
-                      value: branch.id.toString(),
-                      label: branch.name,
-                    })) || []}
+                    options={
+                      branches?.map((branch) => ({
+                        value: branch.id.toString(),
+                        label: branch.name,
+                      })) || []
+                    }
                   />
 
                   <FormSelect
@@ -333,7 +346,9 @@ export function ProductPriceManager({
                               min="0"
                               placeholder="0.00"
                               {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              onChange={(e) =>
+                                field.onChange(parseFloat(e.target.value) || 0)
+                              }
                             />
                           </FormControl>
                         </FormItem>
@@ -352,7 +367,9 @@ export function ProductPriceManager({
                               min="0"
                               placeholder="0.00"
                               {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              onChange={(e) =>
+                                field.onChange(parseFloat(e.target.value) || 0)
+                              }
                             />
                           </FormControl>
                         </FormItem>

@@ -9,20 +9,21 @@ import { useSaleStore } from "../lib/sales.store";
 import { useClients } from "@/pages/client/lib/client.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
-import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import FormWrapper from "@/components/FormWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { SALE } from "../lib/sale.interface";
+import { useAuthStore } from "@/pages/auth/lib/auth.store";
 
 export const SaleAddPage = () => {
   const { ICON } = SALE;
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const { data: companies, isLoading: companiesLoading } = useAllCompanies();
-  const { data: branches, isLoading: branchesLoading } = useAllBranches();
+  const { user } = useAuthStore();
+  const { data: branches, isLoading: branchesLoading } = useAllBranches({
+    company_id: user?.company_id,
+  });
   const {
     data: customers,
     isLoading: customersLoading,
@@ -34,14 +35,9 @@ export const SaleAddPage = () => {
   const { createSale } = useSaleStore();
 
   const isLoading =
-    companiesLoading ||
-    branchesLoading ||
-    customersLoading ||
-    warehousesLoading ||
-    productsLoading;
+    branchesLoading || customersLoading || warehousesLoading || productsLoading;
 
   const getDefaultValues = (): Partial<SaleSchema> => ({
-    company_id: "",
     branch_id: "",
     customer_id: "",
     warehouse_id: "",
@@ -88,9 +84,7 @@ export const SaleAddPage = () => {
         </div>
       </div>
 
-      {companies &&
-        companies.length > 0 &&
-        branches &&
+      {branches &&
         branches.length > 0 &&
         customers &&
         customers.length > 0 &&
@@ -103,7 +97,6 @@ export const SaleAddPage = () => {
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
             mode="create"
-            companies={companies}
             branches={branches}
             customers={customers}
             warehouses={warehouses}

@@ -34,18 +34,26 @@ export default function WarehouseDocumentEditPage() {
     setIsSubmitting(true);
     try {
       const payload = {
-        warehouse_id: parseInt(data.warehouse_id),
+        warehouse_origin_id: parseInt(data.warehouse_origin_id),
+        warehouse_dest_id: data.warehouse_dest_id
+          ? parseInt(data.warehouse_dest_id)
+          : undefined,
+        responsible_origin_id: data.responsible_origin_id
+          ? parseInt(data.responsible_origin_id)
+          : undefined,
+        responsible_dest_id: data.responsible_dest_id
+          ? parseInt(data.responsible_dest_id)
+          : undefined,
         document_type: data.document_type as any,
         motive: data.motive as any,
-        document_number: data.document_number,
-        person_id: parseInt(data.person_id),
-        document_date: data.document_date,
+        movement_date: data.movement_date,
+        purchase_id: data.purchase_id ? parseInt(data.purchase_id) : undefined,
         observations: data.observations,
         details: data.details.map((detail) => ({
           id: detail.id,
           product_id: parseInt(detail.product_id),
           quantity: detail.quantity,
-          unit_cost: detail.unit_cost,
+          unit_price: detail.unit_price,
           observations: detail.observations,
         })),
       };
@@ -55,8 +63,9 @@ export default function WarehouseDocumentEditPage() {
       navigate("/documentos-almacen");
     } catch (error: any) {
       const errorMessage =
-           (error.response.data.message ?? error.response.data.error) ??
-           "Error al actualizar el documento";
+        error.response.data.message ??
+        error.response.data.error ??
+        "Error al actualizar el documento";
       errorToast(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -78,19 +87,28 @@ export default function WarehouseDocumentEditPage() {
   }
 
   const defaultValues: Partial<WarehouseDocumentSchema> = {
-    warehouse_id: document.warehouse_id.toString(),
+    warehouse_origin_id: document.warehouse_origin
+      ? document.warehouse_origin.id.toString()
+      : "",
+    warehouse_dest_id: document.warehouse_destination
+      ? document.warehouse_destination.id.toString()
+      : "",
     document_type: document.document_type,
     motive: document.motive,
-    document_number: document.document_number,
-    person_id: document.person_id.toString(),
-    document_date: document.document_date,
+    responsible_dest_id: document.responsible_destination
+      ? document.responsible_destination.id.toString()
+      : "",
+    responsible_origin_id: document.responsible_origin
+      ? document.responsible_origin.id.toString()
+      : "",
+    purchase_id: document.purchase ? document.purchase.id.toString() : "",
+    movement_date: document.movement_date,
     observations: document.observations || "",
     details: document.details.map((detail) => ({
       id: detail.id,
-      product_id: detail.product_id.toString(),
+      product_id: detail.product.id.toString(),
       quantity: detail.quantity,
-      unit_cost: detail.unit_cost,
-      observations: detail.observations || "",
+      unit_price: detail.unit_price,
     })),
   };
 

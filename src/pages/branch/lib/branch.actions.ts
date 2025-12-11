@@ -24,9 +24,12 @@ export async function getBranch({
   return data;
 }
 
-export async function getAllBranches(): Promise<BranchResource[]> {
+export async function getAllBranches({
+  params,
+}: getBranchProps): Promise<BranchResource[]> {
   const config: AxiosRequestConfig = {
     params: {
+      ...params,
       all: true,
     },
   };
@@ -34,9 +37,7 @@ export async function getAllBranches(): Promise<BranchResource[]> {
   return data;
 }
 
-export async function findBranchById(
-  id: number
-): Promise<BranchResourceById> {
+export async function findBranchById(id: number): Promise<BranchResourceById> {
   const response = await api.get<BranchResourceById>(`${ENDPOINT}/${id}`);
   return response.data;
 }

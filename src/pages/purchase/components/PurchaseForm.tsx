@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader, Plus, Trash2, Edit, Users2, UserPlus } from "lucide-react";
+import { Loader, Plus, Trash2, Pencil, Users2, UserPlus } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
@@ -87,10 +87,13 @@ export const PurchaseForm = ({
   suppliers,
   warehouses,
   products,
-  companies,
   branches,
   onRefreshSuppliers,
 }: PurchaseFormProps) => {
+  const [filteredWarehouses, setFilteredWarehouses] = useState<
+    WarehouseResource[]
+  >([]);
+
   // Estado para el diálogo de proveedor
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
 
@@ -201,6 +204,16 @@ export const PurchaseForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAmount]);
 
+  useEffect(() => {
+    if (selectedAmount !== currentInstallment.amount) {
+      setCurrentInstallment((prev) => ({
+        ...prev,
+        amount: selectedAmount || "",
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAmount]);
+
   const form = useForm({
     resolver: zodResolver(
       mode === "create" ? purchaseSchemaCreate : purchaseSchemaUpdate
@@ -216,6 +229,48 @@ export const PurchaseForm = ({
     },
     mode: "onChange",
   });
+
+  const selectedBranchId = form.watch("branch_id");
+
+  // Inicializar detalles y cuotas desde defaultValues (para modo edición)
+  useEffect(() => {
+    if (mode === "update" && defaultValues) {
+      if (defaultValues.branch_id) {
+        const filtered = warehouses.filter(
+          (warehouse) =>
+            warehouse.branch_id.toString() === defaultValues.branch_id
+        );
+        setFilteredWarehouses(filtered);
+      }
+      // Disparar validación después de setear valores en modo edición
+      form.trigger();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (selectedBranchId) {
+      const filtered = warehouses.filter(
+        (warehouse) => warehouse.branch_id.toString() === selectedBranchId
+      );
+      setFilteredWarehouses(filtered);
+
+      // Si el warehouse seleccionado no está en la nueva lista filtrada, limpiar
+      const currentWarehouseId = form.getValues("warehouse_id");
+      if (currentWarehouseId) {
+        const isValid = filtered.some(
+          (warehouse) => warehouse.id.toString() === currentWarehouseId
+        );
+        if (!isValid) {
+          form.setValue("warehouse_id", "");
+        }
+      }
+    } else {
+      setFilteredWarehouses([]);
+      form.setValue("warehouse_id", "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBranchId, warehouses]);
 
   // Watch para el tipo de pago y el switch de IGV
   const selectedPaymentType = form.watch("payment_type");
@@ -365,6 +420,15 @@ export const PurchaseForm = ({
     return sum;
   };
 
+  // Calcula el total REAL de la compra (detalles - descuento + flete + estiba)
+  const calculatePurchaseTotal = () => {
+    const detailsTotal = calculateDetailsTotal();
+    const discount = form.getValues("discount_global") || 0;
+    const freight = form.getValues("freight_cost") || 0;
+    const loading = form.getValues("loading_cost") || 0;
+    return detailsTotal - discount + freight + loading;
+  };
+
   const calculateSubtotalTotal = () => {
     const sum = details.reduce(
       (sum, detail) => sum + (detail.subtotal || 0),
@@ -426,7 +490,7 @@ export const PurchaseForm = ({
     }
 
     const newAmount = parseFloat(currentInstallment.amount);
-    const purchaseTotal = calculateDetailsTotal();
+    const purchaseTotal = calculatePurchaseTotal();
 
     // Calcular el total de cuotas (excluyendo la que se está editando si aplica)
     let currentInstallmentsTotal = installments.reduce((sum, inst, idx) => {
@@ -494,7 +558,7 @@ export const PurchaseForm = ({
   // Validar si las cuotas coinciden con el total (si hay cuotas)
   const installmentsMatchTotal = () => {
     if (installments.length === 0) return true; // Si no hay cuotas, está ok
-    const purchaseTotal = calculateDetailsTotal();
+    const purchaseTotal = calculatePurchaseTotal();
     const installmentsTotal = calculateInstallmentsTotal();
     return Math.abs(purchaseTotal - installmentsTotal) < 0.000001; // Tolerancia acorde a 6 decimales
   };
@@ -506,10 +570,14 @@ export const PurchaseForm = ({
       return;
     }
 
-    // Validar que las cuotas coincidan con el total si hay cuotas
-    if (installments.length > 0 && !installmentsMatchTotal()) {
+    // Validar que las cuotas coincidan con el total SOLO si es a crédito
+    if (
+      selectedPaymentType === "CREDITO" &&
+      installments.length > 0 &&
+      !installmentsMatchTotal()
+    ) {
       errorToast(
-        `El total de cuotas (${calculateInstallmentsTotal()}) debe ser igual al total de la compra (${calculateDetailsTotal()})`
+        `El total de cuotas (${calculateInstallmentsTotal()}) debe ser igual al total de la compra (${calculatePurchaseTotal()})`
       );
       return;
     }
@@ -518,14 +586,24 @@ export const PurchaseForm = ({
     let validInstallments;
 
     if (selectedPaymentType === "CONTADO") {
-      // Para pagos al contado, crear automáticamente una cuota con el total
-      const totalAmount = calculateDetailsTotal();
-      validInstallments = [
-        {
-          due_days: "1",
-          amount: totalAmount,
-        },
-      ];
+      // En modo edición, si ya hay cuotas, usarlas (no crear nuevas)
+      if (mode === "update" && installments.length > 0) {
+        validInstallments = installments
+          .filter((inst) => inst.due_days && inst.amount)
+          .map((inst) => ({
+            due_days: inst.due_days,
+            amount: inst.amount,
+          }));
+      } else {
+        // En modo creación, crear automáticamente una cuota con el total
+        const totalAmount = calculatePurchaseTotal();
+        validInstallments = [
+          {
+            due_days: "1",
+            amount: totalAmount,
+          },
+        ];
+      }
     } else {
       // Para pagos a crédito, usar las cuotas ingresadas
       validInstallments = installments
@@ -551,11 +629,6 @@ export const PurchaseForm = ({
     });
   };
 
-  const selectedCompanyId = form.watch("company_id");
-  const branchesFiltered = branches?.filter(
-    (b) => b.company_id.toString() === selectedCompanyId
-  );
-
   return (
     <Form {...form}>
       <form
@@ -570,26 +643,11 @@ export const PurchaseForm = ({
         >
           <FormSelect
             control={form.control}
-            label="Empresa"
-            name="company_id"
-            placeholder="Seleccione una empresa"
-            options={
-              companies?.map((company) => ({
-                value: company.id.toString(),
-                label: company.social_reason,
-                description: company.ruc,
-              })) || []
-            }
-            withValue={false}
-          />
-
-          <FormSelect
-            control={form.control}
             label="Tienda"
             name="branch_id"
             placeholder="Seleccione una tienda"
             options={
-              branchesFiltered?.map((branch) => ({
+              branches?.map((branch) => ({
                 value: branch.id.toString(),
                 label: branch.name,
                 description: branch.address,
@@ -638,12 +696,11 @@ export const PurchaseForm = ({
             name="warehouse_id"
             label="Almacén"
             placeholder="Seleccione un almacén"
-            options={warehouses.map((warehouse) => ({
+            options={filteredWarehouses.map((warehouse) => ({
               value: warehouse.id.toString(),
               label: warehouse.name,
               description: warehouse.address,
             }))}
-            disabled={mode === "update"}
           />
 
           <FormSelect
@@ -971,7 +1028,7 @@ export const PurchaseForm = ({
                             size="sm"
                             onClick={() => handleEditDetail(index)}
                           >
-                            <Edit className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
                             type="button"
@@ -1119,7 +1176,7 @@ export const PurchaseForm = ({
                                 size="sm"
                                 onClick={() => handleEditInstallment(index)}
                               >
-                                <Edit className="h-4 w-4" />
+                                <Pencil className="h-4 w-4" />
                               </Button>
                               <Button
                                 type="button"
@@ -1152,7 +1209,7 @@ export const PurchaseForm = ({
                       ⚠️ El total de cuotas (
                       {calculateInstallmentsTotal().toFixed(2)}) debe ser igual
                       al total de la compra (
-                      {calculateDetailsTotal().toFixed(2)}).
+                      {calculatePurchaseTotal().toFixed(2)}).
                     </p>
                   </div>
                 )}

@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import type {
   PurchaseInstallmentResource,
-  Meta,
   CreatePurchaseInstallmentRequestFull,
   UpdatePurchaseInstallmentRequest,
 } from "./purchase.interface";
@@ -14,6 +13,7 @@ import {
 } from "./purchase.actions";
 import { ERROR_MESSAGE, errorToast } from "@/lib/core.function";
 import { PURCHASE_INSTALLMENT } from "./purchase.interface";
+import type { Meta } from "@/lib/pagination.interface";
 
 const { MODEL } = PURCHASE_INSTALLMENT;
 
@@ -62,14 +62,7 @@ export const usePurchaseInstallmentStore = create<PurchaseInstallmentStore>(
       set({ isLoading: true, error: null });
       try {
         const response = await getPurchaseInstallments(purchaseId, params);
-        const meta: Meta = {
-          current_page: response.current_page,
-          from: response.from,
-          last_page: response.last_page,
-          per_page: response.per_page,
-          to: response.to,
-          total: response.total,
-        };
+        const meta = response.meta;
         set({ installments: response.data, meta, isLoading: false });
       } catch (error) {
         set({ error: "Error al cargar las cuotas", isLoading: false });

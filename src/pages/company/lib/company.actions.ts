@@ -34,6 +34,19 @@ export async function getAllCompanies(): Promise<CompanyResource[]> {
   return data;
 }
 
+export async function getAllCompaniesList(): Promise<CompanyResource[]> {
+  const config: AxiosRequestConfig = {
+    headers: {
+      uuid: "MXCV-OVBN-OBNM-NUTRI",
+    },
+    params: {
+      all: true,
+    },
+  };
+  const { data } = await api.get<CompanyResource[]>("company-list", config);
+  return data;
+}
+
 export async function findCompanyById(
   id: number
 ): Promise<CompanyResourceById> {

@@ -35,35 +35,39 @@ export const WAREHOUSE_DOCUMENT: ModelComplete<WarehouseDocumentSchema> = {
     },
   },
   EMPTY: {
-    warehouse_id: "",
+    warehouse_origin_id: "",
     document_type: "",
     motive: "",
-    document_number: "",
-    person_id: "",
-    document_date: "",
+    warehouse_dest_id: "",
+    responsible_origin_id: "",
+    responsible_dest_id: "",
+    movement_date: "",
+    purchase_id: "",
     observations: "",
     details: [],
   },
 };
 
 // Document Types
-export type DocumentType = "INGRESO" | "SALIDA";
-  // | "ENTRADA_DEVOLUCION"
-  // | "ENTRADA_AJUSTE"
-  // | "ENTRADA_TRANSFERENCIA"
-  // | "ENTRADA_DONACION"
-  // | "SALIDA_DEVOLUCION"
-  // | "SALIDA_AJUSTE"
-  // | "SALIDA_TRANSFERENCIA"
-  // | "SALIDA_MERMA"
-  // | "SALIDA_DONACION"
-  // | "SALIDA_USO_INTERNO";
+export type DocumentType = "INGRESO" | "SALIDA" | "TRASLADO" | "AJUSTE";
+// | "ENTRADA_DEVOLUCION"
+// | "ENTRADA_AJUSTE"
+// | "ENTRADA_TRANSFERENCIA"
+// | "ENTRADA_DONACION"
+// | "SALIDA_DEVOLUCION"
+// | "SALIDA_AJUSTE"
+// | "SALIDA_TRANSFERENCIA"
+// | "SALIDA_MERMA"
+// | "SALIDA_DONACION"
+// | "SALIDA_USO_INTERNO";
 
 export type DocumentMotive =
   | "COMPRA"
   | "VENTA"
   | "DEVOLUCION"
-  | "AJUSTE"
+  | "TRASLADO_INTERNO"
+  | "AJUSTE_STOCK"
+  | "OTRO"
   | "TRANSFERENCIA"
   | "MERMA"
   | "DONACION"
@@ -78,7 +82,7 @@ export interface WarehouseDocumentDetail {
   product_id: number;
   product_name: string;
   quantity: number;
-  unit_cost: number;
+  unit_price: number;
   total_cost: number;
   observations: string;
 }
@@ -86,24 +90,58 @@ export interface WarehouseDocumentDetail {
 // Warehouse Document Resource
 export interface WarehouseDocumentResource {
   id: number;
-  correlativo: string;
-  warehouse_id: number;
-  warehouse_name: string;
+  company: Company;
   document_type: DocumentType;
   motive: DocumentMotive;
   document_number: string;
-  destination_warehouse_id: null;
-  destination_warehouse_name: null;
-  person_id: number;
-  person_fullname: string;
-  user_id: number;
-  user_name: string;
-  document_date: string;
-  posting_date: null;
+  movement_date: string;
+  warehouse_origin: Warehouse;
+  warehouse_destination?: Warehouse;
+  responsible_origin: Company;
+  responsible_destination?: Company;
+  purchase: Purchase;
   status: DocumentStatus;
   observations: string;
-  details: WarehouseDocumentDetail[];
+  details: Detail[];
+  user: User;
   created_at: string;
+  updated_at: string;
+}
+
+interface Detail {
+  id: number;
+  product: Product;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+  tax: number;
+  total: number;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  codigo: string;
+}
+
+interface Purchase {
+  id: number;
+  document_number: string;
+}
+
+interface Company {
+  id: number;
+  name: string;
+}
+
+interface Warehouse {
+  id: number;
+  name: string;
+}
+
+interface User {
+  id: number;
+  name: string;
 }
 
 // API Responses
@@ -119,34 +157,38 @@ export interface WarehouseDocumentResourceById {
 
 // Request Types
 export interface CreateWarehouseDocumentRequest {
-  warehouse_id: number;
+  warehouse_origin_id: number;
   document_type: DocumentType;
   motive: DocumentMotive;
-  document_number: string;
-  person_id: number;
-  document_date: string;
+  warehouse_dest_id?: number; // Opcional, requerido solo para TRASLADO
+  responsible_origin_id: number;
+  responsible_dest_id?: number; // Opcional, requerido solo para TRASLADO
+  movement_date: string;
+  purchase_id?: number; // Opcional
   observations?: string;
   details: {
     product_id: number;
     quantity: number;
-    unit_cost: number;
+    unit_price: number;
     observations?: string;
   }[];
 }
 
 export interface UpdateWarehouseDocumentRequest {
-  warehouse_id?: number;
+  warehouse_origin_id?: number;
   document_type?: DocumentType;
   motive?: DocumentMotive;
-  document_number?: string;
-  person_id?: number;
-  document_date?: string;
+  warehouse_dest_id?: number;
+  responsible_origin_id?: number;
+  responsible_dest_id?: number;
+  movement_date?: string;
+  purchase_id?: number;
   observations?: string;
   details?: {
     id?: number;
     product_id: number;
     quantity: number;
-    unit_cost: number;
+    unit_price: number;
     observations?: string;
   }[];
 }

@@ -68,7 +68,6 @@ export const SaleEditPage = () => {
   }, [sale, navigate]);
 
   const mapSaleToForm = (data: SaleResource): Partial<SaleUpdateSchema> => ({
-    company_id: "1", // En modo edición, estos campos no se pueden cambiar
     branch_id: "1", // En modo edición, estos campos no se pueden cambiar
     customer_id: data.customer_id?.toString(),
     warehouse_id: data.warehouse_id?.toString(),
@@ -159,7 +158,6 @@ export const SaleEditPage = () => {
               onSubmit={handleSubmit}
               isSubmitting={isSubmitting}
               mode="update"
-              companies={companies}
               branches={branches}
               customers={customers}
               warehouses={warehouses}

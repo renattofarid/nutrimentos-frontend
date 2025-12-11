@@ -8,7 +8,6 @@ import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
-import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import FormWrapper from "@/components/FormWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
@@ -16,31 +15,26 @@ import { usePurchaseStore } from "../lib/purchase.store";
 import type { PurchaseSchema } from "../lib/purchase.schema";
 import { PURCHASE } from "../lib/purchase.interface";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
+import { useAuthStore } from "@/pages/auth/lib/auth.store";
 
 export default function PurchaseAddPage() {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { MODEL, ICON } = PURCHASE;
-
-  const { data: companies, isLoading: companiesLoading } = useAllCompanies();
   const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({
     role_names: [SUPPLIER_ROLE_CODE],
   });
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
-  const { data: branches, isLoading: branchesLoading } = useAllBranches();
+  const { data: branches, isLoading: branchesLoading } = useAllBranches({
+    company_id: user?.company_id.toString(),
+  });
   const { data: products, isLoading: productsLoading } = useAllProducts();
-
   const { createPurchase } = usePurchaseStore();
-
   const isLoading =
-    companiesLoading ||
-    !suppliers ||
-    warehousesLoading ||
-    productsLoading ||
-    branchesLoading;
+    !suppliers || warehousesLoading || productsLoading || branchesLoading;
 
   const getDefaultValues = (): Partial<PurchaseSchema> => ({
-    company_id: "",
     supplier_id: "",
     warehouse_id: "",
     purchase_order_id: "",
@@ -88,9 +82,7 @@ export default function PurchaseAddPage() {
         <TitleFormComponent title={MODEL.name} mode="create" icon={ICON} />
       </div>
 
-      {companies &&
-        companies.length > 0 &&
-        suppliers &&
+      {suppliers &&
         suppliers.length > 0 &&
         warehouses &&
         warehouses.length > 0 &&
@@ -101,7 +93,6 @@ export default function PurchaseAddPage() {
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
             mode="create"
-            companies={companies}
             suppliers={suppliers}
             warehouses={warehouses}
             products={products}

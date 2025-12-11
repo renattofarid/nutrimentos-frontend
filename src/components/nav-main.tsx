@@ -37,11 +37,13 @@ export function NavMain({
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
 
   // Función para verificar si algún subitem coincide con la ruta actual
-  const isItemActive = (item: typeof items[0]): boolean => {
+  const isItemActive = (item: (typeof items)[0]): boolean => {
     if (!item.items) {
       return location.pathname === item.url;
     }
-    return item.items.some((subItem) => location.pathname.startsWith(subItem.url));
+    return item.items.some((subItem) =>
+      location.pathname.startsWith(subItem.url)
+    );
   };
 
   // Función para verificar si un subitem está activo
@@ -78,7 +80,7 @@ export function NavMain({
               }}
               className="group/collapsible"
             >
-              <SidebarMenuItem>
+              <SidebarMenuItem className="p-0">
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton
                     tooltip={item.title}
@@ -90,10 +92,13 @@ export function NavMain({
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <SidebarMenuSub>
+                  <SidebarMenuSub className="pr-0 mr-0">
                     {item.items?.map((subItem) => (
                       <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton asChild isActive={isSubItemActive(subItem.url)}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={isSubItemActive(subItem.url)}
+                        >
                           <Link to={subItem.url}>
                             {subItem.icon && <subItem.icon />}
                             <span>{subItem.title}</span>
@@ -107,7 +112,11 @@ export function NavMain({
             </Collapsible>
           ) : (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild tooltip={item.title} isActive={isItemActive(item)}>
+              <SidebarMenuButton
+                asChild
+                tooltip={item.title}
+                isActive={isItemActive(item)}
+              >
                 <Link to={item.url}>
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>

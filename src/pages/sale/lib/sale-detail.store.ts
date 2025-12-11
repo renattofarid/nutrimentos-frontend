@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import type {
   SaleDetailResource,
-  Meta,
   CreateSaleDetailRequestFull,
   UpdateSaleDetailRequest,
 } from "./sale.interface";
@@ -13,8 +12,14 @@ import {
   deleteSaleDetail,
   type GetSaleDetailsParams,
 } from "./sale.actions";
-import { ERROR_MESSAGE, SUCCESS_MESSAGE, errorToast, successToast } from "@/lib/core.function";
+import {
+  ERROR_MESSAGE,
+  SUCCESS_MESSAGE,
+  errorToast,
+  successToast,
+} from "@/lib/core.function";
 import { SALE_DETAIL } from "./sale.interface";
+import type { Meta } from "@/lib/pagination.interface";
 
 const { MODEL } = SALE_DETAIL;
 
@@ -29,10 +34,20 @@ interface SaleDetailStore {
   error: string | null;
 
   // Actions
-  fetchDetails: (saleId: number, params?: GetSaleDetailsParams) => Promise<void>;
+  fetchDetails: (
+    saleId: number,
+    params?: GetSaleDetailsParams
+  ) => Promise<void>;
   fetchDetail: (saleId: number, detailId: number) => Promise<void>;
-  createDetail: (saleId: number, data: CreateSaleDetailRequestFull) => Promise<void>;
-  updateDetail: (saleId: number, detailId: number, data: UpdateSaleDetailRequest) => Promise<void>;
+  createDetail: (
+    saleId: number,
+    data: CreateSaleDetailRequestFull
+  ) => Promise<void>;
+  updateDetail: (
+    saleId: number,
+    detailId: number,
+    data: UpdateSaleDetailRequest
+  ) => Promise<void>;
   deleteDetail: (saleId: number, detailId: number) => Promise<void>;
   resetDetail: () => void;
 }
@@ -52,14 +67,7 @@ export const useSaleDetailStore = create<SaleDetailStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await getSaleDetails(saleId, params);
-      const meta: Meta = {
-        current_page: response.current_page,
-        from: response.from,
-        last_page: response.last_page,
-        per_page: response.per_page,
-        to: response.to,
-        total: response.total,
-      };
+      const meta = response.meta;
       set({ details: response.data, meta, isLoading: false });
     } catch (error) {
       set({ error: "Error al cargar los detalles", isLoading: false });
@@ -94,7 +102,11 @@ export const useSaleDetailStore = create<SaleDetailStore>((set) => ({
   },
 
   // Update detail
-  updateDetail: async (saleId: number, detailId: number, data: UpdateSaleDetailRequest) => {
+  updateDetail: async (
+    saleId: number,
+    detailId: number,
+    data: UpdateSaleDetailRequest
+  ) => {
     set({ isSubmitting: true, error: null });
     try {
       await updateSaleDetail(saleId, detailId, data);

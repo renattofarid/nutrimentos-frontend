@@ -72,7 +72,7 @@ const GeneralSheet: React.FC<GeneralSheetProps> = ({
       <Sheet open={open} onOpenChange={(v) => !v && onClose()} modal={modal}>
         <SheetContent
           side={side}
-          className={cn(sizes[size], className, "overflow-y-auto")}
+          className={cn(sizes[size], className, "overflow-y-auto gap-0!")}
         >
           <SheetHeader>
             <div className="flex items-center gap-2">
@@ -90,7 +90,7 @@ const GeneralSheet: React.FC<GeneralSheetProps> = ({
             </div>
             <SheetClose onClick={onClose} />
           </SheetHeader>
-          <div className="">{children}</div>
+          <div className="p-4">{children}</div>
         </SheetContent>
       </Sheet>
     ) : (

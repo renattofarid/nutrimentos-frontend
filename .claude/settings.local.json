@@ -9,7 +9,8 @@
       "Bash(npx tsc:*)",
       "Bash(dir:*)",
       "Bash(nul)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []

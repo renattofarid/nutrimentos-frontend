@@ -820,9 +820,9 @@ export const SaleForm = ({
                     return {
                       value: product.id.toString(),
                       label: product.name,
-                      description: stockInWarehouse
-                        ? `Stock: ${stockInWarehouse.stock}`
-                        : undefined,
+                      description: `${product.codigo} | Stock: ${
+                        stockInWarehouse?.stock ?? 0
+                      }`,
                     };
                   })}
                   disabled={!selectedWarehouseId}

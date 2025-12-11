@@ -629,6 +629,8 @@ export const PurchaseForm = ({
     });
   };
 
+  const selectedWarehouseId = form.watch("warehouse_id");
+
   return (
     <Form {...form}>
       <form
@@ -923,10 +925,19 @@ export const PurchaseForm = ({
                   name="temp_product_id"
                   label="Producto"
                   placeholder="Seleccione"
-                  options={products.map((product) => ({
-                    value: product.id.toString(),
-                    label: product.name,
-                  }))}
+                  options={products.map((product) => {
+                    const stockInWarehouse = product.stock_warehouse?.find(
+                      (stock) =>
+                        stock.warehouse_id.toString() === selectedWarehouseId
+                    );
+                    return {
+                      value: product.id.toString(),
+                      label: product.name,
+                      description: `${product.codigo} | Stock: ${
+                        stockInWarehouse?.stock ?? 0
+                      }`,
+                    };
+                  })}
                 />
               </Form>
             </div>

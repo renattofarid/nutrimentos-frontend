@@ -364,6 +364,15 @@ export const PurchaseForm = ({
     return sum;
   };
 
+  // Calcula el total REAL de la compra (detalles - descuento + flete + estiba)
+  const calculatePurchaseTotal = () => {
+    const detailsTotal = calculateDetailsTotal();
+    const discount = form.getValues("discount_global") || 0;
+    const freight = form.getValues("freight_cost") || 0;
+    const loading = form.getValues("loading_cost") || 0;
+    return detailsTotal - discount + freight + loading;
+  };
+
   const calculateSubtotalTotal = () => {
     const sum = details.reduce(
       (sum, detail) => sum + (detail.subtotal || 0),
@@ -425,7 +434,7 @@ export const PurchaseForm = ({
     }
 
     const newAmount = parseFloat(currentInstallment.amount);
-    const purchaseTotal = calculateDetailsTotal();
+    const purchaseTotal = calculatePurchaseTotal();
 
     // Calcular el total de cuotas (excluyendo la que se está editando si aplica)
     let currentInstallmentsTotal = installments.reduce((sum, inst, idx) => {
@@ -493,7 +502,7 @@ export const PurchaseForm = ({
   // Validar si las cuotas coinciden con el total (si hay cuotas)
   const installmentsMatchTotal = () => {
     if (installments.length === 0) return true; // Si no hay cuotas, está ok
-    const purchaseTotal = calculateDetailsTotal();
+    const purchaseTotal = calculatePurchaseTotal();
     const installmentsTotal = calculateInstallmentsTotal();
     return Math.abs(purchaseTotal - installmentsTotal) < 0.000001; // Tolerancia acorde a 6 decimales
   };
@@ -505,10 +514,10 @@ export const PurchaseForm = ({
       return;
     }
 
-    // Validar que las cuotas coincidan con el total si hay cuotas
-    if (installments.length > 0 && !installmentsMatchTotal()) {
+    // Validar que las cuotas coincidan con el total SOLO si es a crédito
+    if (selectedPaymentType === "CREDITO" && installments.length > 0 && !installmentsMatchTotal()) {
       errorToast(
-        `El total de cuotas (${calculateInstallmentsTotal()}) debe ser igual al total de la compra (${calculateDetailsTotal()})`
+        `El total de cuotas (${calculateInstallmentsTotal()}) debe ser igual al total de la compra (${calculatePurchaseTotal()})`
       );
       return;
     }
@@ -517,14 +526,24 @@ export const PurchaseForm = ({
     let validInstallments;
 
     if (selectedPaymentType === "CONTADO") {
-      // Para pagos al contado, crear automáticamente una cuota con el total
-      const totalAmount = calculateDetailsTotal();
-      validInstallments = [
-        {
-          due_days: "1",
-          amount: totalAmount,
-        },
-      ];
+      // En modo edición, si ya hay cuotas, usarlas (no crear nuevas)
+      if (mode === "update" && installments.length > 0) {
+        validInstallments = installments
+          .filter((inst) => inst.due_days && inst.amount)
+          .map((inst) => ({
+            due_days: inst.due_days,
+            amount: inst.amount,
+          }));
+      } else {
+        // En modo creación, crear automáticamente una cuota con el total
+        const totalAmount = calculatePurchaseTotal();
+        validInstallments = [
+          {
+            due_days: "1",
+            amount: totalAmount,
+          },
+        ];
+      }
     } else {
       // Para pagos a crédito, usar las cuotas ingresadas
       validInstallments = installments
@@ -1131,7 +1150,7 @@ export const PurchaseForm = ({
                       ⚠️ El total de cuotas (
                       {calculateInstallmentsTotal().toFixed(2)}) debe ser igual
                       al total de la compra (
-                      {calculateDetailsTotal().toFixed(2)}).
+                      {calculatePurchaseTotal().toFixed(2)}).
                     </p>
                   </div>
                 )}

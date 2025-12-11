@@ -36,6 +36,7 @@ export interface PurchaseResource {
   id: number;
   correlativo: string;
   company_id: number;
+  branch_id: number;
   supplier_id: number;
   supplier_fullname: string;
   warehouse_id: number;
@@ -45,11 +46,16 @@ export interface PurchaseResource {
   purchase_order_id: number | null;
   document_type: string;
   document_number: string;
+  reference_number: string | null;
   issue_date: string;
   reception_date: string;
   due_date: string;
   payment_type: string;
   include_igv: boolean;
+  include_cost_account: boolean;
+  discount_global: number;
+  freight_cost: number;
+  loading_cost: number;
   total_amount: string;
   current_amount: string;
   currency: string;
@@ -105,7 +111,7 @@ export interface CreatePurchaseInstallmentRequest {
 }
 
 export interface CreatePurchaseRequest {
-  company_id: number;
+  branch_id: number;
   warehouse_id: number;
   supplier_id: number;
   issue_date: string;

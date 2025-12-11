@@ -53,17 +53,24 @@ export default function PurchaseEditPage() {
     data: PurchaseResource
   ): Partial<PurchaseSchema> => {
     return {
+      branch_id: data.branch_id?.toString(),
       supplier_id: data.supplier_id?.toString(),
       warehouse_id: data.warehouse_id?.toString(),
       purchase_order_id: data.purchase_order_id?.toString() || "",
       document_type: data.document_type,
       document_number: data.document_number,
+      reference_number: data.reference_number || "",
       issue_date: data.issue_date?.split("T")[0], // Formato YYYY-MM-DD
       reception_date: data.reception_date?.split("T")[0],
       due_date: data.due_date?.split("T")[0],
       payment_type: data.payment_type,
       include_igv: data.include_igv || false,
+      include_cost_account: data.include_cost_account ?? true,
+      discount_global: data.discount_global || 0,
+      freight_cost: data.freight_cost || 0,
+      loading_cost: data.loading_cost || 0,
       currency: data.currency,
+      observations: data.observations || "",
       details: data.details.map((detail) => ({
         product_id: detail.product.id.toString(),
         quantity: detail.quantity.toString(),

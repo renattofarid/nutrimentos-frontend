@@ -26,7 +26,7 @@ export const warehouseDocumentSchemaCreate = z
       .min(1, { message: "Debe seleccionar un tipo de documento" }),
     motive: z.string().min(1, { message: "Debe seleccionar un motivo" }),
     warehouse_dest_id: z.string().optional(),
-    responsible_origin_id: z.string().optional(),
+    responsible_origin_id: z.string(),
     responsible_dest_id: z.string().optional(),
     movement_date: z
       .string()

@@ -42,6 +42,7 @@ export const USER: ModelComplete<UserResource> = {
     person_id: 0,
     person: {
       id: 0,
+      company_id: 0,
       type_document: "",
       type_person: "",
       number_document: "",

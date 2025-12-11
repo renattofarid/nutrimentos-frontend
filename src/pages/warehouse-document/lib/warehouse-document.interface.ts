@@ -91,20 +91,42 @@ export interface WarehouseDocumentDetail {
 export interface WarehouseDocumentResource {
   id: number;
   company: Company;
-  document_type: DocumentType;
-  motive: DocumentMotive;
+  document_type: string;
+  motive: string;
   document_number: string;
   movement_date: string;
   warehouse_origin: Warehouse;
-  warehouse_destination: null;
-  responsible_origin: null;
-  responsible_destination: null;
-  purchase: null;
-  status: DocumentStatus;
+  warehouse_destination?: Warehouse;
+  responsible_origin: Company;
+  responsible_destination?: Company;
+  purchase: Purchase;
+  status: string;
   observations: string;
-  user: User;
+  details: Detail[];
+  user: Company;
   created_at: string;
   updated_at: string;
+}
+
+interface Detail {
+  id: number;
+  product: Product;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+  tax: number;
+  total: number;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  codigo: string;
+}
+
+interface Purchase {
+  id: number;
+  document_number: string;
 }
 
 interface Company {

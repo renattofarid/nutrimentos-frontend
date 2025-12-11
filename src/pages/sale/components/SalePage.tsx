@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSale } from "../lib/sale.hook";
 import SaleTable from "./SaleTable";
 import SaleActions from "./SaleActions";
@@ -20,9 +20,15 @@ import TitleComponent from "@/components/TitleComponent";
 import { errorToast } from "@/lib/core.function";
 import { InstallmentPaymentManagementSheet } from "@/pages/accounts-receivable/components";
 import PageWrapper from "@/components/PageWrapper";
+import { useAuthStore } from "@/pages/auth/lib/auth.store";
+import DataTablePagination from "@/components/DataTablePagination";
+import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
 export default function SalePage() {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const [page, setPage] = useState(1);
+  const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [search, setSearch] = useState("");
   const [openDelete, setOpenDelete] = useState(false);
   const [saleToDelete, setSaleToDelete] = useState<number | null>(null);
@@ -31,14 +37,31 @@ export default function SalePage() {
   const [selectedInstallment, setSelectedInstallment] =
     useState<SaleInstallmentResource | null>(null);
   const [openPaymentSheet, setOpenPaymentSheet] = useState(false);
+  const company_id = user?.company_id;
 
   const {
     data: sales,
+    meta,
     isLoading,
     refetch,
   } = useSale({
+    company_id,
+    page,
+    per_page,
     search,
   });
+
+  // Effect para resetear a página 1 cuando cambian los filtros
+  useEffect(() => {
+    if (page !== 1) {
+      setPage(1);
+    }
+  }, [search, company_id, per_page]);
+
+  // Effect para hacer el refetch cuando cambian los parámetros
+  useEffect(() => {
+    refetch({ company_id, page, per_page, search });
+  }, [company_id, page, per_page, search]);
 
   const { removeSale } = useSaleStore();
 
@@ -136,6 +159,15 @@ export default function SalePage() {
       <SaleTable columns={columns} data={sales || []} isLoading={isLoading}>
         <SaleOptions search={search} setSearch={setSearch} />
       </SaleTable>
+
+      <DataTablePagination
+        page={page}
+        totalPages={meta?.last_page || 1}
+        onPageChange={setPage}
+        per_page={per_page}
+        setPerPage={setPerPage}
+        totalData={meta?.total || 0}
+      />
 
       <SimpleDeleteDialog
         open={openDelete}

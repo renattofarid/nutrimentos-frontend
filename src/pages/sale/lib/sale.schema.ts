@@ -49,7 +49,6 @@ export type SaleInstallmentSchema = z.infer<typeof saleInstallmentSchema>;
 // ===== MAIN SALE SCHEMA =====
 
 export const saleSchemaCreate = z.object({
-  company_id: requiredStringId("Debe seleccionar una empresa"),
   branch_id: requiredStringId("Debe seleccionar una tienda"),
   customer_id: requiredStringId("Debe seleccionar un cliente"),
   warehouse_id: requiredStringId("Debe seleccionar un almacén"),

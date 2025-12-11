@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useSaleStore } from "./sales.store";
 import type { GetSalesParams } from "./sale.actions";
-import type { SaleResource, Meta } from "./sale.interface";
+import type { SaleResource } from "./sale.interface";
+import type { Meta } from "@/lib/pagination.interface";
 
 // ============================================
 // SALE HOOKS

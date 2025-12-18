@@ -93,6 +93,24 @@ export const deleteSale = async (id: number): Promise<{ message: string }> => {
   return response.data;
 };
 
+export interface NextSeriesResponse {
+  serie: string;
+  numero: string;
+}
+
+export const getNextSeries = async (
+  branch_id: number,
+  document_type: string
+): Promise<NextSeriesResponse> => {
+  const response = await api.get<NextSeriesResponse>(
+    `${SALE_ENDPOINT}/next-series`,
+    {
+      params: { branch_id, document_type },
+    }
+  );
+  return response.data;
+};
+
 // ============================================
 // SALE DETAIL - CRUD Actions (Nested in Sale)
 // ============================================

@@ -63,6 +63,7 @@ import { errorToast } from "@/lib/core.function";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { ClientDialog } from "@/pages/client/components/ClientDialog";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
+import { getNextSeries } from "../lib/sale.actions";
 
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
@@ -118,6 +119,10 @@ export const SaleForm = ({
 
   // Hook para obtener vendedores
   const workers = useAllWorkers();
+
+  // Estados para serie y número automático
+  const [autoSerie, setAutoSerie] = useState<string>("");
+  const [autoNumero, setAutoNumero] = useState<string>("");
 
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
@@ -321,6 +326,7 @@ export const SaleForm = ({
   // Watch para filtrado en cascada
   const selectedBranchId = form.watch("branch_id");
   const selectedWarehouseId = form.watch("warehouse_id");
+  const selectedDocumentType = form.watch("document_type");
 
   // Efecto para filtrar warehouses cuando cambia branch
   useEffect(() => {
@@ -364,6 +370,30 @@ export const SaleForm = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedWarehouseId, products]);
+
+  // Efecto para obtener serie y número automático
+  useEffect(() => {
+    const fetchNextSeries = async () => {
+      if (selectedBranchId && selectedDocumentType && mode === "create") {
+        try {
+          const response = await getNextSeries(
+            Number(selectedBranchId),
+            selectedDocumentType
+          );
+          setAutoSerie(response.serie);
+          setAutoNumero(response.numero);
+        } catch (error) {
+          console.error("Error fetching next series:", error);
+          setAutoSerie("");
+          setAutoNumero("");
+        }
+      } else {
+        setAutoSerie("");
+        setAutoNumero("");
+      }
+    };
+    fetchNextSeries();
+  }, [selectedBranchId, selectedDocumentType, mode]);
 
   // Establecer fecha de emisión automáticamente al cargar el formulario
   useEffect(() => {
@@ -773,6 +803,36 @@ export const SaleForm = ({
                 label: dt.label,
               }))}
             />
+
+            {/* Auto-generated Serie */}
+            {mode === "create" && autoSerie && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Serie (Automática)
+                </label>
+                <Input
+                  value={autoSerie}
+                  readOnly
+                  className="bg-muted"
+                  placeholder="Serie automática"
+                />
+              </div>
+            )}
+
+            {/* Auto-generated Numero */}
+            {mode === "create" && autoNumero && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Número (Automático)
+                </label>
+                <Input
+                  value={autoNumero}
+                  readOnly
+                  className="bg-muted"
+                  placeholder="Número automático"
+                />
+              </div>
+            )}
 
             <DatePickerFormField
               control={form.control}

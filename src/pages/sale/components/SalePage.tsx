@@ -35,6 +35,7 @@ export default function SalePage() {
   const [document_type, setDocumentType] = useState("");
   const [status, setStatus] = useState("");
   const [warehouse_id, setWarehouseId] = useState("");
+  const [vendedor_id, setVendedorId] = useState("");
   const [start_date, setStartDate] = useState<Date | undefined>();
   const [end_date, setEndDate] = useState<Date | undefined>();
   const [numero, setNumero] = useState("");
@@ -62,6 +63,7 @@ export default function SalePage() {
     document_type: document_type || undefined,
     status: status || undefined,
     warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+    vendedor_id: vendedor_id ? Number(vendedor_id) : undefined,
     start_date: start_date?.toISOString().split("T")[0],
     end_date: end_date?.toISOString().split("T")[0],
     numero: numero || undefined,
@@ -78,6 +80,7 @@ export default function SalePage() {
     document_type,
     status,
     warehouse_id,
+    vendedor_id,
     start_date,
     end_date,
     numero,
@@ -96,6 +99,7 @@ export default function SalePage() {
       document_type: document_type || undefined,
       status: status || undefined,
       warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
+      vendedor_id: vendedor_id ? Number(vendedor_id) : undefined,
       start_date: start_date?.toISOString().split("T")[0],
       end_date: end_date?.toISOString().split("T")[0],
       numero: numero || undefined,
@@ -109,6 +113,7 @@ export default function SalePage() {
     document_type,
     status,
     warehouse_id,
+    vendedor_id,
     start_date,
     end_date,
     numero,
@@ -266,6 +271,8 @@ export default function SalePage() {
           setStatus={setStatus}
           warehouse_id={warehouse_id}
           setWarehouseId={setWarehouseId}
+          vendedor_id={vendedor_id}
+          setVendedorId={setVendedorId}
           start_date={start_date}
           end_date={end_date}
           onDateChange={(from, to) => {

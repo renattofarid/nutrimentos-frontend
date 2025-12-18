@@ -41,6 +41,7 @@ export const SaleAddPage = () => {
     branch_id: "",
     customer_id: "",
     warehouse_id: "",
+    vendedor_id: "",
     document_type: "",
     issue_date: "",
     payment_type: "",

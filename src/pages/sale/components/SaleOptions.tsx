@@ -5,6 +5,7 @@ import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
 import { Input } from "@/components/ui/input";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
+import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 
 const DOCUMENT_TYPE_OPTIONS = [
@@ -29,6 +30,8 @@ interface SaleOptionsProps {
   setStatus: (value: string) => void;
   warehouse_id: string;
   setWarehouseId: (value: string) => void;
+  vendedor_id: string;
+  setVendedorId: (value: string) => void;
   start_date?: Date;
   end_date?: Date;
   onDateChange: (from: Date | undefined, to: Date | undefined) => void;
@@ -47,6 +50,8 @@ export default function SaleOptions({
   setStatus,
   warehouse_id,
   setWarehouseId,
+  vendedor_id,
+  setVendedorId,
   start_date,
   end_date,
   onDateChange,
@@ -58,9 +63,10 @@ export default function SaleOptions({
   const { user } = useAuthStore();
   const company_id = user?.company_id;
 
-  // Fetch branches and warehouses
+  // Fetch branches, warehouses and workers
   const { data: branches } = useAllBranches({ company_id });
   const { data: warehouses } = useAllWarehouses();
+  const workers = useAllWorkers();
 
   const branchOptions = [
     ...(branches?.map((branch) => ({
@@ -73,6 +79,13 @@ export default function SaleOptions({
     ...(warehouses?.map((warehouse) => ({
       value: String(warehouse.id),
       label: warehouse.name,
+    })) || []),
+  ];
+
+  const workerOptions = [
+    ...(workers?.map((worker) => ({
+      value: String(worker.id),
+      label: `${worker.names} ${worker.father_surname}`,
     })) || []),
   ];
 
@@ -111,6 +124,15 @@ export default function SaleOptions({
         value={warehouse_id}
         onChange={setWarehouseId}
         placeholder="Almacén"
+        widthPopover="w-48!"
+      />
+
+      {/* Vendedor Filter */}
+      <SearchableSelect
+        options={workerOptions}
+        value={vendedor_id}
+        onChange={setVendedorId}
+        placeholder="Vendedor"
         widthPopover="w-48!"
       />
 

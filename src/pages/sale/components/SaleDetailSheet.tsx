@@ -230,8 +230,8 @@ export default function SaleDetailSheet({
           </CardContent>
         </Card>
 
-        {/* Almacén y Usuario */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Almacén, Usuario y Vendedor */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="!gap-0">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
@@ -260,6 +260,31 @@ export default function SaleDetailSheet({
                 <p className="text-sm text-muted-foreground">
                   {sale.user.email}
                 </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="!gap-0">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Vendedor
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              {sale.vendedor ? (
+                <>
+                  <p className="font-semibold">
+                    {sale.vendedor.names} {sale.vendedor.father_surname}
+                  </p>
+                  {sale.vendedor.number_document && (
+                    <p className="text-sm text-muted-foreground">
+                      {sale.vendedor.number_document}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">Sin vendedor</p>
               )}
             </CardContent>
           </Card>

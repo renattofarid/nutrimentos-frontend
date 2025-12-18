@@ -71,6 +71,7 @@ export const SaleEditPage = () => {
     branch_id: "1", // En modo edición, estos campos no se pueden cambiar
     customer_id: data.customer_id?.toString(),
     warehouse_id: data.warehouse_id?.toString(),
+    vendedor_id: data.vendedor_id ? data.vendedor_id.toString() : "",
     document_type: data.document_type,
     issue_date: data.issue_date.split("T")[0],
     payment_type: data.payment_type,

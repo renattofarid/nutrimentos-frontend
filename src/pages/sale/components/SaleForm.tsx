@@ -62,6 +62,7 @@ import {
 import { errorToast } from "@/lib/core.function";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { ClientDialog } from "@/pages/client/components/ClientDialog";
+import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
@@ -114,6 +115,9 @@ export const SaleForm = ({
   );
 
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+
+  // Hook para obtener vendedores
+  const workers = useAllWorkers();
 
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
@@ -483,6 +487,19 @@ export const SaleForm = ({
     return roundTo6Decimals(sum);
   };
 
+  const calculateTotalWeight = () => {
+    // Calcular el peso total sumando peso de cada producto * cantidad
+    const totalWeight = details.reduce((sum, detail) => {
+      const product = products.find(
+        (p) => p.id.toString() === detail.product_id
+      );
+      const productWeight = product?.weight ? parseFloat(product.weight) : 0;
+      const quantity = parseFloat(detail.quantity) || 0;
+      return sum + productWeight * quantity;
+    }, 0);
+    return roundTo6Decimals(totalWeight);
+  };
+
   // Funciones para cuotas
   const handleAddInstallment = () => {
     if (
@@ -646,10 +663,13 @@ export const SaleForm = ({
         }));
     }
 
+    const totalWeight = calculateTotalWeight();
+
     onSubmit({
       ...data,
       details,
       installments: validInstallments,
+      total_weight: totalWeight,
     });
   };
 
@@ -715,6 +735,21 @@ export const SaleForm = ({
                 <UserPlus className="h-4 w-4" />
               </Button>
             </div>
+
+            <FormSelect
+              control={form.control}
+              name="vendedor_id"
+              label="Vendedor"
+              placeholder="Seleccionar vendedor (opcional)"
+              options={[
+                { value: "", label: "Sin vendedor" },
+                ...(workers?.map((worker) => ({
+                  value: worker.id.toString(),
+                  label: `${worker.names} ${worker.father_surname}`,
+                  description: worker.number_document ?? "-",
+                })) || []),
+              ]}
+            />
 
             <FormSelect
               control={form.control}

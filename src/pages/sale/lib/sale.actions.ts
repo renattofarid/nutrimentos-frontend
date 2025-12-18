@@ -41,6 +41,7 @@ export interface GetSalesParams {
   customer_id?: number;
   branch_id?: number;
   warehouse_id?: number;
+  vendedor_id?: number;
   start_date?: string;
   end_date?: string;
   numero?: string;

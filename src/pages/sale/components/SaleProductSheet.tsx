@@ -82,6 +82,24 @@ export const SaleProductSheet = ({
     (p) => p.id.toString() === selectedProductId
   );
 
+  // Resetear el formulario cuando cambian los defaultValues (modo edición)
+  useEffect(() => {
+    if (open && defaultValues && mode === "update") {
+      form.reset({
+        product_id: defaultValues.product_id || "",
+        quantity: defaultValues.quantity || "",
+        additional_kg: defaultValues.additional_kg || "0",
+      });
+    } else if (open && mode === "create") {
+      form.reset({
+        product_id: "",
+        quantity: "",
+        additional_kg: "0",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, defaultValues, mode]);
+
   // Fetch dynamic price cuando cambian los valores
   useEffect(() => {
     const fetchPrice = async () => {

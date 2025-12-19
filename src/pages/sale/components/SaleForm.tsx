@@ -918,9 +918,11 @@ export const SaleForm = ({
                       description: `${product.codigo} | Stock: ${
                         stockInWarehouse?.stock ?? 0
                       }`,
+                      searchCode: product.codigo,
                     };
                   })}
                   disabled={!selectedWarehouseId}
+                  enableCodeSearch={true}
                 />
               </Form>
             </div>
@@ -932,7 +934,7 @@ export const SaleForm = ({
                 <FormItem>
                   <FormLabel>Cantidad</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="0" {...field} />
+                    <Input type="number" placeholder="0" min="0" {...field} />
                   </FormControl>
                 </FormItem>
               )}

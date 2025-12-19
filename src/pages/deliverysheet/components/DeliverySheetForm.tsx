@@ -97,8 +97,8 @@ export const DeliverySheetForm = ({
       driver_id: defaultValues.driver_id || "",
       customer_id: defaultValues.customer_id || "",
       type: defaultValues.type || "",
-      issue_date: defaultValues.issue_date || new Date(),
-      delivery_date: defaultValues.delivery_date || new Date(),
+      issue_date: defaultValues.issue_date || undefined,
+      delivery_date: defaultValues.delivery_date || undefined,
       sale_ids: defaultValues.sale_ids || [],
       observations: defaultValues.observations || "",
       for_single_customer: defaultValues.for_single_customer ?? true,
@@ -255,6 +255,7 @@ export const DeliverySheetForm = ({
             name="issue_date"
             label="Fecha de Emisión"
             placeholder="Seleccione la fecha de emisión"
+            dateFormat="dd/MM/yyyy"
           />
 
           <DatePickerFormField
@@ -262,6 +263,7 @@ export const DeliverySheetForm = ({
             name="delivery_date"
             label="Fecha de Entrega"
             placeholder="Seleccione la fecha de entrega"
+            dateFormat="dd/MM/yyyy"
           />
 
           <FormField
@@ -308,6 +310,7 @@ export const DeliverySheetForm = ({
                 onClick={handleSearchSales}
                 disabled={!searchParams.payment_type || isLoadingAvailableSales}
                 className="w-full sm:w-auto"
+                size={"sm"}
               >
                 {isLoadingAvailableSales ? (
                   <Loader className="mr-2 h-4 w-4 animate-spin" />

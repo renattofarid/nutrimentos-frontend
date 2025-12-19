@@ -164,7 +164,7 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
         branch_id: Number(data.branch_id),
         zone_id: Number(data.zone_id),
         driver_id: Number(data.driver_id),
-        customer_id: Number(data.customer_id),
+        customer_id: data.customer_id ? Number(data.customer_id) : undefined,
         type: data.type as "CONTADO" | "CREDITO",
         issue_date: data.issue_date,
         delivery_date: data.delivery_date,

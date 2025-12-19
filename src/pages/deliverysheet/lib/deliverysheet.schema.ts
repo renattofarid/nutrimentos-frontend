@@ -7,7 +7,7 @@ export const deliverySheetSchemaCreate = z.object({
   branch_id: requiredStringId("Debe seleccionar una sucursal"),
   zone_id: requiredStringId("Debe seleccionar una zona"),
   driver_id: requiredStringId("Debe seleccionar un conductor"),
-  customer_id: requiredStringId("Debe seleccionar un cliente"),
+  customer_id: z.string().optional(),
   type: z.string().min(1, { message: "Debe seleccionar un tipo" }),
   issue_date: z
     .string()
@@ -25,6 +25,7 @@ export const deliverySheetSchemaCreate = z.object({
     .array(z.number())
     .min(1, { message: "Debe seleccionar al menos una venta" }),
   observations: z.string().max(500).optional(),
+  for_single_customer: z.boolean().optional(),
 });
 
 export type DeliverySheetSchema = z.infer<typeof deliverySheetSchemaCreate>;

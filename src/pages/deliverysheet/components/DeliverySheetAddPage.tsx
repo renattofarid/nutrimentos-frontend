@@ -4,14 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { DeliverySheetForm } from "./DeliverySheetForm";
 import { useDeliverySheetStore } from "../lib/deliverysheet.store";
 import type { DeliverySheetSchema } from "../lib/deliverysheet.schema";
-import TitleComponent from "@/components/TitleComponent";
 import PageWrapper from "@/components/PageWrapper";
 import { DELIVERY_SHEET } from "../lib/deliverysheet.interface";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { useBranchStore } from "@/pages/branch/lib/branch.store";
-import { usePersonStore } from "@/pages/person/lib/person.store";
-import { useEffect } from "react";
+import TitleFormComponent from "@/components/TitleFormComponent";
+import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
+import { useAllClients } from "@/pages/client/lib/client.hook";
+import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 
 export default function DeliverySheetAddPage() {
   const navigate = useNavigate();
@@ -23,13 +21,9 @@ export default function DeliverySheetAddPage() {
     isLoadingAvailableSales,
   } = useDeliverySheetStore();
 
-  const { fetchAllBranches, allBranches } = useBranchStore();
-  const { fetchAllPersons, allPersons } = usePersonStore();
-
-  useEffect(() => {
-    fetchAllBranches();
-    fetchAllPersons();
-  }, [fetchAllBranches, fetchAllPersons]);
+  const { data: allBranches = [] } = useAllBranches();
+  const workers = useAllWorkers();
+  const { data: customers = [] } = useAllClients();
 
   // Mock data para zones y drivers - deberías reemplazar esto con datos reales de tu API
   const zones = [
@@ -38,20 +32,6 @@ export default function DeliverySheetAddPage() {
     { id: 3, code: "ZE", name: "Zona Este" },
     { id: 4, code: "ZO", name: "Zona Oeste" },
   ];
-
-  // Filtrar personas que pueden ser conductores (puedes ajustar este filtro según tu lógica)
-  const drivers = allPersons?.map(person => ({
-    id: person.id,
-    full_name: person.full_name || `${person.names} ${person.father_surname} ${person.mother_surname}`,
-    document_number: person.number_document,
-  })) || [];
-
-  // Todos los clientes disponibles
-  const customers = allPersons?.map(person => ({
-    id: person.id,
-    full_name: person.full_name || `${person.names} ${person.father_surname} ${person.mother_surname}`,
-    document_number: person.number_document,
-  })) || [];
 
   const handleSubmit = async (data: DeliverySheetSchema) => {
     try {
@@ -85,33 +65,27 @@ export default function DeliverySheetAddPage() {
   return (
     <PageWrapper>
       <div className="flex items-center justify-between mb-6">
-        <TitleComponent
+        <TitleFormComponent
           title={TITLES.create.title}
-          subtitle={TITLES.create.subtitle}
+          mode="create"
           icon={ICON}
         />
-        <Button variant="outline" onClick={handleCancel}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver
-        </Button>
       </div>
 
-      <div className="bg-card rounded-lg border p-6">
-        <DeliverySheetForm
-          defaultValues={{}}
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-          isSubmitting={isSubmitting}
-          mode="create"
-          branches={allBranches || []}
-          zones={zones}
-          drivers={drivers}
-          customers={customers}
-          availableSales={availableSales || []}
-          onSearchSales={handleSearchSales}
-          isLoadingAvailableSales={isLoadingAvailableSales}
-        />
-      </div>
+      <DeliverySheetForm
+        defaultValues={{}}
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        isSubmitting={isSubmitting}
+        mode="create"
+        branches={allBranches || []}
+        zones={zones}
+        drivers={workers || []}
+        customers={customers || []}
+        availableSales={availableSales || []}
+        onSearchSales={handleSearchSales}
+        isLoadingAvailableSales={isLoadingAvailableSales}
+      />
     </PageWrapper>
   );
 }

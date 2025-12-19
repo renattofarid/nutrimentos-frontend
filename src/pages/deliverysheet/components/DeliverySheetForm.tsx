@@ -16,10 +16,13 @@ import {
   deliverySheetSchemaCreate,
   type DeliverySheetSchema,
 } from "../lib/deliverysheet.schema";
-import { Loader, Search } from "lucide-react";
-import { FormSelect } from "@/components/FormSelect";
+import { Loader, Search, Info, List } from "lucide-react";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
+import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
+import { FormSelect } from "@/components/FormSelect";
+import { FormSwitch } from "@/components/FormSwitch";
 import { useState, useEffect } from "react";
+import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { DELIVERY_SHEET_TYPES } from "../lib/deliverysheet.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
@@ -41,23 +44,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
 
 interface Zone {
   id: number;
   code: string;
   name: string;
-}
-
-interface Driver {
-  id: number;
-  full_name: string;
-  document_number: string | null;
-}
-
-interface Customer {
-  id: number;
-  full_name: string;
-  document_number: string | null;
 }
 
 interface DeliverySheetFormProps {
@@ -68,8 +60,8 @@ interface DeliverySheetFormProps {
   mode?: "create" | "update";
   branches: BranchResource[];
   zones: Zone[];
-  drivers: Driver[];
-  customers: Customer[];
+  drivers: PersonResource[];
+  customers: PersonResource[];
   availableSales: AvailableSale[];
   onSearchSales: (params: {
     payment_type: string;
@@ -100,27 +92,30 @@ export const DeliverySheetForm = ({
   const [searchParams, setSearchParams] = useState({
     payment_type: "",
     zone_id: "",
-    date_from: "",
-    date_to: "",
+    date_from: undefined as Date | undefined,
+    date_to: undefined as Date | undefined,
   });
 
   const form = useForm<DeliverySheetSchema>({
-    resolver: zodResolver(deliverySheetSchemaCreate),
+    resolver: zodResolver(deliverySheetSchemaCreate) as any,
     defaultValues: {
       branch_id: defaultValues.branch_id || "",
       zone_id: defaultValues.zone_id || "",
       driver_id: defaultValues.driver_id || "",
       customer_id: defaultValues.customer_id || "",
       type: defaultValues.type || "",
-      issue_date: defaultValues.issue_date || new Date().toISOString().split("T")[0],
+      issue_date:
+        defaultValues.issue_date || new Date().toISOString().split("T")[0],
       delivery_date: defaultValues.delivery_date || "",
       sale_ids: defaultValues.sale_ids || [],
       observations: defaultValues.observations || "",
+      for_single_customer: defaultValues.for_single_customer ?? true,
     },
   });
 
   const typeValue = form.watch("type");
   const zoneValue = form.watch("zone_id");
+  const forSingleCustomer = form.watch("for_single_customer");
 
   const handleSearchSales = () => {
     if (!searchParams.payment_type) {
@@ -130,8 +125,12 @@ export const DeliverySheetForm = ({
     onSearchSales({
       payment_type: searchParams.payment_type,
       zone_id: searchParams.zone_id ? Number(searchParams.zone_id) : undefined,
-      date_from: searchParams.date_from || undefined,
-      date_to: searchParams.date_to || undefined,
+      date_from: searchParams.date_from
+        ? format(searchParams.date_from, "yyyy-MM-dd")
+        : undefined,
+      date_to: searchParams.date_to
+        ? format(searchParams.date_to, "yyyy-MM-dd")
+        : undefined,
     });
   };
 
@@ -185,142 +184,93 @@ export const DeliverySheetForm = ({
       >
         <GroupFormSection
           title="Información General"
-          description="Datos principales de la planilla de reparto"
+          icon={Info}
+          cols={{
+            sm: 1,
+            md: 3,
+          }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="branch_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Sucursal</FormLabel>
-                  <FormControl>
-                    <FormSelect
-                      placeholder="Seleccione una sucursal"
-                      items={branches.map((branch) => ({
-                        value: branch.id.toString(),
-                        label: branch.name,
-                      }))}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormSelect
+            control={form.control}
+            name="branch_id"
+            label="Tienda"
+            placeholder="Seleccione una tienda"
+            options={
+              branches?.map((branch) => ({
+                value: branch.id.toString(),
+                label: branch.name,
+                description: branch.address,
+              })) || []
+            }
+            disabled={mode === "update"}
+          />
+          <FormSelect
+            control={form.control}
+            name="type"
+            label="Tipo de Pago"
+            placeholder="Seleccione un tipo"
+            options={DELIVERY_SHEET_TYPES.map((type) => ({
+              value: type.value,
+              label: type.label,
+            }))}
+          />
 
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Pago</FormLabel>
-                  <FormControl>
-                    <FormSelect
-                      placeholder="Seleccione un tipo"
-                      items={DELIVERY_SHEET_TYPES.map((type) => ({
-                        value: type.value,
-                        label: type.label,
-                      }))}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormSelect
+            control={form.control}
+            name="zone_id"
+            label="Zona"
+            placeholder="Seleccione una zona"
+            options={zones.map((zone) => ({
+              value: zone.id.toString(),
+              label: `${zone.name} (${zone.code})`,
+            }))}
+          />
 
-            <FormField
-              control={form.control}
-              name="zone_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Zona</FormLabel>
-                  <FormControl>
-                    <FormSelect
-                      placeholder="Seleccione una zona"
-                      items={zones.map((zone) => ({
-                        value: zone.id.toString(),
-                        label: `${zone.name} (${zone.code})`,
-                      }))}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormSelect
+            control={form.control}
+            name="driver_id"
+            label="Conductor"
+            placeholder="Seleccione un conductor"
+            options={drivers.map((driver) => ({
+              value: driver.id.toString(),
+              label: driver.names ?? driver.business_name,
+            }))}
+          />
 
-            <FormField
-              control={form.control}
-              name="driver_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Conductor</FormLabel>
-                  <FormControl>
-                    <FormSelect
-                      placeholder="Seleccione un conductor"
-                      items={drivers.map((driver) => ({
-                        value: driver.id.toString(),
-                        label: driver.full_name,
-                      }))}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormSwitch
+            control={form.control}
+            name="for_single_customer"
+            label="Tipo de Planilla"
+            text="Planilla para un Cliente Específico"
+            textDescription="Desactive si la planilla es para múltiples clientes"
+          />
 
-            <FormField
+          {forSingleCustomer && (
+            <FormSelect
               control={form.control}
               name="customer_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cliente Cobrador</FormLabel>
-                  <FormControl>
-                    <FormSelect
-                      placeholder="Seleccione un cliente"
-                      items={customers.map((customer) => ({
-                        value: customer.id.toString(),
-                        label: customer.full_name,
-                      }))}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Cliente Cobrador"
+              placeholder="Seleccione un cliente"
+              options={customers.map((customer) => ({
+                value: customer.id.toString(),
+                label: customer.names ?? customer.business_name,
+              }))}
             />
+          )}
 
-            <FormField
-              control={form.control}
-              name="issue_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fecha de Emisión</FormLabel>
-                  <FormControl>
-                    <DatePickerFormField {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <DatePickerFormField
+            control={form.control}
+            name="issue_date"
+            label="Fecha de Emisión"
+            placeholder="Seleccione la fecha de emisión"
+          />
 
-            <FormField
-              control={form.control}
-              name="delivery_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fecha de Entrega</FormLabel>
-                  <FormControl>
-                    <DatePickerFormField {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <DatePickerFormField
+            control={form.control}
+            name="delivery_date"
+            label="Fecha de Entrega"
+            placeholder="Seleccione la fecha de entrega"
+          />
 
           <FormField
             control={form.control}
@@ -343,7 +293,8 @@ export const DeliverySheetForm = ({
 
         <GroupFormSection
           title="Buscar Ventas Disponibles"
-          description="Busque ventas disponibles para agregar a la planilla"
+          icon={Search}
+          cols={{ sm: 1 }}
         >
           <Card>
             <CardHeader>
@@ -353,36 +304,17 @@ export const DeliverySheetForm = ({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Fecha Desde</label>
-                  <input
-                    type="date"
-                    className="w-full mt-1 px-3 py-2 border rounded-md"
-                    value={searchParams.date_from}
-                    onChange={(e) =>
-                      setSearchParams((prev) => ({
-                        ...prev,
-                        date_from: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Fecha Hasta</label>
-                  <input
-                    type="date"
-                    className="w-full mt-1 px-3 py-2 border rounded-md"
-                    value={searchParams.date_to}
-                    onChange={(e) =>
-                      setSearchParams((prev) => ({
-                        ...prev,
-                        date_to: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-              </div>
+              <DateRangePickerFilter
+                dateFrom={searchParams.date_from}
+                dateTo={searchParams.date_to}
+                onDateChange={(dateFrom, dateTo) =>
+                  setSearchParams((prev) => ({
+                    ...prev,
+                    date_from: dateFrom,
+                    date_to: dateTo,
+                  }))
+                }
+              />
 
               <Button
                 type="button"
@@ -402,8 +334,9 @@ export const DeliverySheetForm = ({
 
         {availableSales.length > 0 && (
           <GroupFormSection
-            title="Ventas Disponibles"
-            description={`Seleccione las ventas a incluir en la planilla (${selectedSaleIds.length} seleccionadas)`}
+            title={`Ventas Disponibles (${selectedSaleIds.length} seleccionadas)`}
+            icon={List}
+            cols={{ sm: 1 }}
           >
             <div className="space-y-4">
               <div className="flex justify-between items-center">
@@ -491,7 +424,10 @@ export const DeliverySheetForm = ({
               Cancelar
             </Button>
           )}
-          <Button type="submit" disabled={isSubmitting || selectedSaleIds.length === 0}>
+          <Button
+            type="submit"
+            disabled={isSubmitting || selectedSaleIds.length === 0}
+          >
             {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
             {mode === "create" ? "Crear Planilla" : "Actualizar Planilla"}
           </Button>

@@ -154,7 +154,7 @@ export interface CreateDeliverySheetRequest {
   branch_id: number;
   zone_id: number;
   driver_id: number;
-  customer_id: number;
+  customer_id?: number;
   type: "CONTADO" | "CREDITO";
   issue_date: string;
   delivery_date: string;

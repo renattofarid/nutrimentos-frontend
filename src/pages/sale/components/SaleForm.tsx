@@ -1395,11 +1395,11 @@ export const SaleForm = ({
           </GroupFormSection>
         )}
 
-        <pre>
+        {/* <pre>
           <code>{JSON.stringify(form.getValues(), null, 2)}</code>
           <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
         </pre>
-        <Button onClick={() => form.trigger()}>Button</Button>
+        <Button onClick={() => form.trigger()}>Button</Button> */}
 
         {/* Botones */}
         <div className="flex gap-4 w-full justify-end">
@@ -1430,7 +1430,6 @@ export const SaleForm = ({
           </Button>
         </div>
       </form>
-
 
       {/* Diálogo para agregar proveedor */}
       <ClientDialog

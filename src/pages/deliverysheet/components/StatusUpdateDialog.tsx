@@ -83,18 +83,11 @@ export function StatusUpdateDialog({
               options={STATUS_OPTIONS}
             />
 
-            <FormField
+            <DatePickerFormField
               control={form.control}
               name="delivery_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fecha de Entrega</FormLabel>
-                  <FormControl>
-                    <DatePickerFormField {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Fecha de Entrega"
+              placeholder="Seleccione la fecha de entrega"
             />
 
             <FormField

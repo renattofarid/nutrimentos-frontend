@@ -145,7 +145,7 @@ export default function DeliverySheetPage() {
     }
   };
 
-  const { MODEL, ICON } = DELIVERY_SHEET;
+  const { MODEL, ICON, ROUTE_ADD } = DELIVERY_SHEET;
 
   const columns = getDeliverySheetColumns({
     onDelete: handleDelete,
@@ -163,7 +163,7 @@ export default function DeliverySheetPage() {
           subtitle="Administrar todas las planillas de reparto registradas en el sistema"
           icon={ICON}
         />
-        <Button onClick={() => navigate("/planillas/agregar")}>
+        <Button size={"sm"} onClick={() => navigate(ROUTE_ADD)}>
           <Plus className="mr-2 h-4 w-4" />
           Nueva Planilla
         </Button>

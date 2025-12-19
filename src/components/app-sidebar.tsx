@@ -242,6 +242,11 @@ const data = {
           url: AccountsReceivableRoute,
           icon: DollarSign,
         },
+        {
+          title: DeliverySheetTitle,
+          url: DeliverySheetRoute,
+          icon: DeliverySheetIcon,
+        },
       ],
     },
     {
@@ -373,11 +378,6 @@ const data = {
           icon: GuideIcon,
         },
         {
-          title: DeliverySheetTitle,
-          url: DeliverySheetRoute,
-          icon: DeliverySheetIcon,
-        },
-        {
           title: PaymentConceptTitle,
           url: PaymentConceptRoute,
           icon: PaymentConceptIcon,
@@ -470,7 +470,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <TeamSwitcher />
       </SidebarHeader>
-      <SidebarContent >
+      <SidebarContent>
         <NavMain items={filteredNav} />
       </SidebarContent>
       <SidebarFooter className="flex md:hidden">

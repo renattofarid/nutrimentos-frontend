@@ -20,13 +20,13 @@ import {
 } from "../lib/product.schema";
 import { Loader } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
+import { FormSwitch } from "@/components/FormSwitch";
 import type { CategoryResource } from "@/pages/category/lib/category.interface";
 import type { BrandResource } from "@/pages/brand/lib/brand.interface";
 import type { UnitResource } from "@/pages/unit/lib/unit.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { ProductTypeResource } from "@/pages/product-type/lib/product-type.interface";
 import type { NationalityResource } from "@/pages/nationality/lib/nationality.interface";
-import { Switch } from "@/components/ui/switch";
 import type { CompanyResource } from "@/pages/company/lib/company.interface";
 import type { ProductResource } from "../lib/product.interface";
 
@@ -197,22 +197,62 @@ export const ProductForm = ({
               }))}
             />
 
-            <FormField
+            <FormSwitch
               control={form.control}
               name="is_taxed"
+              label="Impuestos"
+              text="¿Está Gravado?"
+            />
+          </div>
+        </div>
+
+        {/* Peso y Precio por Kg */}
+        <div className="bg-sidebar p-4 rounded-lg space-y-4">
+          <h3 className="text-lg font-semibold">Información de Peso</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="weight"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                  <div>
-                    <FormLabel>¿Está Gravado?</FormLabel>
-                  </div>
+                <FormItem>
+                  <FormLabel>Peso</FormLabel>
                   <FormControl>
-                    <Switch
-                      checked={field.value === 1}
-                      onCheckedChange={(checked) =>
-                        field.onChange(checked ? 1 : 0)
-                      }
+                    <Input
+                      variant="default"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormSwitch
+              control={form.control}
+              name="is_kg"
+              label="Unidad de Medida"
+              text="Venta por Kilogramo"
+            />
+
+            <FormField
+              control={form.control}
+              name="price_per_kg"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Precio por Kg</FormLabel>
+                  <FormControl>
+                    <Input
+                      variant="default"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />

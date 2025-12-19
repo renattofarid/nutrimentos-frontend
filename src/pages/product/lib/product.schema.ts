@@ -29,7 +29,7 @@ export const productSchemaCreate = z.object({
     .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {
       message: "Debe ser un número válido mayor o igual a 0",
     }),
-  is_taxed: z.number().min(0).max(1).default(1),
+  is_taxed: z.boolean().default(true),
   supplier_id: requiredStringId("Debe seleccionar un proveedor"),
   nationality_id: z.string().optional().default(""),
   comment: z.string().optional().default(""),
@@ -40,6 +40,7 @@ export const productSchemaCreate = z.object({
     .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {
       message: "Debe ser un número válido mayor o igual a 0",
     }),
+  is_kg: z.boolean().default(true),
   price_per_kg: z
     .string()
     .optional()

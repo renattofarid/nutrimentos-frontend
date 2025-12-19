@@ -9,6 +9,8 @@ import type { CompanyResource } from "@/pages/company/lib/company.interface";
 interface ProductOptionsProps {
   search: string;
   setSearch: (value: string) => void;
+  searchCode: string;
+  setSearchCode: (value: string) => void;
   selectedCategory: string;
   setSelectedCategory: (value: string) => void;
   selectedBrand: string;
@@ -25,6 +27,8 @@ interface ProductOptionsProps {
 export default function ProductOptions({
   search,
   setSearch,
+  searchCode,
+  setSearchCode,
   selectedCategory,
   setSelectedCategory,
   selectedBrand,
@@ -43,6 +47,12 @@ export default function ProductOptions({
         value={search}
         onChange={setSearch}
         placeholder="Buscar producto"
+      />
+
+      <SearchInput
+        value={searchCode}
+        onChange={setSearchCode}
+        placeholder="Buscar código"
       />
 
       <div className="flex gap-2">

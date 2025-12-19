@@ -98,7 +98,6 @@ export function DatePickerFormField<T extends FieldValues>({
     if (date) {
       field.onChange(format(date, "yyyy-MM-dd"));
       if (isMobile) setDrawerOpen(false);
-      if (!isMobile) setPopoverOpen(false);
     } else {
       field.onChange("");
     }
@@ -106,7 +105,6 @@ export function DatePickerFormField<T extends FieldValues>({
   };
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [popoverOpen, setPopoverOpen] = useState(false);
 
   return (
     <FormItem className="flex flex-col">
@@ -144,7 +142,7 @@ export function DatePickerFormField<T extends FieldValues>({
           </DrawerContent>
         </Drawer>
       ) : (
-        <Popover open={popoverOpen} onOpenChange={setPopoverOpen} modal={true}>
+        <Popover>
           <PopoverTrigger asChild>
             <FormControl>
               <Button
@@ -160,7 +158,7 @@ export function DatePickerFormField<T extends FieldValues>({
               </Button>
             </FormControl>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <PopoverContent className="w-auto p-0" align="start">
             <Calendar
               mode="single"
               locale={es}

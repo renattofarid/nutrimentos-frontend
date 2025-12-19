@@ -38,12 +38,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
-
-interface Zone {
-  id: number;
-  code: string;
-  name: string;
-}
+import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
 
 interface DeliverySheetFormProps {
   defaultValues: Partial<DeliverySheetSchema>;
@@ -52,13 +47,14 @@ interface DeliverySheetFormProps {
   isSubmitting?: boolean;
   mode?: "create" | "update";
   branches: BranchResource[];
-  zones: Zone[];
+  zones: ZoneResource[];
   drivers: PersonResource[];
   customers: PersonResource[];
   availableSales: AvailableSale[];
   onSearchSales: (params: {
     payment_type: string;
     zone_id?: number;
+    customer_id?: number;
     date_from?: string;
     date_to?: string;
   }) => void;
@@ -85,6 +81,7 @@ export const DeliverySheetForm = ({
   const [searchParams, setSearchParams] = useState({
     payment_type: "",
     zone_id: "",
+    customer_id: "",
     date_from: undefined as Date | undefined,
     date_to: undefined as Date | undefined,
   });
@@ -97,8 +94,8 @@ export const DeliverySheetForm = ({
       driver_id: defaultValues.driver_id || "",
       customer_id: defaultValues.customer_id || "",
       type: defaultValues.type || "",
-      issue_date: defaultValues.issue_date || undefined,
-      delivery_date: defaultValues.delivery_date || undefined,
+      issue_date: defaultValues.issue_date,
+      delivery_date: defaultValues.delivery_date,
       sale_ids: defaultValues.sale_ids || [],
       observations: defaultValues.observations || "",
       for_single_customer: defaultValues.for_single_customer ?? true,
@@ -107,6 +104,7 @@ export const DeliverySheetForm = ({
 
   const typeValue = form.watch("type");
   const zoneValue = form.watch("zone_id");
+  const customerValue = form.watch("customer_id");
   const forSingleCustomer = form.watch("for_single_customer");
 
   const handleSearchSales = () => {
@@ -117,6 +115,7 @@ export const DeliverySheetForm = ({
     onSearchSales({
       payment_type: searchParams.payment_type,
       zone_id: searchParams.zone_id ? Number(searchParams.zone_id) : undefined,
+      customer_id: searchParams.customer_id ? Number(searchParams.customer_id) : undefined,
       date_from: searchParams.date_from
         ? format(searchParams.date_from, "yyyy-MM-dd")
         : undefined,
@@ -154,10 +153,16 @@ export const DeliverySheetForm = ({
   }, [typeValue]);
 
   useEffect(() => {
-    if (zoneValue) {
-      setSearchParams((prev) => ({ ...prev, zone_id: zoneValue }));
+    if (forSingleCustomer) {
+      // Si es cliente único, limpiar zona y sincronizar customer_id
+      form.setValue("zone_id", "");
+      setSearchParams((prev) => ({ ...prev, zone_id: "", customer_id: customerValue || "" }));
+    } else {
+      // Si es multi-cliente, limpiar cliente y sincronizar zone_id
+      form.setValue("customer_id", "");
+      setSearchParams((prev) => ({ ...prev, customer_id: "", zone_id: zoneValue || "" }));
     }
-  }, [zoneValue]);
+  }, [forSingleCustomer, zoneValue, customerValue, form]);
 
   const totalAmount = selectedSaleIds.reduce((sum, saleId) => {
     const sale = availableSales.find((s) => s.id === saleId);
@@ -199,17 +204,6 @@ export const DeliverySheetForm = ({
 
           <FormSelect
             control={form.control}
-            name="zone_id"
-            label="Zona"
-            placeholder="Seleccione una zona"
-            options={zones.map((zone) => ({
-              value: zone.id.toString(),
-              label: `${zone.name} (${zone.code})`,
-            }))}
-          />
-
-          <FormSelect
-            control={form.control}
             name="type"
             label="Tipo de Pago"
             placeholder="Seleccione un tipo"
@@ -218,6 +212,37 @@ export const DeliverySheetForm = ({
               label: type.label,
             }))}
           />
+
+          <FormSwitch
+            control={form.control}
+            name="for_single_customer"
+            label="Tipo de Planilla"
+            text="Cliente Único"
+          />
+
+          {forSingleCustomer ? (
+            <FormSelect
+              control={form.control}
+              name="customer_id"
+              label="Cliente"
+              placeholder="Seleccione un cliente"
+              options={customers.map((customer) => ({
+                value: customer.id.toString(),
+                label: customer.names ?? customer.business_name,
+              }))}
+            />
+          ) : (
+            <FormSelect
+              control={form.control}
+              name="zone_id"
+              label="Zona"
+              placeholder="Seleccione una zona"
+              options={zones.map((zone) => ({
+                value: zone.id.toString(),
+                label: `${zone.name} (${zone.code})`,
+              }))}
+            />
+          )}
 
           <FormSelect
             control={form.control}
@@ -229,26 +254,6 @@ export const DeliverySheetForm = ({
               label: driver.names ?? driver.business_name,
             }))}
           />
-
-          <FormSwitch
-            control={form.control}
-            name="for_single_customer"
-            label="Tipo de Planilla"
-            text="Cliente Único"
-          />
-
-          {forSingleCustomer && (
-            <FormSelect
-              control={form.control}
-              name="customer_id"
-              label="Cliente"
-              placeholder="Seleccione un cliente"
-              options={customers.map((customer) => ({
-                value: customer.id.toString(),
-                label: customer.names ?? customer.business_name,
-              }))}
-            />
-          )}
 
           <DatePickerFormField
             control={form.control}

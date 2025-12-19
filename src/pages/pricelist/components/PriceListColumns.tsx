@@ -12,12 +12,14 @@ interface PriceListColumnsProps {
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
   onAssignClient: (id: number) => void;
+  onViewDetails: (id: number) => void;
 }
 
 export const PriceListColumns = ({
   onEdit,
   onDelete,
   onAssignClient,
+  onViewDetails,
 }: PriceListColumnsProps): ColumnDef<PriceList>[] => [
   {
     accessorKey: "code",
@@ -103,6 +105,9 @@ export const PriceListColumns = ({
     cell: ({ row }) => (
       <SelectActions>
         <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => onViewDetails(row.original.id)}>
+            Ver Detalles
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onEdit(row.original.id)}>
             Editar
           </DropdownMenuItem>

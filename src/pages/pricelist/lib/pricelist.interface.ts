@@ -1,5 +1,6 @@
 import type { ModelComplete } from "@/lib/core.interface";
 import type { Links, Meta } from "@/lib/pagination.interface";
+import type { ProductResource } from "@/pages/product/lib/product.interface";
 import { ListIcon } from "lucide-react";
 
 const ROUTE = "/lista-precio";
@@ -49,38 +50,38 @@ export const PRICELIST: ModelComplete<PriceList> = {
 
 // Weight Range
 export interface WeightRange {
-  id?: number;
-  client_category_id?: number;
+  id: number;
+  client_category_id: number;
   name: string;
-  min_weight: string | number;
-  max_weight: string | number | null;
+  min_weight: string;
+  max_weight: string;
   order: number;
-  formatted_range?: string;
-  created_at?: string;
-  updated_at?: string;
+  formatted_range: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface WeightRangeRequest {
   name: string;
   min_weight: number;
-  max_weight: number | null;
+  max_weight?: number;
   order: number;
 }
 
 // Product Price
 export interface ProductPrice {
-  id?: number;
+  id: number;
   product_id: number;
-  weight_range_id?: number;
-  weight_range_index?: number;
-  client_category_id?: number;
-  branch_id?: number | null;
-  price: string | number;
+  weight_range_id: number;
+  client_category_id: number;
+  branch_id?: number;
+  price: string;
   currency: string;
-  is_active?: boolean;
-  formatted_price?: string;
-  created_at?: string;
-  updated_at?: string;
+  is_active: boolean;
+  formatted_price: string;
+  product: ProductResource;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ProductPriceRequest {
@@ -171,10 +172,10 @@ export interface PriceData {
   price: string;
   currency: string;
   is_active: boolean;
-  branch_id: number | null;
+  branch_id?: number;
   created_at: string;
   updated_at: string;
-  deleted_at: string | null;
+  deleted_at?: string;
   applied_weight_range: AppliedWeightRange;
   product: Product;
 }

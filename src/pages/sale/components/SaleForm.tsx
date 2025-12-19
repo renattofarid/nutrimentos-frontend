@@ -64,6 +64,9 @@ import { GroupFormSection } from "@/components/GroupFormSection";
 import { ClientDialog } from "@/pages/client/components/ClientDialog";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { getNextSeries } from "../lib/sale.actions";
+import { DataTable } from "@/components/DataTable";
+import { SaleProductSheet, type DetailFormData } from "./SaleProductSheet";
+import { createSaleDetailColumns } from "./sale-details-columns";
 
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
@@ -87,6 +90,8 @@ interface DetailRow {
   subtotal: number;
   igv: number;
   total: number;
+  additional_kg?: string; // kg adicionales cuando is_kg está habilitado
+  total_kg?: number; // peso total calculado (peso base * cantidad + kg adicionales)
 }
 
 interface InstallmentRow {
@@ -116,6 +121,8 @@ export const SaleForm = ({
   );
 
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
+  const [editingProductData, setEditingProductData] = useState<DetailFormData | undefined>(undefined);
 
   // Hook para obtener vendedores
   const { data: workers = [] } = useAllWorkers();
@@ -130,14 +137,6 @@ export const SaleForm = ({
   const [editingDetailIndex, setEditingDetailIndex] = useState<number | null>(
     null
   );
-  const [currentDetail, setCurrentDetail] = useState<DetailRow>({
-    product_id: "",
-    quantity: "",
-    unit_price: "",
-    subtotal: 0,
-    igv: 0,
-    total: 0,
-  });
 
   // Estados para cuotas
   const [installments, setInstallments] = useState<InstallmentRow[]>([]);
@@ -151,14 +150,6 @@ export const SaleForm = ({
   });
 
   // Formularios temporales
-  const detailTempForm = useForm({
-    defaultValues: {
-      temp_product_id: currentDetail.product_id,
-      temp_quantity: currentDetail.quantity,
-      temp_unit_price: currentDetail.unit_price,
-    },
-  });
-
   const installmentTempForm = useForm({
     defaultValues: {
       temp_installment_number: currentInstallment.installment_number,
@@ -167,48 +158,12 @@ export const SaleForm = ({
     },
   });
 
-  // Watchers para detalles
-  const selectedProductId = detailTempForm.watch("temp_product_id");
-  const selectedQuantity = detailTempForm.watch("temp_quantity");
-  const selectedUnitPrice = detailTempForm.watch("temp_unit_price");
-
   // Watchers para cuotas
   const selectedInstallmentNumber = installmentTempForm.watch(
     "temp_installment_number"
   );
   const selectedDueDays = installmentTempForm.watch("temp_due_days");
   const selectedAmount = installmentTempForm.watch("temp_amount");
-
-  // Observers para detalles
-  useEffect(() => {
-    if (selectedProductId !== currentDetail.product_id) {
-      setCurrentDetail((prev) => ({
-        ...prev,
-        product_id: selectedProductId || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProductId]);
-
-  useEffect(() => {
-    if (selectedQuantity !== currentDetail.quantity) {
-      setCurrentDetail((prev) => ({
-        ...prev,
-        quantity: selectedQuantity || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedQuantity]);
-
-  useEffect(() => {
-    if (selectedUnitPrice !== currentDetail.unit_price) {
-      setCurrentDetail((prev) => ({
-        ...prev,
-        unit_price: selectedUnitPrice || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedUnitPrice]);
 
   // Observers para cuotas
   useEffect(() => {
@@ -287,6 +242,11 @@ export const SaleForm = ({
           const igv = roundTo6Decimals(subtotal * 0.18);
           const total = roundTo6Decimals(subtotal + igv);
 
+          // Calcular peso total en kg
+          const productWeight = product?.weight ? parseFloat(product.weight) : 0;
+          const additionalKg = parseFloat(detail.additional_kg || "0");
+          const totalKg = roundTo6Decimals(productWeight * quantity + additionalKg);
+
           return {
             product_id: detail.product_id,
             product_name: product?.name,
@@ -295,6 +255,8 @@ export const SaleForm = ({
             subtotal,
             igv,
             total,
+            additional_kg: detail.additional_kg || "0",
+            total_kg: totalKg,
           };
         });
         setDetails(initialDetails);
@@ -427,76 +389,41 @@ export const SaleForm = ({
   };
 
   // Funciones para detalles
-  const handleAddDetail = () => {
-    if (
-      !currentDetail.product_id ||
-      !currentDetail.quantity ||
-      !currentDetail.unit_price
-    ) {
-      return;
-    }
-
-    const product = products.find(
-      (p) => p.id.toString() === currentDetail.product_id
-    );
-    const quantity = parseFloat(currentDetail.quantity);
-    const unitPrice = parseFloat(currentDetail.unit_price);
-
-    // Calcular subtotal, IGV (18%) y total con redondeo a 6 decimales
-    const subtotal = roundTo6Decimals(quantity * unitPrice);
-    const igv = roundTo6Decimals(subtotal * 0.18); // IGV 18%
-    const total = roundTo6Decimals(subtotal + igv);
-
-    const newDetail: DetailRow = {
-      ...currentDetail,
-      product_name: product?.name,
-      subtotal,
-      igv,
-      total,
-    };
-
-    if (editingDetailIndex !== null) {
-      const updatedDetails = [...details];
-      updatedDetails[editingDetailIndex] = newDetail;
-      setDetails(updatedDetails);
-      form.setValue("details", updatedDetails);
-      setEditingDetailIndex(null);
-    } else {
-      const updatedDetails = [...details, newDetail];
-      setDetails(updatedDetails);
-      form.setValue("details", updatedDetails);
-    }
-
-    // Limpiar formulario y estado
-    const emptyDetail = {
-      product_id: "",
-      quantity: "",
-      unit_price: "",
-      subtotal: 0,
-      igv: 0,
-      total: 0,
-    };
-    setCurrentDetail(emptyDetail);
-    detailTempForm.reset({
-      temp_product_id: "",
-      temp_quantity: "",
-      temp_unit_price: "",
-    });
-  };
-
   const handleEditDetail = (index: number) => {
     const detail = details[index];
-    setCurrentDetail(detail);
-    detailTempForm.setValue("temp_product_id", detail.product_id);
-    detailTempForm.setValue("temp_quantity", detail.quantity);
-    detailTempForm.setValue("temp_unit_price", detail.unit_price);
+    setEditingProductData(detail as DetailFormData);
     setEditingDetailIndex(index);
+    setIsProductSheetOpen(true);
   };
 
   const handleRemoveDetail = (index: number) => {
     const updatedDetails = details.filter((_, i) => i !== index);
     setDetails(updatedDetails);
     form.setValue("details", updatedDetails);
+  };
+
+  const handleAddProductClick = () => {
+    setEditingProductData(undefined);
+    setEditingDetailIndex(null);
+    setIsProductSheetOpen(true);
+  };
+
+  const handleProductSubmit = (data: DetailFormData) => {
+    if (editingDetailIndex !== null) {
+      // Actualizar detalle existente
+      const updatedDetails = [...details];
+      updatedDetails[editingDetailIndex] = data;
+      setDetails(updatedDetails);
+      form.setValue("details", updatedDetails);
+      setEditingDetailIndex(null);
+    } else {
+      // Agregar nuevo detalle
+      const updatedDetails = [...details, data];
+      setDetails(updatedDetails);
+      form.setValue("details", updatedDetails);
+    }
+    setIsProductSheetOpen(false);
+    setEditingProductData(undefined);
   };
 
   const calculateDetailsSubtotal = () => {
@@ -518,14 +445,9 @@ export const SaleForm = ({
   };
 
   const calculateTotalWeight = () => {
-    // Calcular el peso total sumando peso de cada producto * cantidad
+    // Calcular el peso total sumando el total_kg de cada detalle
     const totalWeight = details.reduce((sum, detail) => {
-      const product = products.find(
-        (p) => p.id.toString() === detail.product_id
-      );
-      const productWeight = product?.weight ? parseFloat(product.weight) : 0;
-      const quantity = parseFloat(detail.quantity) || 0;
-      return sum + productWeight * quantity;
+      return sum + (detail.total_kg || 0);
     }, 0);
     return roundTo6Decimals(totalWeight);
   };
@@ -895,172 +817,56 @@ export const SaleForm = ({
           icon={ListChecks}
           cols={{ sm: 1 }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 bg-sidebar rounded-lg">
-            <div className="md:col-span-3">
-              <Form {...detailTempForm}>
-                <FormSelect
-                  control={detailTempForm.control}
-                  name="temp_product_id"
-                  label="Producto"
-                  placeholder={
-                    selectedWarehouseId
-                      ? "Seleccione un producto"
-                      : "Primero seleccione un almacén"
-                  }
-                  options={filteredProducts.map((product) => {
-                    const stockInWarehouse = product.stock_warehouse?.find(
-                      (stock) =>
-                        stock.warehouse_id.toString() === selectedWarehouseId
-                    );
-                    return {
-                      value: product.id.toString(),
-                      label: product.name,
-                      description: `${product.codigo} | Stock: ${
-                        stockInWarehouse?.stock ?? 0
-                      }`,
-                      searchCode: product.codigo,
-                    };
-                  })}
-                  disabled={!selectedWarehouseId}
-                  enableCodeSearch={true}
-                />
-              </Form>
+          <DataTable
+            columns={createSaleDetailColumns({
+              onEdit: handleEditDetail,
+              onDelete: handleRemoveDetail,
+            })}
+            data={details}
+            isVisibleColumnFilter={false}
+          >
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={handleAddProductClick}
+              disabled={!selectedWarehouseId || !form.watch("customer_id")}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Agregar Producto
+            </Button>
+          </DataTable>
+
+          {/* Resumen de totales */}
+          {details.length > 0 && (
+            <div className="mt-4 space-y-2 p-4 bg-muted/30 rounded-lg border">
+              <div className="flex justify-between items-center pb-2 border-b">
+                <span className="font-bold text-blue-600">Peso Total:</span>
+                <span className="text-lg font-bold text-blue-600">
+                  {formatDecimalTrunc(calculateTotalWeight(), 2)} kg
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-semibold">Subtotal:</span>
+                <span className="font-bold">
+                  {formatNumber(calculateDetailsSubtotal())}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-orange-600">
+                  IGV (18%):
+                </span>
+                <span className="font-bold text-orange-600">
+                  {formatNumber(calculateDetailsIGV())}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t">
+                <span className="text-lg font-bold">Total:</span>
+                <span className="text-xl font-bold text-primary">
+                  {formatNumber(calculateDetailsTotal())}
+                </span>
+              </div>
             </div>
-
-            <FormField
-              control={detailTempForm.control}
-              name="temp_quantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cantidad</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="0" min="0" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={detailTempForm.control}
-              name="temp_unit_price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Precio Unit.</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.000001"
-                      placeholder="0.000000"
-                      {...field}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <div className="md:col-span-1 flex items-end justify-end">
-              <Button
-                type="button"
-                size={"sm"}
-                variant="default"
-                onClick={handleAddDetail}
-                disabled={
-                  !currentDetail.product_id ||
-                  !currentDetail.quantity ||
-                  !currentDetail.unit_price
-                }
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {editingDetailIndex !== null ? "Actualizar" : "Agregar"}
-              </Button>
-            </div>
-          </div>
-
-          {details.length > 0 ? (
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Producto</TableHead>
-                    <TableHead className="text-right">Cantidad</TableHead>
-                    <TableHead className="text-right">P. Unit.</TableHead>
-                    <TableHead className="text-right">Subtotal</TableHead>
-                    <TableHead className="text-right">IGV (18%)</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-center">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {details.map((detail, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{detail.product_name}</TableCell>
-                      <TableCell className="text-right">
-                        {detail.quantity}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatNumber(parseFloat(detail.unit_price))}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatNumber(detail.subtotal)}
-                      </TableCell>
-                      <TableCell className="text-right text-orange-600">
-                        {formatNumber(detail.igv)}
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-primary">
-                        {formatNumber(detail.total)}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center gap-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditDetail(index)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveDetail(index)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-right font-bold">
-                      TOTALES:
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-lg">
-                      {formatNumber(calculateDetailsSubtotal())}
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-lg text-orange-600">
-                      {formatNumber(calculateDetailsIGV())}
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-lg text-primary">
-                      {formatNumber(calculateDetailsTotal())}
-                    </TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <Empty className="border border-dashed">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <ListChecks />
-                </EmptyMedia>
-                <EmptyTitle>No hay detalles agregados</EmptyTitle>
-                <EmptyDescription>
-                  Agregue productos a la venta utilizando el formulario
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
           )}
         </GroupFormSection>
 
@@ -1440,6 +1246,22 @@ export const SaleForm = ({
         onClientCreated={() => {
           onRefreshClients?.();
         }}
+      />
+
+      {/* Sheet para agregar/editar productos */}
+      <SaleProductSheet
+        open={isProductSheetOpen}
+        onClose={() => {
+          setIsProductSheetOpen(false);
+          setEditingProductData(undefined);
+          setEditingDetailIndex(null);
+        }}
+        products={filteredProducts}
+        customerId={form.watch("customer_id") || ""}
+        warehouseId={selectedWarehouseId || ""}
+        onSubmit={handleProductSubmit}
+        defaultValues={editingProductData}
+        mode={editingDetailIndex !== null ? "update" : "create"}
       />
     </Form>
   );

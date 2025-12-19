@@ -10,6 +10,7 @@ import TitleFormComponent from "@/components/TitleFormComponent";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { useAllClients } from "@/pages/client/lib/client.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
+import { useAllZones } from "@/pages/zone/lib/zone.hook";
 
 export default function DeliverySheetAddPage() {
   const navigate = useNavigate();
@@ -21,17 +22,10 @@ export default function DeliverySheetAddPage() {
     isLoadingAvailableSales,
   } = useDeliverySheetStore();
 
-  const { data: allBranches = [] } = useAllBranches({}, true);
+  const { data: allBranches = [] } = useAllBranches();
   const { data: workers = [] } = useAllWorkers();
-  const { data: customers = [] } = useAllClients({}, true);
-
-  // Mock data para zones y drivers - deberías reemplazar esto con datos reales de tu API
-  const zones = [
-    { id: 1, code: "ZN", name: "Zona Norte" },
-    { id: 2, code: "ZS", name: "Zona Sur" },
-    { id: 3, code: "ZE", name: "Zona Este" },
-    { id: 4, code: "ZO", name: "Zona Oeste" },
-  ];
+  const { data: customers = [] } = useAllClients();
+  const { data: zones = [] } = useAllZones();
 
   const handleSubmit = async (data: DeliverySheetSchema) => {
     try {
@@ -49,12 +43,14 @@ export default function DeliverySheetAddPage() {
   const handleSearchSales = (params: {
     payment_type: string;
     zone_id?: number;
+    customer_id?: number;
     date_from?: string;
     date_to?: string;
   }) => {
     fetchAvailableSales({
       payment_type: params.payment_type as "CONTADO" | "CREDITO",
       zone_id: params.zone_id,
+      customer_id: params.customer_id,
       date_from: params.date_from,
       date_to: params.date_to,
     });
@@ -79,7 +75,7 @@ export default function DeliverySheetAddPage() {
         isSubmitting={isSubmitting}
         mode="create"
         branches={allBranches || []}
-        zones={zones}
+        zones={zones || []}
         drivers={workers || []}
         customers={customers || []}
         availableSales={availableSales || []}

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { type DateRange } from "react-day-picker";
@@ -32,8 +31,6 @@ export function DateRangePickerFilter({
   dateFormat = "dd/MM/yyyy",
   className,
 }: DateRangePickerFilterProps) {
-  const [popoverOpen, setPopoverOpen] = useState(false);
-
   const dateRange: DateRange = {
     from: dateFrom,
     to: dateTo,
@@ -54,15 +51,10 @@ export function DateRangePickerFilter({
     // Always update both dates, even if one is undefined
     // This allows the calendar to work naturally in range mode
     onDateChange(range?.from, range?.to);
-
-    // Close popover when both dates are selected
-    if (range?.from && range?.to) {
-      setPopoverOpen(false);
-    }
   };
 
   return (
-    <Popover open={popoverOpen} onOpenChange={setPopoverOpen} modal={true}>
+    <Popover>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -77,7 +69,7 @@ export function DateRangePickerFilter({
           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 max-h-none" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+      <PopoverContent className="w-auto p-0 max-h-none" align="start">
         <Calendar
           locale={es}
           mode="range"

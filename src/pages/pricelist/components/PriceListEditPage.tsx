@@ -13,6 +13,9 @@ import {
   ERROR_MESSAGE,
 } from "@/lib/core.function";
 import FormSkeleton from "@/components/FormSkeleton";
+import { EmptyState } from "@/components/EmptyState";
+import { ListCheck, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const { MODEL, ICON, TITLES } = PRICELIST;
 
@@ -107,15 +110,23 @@ export default function PriceListEditPage() {
           subtitle={TITLES.update.subtitle}
           icon={ICON}
         />
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex justify-center items-center py-12">
-              <p className="text-muted-foreground">
-                No se encontró la lista de precio
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={ListCheck}
+          title="No hay lista de precios encontrada"
+          description="Agrega rangos de peso y precios para los productos a este lista de precios."
+          action={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(PRICELIST.ROUTE)}
+              className="gap-2 w-full sm:w-auto"
+            >
+              <Plus className="h-4 w-4" />
+              Agregar lista de precios
+            </Button>
+          }
+        />
       </div>
     );
   }
@@ -128,17 +139,13 @@ export default function PriceListEditPage() {
         icon={ICON}
       />
 
-      <Card>
-        <CardContent className="pt-6">
-          <PriceListForm
-            defaultValues={getDefaultValues()}
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-            isSubmitting={isSubmitting}
-            mode="update"
-          />
-        </CardContent>
-      </Card>
+      <PriceListForm
+        defaultValues={getDefaultValues()}
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        isSubmitting={isSubmitting}
+        mode="update"
+      />
     </div>
   );
 }

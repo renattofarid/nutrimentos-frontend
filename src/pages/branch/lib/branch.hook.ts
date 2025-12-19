@@ -17,16 +17,13 @@ export function useBranch(params?: Record<string, unknown>) {
   };
 }
 
-export function useAllBranches(
-  params?: Record<string, unknown>,
-  refetch: boolean = false
-) {
+export function useAllBranches(params?: Record<string, unknown>) {
   const { allBranches, isLoadingAll, error, fetchAllBranches } =
     useBranchStore();
 
   useEffect(() => {
-    if (!allBranches || refetch) fetchAllBranches(params);
-  }, [allBranches, fetchAllBranches, refetch]);
+    if (!allBranches) fetchAllBranches(params);
+  }, [allBranches, fetchAllBranches]);
 
   return {
     data: allBranches,

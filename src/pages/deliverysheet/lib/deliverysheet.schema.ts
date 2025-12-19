@@ -3,30 +3,45 @@ import { z } from "zod";
 
 // ===== MAIN DELIVERY SHEET SCHEMA =====
 
-export const deliverySheetSchemaCreate = z.object({
-  branch_id: requiredStringId("Debe seleccionar una sucursal"),
-  zone_id: requiredStringId("Debe seleccionar una zona"),
-  driver_id: requiredStringId("Debe seleccionar un conductor"),
-  customer_id: z.string().optional(),
-  type: z.string().min(1, { message: "Debe seleccionar un tipo" }),
-  issue_date: z
-    .string()
-    .min(1, { message: "La fecha de emisión es requerida" })
-    .refine((val) => !isNaN(Date.parse(val)), {
-      message: "La fecha de emisión no es válida",
-    }),
-  delivery_date: z
-    .string()
-    .min(1, { message: "La fecha de entrega es requerida" })
-    .refine((val) => !isNaN(Date.parse(val)), {
-      message: "La fecha de entrega no es válida",
-    }),
-  sale_ids: z
-    .array(z.number())
-    .min(1, { message: "Debe seleccionar al menos una venta" }),
-  observations: z.string().max(500).optional(),
-  for_single_customer: z.boolean().optional(),
-});
+export const deliverySheetSchemaCreate = z
+  .object({
+    branch_id: requiredStringId("Debe seleccionar una sucursal"),
+    zone_id: z.string().optional(),
+    driver_id: requiredStringId("Debe seleccionar un conductor"),
+    customer_id: z.string().optional(),
+    type: z.string().min(1, { message: "Debe seleccionar un tipo" }),
+    issue_date: z
+      .string()
+      .min(1, { message: "La fecha de emisión es requerida" })
+      .refine((val) => !isNaN(Date.parse(val)), {
+        message: "La fecha de emisión no es válida",
+      }),
+    delivery_date: z
+      .string()
+      .min(1, { message: "La fecha de entrega es requerida" })
+      .refine((val) => !isNaN(Date.parse(val)), {
+        message: "La fecha de entrega no es válida",
+      }),
+    sale_ids: z
+      .array(z.number())
+      .min(1, { message: "Debe seleccionar al menos una venta" }),
+    observations: z.string().max(500).optional(),
+    for_single_customer: z.boolean().optional(),
+  })
+  .refine(
+    (data) => {
+      // Si es para un cliente único, customer_id es requerido
+      if (data.for_single_customer) {
+        return data.customer_id && data.customer_id.trim().length > 0;
+      }
+      // Si es multi-cliente, zone_id es requerido
+      return data.zone_id && data.zone_id.trim().length > 0;
+    },
+    {
+      message: "Debe seleccionar una zona o un cliente según el tipo de planilla",
+      path: ["zone_id"], // El error se mostrará en zone_id por defecto
+    }
+  );
 
 export type DeliverySheetSchema = z.infer<typeof deliverySheetSchemaCreate>;
 

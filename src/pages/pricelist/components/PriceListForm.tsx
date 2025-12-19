@@ -22,7 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { PriceMatrixTable } from "./PriceMatrixTable";
 import { FormSwitch } from "@/components/FormSwitch";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 type PriceListFormProps =
   | {
@@ -74,14 +74,6 @@ export default function PriceListForm({
   );
   const [priceMatrix, setPriceMatrix] = useState<Record<string, PriceCell>>({});
 
-  // Función para actualizar weight ranges y limpiar errores
-  const handleWeightRangesChange = (ranges: WeightRangeData[]) => {
-    setWeightRanges(ranges);
-    if (ranges.length > 0 && form.formState.errors.root) {
-      form.clearErrors("root");
-    }
-  };
-
   // Schema simplificado solo para campos básicos (sin weight_ranges ni product_prices)
   const basicFieldsSchema = z.object({
     name: z
@@ -104,8 +96,23 @@ export default function PriceListForm({
     mode: "onChange",
   });
 
+  // Función para actualizar weight ranges y limpiar errores
+  const handleWeightRangesChange = (ranges: WeightRangeData[]) => {
+    setWeightRanges(ranges);
+    if (form.formState.errors.root) {
+      form.clearErrors("root");
+    }
+  };
+
+  // Limpiar errores cuando cambian los productos o precios
+  useEffect(() => {
+    if (form.formState.errors.root) {
+      form.clearErrors("root");
+    }
+  }, [selectedProducts, priceMatrix, form]);
+
   // Verificar si el formulario está completo
-  const isFormComplete = () => {
+  const isFormComplete = useMemo(() => {
     // Debe haber al menos un rango de peso
     if (weightRanges.length === 0) return false;
 
@@ -125,7 +132,7 @@ export default function PriceListForm({
     }
 
     return true;
-  };
+  }, [weightRanges, selectedProducts, priceMatrix]);
 
   // Cargar datos iniciales cuando hay defaultValues
   useEffect(() => {
@@ -340,11 +347,11 @@ export default function PriceListForm({
 
         <Separator />
 
-        {/* <Button onClick={() => form.trigger()}>Button</Button>
+        <Button onClick={() => form.trigger()}>Button</Button>
         <pre>
           <code>{JSON.stringify(form.getValues(), null, 2)}</code>
           <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-        </pre> */}
+        </pre>
 
         {/* Botones de Acción */}
         <div className="flex gap-4 justify-end">
@@ -353,7 +360,7 @@ export default function PriceListForm({
           </Button>
           <Button
             type="submit"
-            disabled={isSubmitting || !form.formState.isValid || !isFormComplete()}
+            disabled={isSubmitting || !form.formState.isValid || !isFormComplete}
           >
             {isSubmitting
               ? "Guardando..."

@@ -84,10 +84,19 @@ export function GeneralModal({
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
-            {title && <DialogTitle>{title}</DialogTitle>}
-            <DialogDescription className="text-muted-foreground text-sm">
-              {subtitle}
-            </DialogDescription>
+            <div className="flex items-start gap-2">
+              {icon && IconComponent && (
+                <div className="mr-2 bg-primary text-primary-foreground rounded-md p-2">
+                  <IconComponent className="size-5" />
+                </div>
+              )}
+              <div className="flex flex-col items-start">
+                {title && <DialogTitle>{title}</DialogTitle>}
+                <DialogDescription className="text-muted-foreground text-sm">
+                  {subtitle}
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
           <div>{children}</div>
         </DialogContent>
@@ -98,7 +107,7 @@ export function GeneralModal({
           className={cn(className, "pb-0 flex flex-col max-h-[96vh]")}
         >
           <DrawerHeader className="flex-shrink-0 p-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-start gap-2">
               {icon && IconComponent && (
                 <div className="mr-2 bg-primary text-primary-foreground rounded-md p-2">
                   <IconComponent className="size-5" />

@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { DeliverySheetForm } from "./DeliverySheetForm";
 import { useDeliverySheetStore } from "../lib/deliverysheet.store";
 import type { DeliverySheetSchema } from "../lib/deliverysheet.schema";
-import PageWrapper from "@/components/PageWrapper";
 import { DELIVERY_SHEET } from "../lib/deliverysheet.interface";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { useAllClients } from "@/pages/client/lib/client.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
+import FormWrapper from "@/components/FormWrapper";
 
 export default function DeliverySheetAddPage() {
   const navigate = useNavigate();
@@ -59,7 +59,7 @@ export default function DeliverySheetAddPage() {
   const { TITLES, ICON } = DELIVERY_SHEET;
 
   return (
-    <PageWrapper>
+    <FormWrapper>
       <div className="flex items-center justify-between mb-6">
         <TitleFormComponent
           title={TITLES.create.title}
@@ -82,6 +82,6 @@ export default function DeliverySheetAddPage() {
         onSearchSales={handleSearchSales}
         isLoadingAvailableSales={isLoadingAvailableSales}
       />
-    </PageWrapper>
+    </FormWrapper>
   );
 }

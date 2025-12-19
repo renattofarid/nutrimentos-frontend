@@ -22,7 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { PriceMatrixTable } from "./PriceMatrixTable";
 import { FormSwitch } from "@/components/FormSwitch";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 type PriceListFormProps =
   | {
@@ -109,30 +109,7 @@ export default function PriceListForm({
     if (form.formState.errors.root) {
       form.clearErrors("root");
     }
-  }, [selectedProducts, priceMatrix, form]);
-
-  // Verificar si el formulario está completo
-  const isFormComplete = useMemo(() => {
-    // Debe haber al menos un rango de peso
-    if (weightRanges.length === 0) return false;
-
-    // Debe haber al menos un producto
-    if (selectedProducts.length === 0) return false;
-
-    // Todos los precios deben estar llenos
-    for (const product of selectedProducts) {
-      for (let rangeIndex = 0; rangeIndex < weightRanges.length; rangeIndex++) {
-        const key = `${product.product_id}_${rangeIndex}`;
-        const priceCell = priceMatrix[key];
-
-        if (!priceCell || !priceCell.price || priceCell.price <= 0) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  }, [weightRanges, selectedProducts, priceMatrix]);
+  }, [selectedProducts, priceMatrix, weightRanges, form]);
 
   // Cargar datos iniciales cuando hay defaultValues
   useEffect(() => {
@@ -185,22 +162,21 @@ export default function PriceListForm({
   }, [defaultValues, products]);
 
   const handleFormSubmit = async (data: any) => {
+    const errors: string[] = [];
+
+    // Validar campos básicos
+    if (!data.name || data.name.trim() === "") {
+      errors.push("El nombre es requerido");
+    }
+
     // Validar que haya al menos un rango de peso
     if (weightRanges.length === 0) {
-      form.setError("root", {
-        type: "manual",
-        message: "Debe agregar al menos un rango de peso",
-      });
-      return;
+      errors.push("Debe agregar al menos un rango de peso");
     }
 
     // Validar que haya al menos un producto seleccionado
     if (selectedProducts.length === 0) {
-      form.setError("root", {
-        type: "manual",
-        message: "Debe agregar al menos un producto a la matriz de precios",
-      });
-      return;
+      errors.push("Debe agregar al menos un producto a la matriz de precios");
     }
 
     // Validar que todos los precios estén llenos
@@ -217,13 +193,18 @@ export default function PriceListForm({
     });
 
     if (missingPrices.length > 0) {
+      errors.push(
+        `Precios incompletos: ${missingPrices.slice(0, 5).join(", ")}${
+          missingPrices.length > 5 ? ` y ${missingPrices.length - 5} más` : ""
+        }`
+      );
+    }
+
+    // Si hay errores, mostrarlos y no enviar
+    if (errors.length > 0) {
       form.setError("root", {
         type: "manual",
-        message: `Debe completar los precios para: ${missingPrices
-          .slice(0, 3)
-          .join(", ")}${
-          missingPrices.length > 3 ? ` y ${missingPrices.length - 3} más` : ""
-        }`,
+        message: errors.join(" | "),
       });
       return;
     }
@@ -342,32 +323,36 @@ export default function PriceListForm({
         />
 
         {form.formState.errors.root && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3">
-            <p className="text-sm font-medium text-destructive">
-              {form.formState.errors.root.message}
-            </p>
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+            <h4 className="text-sm font-semibold text-destructive mb-2">
+              Errores de validación:
+            </h4>
+            <ul className="list-disc list-inside space-y-1">
+              {form.formState.errors.root.message
+                ?.split(" | ")
+                .map((error, index) => (
+                  <li key={index} className="text-sm text-destructive">
+                    {error}
+                  </li>
+                ))}
+            </ul>
           </div>
         )}
 
         <Separator />
 
-        <Button onClick={() => form.trigger()}>Button</Button>
+        {/* <Button onClick={() => form.trigger()}>Button</Button>
         <pre>
           <code>{JSON.stringify(form.getValues(), null, 2)}</code>
           <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-        </pre>
+        </pre> */}
 
         {/* Botones de Acción */}
         <div className="flex gap-4 justify-end">
           <Button type="button" variant="neutral" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button
-            type="submit"
-            disabled={
-              isSubmitting || !form.formState.isValid || !isFormComplete
-            }
-          >
+          <Button type="submit" disabled={isSubmitting}>
             {isSubmitting
               ? "Guardando..."
               : mode === "create"

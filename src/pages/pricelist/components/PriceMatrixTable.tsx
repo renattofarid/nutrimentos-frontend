@@ -140,9 +140,10 @@ export const PriceMatrixTable = ({
     });
   };
 
-  const getPriceValue = (productId: number, rangeIndex: number): number => {
+  const getPriceValue = (productId: number, rangeIndex: number): string => {
     const key = `${productId}_${rangeIndex}`;
-    return priceMatrix[key]?.price || 0;
+    const price = priceMatrix[key]?.price;
+    return price && price > 0 ? price.toString() : "";
   };
 
   const getCurrencyValue = (productId: number, rangeIndex: number): string => {

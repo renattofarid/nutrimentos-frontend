@@ -219,7 +219,11 @@ export default function PriceListForm({
     if (missingPrices.length > 0) {
       form.setError("root", {
         type: "manual",
-        message: `Debe completar los precios para: ${missingPrices.slice(0, 3).join(", ")}${missingPrices.length > 3 ? ` y ${missingPrices.length - 3} más` : ""}`,
+        message: `Debe completar los precios para: ${missingPrices
+          .slice(0, 3)
+          .join(", ")}${
+          missingPrices.length > 3 ? ` y ${missingPrices.length - 3} más` : ""
+        }`,
       });
       return;
     }
@@ -360,7 +364,9 @@ export default function PriceListForm({
           </Button>
           <Button
             type="submit"
-            disabled={isSubmitting || !form.formState.isValid || !isFormComplete}
+            disabled={
+              isSubmitting || !form.formState.isValid || !isFormComplete
+            }
           >
             {isSubmitting
               ? "Guardando..."

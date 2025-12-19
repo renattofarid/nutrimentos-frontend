@@ -112,24 +112,37 @@ export const SaleProductSheet = ({
       const quantity = parseFloat(selectedQuantity) || 0;
       const additionalKg = parseFloat(selectedAdditionalKg || "0");
 
-      if (quantity === 0) {
+      if (quantity === 0 && additionalKg === 0) {
         console.log("Cantidad es 0");
         setPriceData(null);
         return;
       }
 
+      // Calcular la cantidad en decimales considerando el peso del saco
+      // Fórmula: cantidad_decimal = sacos + (kg_adicionales / peso_del_saco)
+      let quantitySacksDecimal = quantity;
+      const productWeight = selectedProduct?.weight ? parseFloat(selectedProduct.weight) : 0;
+
+      if (productWeight > 0 && additionalKg > 0) {
+        // Convertir kg adicionales a fracción de sacos
+        const additionalSacks = additionalKg / productWeight;
+        quantitySacksDecimal = quantity + additionalSacks;
+      }
+
       console.log("Obteniendo precio dinámico...", {
         product_id: selectedProductId,
         person_id: customerId,
-        quantity_sacks: quantity,
-        quantity_kg: additionalKg,
+        quantity_sacks: quantitySacksDecimal,
+        quantity_kg: 0, // Ahora enviamos 0 porque ya incluimos los kg en quantity_sacks
+        peso_del_saco: productWeight,
+        calculo: `${quantity} sacos + (${additionalKg} kg / ${productWeight} kg) = ${quantitySacksDecimal}`,
       });
 
       const result = await fetchDynamicPrice({
         product_id: selectedProductId,
         person_id: customerId,
-        quantity_sacks: quantity,
-        quantity_kg: additionalKg,
+        quantity_sacks: quantitySacksDecimal,
+        quantity_kg: 0, // Los kg adicionales ya están incluidos en quantity_sacks
       });
 
       if (result) {
@@ -151,16 +164,26 @@ export const SaleProductSheet = ({
       return Math.round(value * 1000000) / 1000000;
     };
 
-    const unitPrice = parseFloat(priceData.pricing.unit_price);
-    const quantity = parseFloat(data.quantity);
-    const subtotal = roundTo6Decimals(quantity * unitPrice);
+    // Calcular la cantidad decimal (igual que en el useEffect)
+    const quantity = parseFloat(data.quantity) || 0;
+    const additionalKg = parseFloat(data.additional_kg || "0");
+    const productWeight = selectedProduct?.weight ? parseFloat(selectedProduct.weight) : 0;
+
+    let quantitySacksDecimal = quantity;
+    if (productWeight > 0 && additionalKg > 0) {
+      const additionalSacks = additionalKg / productWeight;
+      quantitySacksDecimal = quantity + additionalSacks;
+    }
+
+    // Usar los valores del backend que ya están correctamente calculados
+    const subtotal = roundTo6Decimals(parseFloat(priceData.pricing.subtotal));
     const igv = roundTo6Decimals(subtotal * 0.18);
     const total = roundTo6Decimals(subtotal + igv);
 
     const formData: DetailFormData = {
       product_id: data.product_id,
       product_name: selectedProduct?.name,
-      quantity: data.quantity,
+      quantity: quantitySacksDecimal.toString(), // Usar la cantidad decimal calculada
       unit_price: priceData.pricing.unit_price,
       subtotal,
       igv,

@@ -233,7 +233,7 @@ export default function PriceListForm({
       weight_ranges: weightRanges.map((range) => ({
         name: range.name,
         min_weight: range.min_weight,
-        max_weight: range.max_weight,
+        max_weight: range.max_weight ?? undefined,
         order: range.order,
       })),
       product_prices,

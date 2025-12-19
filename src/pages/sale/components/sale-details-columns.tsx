@@ -40,7 +40,7 @@ export const createSaleDetailColumns = ({
     header: () => <div className="text-right">Sacos</div>,
     accessorKey: "quantity",
     cell: ({ row }) => {
-      return <div className="text-right">{row.original.quantity}</div>;
+      return <div className="text-right">{formatDecimalTrunc(parseFloat(row.original.quantity), 6)}</div>;
     },
   },
   {

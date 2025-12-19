@@ -122,7 +122,9 @@ export const SaleForm = ({
 
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
   const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
-  const [editingProductData, setEditingProductData] = useState<DetailFormData | undefined>(undefined);
+  const [editingProductData, setEditingProductData] = useState<
+    DetailFormData | undefined
+  >(undefined);
 
   // Hook para obtener vendedores
   const { data: workers = [] } = useAllWorkers();
@@ -243,9 +245,13 @@ export const SaleForm = ({
           const total = roundTo6Decimals(subtotal + igv);
 
           // Calcular peso total en kg
-          const productWeight = product?.weight ? parseFloat(product.weight) : 0;
+          const productWeight = product?.weight
+            ? parseFloat(product.weight)
+            : 0;
           const additionalKg = parseFloat(detail.additional_kg || "0");
-          const totalKg = roundTo6Decimals(productWeight * quantity + additionalKg);
+          const totalKg = roundTo6Decimals(
+            productWeight * quantity + additionalKg
+          );
 
           return {
             product_id: detail.product_id,
@@ -289,6 +295,17 @@ export const SaleForm = ({
   const selectedBranchId = form.watch("branch_id");
   const selectedWarehouseId = form.watch("warehouse_id");
   const selectedDocumentType = form.watch("document_type");
+  const selectedCurrency = form.watch("currency");
+
+  // Función para obtener el símbolo de moneda
+  const getCurrencySymbol = () => {
+    const currency = CURRENCIES.find((c) => c.value === selectedCurrency);
+    if (!currency) return "";
+    if (selectedCurrency === "PEN") return "S/.";
+    if (selectedCurrency === "USD") return "$";
+    if (selectedCurrency === "EUR") return "€";
+    return "";
+  };
 
   // Efecto para filtrar warehouses cuando cambia branch
   useEffect(() => {
@@ -386,6 +403,11 @@ export const SaleForm = ({
   // Función de redondeo a 6 decimales
   const roundTo6Decimals = (value: number): number => {
     return Math.round(value * 1000000) / 1000000;
+  };
+
+  // Función de redondeo a 2 decimales para pagos
+  const roundTo2Decimals = (value: number): number => {
+    return Math.round(value * 100) / 100;
   };
 
   // Funciones para detalles
@@ -551,24 +573,29 @@ export const SaleForm = ({
     const transfer = parseFloat(form.watch("amount_transfer") || "0");
     const other = parseFloat(form.watch("amount_other") || "0");
     const sum = cash + card + yape + plin + deposit + transfer + other;
-    return roundTo6Decimals(sum);
+    return roundTo2Decimals(sum);
   };
 
   const paymentAmountsMatchTotal = () => {
     if (selectedPaymentType !== "CONTADO") return true;
     const saleTotal = calculateDetailsTotal();
     const paymentTotal = calculatePaymentTotal();
-    return Math.abs(saleTotal - paymentTotal) < 0.000001;
+    // Redondear ambos a 2 decimales para comparación
+    const saleTotalRounded = roundTo2Decimals(saleTotal);
+    const paymentTotalRounded = roundTo2Decimals(paymentTotal);
+    return Math.abs(saleTotalRounded - paymentTotalRounded) < 0.01;
   };
 
   const handleFormSubmit = (data: any) => {
+    const currencySymbol = getCurrencySymbol();
+
     // Validar que si es al contado, los montos de pago deben coincidir con el total
     if (selectedPaymentType === "CONTADO" && !paymentAmountsMatchTotal()) {
       errorToast(
-        `El total pagado (${formatNumber(
+        `El total pagado (${currencySymbol} ${formatNumber(
           calculatePaymentTotal()
-        )}) debe ser igual al total de la venta (${formatNumber(
-          calculateDetailsTotal()
+        )}) debe ser igual al total de la venta (${currencySymbol} ${formatNumber(
+          roundTo2Decimals(calculateDetailsTotal())
         )})`
       );
       return;
@@ -583,9 +610,9 @@ export const SaleForm = ({
     // Validar que las cuotas coincidan con el total si hay cuotas
     if (installments.length > 0 && !installmentsMatchTotal()) {
       errorToast(
-        `El total de cuotas (${formatNumber(
+        `El total de cuotas (${currencySymbol} ${formatNumber(
           calculateInstallmentsTotal()
-        )}) debe ser igual al total de la venta (${formatNumber(
+        )}) debe ser igual al total de la venta (${currencySymbol} ${formatNumber(
           calculateDetailsTotal()
         )})`
       );
@@ -849,7 +876,7 @@ export const SaleForm = ({
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Subtotal:</span>
                 <span className="font-bold">
-                  {formatNumber(calculateDetailsSubtotal())}
+                  {getCurrencySymbol()} {formatNumber(calculateDetailsSubtotal())}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -857,13 +884,13 @@ export const SaleForm = ({
                   IGV (18%):
                 </span>
                 <span className="font-bold text-orange-600">
-                  {formatNumber(calculateDetailsIGV())}
+                  {getCurrencySymbol()} {formatNumber(calculateDetailsIGV())}
                 </span>
               </div>
               <div className="flex justify-between items-center pt-2 border-t">
                 <span className="text-lg font-bold">Total:</span>
                 <span className="text-xl font-bold text-primary">
-                  {formatNumber(calculateDetailsTotal())}
+                  {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())}
                 </span>
               </div>
             </div>
@@ -887,7 +914,7 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
                         min="0"
                         placeholder="0.00"
                         {...field}
@@ -907,7 +934,7 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
                         min="0"
                         placeholder="0.00"
                         {...field}
@@ -927,7 +954,7 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
                         min="0"
                         placeholder="0.00"
                         {...field}
@@ -947,7 +974,7 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
                         min="0"
                         placeholder="0.00"
                         {...field}
@@ -967,7 +994,7 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
                         min="0"
                         placeholder="0.00"
                         {...field}
@@ -987,7 +1014,7 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
                         min="0"
                         placeholder="0.00"
                         {...field}
@@ -1007,7 +1034,7 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
                         min="0"
                         placeholder="0.00"
                         {...field}
@@ -1025,13 +1052,13 @@ export const SaleForm = ({
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Total de la Venta:</span>
                   <span className="text-lg font-bold text-primary">
-                    {formatNumber(calculateDetailsTotal())}
+                    {getCurrencySymbol()} {formatNumber(roundTo2Decimals(calculateDetailsTotal()))}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Total Pagado:</span>
                   <span className="text-lg font-bold text-blue-600">
-                    {formatNumber(calculatePaymentTotal())}
+                    {getCurrencySymbol()} {formatNumber(calculatePaymentTotal())}
                   </span>
                 </div>
                 {!paymentAmountsMatchTotal() && (
@@ -1091,7 +1118,7 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1169,7 +1196,7 @@ export const SaleForm = ({
                           TOTAL CUOTAS:
                         </TableCell>
                         <TableCell className="text-right font-bold text-lg text-blue-600">
-                          {formatDecimalTrunc(calculateInstallmentsTotal(), 6)}
+                          {getCurrencySymbol()} {formatDecimalTrunc(calculateInstallmentsTotal(), 6)}
                         </TableCell>
                         <TableCell></TableCell>
                       </TableRow>
@@ -1180,9 +1207,9 @@ export const SaleForm = ({
                   <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
                     <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
                       ⚠️ El total de cuotas (
-                      {formatNumber(calculateInstallmentsTotal())}) debe ser
+                      {getCurrencySymbol()} {formatNumber(calculateInstallmentsTotal())}) debe ser
                       igual al total de la venta (
-                      {formatNumber(calculateDetailsTotal())})
+                      {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())})
                     </p>
                   </div>
                 )}

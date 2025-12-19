@@ -118,7 +118,7 @@ export const SaleForm = ({
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
 
   // Hook para obtener vendedores
-  const workers = useAllWorkers();
+  const { data: workers = [] } = useAllWorkers();
 
   // Estados para serie y número automático
   const [autoSerie, setAutoSerie] = useState<string>("");

@@ -37,13 +37,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 
 interface Zone {
@@ -104,9 +97,8 @@ export const DeliverySheetForm = ({
       driver_id: defaultValues.driver_id || "",
       customer_id: defaultValues.customer_id || "",
       type: defaultValues.type || "",
-      issue_date:
-        defaultValues.issue_date || new Date().toISOString().split("T")[0],
-      delivery_date: defaultValues.delivery_date || "",
+      issue_date: defaultValues.issue_date || new Date(),
+      delivery_date: defaultValues.delivery_date || new Date(),
       sale_ids: defaultValues.sale_ids || [],
       observations: defaultValues.observations || "",
       for_single_customer: defaultValues.for_single_customer ?? true,
@@ -204,16 +196,6 @@ export const DeliverySheetForm = ({
             }
             disabled={mode === "update"}
           />
-          <FormSelect
-            control={form.control}
-            name="type"
-            label="Tipo de Pago"
-            placeholder="Seleccione un tipo"
-            options={DELIVERY_SHEET_TYPES.map((type) => ({
-              value: type.value,
-              label: type.label,
-            }))}
-          />
 
           <FormSelect
             control={form.control}
@@ -223,6 +205,17 @@ export const DeliverySheetForm = ({
             options={zones.map((zone) => ({
               value: zone.id.toString(),
               label: `${zone.name} (${zone.code})`,
+            }))}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="type"
+            label="Tipo de Pago"
+            placeholder="Seleccione un tipo"
+            options={DELIVERY_SHEET_TYPES.map((type) => ({
+              value: type.value,
+              label: type.label,
             }))}
           />
 
@@ -241,15 +234,14 @@ export const DeliverySheetForm = ({
             control={form.control}
             name="for_single_customer"
             label="Tipo de Planilla"
-            text="Planilla para un Cliente Específico"
-            textDescription="Desactive si la planilla es para múltiples clientes"
+            text="Cliente Único"
           />
 
           {forSingleCustomer && (
             <FormSelect
               control={form.control}
               name="customer_id"
-              label="Cliente Cobrador"
+              label="Cliente"
               placeholder="Seleccione un cliente"
               options={customers.map((customer) => ({
                 value: customer.id.toString(),
@@ -296,30 +288,26 @@ export const DeliverySheetForm = ({
           icon={Search}
           cols={{ sm: 1 }}
         >
-          <Card>
-            <CardHeader>
-              <CardTitle>Filtros de Búsqueda</CardTitle>
-              <CardDescription>
-                Seleccione los criterios para buscar ventas disponibles
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <DateRangePickerFilter
-                dateFrom={searchParams.date_from}
-                dateTo={searchParams.date_to}
-                onDateChange={(dateFrom, dateTo) =>
-                  setSearchParams((prev) => ({
-                    ...prev,
-                    date_from: dateFrom,
-                    date_to: dateTo,
-                  }))
-                }
-              />
-
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+              <div className="flex-1 w-full">
+                <DateRangePickerFilter
+                  dateFrom={searchParams.date_from}
+                  dateTo={searchParams.date_to}
+                  onDateChange={(dateFrom, dateTo) =>
+                    setSearchParams((prev) => ({
+                      ...prev,
+                      date_from: dateFrom,
+                      date_to: dateTo,
+                    }))
+                  }
+                />
+              </div>
               <Button
                 type="button"
                 onClick={handleSearchSales}
-                disabled={!typeValue || isLoadingAvailableSales}
+                disabled={!searchParams.payment_type || isLoadingAvailableSales}
+                className="w-full sm:w-auto"
               >
                 {isLoadingAvailableSales ? (
                   <Loader className="mr-2 h-4 w-4 animate-spin" />
@@ -328,8 +316,8 @@ export const DeliverySheetForm = ({
                 )}
                 Buscar Ventas
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </GroupFormSection>
 
         {availableSales.length > 0 && (

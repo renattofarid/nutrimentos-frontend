@@ -21,9 +21,9 @@ export default function DeliverySheetAddPage() {
     isLoadingAvailableSales,
   } = useDeliverySheetStore();
 
-  const { data: allBranches = [] } = useAllBranches();
-  const workers = useAllWorkers();
-  const { data: customers = [] } = useAllClients();
+  const { data: allBranches = [] } = useAllBranches({}, true);
+  const { data: workers = [] } = useAllWorkers();
+  const { data: customers = [] } = useAllClients({}, true);
 
   // Mock data para zones y drivers - deberías reemplazar esto con datos reales de tu API
   const zones = [

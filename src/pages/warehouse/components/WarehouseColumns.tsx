@@ -26,15 +26,16 @@ export const WarehouseColumns = ({
     cell: ({ getValue }) => getValue() as string,
   },
   {
+    accessorKey: "branch_name",
+    header: "Tienda",
+    cell: ({ getValue }) => getValue() as string,
+  },
+  {
     accessorKey: "capacity",
     header: "Capacidad",
     cell: ({ getValue }) => {
       const capacity = getValue() as number;
-      return (
-        <span className="font-mono">
-          {capacity.toLocaleString()}
-        </span>
-      );
+      return <span className="font-mono">{capacity.toLocaleString()}</span>;
     },
   },
   {

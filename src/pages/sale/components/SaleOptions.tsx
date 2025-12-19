@@ -66,7 +66,7 @@ export default function SaleOptions({
   // Fetch branches, warehouses and workers
   const { data: branches } = useAllBranches({ company_id });
   const { data: warehouses } = useAllWarehouses();
-  const workers = useAllWorkers();
+  const { data: workers = [] } = useAllWorkers();
 
   const branchOptions = [
     ...(branches?.map((branch) => ({

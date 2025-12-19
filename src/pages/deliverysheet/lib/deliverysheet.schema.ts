@@ -1,4 +1,4 @@
-import { requiredStringId } from "@/lib/core.schema";
+import { dateSchema, requiredStringId } from "@/lib/core.schema";
 import { z } from "zod";
 
 // ===== MAIN DELIVERY SHEET SCHEMA =====
@@ -9,18 +9,8 @@ export const deliverySheetSchemaCreate = z.object({
   driver_id: requiredStringId("Debe seleccionar un conductor"),
   customer_id: z.string().optional(),
   type: z.string().min(1, { message: "Debe seleccionar un tipo" }),
-  issue_date: z
-    .string()
-    .min(1, { message: "La fecha de emisión es requerida" })
-    .refine((val) => !isNaN(Date.parse(val)), {
-      message: "La fecha de emisión no es válida",
-    }),
-  delivery_date: z
-    .string()
-    .min(1, { message: "La fecha de entrega es requerida" })
-    .refine((val) => !isNaN(Date.parse(val)), {
-      message: "La fecha de entrega no es válida",
-    }),
+  issue_date: dateSchema("La fecha de emisión es requerida"),
+  delivery_date: dateSchema("La fecha de entrega es requerida"),
   sale_ids: z
     .array(z.number())
     .min(1, { message: "Debe seleccionar al menos una venta" }),

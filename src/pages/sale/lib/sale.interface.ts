@@ -2,6 +2,8 @@
 // SALE - Interfaces, Types & Routes
 // ============================================
 
+import type { PersonResource } from "@/pages/person/lib/person.interface";
+
 // ===== API RESOURCES =====
 
 export interface SaleDetailResource {
@@ -42,12 +44,14 @@ export interface SaleResource {
   warehouse_id: number;
   customer_id: number;
   user_id: number;
+  vendedor_id: number | null;
   document_type: string;
   serie: string;
   numero: string;
   full_document_number: string;
   issue_date: string;
   payment_type: string;
+  total_weight: number;
   subtotal: number;
   discount_global: number;
   tax_amount: number;
@@ -68,6 +72,7 @@ export interface SaleResource {
   warehouse: Warehouse;
   customer: Customer;
   user: User;
+  vendedor?: PersonResource;
   details: Detail[];
   installments: SaleInstallmentResource[];
   created_at: string;
@@ -152,9 +157,11 @@ export interface CreateSaleRequest {
   branch_id: number;
   customer_id: number;
   warehouse_id: number;
+  vendedor_id: number | null;
   document_type: string;
   issue_date: string;
   payment_type: string;
+  total_weight: number;
   currency: string;
   observations: string;
   amount_cash: string;
@@ -171,9 +178,11 @@ export interface CreateSaleRequest {
 export interface UpdateSaleRequest {
   customer_id?: number;
   warehouse_id?: number;
+  vendedor_id?: number | null;
   document_type?: string;
   issue_date?: string;
   payment_type?: string;
+  total_weight?: number;
   currency?: string;
   observations?: string;
   details?: {

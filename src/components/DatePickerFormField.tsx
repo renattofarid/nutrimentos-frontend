@@ -168,7 +168,6 @@ export function DatePickerFormField<T extends FieldValues>({
               captionLayout={captionLayout}
               onSelect={handleChange}
               disabled={disabledRange}
-              autoFocus
               endMonth={endMonth}
             />
           </PopoverContent>

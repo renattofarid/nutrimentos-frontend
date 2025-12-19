@@ -10,7 +10,10 @@
       "Bash(dir:*)",
       "Bash(nul)",
       "Bash(ls:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(find:*)",
+      "Bash(git checkout:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

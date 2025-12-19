@@ -18,15 +18,16 @@ import {
   productSchemaUpdate,
   type ProductSchema,
 } from "../lib/product.schema";
-import { Loader } from "lucide-react";
+import { Loader, Info, Weight, MessageSquare } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
+import { FormSwitch } from "@/components/FormSwitch";
+import { GroupFormSection } from "@/components/GroupFormSection";
 import type { CategoryResource } from "@/pages/category/lib/category.interface";
 import type { BrandResource } from "@/pages/brand/lib/brand.interface";
 import type { UnitResource } from "@/pages/unit/lib/unit.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { ProductTypeResource } from "@/pages/product-type/lib/product-type.interface";
 import type { NationalityResource } from "@/pages/nationality/lib/nationality.interface";
-import { Switch } from "@/components/ui/switch";
 import type { CompanyResource } from "@/pages/company/lib/company.interface";
 import type { ProductResource } from "../lib/product.interface";
 
@@ -74,200 +75,199 @@ export const ProductForm = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
         {/* Información Básica */}
-        <div className="bg-sidebar p-4 rounded-lg space-y-4">
-          <h3 className="text-lg font-semibold">Información Básica</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="codigo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Código</FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder="Ej: PROD-001"
-                      {...field}
-                      onChange={(e) =>
-                        field.onChange(e.target.value.toUpperCase())
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <GroupFormSection
+          title="Información Básica"
+          icon={Info}
+          cols={{ sm: 1, md: 2 }}
+        >
+          <FormField
+            control={form.control}
+            name="codigo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Código</FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Ej: PROD-001"
+                    {...field}
+                    onChange={(e) =>
+                      field.onChange(e.target.value.toUpperCase())
+                    }
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre del Producto</FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder="Ej: Producto de ejemplo"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nombre del Producto</FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Ej: Producto de ejemplo"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormSelect
-              control={form.control}
-              name="company_id"
-              label="Empresa"
-              placeholder="Seleccione una empresa"
-              options={companies.map((company) => ({
-                value: company.id.toString(),
-                label: company.social_reason,
-              }))}
-            />
+          <FormSelect
+            control={form.control}
+            name="company_id"
+            label="Empresa"
+            placeholder="Seleccione una empresa"
+            options={companies.map((company) => ({
+              value: company.id.toString(),
+              label: company.social_reason,
+            }))}
+          />
 
-            <FormSelect
-              control={form.control}
-              name="category_id"
-              label="Categoría"
-              placeholder="Seleccione una categoría"
-              options={categories.map((category) => ({
-                value: category.id.toString(),
-                label: `${"  ".repeat(Math.max(0, category.level - 1))}${
-                  category.name
-                }`,
-              }))}
-            />
+          <FormSelect
+            control={form.control}
+            name="category_id"
+            label="Categoría"
+            placeholder="Seleccione una categoría"
+            options={categories.map((category) => ({
+              value: category.id.toString(),
+              label: `${"  ".repeat(Math.max(0, category.level - 1))}${
+                category.name
+              }`,
+            }))}
+          />
 
-            <FormSelect
-              control={form.control}
-              name="product_type_id"
-              label="Tipo de Producto"
-              placeholder="Seleccione el tipo"
-              options={productTypes.map((type) => ({
-                value: type.id.toString(),
-                label: type.name,
-              }))}
-            />
+          <FormSelect
+            control={form.control}
+            name="product_type_id"
+            label="Tipo de Producto"
+            placeholder="Seleccione el tipo"
+            options={productTypes.map((type) => ({
+              value: type.id.toString(),
+              label: type.name,
+            }))}
+          />
 
-            <FormSelect
-              control={form.control}
-              name="brand_id"
-              label="Marca"
-              placeholder="Seleccione una marca"
-              options={brands.map((brand) => ({
-                value: brand.id.toString(),
-                label: brand.name,
-              }))}
-            />
+          <FormSelect
+            control={form.control}
+            name="brand_id"
+            label="Marca"
+            placeholder="Seleccione una marca"
+            options={brands.map((brand) => ({
+              value: brand.id.toString(),
+              label: brand.name,
+            }))}
+          />
 
-            <FormSelect
-              control={form.control}
-              name="unit_id"
-              label="Unidad"
-              placeholder="Seleccione una unidad"
-              options={units.map((unit) => ({
-                value: unit.id.toString(),
-                label: unit.name,
-              }))}
-            />
+          <FormSelect
+            control={form.control}
+            name="unit_id"
+            label="Unidad"
+            placeholder="Seleccione una unidad"
+            options={units.map((unit) => ({
+              value: unit.id.toString(),
+              label: unit.name,
+            }))}
+          />
 
-            <FormSelect
-              control={form.control}
-              name="supplier_id"
-              label="Proveedor"
-              placeholder="Seleccione un proveedor"
-              options={suppliers.map((supplier) => ({
-                value: supplier.id.toString(),
-                label:
-                  supplier.business_name ??
-                  `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`.trim(),
-              }))}
-            />
+          <FormSelect
+            control={form.control}
+            name="supplier_id"
+            label="Proveedor"
+            placeholder="Seleccione un proveedor"
+            options={suppliers.map((supplier) => ({
+              value: supplier.id.toString(),
+              label:
+                supplier.business_name ??
+                `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`.trim(),
+            }))}
+          />
 
-            <FormSelect
-              control={form.control}
-              name="nationality_id"
-              label="Nacionalidad (Opcional)"
-              placeholder="Seleccione una nacionalidad"
-              options={nationalities.map((nationality) => ({
-                value: nationality.id.toString(),
-                label: nationality.name,
-              }))}
-            />
+          <FormSelect
+            control={form.control}
+            name="nationality_id"
+            label="Nacionalidad (Opcional)"
+            placeholder="Seleccione una nacionalidad"
+            options={nationalities.map((nationality) => ({
+              value: nationality.id.toString(),
+              label: nationality.name,
+            }))}
+          />
 
-            <FormField
-              control={form.control}
-              name="is_taxed"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                  <div>
-                    <FormLabel>¿Está Gravado?</FormLabel>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value === 1}
-                      onCheckedChange={(checked) =>
-                        field.onChange(checked ? 1 : 0)
-                      }
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
+          <FormSwitch
+            control={form.control}
+            name="is_taxed"
+            label="Impuestos"
+            text="¿Está Gravado?"
+          />
+        </GroupFormSection>
 
-        {/* Precios y Costos */}
-        {/* <div className="bg-sidebar p-4 rounded-lg space-y-4">
-          <h3 className="text-lg font-semibold">Precios y Costos</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="purchase_price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Precio de Compra</FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      type="number"
-                      step="0.01"
-                      placeholder="50.00"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Peso y Precio por Kg */}
+        <GroupFormSection
+          title="Información de Peso"
+          icon={Weight}
+          cols={{ sm: 1, md: 3 }}
+        >
+          <FormField
+            control={form.control}
+            name="weight"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Peso</FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="sale_price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Precio de Venta</FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      type="number"
-                      step="0.01"
-                      placeholder="60.00"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div> */}
+          <FormSwitch
+            control={form.control}
+            name="is_kg"
+            label="Unidad de Medida"
+            text="Venta por Kilogramo"
+          />
+
+          <FormField
+            control={form.control}
+            name="price_per_kg"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Precio por Kg</FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </GroupFormSection>
 
         {/* Comentarios */}
-        <div className="bg-sidebar p-4 rounded-lg space-y-4">
-          <h3 className="text-lg font-semibold">Comentarios (Opcional)</h3>
+        <GroupFormSection
+          title="Comentarios (Opcional)"
+          icon={MessageSquare}
+          cols={{ sm: 1 }}
+        >
           <FormField
             control={form.control}
             name="comment"
@@ -284,7 +284,7 @@ export const ProductForm = ({
               </FormItem>
             )}
           />
-        </div>
+        </GroupFormSection>
 
         <div className="flex gap-4 w-full justify-end">
           <Button type="button" variant="neutral" onClick={onCancel}>

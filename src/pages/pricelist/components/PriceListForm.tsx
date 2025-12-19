@@ -1,8 +1,7 @@
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
-  priceListSchemaCreate,
-  priceListSchemaUpdate,
   type PriceListSchemaCreate,
   type PriceListSchemaUpdate,
 } from "../lib/pricelist.schema";
@@ -17,18 +16,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { FileText } from "lucide-react";
+import { GroupFormSection } from "@/components/GroupFormSection";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
+import { PriceMatrixTable } from "./PriceMatrixTable";
+import { FormSwitch } from "@/components/FormSwitch";
+import { useState, useEffect } from "react";
 
 type PriceListFormProps =
   | {
@@ -46,6 +40,24 @@ type PriceListFormProps =
       mode: "update";
     };
 
+interface WeightRangeData {
+  name: string;
+  min_weight: number;
+  max_weight: number | null;
+  order: number;
+}
+
+interface ProductInMatrix {
+  product_id: number;
+  product_name: string;
+  product_code: string;
+}
+
+interface PriceCell {
+  price: number;
+  currency: string;
+}
+
 export default function PriceListForm({
   defaultValues,
   onSubmit,
@@ -55,468 +67,292 @@ export default function PriceListForm({
 }: PriceListFormProps) {
   const { data: products } = useAllProducts();
 
+  // Estados para la matriz de precios
+  const [weightRanges, setWeightRanges] = useState<WeightRangeData[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<ProductInMatrix[]>(
+    []
+  );
+  const [priceMatrix, setPriceMatrix] = useState<Record<string, PriceCell>>({});
+
+  // Schema simplificado solo para campos básicos (sin weight_ranges ni product_prices)
+  const basicFieldsSchema = z.object({
+    name: z
+      .string()
+      .min(1, "El nombre es requerido")
+      .max(255, "Máximo 255 caracteres"),
+    code: z.string().max(50, "Máximo 50 caracteres").optional(),
+    description: z.string().max(500, "Máximo 500 caracteres").optional(),
+    is_active: z.boolean().optional(),
+  });
+
   const form = useForm<any>({
-    resolver: zodResolver(
-      mode === "create" ? priceListSchemaCreate : priceListSchemaUpdate
-    ),
+    resolver: zodResolver(basicFieldsSchema),
     defaultValues: defaultValues || {
       name: "",
       code: "",
       description: "",
       is_active: true,
-      weight_ranges: [
-        {
-          name: "",
-          min_weight: 0,
-          max_weight: null,
-          order: 1,
-        },
-      ],
-      product_prices: [],
     },
     mode: "onChange",
   });
 
-  const {
-    fields: weightRangeFields,
-    append: appendWeightRange,
-    remove: removeWeightRange,
-  } = useFieldArray({
-    control: form.control,
-    name: "weight_ranges",
-  });
-
-  const {
-    fields: productPriceFields,
-    append: appendProductPrice,
-    remove: removeProductPrice,
-  } = useFieldArray({
-    control: form.control,
-    name: "product_prices",
-  });
-
-  const handleAddWeightRange = () => {
-    const currentRanges = form.getValues("weight_ranges") || [];
-    const nextOrder = currentRanges.length + 1;
-    appendWeightRange({
-      name: "",
-      min_weight: 0,
-      max_weight: null,
-      order: nextOrder,
-    });
+  // Función para actualizar weight ranges y limpiar errores
+  const handleWeightRangesChange = (ranges: WeightRangeData[]) => {
+    setWeightRanges(ranges);
+    if (form.formState.errors.root) {
+      form.clearErrors("root");
+    }
   };
 
-  const handleAddProductPrice = () => {
-    appendProductPrice({
-      product_id: 0,
-      weight_range_index: 0,
-      price: 0,
-      currency: "PEN",
+  // Limpiar errores cuando cambian los productos o precios
+  useEffect(() => {
+    if (form.formState.errors.root) {
+      form.clearErrors("root");
+    }
+  }, [selectedProducts, priceMatrix, weightRanges, form]);
+
+  // Cargar datos iniciales cuando hay defaultValues
+  useEffect(() => {
+    if (
+      defaultValues?.weight_ranges &&
+      defaultValues.weight_ranges.length > 0
+    ) {
+      setWeightRanges(
+        defaultValues.weight_ranges.map((range, index) => ({
+          name: range.name,
+          min_weight: range.min_weight,
+          max_weight: range.max_weight ?? null,
+          order: index + 1,
+        }))
+      );
+    }
+
+    if (
+      defaultValues?.product_prices &&
+      defaultValues.product_prices.length > 0 &&
+      products
+    ) {
+      // Extraer productos únicos
+      const uniqueProducts = new Map<number, ProductInMatrix>();
+      const newMatrix: Record<string, PriceCell> = {};
+
+      defaultValues.product_prices.forEach((price) => {
+        if (!uniqueProducts.has(price.product_id)) {
+          const product = products.find((p) => p.id === price.product_id);
+          if (product) {
+            uniqueProducts.set(price.product_id, {
+              product_id: product.id,
+              product_name: product.name,
+              product_code: product.codigo,
+            });
+          }
+        }
+
+        // Agregar precio a la matriz
+        const key = `${price.product_id}_${price.weight_range_index}`;
+        newMatrix[key] = {
+          price: price.price,
+          currency: price.currency,
+        };
+      });
+
+      setSelectedProducts(Array.from(uniqueProducts.values()));
+      setPriceMatrix(newMatrix);
+    }
+  }, [defaultValues, products]);
+
+  const handleFormSubmit = async (data: any) => {
+    const errors: string[] = [];
+
+    // Validar campos básicos
+    if (!data.name || data.name.trim() === "") {
+      errors.push("El nombre es requerido");
+    }
+
+    // Validar que haya al menos un rango de peso
+    if (weightRanges.length === 0) {
+      errors.push("Debe agregar al menos un rango de peso");
+    }
+
+    // Validar que haya al menos un producto seleccionado
+    if (selectedProducts.length === 0) {
+      errors.push("Debe agregar al menos un producto a la matriz de precios");
+    }
+
+    // Validar que todos los precios estén llenos
+    const missingPrices: string[] = [];
+    selectedProducts.forEach((product) => {
+      weightRanges.forEach((range, rangeIndex) => {
+        const key = `${product.product_id}_${rangeIndex}`;
+        const priceCell = priceMatrix[key];
+
+        if (!priceCell || !priceCell.price || priceCell.price <= 0) {
+          missingPrices.push(`${product.product_name} - ${range.name}`);
+        }
+      });
     });
+
+    if (missingPrices.length > 0) {
+      errors.push(
+        `Precios incompletos: ${missingPrices.slice(0, 5).join(", ")}${
+          missingPrices.length > 5 ? ` y ${missingPrices.length - 5} más` : ""
+        }`
+      );
+    }
+
+    // Si hay errores, mostrarlos y no enviar
+    if (errors.length > 0) {
+      form.setError("root", {
+        type: "manual",
+        message: errors.join(" | "),
+      });
+      return;
+    }
+
+    // Convertir la matriz de precios al formato esperado por el backend
+    const product_prices: any[] = [];
+
+    selectedProducts.forEach((product) => {
+      weightRanges.forEach((_, rangeIndex) => {
+        const key = `${product.product_id}_${rangeIndex}`;
+        const priceCell = priceMatrix[key];
+
+        if (priceCell && priceCell.price > 0) {
+          product_prices.push({
+            product_id: product.product_id,
+            weight_range_index: rangeIndex,
+            price: priceCell.price,
+            currency: priceCell.currency,
+          });
+        }
+      });
+    });
+
+    const formData = {
+      ...data,
+      weight_ranges: weightRanges.map((range) => ({
+        name: range.name,
+        min_weight: range.min_weight,
+        max_weight: range.max_weight ?? undefined,
+        order: range.order,
+      })),
+      product_prices,
+    };
+
+    await onSubmit(formData);
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(handleFormSubmit)}
+        className="space-y-6"
+      >
         {/* Información Básica */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Información Básica</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ej: Lista de Precios 2025"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <GroupFormSection
+          title="Información Básica"
+          icon={FileText}
+          cols={{ sm: 1, md: 2 }}
+        >
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nombre *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Ej: Lista de Precios 2025" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              <FormField
-                control={form.control}
-                name="code"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Código</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ej: LP2025" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+          <FormField
+            control={form.control}
+            name="code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Código</FormLabel>
+                <FormControl>
+                  <Input placeholder="Ej: LP2025" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descripción</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Descripción de la lista de precios..."
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Descripción</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Descripción de la lista de precios..."
+                    rows={3}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
+          {mode === "update" && (
+            <FormSwitch
               control={form.control}
               name="is_active"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Estado Activo</FormLabel>
-                    <div className="text-sm text-muted-foreground">
-                      La lista de precios estará disponible para asignar a
-                      clientes
-                    </div>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
+              text="Estado Activo"
+              textDescription="La lista de precios estará disponible para asignar a clientes"
+              className="md:col-span-2"
             />
-          </CardContent>
-        </Card>
+          )}
+        </GroupFormSection>
 
-        {/* Rangos de Peso */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Rangos de Peso</CardTitle>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddWeightRange}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Agregar Rango
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {weightRangeFields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start p-4 border rounded-lg bg-muted/50"
-                >
-                  <div className="md:col-span-1 flex items-center justify-center">
-                    <GripVertical className="h-5 w-5 text-muted-foreground" />
-                  </div>
+        {/* Matriz de Precios */}
+        <PriceMatrixTable
+          weightRanges={weightRanges}
+          onWeightRangesChange={handleWeightRangesChange}
+          products={products || []}
+          selectedProducts={selectedProducts}
+          onSelectedProductsChange={setSelectedProducts}
+          priceMatrix={priceMatrix}
+          onPriceMatrixChange={setPriceMatrix}
+        />
 
-                  <FormField
-                    control={form.control}
-                    name={`weight_ranges.${index}.name`}
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-3">
-                        <FormLabel>Nombre</FormLabel>
-                        <FormControl>
-                          <Input placeholder="0-300kg" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name={`weight_ranges.${index}.min_weight`}
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Peso Mín.</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={field.value as number}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? 0
-                                  : parseFloat(e.target.value)
-                              )
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name={`weight_ranges.${index}.max_weight`}
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Peso Máx.</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="Sin límite"
-                            value={
-                              field.value === null
-                                ? ""
-                                : (field.value as number)
-                            }
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? null
-                                  : parseFloat(e.target.value)
-                              )
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name={`weight_ranges.${index}.order`}
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Orden</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            value={field.value as number}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? 1
-                                  : parseInt(e.target.value)
-                              )
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="md:col-span-2 flex items-end">
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeWeightRange(index)}
-                      disabled={weightRangeFields.length === 1}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Precios de Productos */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Precios de Productos</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Opcional: Puedes agregar precios ahora o después
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddProductPrice}
-              disabled={!products || products.length === 0}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Agregar Precio
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {productPriceFields.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No hay precios de productos agregados
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {productPriceFields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start p-4 border rounded-lg bg-muted/50"
-                  >
-                    <FormField
-                      control={form.control}
-                      name={`product_prices.${index}.product_id`}
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-4">
-                          <FormLabel>Producto</FormLabel>
-                          <Select
-                            onValueChange={(value) =>
-                              field.onChange(Number(value))
-                            }
-                            value={
-                              field.value ? field.value.toString() : undefined
-                            }
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleccionar producto" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {products?.map((product) => (
-                                <SelectItem
-                                  key={product.id}
-                                  value={product.id.toString()}
-                                >
-                                  {product.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`product_prices.${index}.weight_range_index`}
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-3">
-                          <FormLabel>Rango de Peso</FormLabel>
-                          <Select
-                            onValueChange={(value) =>
-                              field.onChange(Number(value))
-                            }
-                            value={
-                              field.value !== undefined && field.value !== null
-                                ? field.value.toString()
-                                : undefined
-                            }
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleccionar rango" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {weightRangeFields.map((range, idx) => (
-                                <SelectItem
-                                  key={idx + range.id}
-                                  value={idx.toString()}
-                                >
-                                  {form.watch(`weight_ranges.${idx}.name`) ||
-                                    `Rango ${idx + 1}`}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`product_prices.${index}.price`}
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Precio</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={field.value as number}
-                              onChange={(e) =>
-                                field.onChange(
-                                  e.target.value === ""
-                                    ? 0
-                                    : parseFloat(e.target.value)
-                                )
-                              }
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`product_prices.${index}.currency`}
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Moneda</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="PEN">PEN</SelectItem>
-                              <SelectItem value="USD">USD</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="md:col-span-1 flex items-end">
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => removeProductPrice(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+        {form.formState.errors.root && (
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+            <h4 className="text-sm font-semibold text-destructive mb-2">
+              Errores de validación:
+            </h4>
+            <ul className="list-disc list-inside space-y-1">
+              {form.formState.errors.root.message
+                ?.split(" | ")
+                .map((error, index) => (
+                  <li key={index} className="text-sm text-destructive">
+                    {error}
+                  </li>
                 ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </ul>
+          </div>
+        )}
 
         <Separator />
+
+        {/* <Button onClick={() => form.trigger()}>Button</Button>
+        <pre>
+          <code>{JSON.stringify(form.getValues(), null, 2)}</code>
+          <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
+        </pre> */}
 
         {/* Botones de Acción */}
         <div className="flex gap-4 justify-end">
           <Button type="button" variant="neutral" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting || !form.formState.isValid}
-          >
+          <Button type="submit" disabled={isSubmitting}>
             {isSubmitting
               ? "Guardando..."
               : mode === "create"

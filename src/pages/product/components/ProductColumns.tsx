@@ -107,6 +107,18 @@ export const ProductColumns = ({
     },
   },
   {
+    accessorKey: "is_kg",
+    header: "Venta por Kg",
+    cell: ({ getValue }) => {
+      const isKg = getValue() as number;
+      return (
+        <Badge variant={isKg ? "default" : "outline"}>
+          {isKg ? "Sí" : "No"}
+        </Badge>
+      );
+    },
+  },
+  {
     accessorKey: "created_at",
     header: "Fecha de Creación",
     cell: ({ getValue }) => {

@@ -25,11 +25,15 @@ interface PersonStore {
   persons: PersonResource[] | null;
   person: PersonResource | null;
   allPersons: PersonResource[] | null;
+  allWorkers: PersonResource[] | null;
+  allClients: PersonResource[] | null;
   personRoles: PersonRoleResource[] | null;
   personRoleDetails: PersonRoleDetailResource[] | null;
   meta: Meta | null;
   isLoading: boolean;
   isLoadingAll: boolean;
+  isLoadingAllWorkers: boolean;
+  isLoadingAllClients: boolean;
   isFinding: boolean;
   isSubmitting: boolean;
   isLoadingRoles: boolean;
@@ -37,6 +41,8 @@ interface PersonStore {
   error: string | null;
   fetchPersons: ({ params }: GetPersonsProps) => Promise<void>;
   fetchAllPersons: ({ params }: GetPersonsProps) => Promise<void>;
+  fetchAllWorkers: ({ params }: GetPersonsProps) => Promise<void>;
+  fetchAllClients: ({ params }: GetPersonsProps) => Promise<void>;
   fetchPersonById: (id: number) => Promise<void>;
   createPerson: (data: CreatePersonRequest) => Promise<void>;
   updatePerson: (id: number, data: UpdatePersonRequest) => Promise<void>;
@@ -54,11 +60,15 @@ export const usePersonStore = create<PersonStore>((set) => ({
   persons: null,
   person: null,
   allPersons: null,
+  allWorkers: null,
+  allClients: null,
   personRoles: null,
   personRoleDetails: null,
   meta: null,
   isLoading: false,
   isLoadingAll: false,
+  isLoadingAllWorkers: false,
+  isLoadingAllClients: false,
   isFinding: false,
   isSubmitting: false,
   isLoadingRoles: false,
@@ -82,6 +92,26 @@ export const usePersonStore = create<PersonStore>((set) => ({
       set({ allPersons: data, isLoadingAll: false });
     } catch {
       set({ error: "Error al cargar todas las personas", isLoadingAll: false });
+    }
+  },
+
+  fetchAllWorkers: async ({ params }: GetPersonsProps) => {
+    set({ isLoadingAllWorkers: true, error: null });
+    try {
+      const data = await getAllPersons({ params });
+      set({ allWorkers: data, isLoadingAllWorkers: false });
+    } catch {
+      set({ error: "Error al cargar todos los trabajadores", isLoadingAllWorkers: false });
+    }
+  },
+
+  fetchAllClients: async ({ params }: GetPersonsProps) => {
+    set({ isLoadingAllClients: true, error: null });
+    try {
+      const data = await getAllPersons({ params });
+      set({ allClients: data, isLoadingAllClients: false });
+    } catch {
+      set({ error: "Error al cargar todos los clientes", isLoadingAllClients: false });
     }
   },
 
@@ -175,6 +205,8 @@ export const usePersonStore = create<PersonStore>((set) => ({
       persons: null,
       person: null,
       allPersons: null,
+      allWorkers: null,
+      allClients: null,
       personRoles: null,
       meta: null,
       error: null,

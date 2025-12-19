@@ -19,7 +19,7 @@ export default function WarehouseDocumentAddPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: warehouses } = useAllWarehouses();
-  const persons = useAllWorkers();
+  const { data: persons = [] } = useAllWorkers();
   const { data: products } = useAllProducts();
 
   const handleSubmit = async (data: WarehouseDocumentSchema) => {

@@ -2,8 +2,6 @@ import { create } from "zustand";
 import type { Meta } from "@/lib/pagination.interface";
 import type { PriceList, GetPriceResponse } from "./pricelist.interface";
 import type {
-  PriceListSchemaCreate,
-  PriceListSchemaUpdate,
   AssignClientSchema,
   GetPriceSchema,
 } from "./pricelist.schema";
@@ -26,8 +24,8 @@ interface PriceListStore {
   fetchPriceLists: (params?: Record<string, any>) => Promise<void>;
   fetchAllPriceLists: () => Promise<void>;
   fetchPriceList: (id: number) => Promise<void>;
-  createPriceList: (data: PriceListSchemaCreate) => Promise<void>;
-  updatePriceList: (id: number, data: PriceListSchemaUpdate) => Promise<void>;
+  createPriceList: (data: any) => Promise<void>;
+  updatePriceList: (id: number, data: any) => Promise<void>;
   deletePriceList: (id: number) => Promise<void>;
   assignClient: (id: number, data: AssignClientSchema) => Promise<void>;
   getPrice: (data: GetPriceSchema) => Promise<void>;
@@ -95,7 +93,7 @@ export const usePriceListStore = create<PriceListStore>((set) => ({
   },
 
   // Crear una nueva lista de precio
-  createPriceList: async (data: PriceListSchemaCreate) => {
+  createPriceList: async (data: any) => {
     set({ isSubmitting: true, error: null });
     try {
       await actions.storePriceList(data);

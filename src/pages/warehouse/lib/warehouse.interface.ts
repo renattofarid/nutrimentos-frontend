@@ -43,6 +43,8 @@ export const WAREHOUSE: ModelComplete<WarehouseResource> = {
     branch_id: 0,
     phone: "",
     email: "",
+    branch_name: "",
+    is_accounting: 0,
     created_at: "",
   },
 };
@@ -61,8 +63,10 @@ export interface WarehouseResource {
   responsible_id: number;
   responsible_full_name: string;
   branch_id: number;
+  branch_name: string;
   phone: string;
   email: string;
+  is_accounting: number;
   created_at: string;
 }
 

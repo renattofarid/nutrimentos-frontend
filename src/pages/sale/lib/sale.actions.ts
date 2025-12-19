@@ -41,6 +41,7 @@ export interface GetSalesParams {
   customer_id?: number;
   branch_id?: number;
   warehouse_id?: number;
+  vendedor_id?: number;
   start_date?: string;
   end_date?: string;
   numero?: string;
@@ -88,6 +89,24 @@ export const updateSale = async (
 export const deleteSale = async (id: number): Promise<{ message: string }> => {
   const response = await api.delete<{ message: string }>(
     `${SALE_ENDPOINT}/${id}`
+  );
+  return response.data;
+};
+
+export interface NextSeriesResponse {
+  serie: string;
+  numero: string;
+}
+
+export const getNextSeries = async (
+  branch_id: number,
+  document_type: string
+): Promise<NextSeriesResponse> => {
+  const response = await api.get<NextSeriesResponse>(
+    `${SALE_ENDPOINT}/next-series`,
+    {
+      params: { branch_id, document_type },
+    }
   );
   return response.data;
 };

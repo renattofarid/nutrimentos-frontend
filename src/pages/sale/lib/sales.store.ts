@@ -104,9 +104,11 @@ export const useSaleStore = create<SaleStore>((set) => ({
         branch_id: Number(data.branch_id),
         customer_id: Number(data.customer_id),
         warehouse_id: Number(data.warehouse_id),
+        vendedor_id: data.vendedor_id ? Number(data.vendedor_id) : null,
         document_type: data.document_type,
         issue_date: data.issue_date,
         payment_type: data.payment_type,
+        total_weight: data.total_weight || 0,
         currency: data.currency,
         observations: data.observations || "",
         amount_cash: data.amount_cash || "0",
@@ -147,9 +149,15 @@ export const useSaleStore = create<SaleStore>((set) => ({
         ...(data.branch_id && { branch_id: Number(data.branch_id) }),
         ...(data.customer_id && { customer_id: Number(data.customer_id) }),
         ...(data.warehouse_id && { warehouse_id: Number(data.warehouse_id) }),
+        ...(data.vendedor_id !== undefined && {
+          vendedor_id: data.vendedor_id ? Number(data.vendedor_id) : null,
+        }),
         ...(data.document_type && { document_type: data.document_type }),
         ...(data.issue_date && { issue_date: data.issue_date }),
         ...(data.payment_type && { payment_type: data.payment_type }),
+        ...(data.total_weight !== undefined && {
+          total_weight: data.total_weight || 0,
+        }),
         ...(data.currency && { currency: data.currency }),
         ...(data.observations !== undefined && {
           observations: data.observations,

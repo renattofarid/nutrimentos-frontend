@@ -18,6 +18,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { PRICELIST } from "../lib/pricelist.interface";
 import AssignClientModal from "./AssignClientModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import { PriceListDetailsSheet } from "./PriceListDetailsSheet";
 
 const { MODEL, ICON } = PRICELIST;
 
@@ -28,6 +29,7 @@ export default function PriceListPage() {
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [assignClientId, setAssignClientId] = useState<number | null>(null);
+  const [viewDetailsId, setViewDetailsId] = useState<number | null>(null);
 
   const { data, meta, isLoading, refetch } = usePriceList();
   const { deletePriceList } = usePriceListStore();
@@ -73,6 +75,7 @@ export default function PriceListPage() {
           onEdit: handleEdit,
           onDelete: setDeleteId,
           onAssignClient: setAssignClientId,
+          onViewDetails: setViewDetailsId,
         })}
         data={data || []}
       >
@@ -101,6 +104,14 @@ export default function PriceListPage() {
           priceListId={assignClientId}
           open={true}
           onClose={() => setAssignClientId(null)}
+        />
+      )}
+
+      {viewDetailsId !== null && (
+        <PriceListDetailsSheet
+          priceListId={viewDetailsId}
+          open={true}
+          onClose={() => setViewDetailsId(null)}
         />
       )}
     </div>

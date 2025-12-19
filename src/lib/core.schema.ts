@@ -53,3 +53,11 @@ export const dateStringSchema = (field: string) =>
     })
     .optional()
     .or(z.literal(""));
+
+export const dateSchema = (field: string) =>
+  z.coerce
+    .date()
+    .refine((val) => val instanceof Date && !isNaN(val.getTime()), {
+      message: `${field} no es una fecha válida`,
+    })
+    .optional();

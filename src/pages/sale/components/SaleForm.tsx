@@ -62,6 +62,11 @@ import {
 import { errorToast } from "@/lib/core.function";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { ClientDialog } from "@/pages/client/components/ClientDialog";
+import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
+import { getNextSeries } from "../lib/sale.actions";
+import { DataTable } from "@/components/DataTable";
+import { SaleProductSheet, type DetailFormData } from "./SaleProductSheet";
+import { createSaleDetailColumns } from "./sale-details-columns";
 
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
@@ -85,6 +90,8 @@ interface DetailRow {
   subtotal: number;
   igv: number;
   total: number;
+  additional_kg?: string; // kg adicionales cuando is_kg está habilitado
+  total_kg?: number; // peso total calculado (peso base * cantidad + kg adicionales)
 }
 
 interface InstallmentRow {
@@ -114,6 +121,17 @@ export const SaleForm = ({
   );
 
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
+  const [editingProductData, setEditingProductData] = useState<
+    DetailFormData | undefined
+  >(undefined);
+
+  // Hook para obtener vendedores
+  const { data: workers = [] } = useAllWorkers();
+
+  // Estados para serie y número automático
+  const [autoSerie, setAutoSerie] = useState<string>("");
+  const [autoNumero, setAutoNumero] = useState<string>("");
 
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
@@ -121,14 +139,6 @@ export const SaleForm = ({
   const [editingDetailIndex, setEditingDetailIndex] = useState<number | null>(
     null
   );
-  const [currentDetail, setCurrentDetail] = useState<DetailRow>({
-    product_id: "",
-    quantity: "",
-    unit_price: "",
-    subtotal: 0,
-    igv: 0,
-    total: 0,
-  });
 
   // Estados para cuotas
   const [installments, setInstallments] = useState<InstallmentRow[]>([]);
@@ -142,14 +152,6 @@ export const SaleForm = ({
   });
 
   // Formularios temporales
-  const detailTempForm = useForm({
-    defaultValues: {
-      temp_product_id: currentDetail.product_id,
-      temp_quantity: currentDetail.quantity,
-      temp_unit_price: currentDetail.unit_price,
-    },
-  });
-
   const installmentTempForm = useForm({
     defaultValues: {
       temp_installment_number: currentInstallment.installment_number,
@@ -158,48 +160,12 @@ export const SaleForm = ({
     },
   });
 
-  // Watchers para detalles
-  const selectedProductId = detailTempForm.watch("temp_product_id");
-  const selectedQuantity = detailTempForm.watch("temp_quantity");
-  const selectedUnitPrice = detailTempForm.watch("temp_unit_price");
-
   // Watchers para cuotas
   const selectedInstallmentNumber = installmentTempForm.watch(
     "temp_installment_number"
   );
   const selectedDueDays = installmentTempForm.watch("temp_due_days");
   const selectedAmount = installmentTempForm.watch("temp_amount");
-
-  // Observers para detalles
-  useEffect(() => {
-    if (selectedProductId !== currentDetail.product_id) {
-      setCurrentDetail((prev) => ({
-        ...prev,
-        product_id: selectedProductId || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProductId]);
-
-  useEffect(() => {
-    if (selectedQuantity !== currentDetail.quantity) {
-      setCurrentDetail((prev) => ({
-        ...prev,
-        quantity: selectedQuantity || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedQuantity]);
-
-  useEffect(() => {
-    if (selectedUnitPrice !== currentDetail.unit_price) {
-      setCurrentDetail((prev) => ({
-        ...prev,
-        unit_price: selectedUnitPrice || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedUnitPrice]);
 
   // Observers para cuotas
   useEffect(() => {
@@ -278,6 +244,15 @@ export const SaleForm = ({
           const igv = roundTo6Decimals(subtotal * 0.18);
           const total = roundTo6Decimals(subtotal + igv);
 
+          // Calcular peso total en kg
+          const productWeight = product?.weight
+            ? parseFloat(product.weight)
+            : 0;
+          const additionalKg = parseFloat(detail.additional_kg || "0");
+          const totalKg = roundTo6Decimals(
+            productWeight * quantity + additionalKg
+          );
+
           return {
             product_id: detail.product_id,
             product_name: product?.name,
@@ -286,6 +261,8 @@ export const SaleForm = ({
             subtotal,
             igv,
             total,
+            additional_kg: detail.additional_kg || "0",
+            total_kg: totalKg,
           };
         });
         setDetails(initialDetails);
@@ -317,6 +294,18 @@ export const SaleForm = ({
   // Watch para filtrado en cascada
   const selectedBranchId = form.watch("branch_id");
   const selectedWarehouseId = form.watch("warehouse_id");
+  const selectedDocumentType = form.watch("document_type");
+  const selectedCurrency = form.watch("currency");
+
+  // Función para obtener el símbolo de moneda
+  const getCurrencySymbol = () => {
+    const currency = CURRENCIES.find((c) => c.value === selectedCurrency);
+    if (!currency) return "";
+    if (selectedCurrency === "PEN") return "S/.";
+    if (selectedCurrency === "USD") return "$";
+    if (selectedCurrency === "EUR") return "€";
+    return "";
+  };
 
   // Efecto para filtrar warehouses cuando cambia branch
   useEffect(() => {
@@ -361,6 +350,30 @@ export const SaleForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedWarehouseId, products]);
 
+  // Efecto para obtener serie y número automático
+  useEffect(() => {
+    const fetchNextSeries = async () => {
+      if (selectedBranchId && selectedDocumentType && mode === "create") {
+        try {
+          const response = await getNextSeries(
+            Number(selectedBranchId),
+            selectedDocumentType
+          );
+          setAutoSerie(response.serie);
+          setAutoNumero(response.numero);
+        } catch (error) {
+          console.error("Error fetching next series:", error);
+          setAutoSerie("");
+          setAutoNumero("");
+        }
+      } else {
+        setAutoSerie("");
+        setAutoNumero("");
+      }
+    };
+    fetchNextSeries();
+  }, [selectedBranchId, selectedDocumentType, mode]);
+
   // Establecer fecha de emisión automáticamente al cargar el formulario
   useEffect(() => {
     // Inicializar montos de pago a 0
@@ -392,77 +405,47 @@ export const SaleForm = ({
     return Math.round(value * 1000000) / 1000000;
   };
 
-  // Funciones para detalles
-  const handleAddDetail = () => {
-    if (
-      !currentDetail.product_id ||
-      !currentDetail.quantity ||
-      !currentDetail.unit_price
-    ) {
-      return;
-    }
-
-    const product = products.find(
-      (p) => p.id.toString() === currentDetail.product_id
-    );
-    const quantity = parseFloat(currentDetail.quantity);
-    const unitPrice = parseFloat(currentDetail.unit_price);
-
-    // Calcular subtotal, IGV (18%) y total con redondeo a 6 decimales
-    const subtotal = roundTo6Decimals(quantity * unitPrice);
-    const igv = roundTo6Decimals(subtotal * 0.18); // IGV 18%
-    const total = roundTo6Decimals(subtotal + igv);
-
-    const newDetail: DetailRow = {
-      ...currentDetail,
-      product_name: product?.name,
-      subtotal,
-      igv,
-      total,
-    };
-
-    if (editingDetailIndex !== null) {
-      const updatedDetails = [...details];
-      updatedDetails[editingDetailIndex] = newDetail;
-      setDetails(updatedDetails);
-      form.setValue("details", updatedDetails);
-      setEditingDetailIndex(null);
-    } else {
-      const updatedDetails = [...details, newDetail];
-      setDetails(updatedDetails);
-      form.setValue("details", updatedDetails);
-    }
-
-    // Limpiar formulario y estado
-    const emptyDetail = {
-      product_id: "",
-      quantity: "",
-      unit_price: "",
-      subtotal: 0,
-      igv: 0,
-      total: 0,
-    };
-    setCurrentDetail(emptyDetail);
-    detailTempForm.reset({
-      temp_product_id: "",
-      temp_quantity: "",
-      temp_unit_price: "",
-    });
+  // Función de redondeo a 2 decimales para pagos
+  const roundTo2Decimals = (value: number): number => {
+    return Math.round(value * 100) / 100;
   };
 
+  // Funciones para detalles
   const handleEditDetail = (index: number) => {
     const detail = details[index];
-    setCurrentDetail(detail);
-    detailTempForm.setValue("temp_product_id", detail.product_id);
-    detailTempForm.setValue("temp_quantity", detail.quantity);
-    detailTempForm.setValue("temp_unit_price", detail.unit_price);
+    setEditingProductData(detail as DetailFormData);
     setEditingDetailIndex(index);
+    setIsProductSheetOpen(true);
   };
 
   const handleRemoveDetail = (index: number) => {
     const updatedDetails = details.filter((_, i) => i !== index);
     setDetails(updatedDetails);
     form.setValue("details", updatedDetails);
+  };
+
+  const handleAddProductClick = () => {
+    setEditingProductData(undefined);
+    setEditingDetailIndex(null);
+    setIsProductSheetOpen(true);
+  };
+
+  const handleProductSubmit = (data: DetailFormData) => {
+    if (editingDetailIndex !== null) {
+      // Actualizar detalle existente
+      const updatedDetails = [...details];
+      updatedDetails[editingDetailIndex] = data;
+      setDetails(updatedDetails);
+      form.setValue("details", updatedDetails);
+      setEditingDetailIndex(null);
+    } else {
+      // Agregar nuevo detalle
+      const updatedDetails = [...details, data];
+      setDetails(updatedDetails);
+      form.setValue("details", updatedDetails);
+    }
+    setIsProductSheetOpen(false);
+    setEditingProductData(undefined);
   };
 
   const calculateDetailsSubtotal = () => {
@@ -481,6 +464,14 @@ export const SaleForm = ({
   const calculateDetailsTotal = () => {
     const sum = details.reduce((sum, detail) => sum + (detail.total || 0), 0);
     return roundTo6Decimals(sum);
+  };
+
+  const calculateTotalWeight = () => {
+    // Calcular el peso total sumando el total_kg de cada detalle
+    const totalWeight = details.reduce((sum, detail) => {
+      return sum + (detail.total_kg || 0);
+    }, 0);
+    return roundTo6Decimals(totalWeight);
   };
 
   // Funciones para cuotas
@@ -582,24 +573,29 @@ export const SaleForm = ({
     const transfer = parseFloat(form.watch("amount_transfer") || "0");
     const other = parseFloat(form.watch("amount_other") || "0");
     const sum = cash + card + yape + plin + deposit + transfer + other;
-    return roundTo6Decimals(sum);
+    return roundTo2Decimals(sum);
   };
 
   const paymentAmountsMatchTotal = () => {
     if (selectedPaymentType !== "CONTADO") return true;
     const saleTotal = calculateDetailsTotal();
     const paymentTotal = calculatePaymentTotal();
-    return Math.abs(saleTotal - paymentTotal) < 0.000001;
+    // Redondear ambos a 2 decimales para comparación
+    const saleTotalRounded = roundTo2Decimals(saleTotal);
+    const paymentTotalRounded = roundTo2Decimals(paymentTotal);
+    return Math.abs(saleTotalRounded - paymentTotalRounded) < 0.01;
   };
 
   const handleFormSubmit = (data: any) => {
+    const currencySymbol = getCurrencySymbol();
+
     // Validar que si es al contado, los montos de pago deben coincidir con el total
     if (selectedPaymentType === "CONTADO" && !paymentAmountsMatchTotal()) {
       errorToast(
-        `El total pagado (${formatNumber(
+        `El total pagado (${currencySymbol} ${formatNumber(
           calculatePaymentTotal()
-        )}) debe ser igual al total de la venta (${formatNumber(
-          calculateDetailsTotal()
+        )}) debe ser igual al total de la venta (${currencySymbol} ${formatNumber(
+          roundTo2Decimals(calculateDetailsTotal())
         )})`
       );
       return;
@@ -614,9 +610,9 @@ export const SaleForm = ({
     // Validar que las cuotas coincidan con el total si hay cuotas
     if (installments.length > 0 && !installmentsMatchTotal()) {
       errorToast(
-        `El total de cuotas (${formatNumber(
+        `El total de cuotas (${currencySymbol} ${formatNumber(
           calculateInstallmentsTotal()
-        )}) debe ser igual al total de la venta (${formatNumber(
+        )}) debe ser igual al total de la venta (${currencySymbol} ${formatNumber(
           calculateDetailsTotal()
         )})`
       );
@@ -646,10 +642,13 @@ export const SaleForm = ({
         }));
     }
 
+    const totalWeight = calculateTotalWeight();
+
     onSubmit({
       ...data,
       details,
       installments: validInstallments,
+      total_weight: totalWeight,
     });
   };
 
@@ -718,6 +717,21 @@ export const SaleForm = ({
 
             <FormSelect
               control={form.control}
+              name="vendedor_id"
+              label="Vendedor"
+              placeholder="Seleccionar vendedor (opcional)"
+              options={[
+                { value: "", label: "Sin vendedor" },
+                ...(workers?.map((worker) => ({
+                  value: worker.id.toString(),
+                  label: `${worker.names} ${worker.father_surname}`,
+                  description: worker.number_document ?? "-",
+                })) || []),
+              ]}
+            />
+
+            <FormSelect
+              control={form.control}
               name="warehouse_id"
               label="Almacén"
               placeholder="Seleccione un almacén"
@@ -738,6 +752,36 @@ export const SaleForm = ({
                 label: dt.label,
               }))}
             />
+
+            {/* Auto-generated Serie */}
+            {mode === "create" && autoSerie && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Serie (Automática)
+                </label>
+                <Input
+                  value={autoSerie}
+                  readOnly
+                  className="bg-muted"
+                  placeholder="Serie automática"
+                />
+              </div>
+            )}
+
+            {/* Auto-generated Numero */}
+            {mode === "create" && autoNumero && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Número (Automático)
+                </label>
+                <Input
+                  value={autoNumero}
+                  readOnly
+                  className="bg-muted"
+                  placeholder="Número automático"
+                />
+              </div>
+            )}
 
             <DatePickerFormField
               control={form.control}
@@ -800,170 +844,56 @@ export const SaleForm = ({
           icon={ListChecks}
           cols={{ sm: 1 }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 bg-sidebar rounded-lg">
-            <div className="md:col-span-3">
-              <Form {...detailTempForm}>
-                <FormSelect
-                  control={detailTempForm.control}
-                  name="temp_product_id"
-                  label="Producto"
-                  placeholder={
-                    selectedWarehouseId
-                      ? "Seleccione un producto"
-                      : "Primero seleccione un almacén"
-                  }
-                  options={filteredProducts.map((product) => {
-                    const stockInWarehouse = product.stock_warehouse?.find(
-                      (stock) =>
-                        stock.warehouse_id.toString() === selectedWarehouseId
-                    );
-                    return {
-                      value: product.id.toString(),
-                      label: product.name,
-                      description: `${product.codigo} | Stock: ${
-                        stockInWarehouse?.stock ?? 0
-                      }`,
-                    };
-                  })}
-                  disabled={!selectedWarehouseId}
-                />
-              </Form>
+          <DataTable
+            columns={createSaleDetailColumns({
+              onEdit: handleEditDetail,
+              onDelete: handleRemoveDetail,
+            })}
+            data={details}
+            isVisibleColumnFilter={false}
+          >
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={handleAddProductClick}
+              disabled={!selectedWarehouseId || !form.watch("customer_id")}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Agregar Producto
+            </Button>
+          </DataTable>
+
+          {/* Resumen de totales */}
+          {details.length > 0 && (
+            <div className="mt-4 space-y-2 p-4 bg-muted/30 rounded-lg border">
+              <div className="flex justify-between items-center pb-2 border-b">
+                <span className="font-bold text-blue-600">Peso Total:</span>
+                <span className="text-lg font-bold text-blue-600">
+                  {formatDecimalTrunc(calculateTotalWeight(), 2)} kg
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-semibold">Subtotal:</span>
+                <span className="font-bold">
+                  {getCurrencySymbol()} {formatNumber(calculateDetailsSubtotal())}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-orange-600">
+                  IGV (18%):
+                </span>
+                <span className="font-bold text-orange-600">
+                  {getCurrencySymbol()} {formatNumber(calculateDetailsIGV())}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t">
+                <span className="text-lg font-bold">Total:</span>
+                <span className="text-xl font-bold text-primary">
+                  {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())}
+                </span>
+              </div>
             </div>
-
-            <FormField
-              control={detailTempForm.control}
-              name="temp_quantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cantidad</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="0" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={detailTempForm.control}
-              name="temp_unit_price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Precio Unit.</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.000001"
-                      placeholder="0.000000"
-                      {...field}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <div className="md:col-span-1 flex items-end justify-end">
-              <Button
-                type="button"
-                size={"sm"}
-                variant="default"
-                onClick={handleAddDetail}
-                disabled={
-                  !currentDetail.product_id ||
-                  !currentDetail.quantity ||
-                  !currentDetail.unit_price
-                }
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {editingDetailIndex !== null ? "Actualizar" : "Agregar"}
-              </Button>
-            </div>
-          </div>
-
-          {details.length > 0 ? (
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Producto</TableHead>
-                    <TableHead className="text-right">Cantidad</TableHead>
-                    <TableHead className="text-right">P. Unit.</TableHead>
-                    <TableHead className="text-right">Subtotal</TableHead>
-                    <TableHead className="text-right">IGV (18%)</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-center">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {details.map((detail, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{detail.product_name}</TableCell>
-                      <TableCell className="text-right">
-                        {detail.quantity}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatNumber(parseFloat(detail.unit_price))}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatNumber(detail.subtotal)}
-                      </TableCell>
-                      <TableCell className="text-right text-orange-600">
-                        {formatNumber(detail.igv)}
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-primary">
-                        {formatNumber(detail.total)}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center gap-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditDetail(index)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveDetail(index)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-right font-bold">
-                      TOTALES:
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-lg">
-                      {formatNumber(calculateDetailsSubtotal())}
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-lg text-orange-600">
-                      {formatNumber(calculateDetailsIGV())}
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-lg text-primary">
-                      {formatNumber(calculateDetailsTotal())}
-                    </TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <Empty className="border border-dashed">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <ListChecks />
-                </EmptyMedia>
-                <EmptyTitle>No hay detalles agregados</EmptyTitle>
-                <EmptyDescription>
-                  Agregue productos a la venta utilizando el formulario
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
           )}
         </GroupFormSection>
 
@@ -984,7 +914,8 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1003,7 +934,8 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1022,7 +954,8 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1041,7 +974,8 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1060,7 +994,8 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1079,7 +1014,8 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1098,7 +1034,8 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1115,13 +1052,13 @@ export const SaleForm = ({
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Total de la Venta:</span>
                   <span className="text-lg font-bold text-primary">
-                    {formatNumber(calculateDetailsTotal())}
+                    {getCurrencySymbol()} {formatNumber(roundTo2Decimals(calculateDetailsTotal()))}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Total Pagado:</span>
                   <span className="text-lg font-bold text-blue-600">
-                    {formatNumber(calculatePaymentTotal())}
+                    {getCurrencySymbol()} {formatNumber(calculatePaymentTotal())}
                   </span>
                 </div>
                 {!paymentAmountsMatchTotal() && (
@@ -1181,7 +1118,7 @@ export const SaleForm = ({
                     <FormControl>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1259,7 +1196,7 @@ export const SaleForm = ({
                           TOTAL CUOTAS:
                         </TableCell>
                         <TableCell className="text-right font-bold text-lg text-blue-600">
-                          {formatDecimalTrunc(calculateInstallmentsTotal(), 6)}
+                          {getCurrencySymbol()} {formatDecimalTrunc(calculateInstallmentsTotal(), 6)}
                         </TableCell>
                         <TableCell></TableCell>
                       </TableRow>
@@ -1270,9 +1207,9 @@ export const SaleForm = ({
                   <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
                     <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
                       ⚠️ El total de cuotas (
-                      {formatNumber(calculateInstallmentsTotal())}) debe ser
+                      {getCurrencySymbol()} {formatNumber(calculateInstallmentsTotal())}) debe ser
                       igual al total de la venta (
-                      {formatNumber(calculateDetailsTotal())})
+                      {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())})
                     </p>
                   </div>
                 )}
@@ -1328,6 +1265,7 @@ export const SaleForm = ({
           </Button>
         </div>
       </form>
+
       {/* Diálogo para agregar proveedor */}
       <ClientDialog
         open={isClientDialogOpen}
@@ -1335,6 +1273,22 @@ export const SaleForm = ({
         onClientCreated={() => {
           onRefreshClients?.();
         }}
+      />
+
+      {/* Sheet para agregar/editar productos */}
+      <SaleProductSheet
+        open={isProductSheetOpen}
+        onClose={() => {
+          setIsProductSheetOpen(false);
+          setEditingProductData(undefined);
+          setEditingDetailIndex(null);
+        }}
+        products={filteredProducts}
+        customerId={form.watch("customer_id") || ""}
+        warehouseId={selectedWarehouseId || ""}
+        onSubmit={handleProductSubmit}
+        defaultValues={editingProductData}
+        mode={editingDetailIndex !== null ? "update" : "create"}
       />
     </Form>
   );

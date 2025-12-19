@@ -8,20 +8,16 @@ import {
 } from "@/components/ui/sheet";
 import { Loader2, Package, DollarSign, AlertCircle } from "lucide-react";
 import { getClientPriceList } from "../lib/client.actions";
-import type { ClientPriceListData } from "../lib/client.interface";
+import type {
+  ClientPriceListData,
+  ClientPriceProduct,
+  ClientProductPrice,
+} from "../lib/client.interface";
 import { errorToast } from "@/lib/core.function";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import AssignPriceListModal from "./AssignPriceListModal";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 interface ClientPriceListSheetProps {
   open: boolean;
@@ -164,12 +160,12 @@ export default function ClientPriceListSheet({
                 </div>
               )}
 
-              {/* Productos y precios */}
+              {/* Matriz de Precios */}
               <div className="border rounded-lg">
                 <div className="bg-sidebar px-4 py-3 border-b">
                   <h4 className="font-semibold flex items-center gap-2">
                     <Package className="size-4" />
-                    Productos ({priceListData.total_products})
+                    Matriz de Precios ({priceListData.total_products} productos)
                   </h4>
                 </div>
                 <ScrollArea className="h-[calc(100vh-28rem)]">
@@ -178,50 +174,126 @@ export default function ClientPriceListSheet({
                       <p>No hay productos en esta lista de precios</p>
                     </div>
                   ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Código</TableHead>
-                          <TableHead>Producto</TableHead>
-                          <TableHead className="text-right">Precio</TableHead>
-                          <TableHead className="text-center">Estado</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {priceListData.products.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="font-mono text-xs">
-                              {item.product.codigo}
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">
-                                  {item.product.name}
-                                </div>
-                                {item.product.comment && (
-                                  <div className="text-xs text-muted-foreground">
-                                    {item.product.comment}
+                    <div className="p-4 overflow-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="bg-muted/50">
+                            <th className="border p-3 text-left font-semibold sticky left-0 bg-muted/50 z-10 min-w-[200px]">
+                              Producto
+                            </th>
+                            {priceListData.price_list.weight_ranges.length === 0 ? (
+                              <th className="border p-3 text-center text-muted-foreground italic">
+                                Sin rangos de peso
+                              </th>
+                            ) : (
+                              priceListData.price_list.weight_ranges.map((range) => (
+                                <th
+                                  key={range.id}
+                                  className="border p-3 text-center font-semibold min-w-[140px]"
+                                >
+                                  <div className="space-y-1">
+                                    <Badge variant="secondary" className="font-mono text-xs">
+                                      {range.name}
+                                    </Badge>
+                                    <div className="text-xs text-muted-foreground font-normal">
+                                      {range.min_weight}kg -{" "}
+                                      {range.max_weight && range.max_weight !== "null"
+                                        ? `${range.max_weight}kg`
+                                        : "Sin límite"}
+                                    </div>
                                   </div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right font-semibold">
-                              {formatPrice(item.price, item.currency)}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge
-                                variant={
-                                  item.is_active ? "default" : "secondary"
-                                }
-                                className="text-xs"
-                              >
-                                {item.is_active ? "Activo" : "Inactivo"}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                                </th>
+                              ))
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(() => {
+                            // Agrupar productos por product_id
+                            const productMap = new Map<
+                              number,
+                              {
+                                product: ClientPriceProduct;
+                                prices: Map<number, ClientProductPrice>;
+                              }
+                            >();
+
+                            priceListData.products.forEach((item) => {
+                              if (!productMap.has(item.product_id)) {
+                                productMap.set(item.product_id, {
+                                  product: item.product,
+                                  prices: new Map(),
+                                });
+                              }
+                              productMap
+                                .get(item.product_id)!
+                                .prices.set(item.weight_range_id, item);
+                            });
+
+                            return Array.from(productMap.values()).map(
+                              ({ product, prices }) => (
+                                <tr key={product.id} className="hover:bg-muted/20">
+                                  <td className="border p-3 sticky left-0 bg-background z-10">
+                                    <div>
+                                      <div className="font-semibold text-sm">
+                                        {product.name}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground font-mono">
+                                        {product.codigo}
+                                      </div>
+                                      {product.comment && (
+                                        <div className="text-xs text-muted-foreground mt-1">
+                                          {product.comment}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </td>
+                                  {priceListData.price_list.weight_ranges.length === 0 ? (
+                                    <td className="border p-3 text-center text-muted-foreground italic">
+                                      Sin rangos de peso
+                                    </td>
+                                  ) : (
+                                    priceListData.price_list.weight_ranges.map((range) => {
+                                      const priceItem = prices.get(range.id);
+                                      return (
+                                        <td key={range.id} className="border p-2">
+                                          {priceItem ? (
+                                            <div className="text-center space-y-1">
+                                              <div className="font-semibold text-sm">
+                                                {formatPrice(
+                                                  priceItem.price,
+                                                  priceItem.currency
+                                                )}
+                                              </div>
+                                              <Badge
+                                                variant={
+                                                  priceItem.is_active
+                                                    ? "default"
+                                                    : "secondary"
+                                                }
+                                                className="text-xs"
+                                              >
+                                                {priceItem.is_active
+                                                  ? "Activo"
+                                                  : "Inactivo"}
+                                              </Badge>
+                                            </div>
+                                          ) : (
+                                            <div className="text-center text-muted-foreground text-xs">
+                                              -
+                                            </div>
+                                          )}
+                                        </td>
+                                      );
+                                    })
+                                  )}
+                                </tr>
+                              )
+                            );
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
                 </ScrollArea>
               </div>

@@ -22,7 +22,7 @@ export default function WarehouseDocumentEditPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: warehouses } = useAllWarehouses();
-  const persons = useAllWorkers();
+  const { data: persons = [] } = useAllWorkers();
   const { data: products } = useAllProducts();
 
   const { data: document, isFinding } = useWarehouseDocumentById(parseInt(id!));

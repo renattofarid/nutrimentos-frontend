@@ -26,6 +26,7 @@ const { MODEL, ICON } = PRODUCT;
 export default function ProductPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [searchCode, setSearchCode] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -43,6 +44,7 @@ export default function ProductPage() {
     const filterParams = {
       page,
       search,
+      codigo: searchCode,
       per_page,
       ...(selectedCompany && { company_id: selectedCompany }),
       ...(selectedCategory && { category_id: selectedCategory }),
@@ -53,10 +55,12 @@ export default function ProductPage() {
   }, [
     page,
     search,
+    searchCode,
     per_page,
     selectedCategory,
     selectedBrand,
     selectedType,
+    selectedCompany,
     refetch,
   ]);
 
@@ -118,6 +122,8 @@ export default function ProductPage() {
       >
         {categories && brands && companies && (
           <ProductOptions
+            searchCode={searchCode}
+            setSearchCode={setSearchCode}
             search={search}
             setSearch={setSearch}
             selectedCategory={selectedCategory}

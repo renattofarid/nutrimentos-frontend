@@ -61,6 +61,7 @@ export default function AssignPriceListModal({
     <GeneralModal
       open={open}
       onClose={onClose}
+      icon="ListCheck"
       title="Asignar Lista de Precios"
       subtitle={`Selecciona la lista de precios para ${personName}`}
       maxWidth="md"

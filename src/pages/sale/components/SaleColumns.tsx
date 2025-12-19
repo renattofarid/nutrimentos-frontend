@@ -77,6 +77,16 @@ export const getSaleColumns = ({
     cell: ({ row }) => <span>{row.original.warehouse.name || "N/A"}</span>,
   },
   {
+    accessorKey: "vendedor",
+    header: "Vendedor",
+    cell: ({ row }) => {
+      const vendedor = row.original.vendedor;
+      return vendedor
+        ? `${vendedor.names} ${vendedor.father_surname}`
+        : "-";
+    },
+  },
+  {
     accessorKey: "issue_date",
     header: "Fecha Emisión",
     cell: ({ row }) => {

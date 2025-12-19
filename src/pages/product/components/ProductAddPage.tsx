@@ -37,7 +37,9 @@ export default function ProductAddPage() {
   const { data: units } = useAllUnits();
   const { data: productTypes } = useAllProductTypes();
   const { data: nationalities } = useAllNationalities();
-  const { data: suppliers } = useAllPersons({ role_names: [SUPPLIER_ROLE_CODE] });
+  const { data: suppliers } = useAllPersons({
+    role_names: [SUPPLIER_ROLE_CODE],
+  });
 
   const getDefaultValues = (): Partial<ProductSchema> => ({
     codigo: "",
@@ -47,7 +49,10 @@ export default function ProductAddPage() {
     product_type_id: undefined,
     brand_id: undefined,
     unit_id: undefined,
-    is_taxed: 1,
+    is_taxed: false,
+    is_kg: false,
+    purchase_price: "",
+    sale_price: "",
     supplier_id: undefined,
     nationality_id: undefined,
     comment: "",

@@ -50,6 +50,7 @@ import { BOX_SHIFT } from "@/pages/box-shift/lib/box-shift.interface";
 import { AccountsReceivableRoute } from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
 import { ACCOUNTS_PAYABLE } from "@/pages/accounts-payable/lib/accounts-payable.interface";
 import { WAREHOUSE_DOCUMENT } from "@/pages/warehouse-document/lib/warehouse-document.interface";
+import { DELIVERY_SHEET } from "@/pages/deliverysheet/lib/deliverysheet.interface";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -213,6 +214,12 @@ const {
   MODEL: { name: AccountsPayableTitle },
 } = ACCOUNTS_PAYABLE;
 
+const {
+  ICON_REACT: DeliverySheetIcon,
+  ROUTE: DeliverySheetRoute,
+  MODEL: { plural: DeliverySheetTitle },
+} = DELIVERY_SHEET;
+
 const data = {
   navMain: [
     {
@@ -234,6 +241,11 @@ const data = {
           title: "Cuentas por Cobrar",
           url: AccountsReceivableRoute,
           icon: DollarSign,
+        },
+        {
+          title: DeliverySheetTitle,
+          url: DeliverySheetRoute,
+          icon: DeliverySheetIcon,
         },
       ],
     },
@@ -458,7 +470,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <TeamSwitcher />
       </SidebarHeader>
-      <SidebarContent >
+      <SidebarContent>
         <NavMain items={filteredNav} />
       </SidebarContent>
       <SidebarFooter className="flex md:hidden">

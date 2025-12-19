@@ -44,11 +44,12 @@ export const PRODUCT: ModelComplete<ProductSchema> = {
     unit_id: "",
     purchase_price: "",
     sale_price: "",
-    is_taxed: 1,
+    is_taxed: true,
     supplier_id: "",
     nationality_id: "",
     comment: "",
     weight: "",
+    is_kg: true,
     price_per_kg: "",
     commission_percentage: "",
     accounting_cost: "",
@@ -83,6 +84,7 @@ export interface ProductResource {
   supplier_full_name: string;
   comment: string;
   weight?: string;
+  is_kg: number;
   price_per_kg?: string;
   commission_percentage?: string;
   accounting_cost?: string;

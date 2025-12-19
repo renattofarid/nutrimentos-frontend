@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
 import TitleComponent from "@/components/TitleComponent";
 import PriceListForm from "./PriceListForm";
 import { usePriceListStore } from "../lib/pricelist.store";
@@ -41,16 +40,12 @@ export default function PriceListAddPage() {
         icon={ICON}
       />
 
-      <Card>
-        <CardContent className="pt-6">
-          <PriceListForm
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-            isSubmitting={isSubmitting}
-            mode="create"
-          />
-        </CardContent>
-      </Card>
+      <PriceListForm
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        isSubmitting={isSubmitting}
+        mode="create"
+      />
     </FormWrapper>
   );
 }

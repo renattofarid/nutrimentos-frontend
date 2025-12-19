@@ -86,6 +86,8 @@ import { ACCOUNTS_PAYABLE } from "./pages/accounts-payable/lib/accounts-payable.
 import { ValuatedInventoryPage, WarehouseDocumentAddPage, WarehouseDocumentEditPage, WarehouseDocumentPage, WarehouseKardexPage } from "./pages/warehouse-document/components";
 import { WAREHOUSE_DOCUMENT } from "./pages/warehouse-document/lib/warehouse-document.interface";
 import WarehouseDocumentDetailPage from "./pages/warehouse-document/components/WarehouseDocumentDetailPage";
+import DeliverySheetPage from "./pages/deliverysheet/components/DeliverySheetPage";
+import { DELIVERY_SHEET } from "./pages/deliverysheet/lib/deliverysheet.interface";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -115,6 +117,7 @@ const { ROUTE: GuideRoute } = GUIDE;
 const { ROUTE: BoxShiftRoute } = BOX_SHIFT;
 const { ROUTE: AccountsPayableRoute } = ACCOUNTS_PAYABLE;
 const { ROUTE: WarehouseDocumentRoute } = WAREHOUSE_DOCUMENT;
+const { ROUTE: DeliverySheetRoute } = DELIVERY_SHEET;
 
 export const hasAccessToRoute = (access: Access[], route: string): boolean => {
   const transformRoute = route.split("/").pop();
@@ -688,6 +691,16 @@ export default function App() {
             element={
               <ProtectedRoute path={AccountsPayableRoute}>
                 <AccountsPayablePage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rutas de Planillas de Reparto */}
+          <Route
+            path={DeliverySheetRoute}
+            element={
+              <ProtectedRoute path={DeliverySheetRoute}>
+                <DeliverySheetPage />
               </ProtectedRoute>
             }
           />

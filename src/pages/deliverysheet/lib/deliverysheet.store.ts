@@ -263,9 +263,13 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
       await createSettlement(id, request);
       set({ isSubmitting: false });
       successToast("Rendición registrada exitosamente");
-    } catch (error) {
+    } catch (error: any) {
       set({ error: "Error al registrar la rendición", isSubmitting: false });
-      errorToast("Error al registrar la rendición");
+      errorToast(
+        error.response.data.message ??
+          error.response.data.error ??
+          "Error al registrar la rendición"
+      );
       throw error;
     }
   },
@@ -289,9 +293,13 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
       await createDeliverySheetPayment(id, request);
       set({ isSubmitting: false });
       successToast("Pago registrado exitosamente");
-    } catch (error) {
+    } catch (error: any) {
       set({ error: "Error al registrar el pago", isSubmitting: false });
-      errorToast("Error al registrar el pago");
+      errorToast(
+        error.response.data.error ??
+          error.response.data.message ??
+          "Error al registrar el pago"
+      );
       throw error;
     }
   },

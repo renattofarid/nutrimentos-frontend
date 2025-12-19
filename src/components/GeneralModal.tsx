@@ -55,7 +55,6 @@ export function GeneralModal({
   title,
   subtitle,
   children,
-  maxWidth = "max-w-lg",
   size = "lg",
   className,
   modal,
@@ -81,7 +80,7 @@ export function GeneralModal({
         }}
       >
         <DialogContent
-          className={`w-[95vw] rounded-xl overflow-auto ${maxWidth}`}
+          className={cn(sizes[size], "w-[95vw] rounded-xl overflow-auto")}
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
@@ -96,11 +95,7 @@ export function GeneralModal({
     ) : (
       <Drawer open={open} onOpenChange={(v) => !v && onClose()} modal={modal}>
         <DrawerContent
-          className={cn(
-            sizes[size],
-            className,
-            "pb-0 flex flex-col max-h-[96vh]"
-          )}
+          className={cn(className, "pb-0 flex flex-col max-h-[96vh]")}
         >
           <DrawerHeader className="flex-shrink-0 p-2">
             <div className="flex items-center gap-2">

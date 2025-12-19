@@ -65,7 +65,7 @@ export const saleSchemaCreate = z.object({
   payment_type: z
     .string()
     .min(1, { message: "Debe seleccionar un tipo de pago" }),
-  total_weight: z.number().positive("El peso total debe ser mayor a 0"),
+  total_weight: z.number().positive("El peso total debe ser mayor a 0").optional().default(0),
   currency: z.string().min(1, { message: "Debe seleccionar una moneda" }),
   observations: z.string().max(500).optional(),
   amount_cash: z

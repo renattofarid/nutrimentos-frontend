@@ -1080,6 +1080,7 @@ export const SaleForm = ({
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1099,6 +1100,7 @@ export const SaleForm = ({
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1118,6 +1120,7 @@ export const SaleForm = ({
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1137,6 +1140,7 @@ export const SaleForm = ({
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1156,6 +1160,7 @@ export const SaleForm = ({
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1175,6 +1180,7 @@ export const SaleForm = ({
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1194,6 +1200,7 @@ export const SaleForm = ({
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                       />
@@ -1388,11 +1395,11 @@ export const SaleForm = ({
           </GroupFormSection>
         )}
 
-        {/* <pre>
+        <pre>
           <code>{JSON.stringify(form.getValues(), null, 2)}</code>
           <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
         </pre>
-        <Button onClick={() => form.trigger()}>Button</Button> */}
+        <Button onClick={() => form.trigger()}>Button</Button>
 
         {/* Botones */}
         <div className="flex gap-4 w-full justify-end">
@@ -1423,6 +1430,8 @@ export const SaleForm = ({
           </Button>
         </div>
       </form>
+
+
       {/* Diálogo para agregar proveedor */}
       <ClientDialog
         open={isClientDialogOpen}

@@ -45,9 +45,7 @@ export const getDeliverySheetColumns = ({
     accessorKey: "sheet_number",
     header: "N° Planilla",
     cell: ({ row }) => (
-      <div className="font-mono font-semibold">
-        {row.original.sheet_number}
-      </div>
+      <div className="font-mono font-semibold">{row.original.sheet_number}</div>
     ),
   },
   {
@@ -171,7 +169,9 @@ export const getDeliverySheetColumns = ({
       const pending = parseFloat(row.original.pending_amount);
       return (
         <span
-          className={`font-semibold ${pending > 0 ? "text-orange-600" : "text-primary"}`}
+          className={`font-semibold ${
+            pending > 0 ? "text-orange-600" : "text-primary"
+          }`}
         >
           S/. {row.original.pending_amount}
         </span>
@@ -182,8 +182,8 @@ export const getDeliverySheetColumns = ({
     id: "actions",
     header: "Acciones",
     cell: ({ row }) => {
-      const isCompleted = row.original.status === "COMPLETADO";
-      const isCanceled = row.original.status === "CANCELADO";
+      // const isCompleted = row.original.status === "COMPLETADO";
+      // const isCanceled = row.original.status === "CANCELADO";
       const canDelete = row.original.status === "PENDIENTE";
       const canUpdateStatus =
         row.original.status === "PENDIENTE" ||

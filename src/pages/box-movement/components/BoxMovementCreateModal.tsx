@@ -147,6 +147,7 @@ export default function BoxMovementCreateModal({
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                         onChange={(e) =>
@@ -169,6 +170,7 @@ export default function BoxMovementCreateModal({
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                         onChange={(e) =>
@@ -191,6 +193,7 @@ export default function BoxMovementCreateModal({
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                         onChange={(e) =>
@@ -213,6 +216,7 @@ export default function BoxMovementCreateModal({
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                         onChange={(e) =>
@@ -234,6 +238,7 @@ export default function BoxMovementCreateModal({
                     <FormControl>
                       <Input
                         type="number"
+                        min="0"
                         step="0.01"
                         placeholder="0.00"
                         {...field}
@@ -257,6 +262,7 @@ export default function BoxMovementCreateModal({
                       <Input
                         type="number"
                         step="0.01"
+                        min="0"
                         placeholder="0.00"
                         {...field}
                         onChange={(e) =>

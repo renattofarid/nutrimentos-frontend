@@ -75,22 +75,12 @@ export function StatusUpdateDialog({
             onSubmit={form.handleSubmit(handleFormSubmit)}
             className="space-y-4"
           >
-            <FormField
+            <FormSelect
               control={form.control}
               name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Estado</FormLabel>
-                  <FormControl>
-                    <FormSelect
-                      placeholder="Seleccione un estado"
-                      items={STATUS_OPTIONS}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Estado"
+              placeholder="Seleccione un estado"
+              options={STATUS_OPTIONS}
             />
 
             <FormField

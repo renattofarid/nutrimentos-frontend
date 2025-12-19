@@ -2,12 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import GeneralSheet from "@/components/GeneralSheet";
 import {
   Form,
   FormField,
@@ -19,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader } from "lucide-react";
+import { Loader, Wallet } from "lucide-react";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import {
   deliverySheetPaymentSchema,
@@ -27,7 +22,6 @@ import {
 } from "../lib/deliverysheet.schema";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { useState, useEffect } from "react";
-import { Badge } from "@/components/ui/badge";
 
 interface PaymentDialogProps {
   open: boolean;
@@ -45,9 +39,10 @@ export function PaymentDialog({
   pendingAmount,
 }: PaymentDialogProps) {
   const [totalPaid, setTotalPaid] = useState(0);
+  const pendingAmountNumber = parseFloat(pendingAmount) || 0;
 
   const form = useForm<DeliverySheetPaymentSchema>({
-    resolver: zodResolver(deliverySheetPaymentSchema),
+    resolver: zodResolver(deliverySheetPaymentSchema) as any,
     defaultValues: {
       payment_date: new Date().toISOString().split("T")[0],
       amount_cash: "0",
@@ -90,218 +85,239 @@ export function PaymentDialog({
   ]);
 
   const handleFormSubmit = (data: DeliverySheetPaymentSchema) => {
+    if (totalPaid > pendingAmountNumber) {
+      return;
+    }
     onSubmit(data);
   };
 
+  const isOverpaid = totalPaid > pendingAmountNumber;
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Registrar Pago de Planilla</DialogTitle>
-        </DialogHeader>
-
-        <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
-          <div>
-            <p className="text-sm text-muted-foreground">Monto Pendiente</p>
-            <p className="text-2xl font-bold">S/. {pendingAmount}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Total a Pagar</p>
-            <p className="text-2xl font-bold text-primary">
-              S/. {totalPaid.toFixed(2)}
-            </p>
-          </div>
+    <GeneralSheet
+      open={open}
+      onClose={onClose}
+      title="Registrar Pago de Planilla"
+      subtitle="Registre los montos recibidos por cada método de pago"
+      size="2xl"
+    >
+      <div className="flex justify-between items-center p-4 bg-muted rounded-lg mb-6">
+        <div>
+          <p className="text-sm text-muted-foreground">Monto Pendiente</p>
+          <p className="text-2xl font-bold">S/. {pendingAmount}</p>
         </div>
-
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleFormSubmit)}
-            className="space-y-6"
+        <div>
+          <p className="text-sm text-muted-foreground">Total a Pagar</p>
+          <p
+            className={`text-2xl font-bold ${
+              isOverpaid ? "text-destructive" : "text-primary"
+            }`}
           >
-            <FormField
-              control={form.control}
-              name="payment_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fecha de Pago</FormLabel>
-                  <FormControl>
-                    <DatePickerFormField {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            S/. {totalPaid.toFixed(2)}
+          </p>
+        </div>
+      </div>
 
-            <GroupFormSection
-              title="Métodos de Pago"
-              description="Ingrese los montos según el método de pago utilizado"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="amount_cash"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Efectivo</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+      {isOverpaid && (
+        <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg mb-4">
+          <p className="text-sm text-destructive font-medium">
+            El monto a pagar excede el monto pendiente en S/.{" "}
+            {(totalPaid - pendingAmountNumber).toFixed(2)}
+          </p>
+        </div>
+      )}
 
-                <FormField
-                  control={form.control}
-                  name="amount_card"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tarjeta</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(handleFormSubmit)}
+          className="space-y-6"
+        >
+          <DatePickerFormField
+            control={form.control}
+            name="payment_date"
+            label="Fecha de Pago"
+          />
 
-                <FormField
-                  control={form.control}
-                  name="amount_yape"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Yape</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <GroupFormSection
+            title="Métodos de Pago"
+            icon={Wallet}
+            cols={{ sm: 1 }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="amount_cash"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Efectivo</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="amount_plin"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Plin</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="amount_card"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tarjeta</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="amount_deposit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Depósito</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="amount_yape"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Yape</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="amount_transfer"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Transferencia</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="amount_plin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Plin</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="amount_other"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Otro</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </GroupFormSection>
+              <FormField
+                control={form.control}
+                name="amount_deposit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Depósito</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="observations"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Observaciones del pago..."
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="amount_transfer"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Transferencia</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className="flex justify-end gap-4 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isSubmitting || totalPaid === 0}>
-                {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-                Registrar Pago
-              </Button>
+              <FormField
+                control={form.control}
+                name="amount_other"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Otro</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          </GroupFormSection>
+
+          <FormField
+            control={form.control}
+            name="observations"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Observaciones</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Observaciones del pago..."
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex justify-end gap-4 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || totalPaid === 0 || isOverpaid}
+            >
+              {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+              Registrar Pago
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </GeneralSheet>
   );
 }

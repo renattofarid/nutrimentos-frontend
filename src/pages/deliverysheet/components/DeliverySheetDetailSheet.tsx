@@ -11,15 +11,9 @@ import {
   Wallet,
   Package,
 } from "lucide-react";
-import type { DeliverySheetResource } from "../lib/deliverysheet.interface";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import type { DeliverySheetResource, DeliverySheetSale, DeliverySheetPayment } from "../lib/deliverysheet.interface";
+import { DataTable } from "@/components/DataTable";
+import type { ColumnDef } from "@tanstack/react-table";
 
 interface DeliverySheetDetailSheetProps {
   deliverySheet: DeliverySheetResource | null;
@@ -73,6 +67,113 @@ export default function DeliverySheetDetailSheet({
     if (status === "DEVUELTO") return "outline";
     return "outline";
   };
+
+  // Columnas para la tabla de ventas
+  const salesColumns: ColumnDef<DeliverySheetSale>[] = [
+    {
+      accessorKey: "full_document_number",
+      header: "Documento",
+      cell: ({ row }) => (
+        <div className="flex flex-col">
+          <span className="text-xs text-muted-foreground">
+            {row.original.document_type}
+          </span>
+          <span className="font-mono font-semibold">
+            {row.original.full_document_number}
+          </span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "customer.full_name",
+      header: "Cliente",
+      cell: ({ row }) => (
+        <div className="max-w-[180px] truncate">
+          {row.original.customer.full_name}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "issue_date",
+      header: "Fecha",
+      cell: ({ row }) => (
+        <Badge variant="outline">{formatDate(row.original.issue_date)}</Badge>
+      ),
+    },
+    {
+      accessorKey: "total_amount",
+      header: "Monto",
+      cell: ({ row }) => (
+        <div className="text-right font-semibold">
+          S/. {row.original.total_amount}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "collected_amount",
+      header: "Cobrado",
+      cell: ({ row }) => (
+        <div className="text-right font-semibold text-primary">
+          S/. {row.original.collected_amount}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "delivery_status",
+      header: "Estado",
+      cell: ({ row }) => (
+        <Badge variant={getDeliveryStatusVariant(row.original.delivery_status)}>
+          {row.original.delivery_status.replace("_", " ")}
+        </Badge>
+      ),
+    },
+  ];
+
+  // Columnas para la tabla de pagos
+  const paymentsColumns: ColumnDef<DeliverySheetPayment>[] = [
+    {
+      accessorKey: "payment_date",
+      header: "Fecha",
+      cell: ({ row }) => (
+        <Badge variant="outline">{formatDate(row.original.payment_date)}</Badge>
+      ),
+    },
+    {
+      accessorKey: "amount_cash",
+      header: "Efectivo",
+      cell: ({ row }) => (
+        <div className="text-right">S/. {row.original.amount_cash}</div>
+      ),
+    },
+    {
+      accessorKey: "amount_card",
+      header: "Tarjeta",
+      cell: ({ row }) => (
+        <div className="text-right">S/. {row.original.amount_card}</div>
+      ),
+    },
+    {
+      accessorKey: "amount_yape",
+      header: "Yape",
+      cell: ({ row }) => (
+        <div className="text-right">S/. {row.original.amount_yape}</div>
+      ),
+    },
+    {
+      accessorKey: "total_amount",
+      header: "Total",
+      cell: ({ row }) => (
+        <div className="text-right font-semibold text-primary">
+          S/. {row.original.total_amount}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "user.name",
+      header: "Usuario",
+      cell: ({ row }) => row.original.user.name,
+    },
+  ];
 
   return (
     <GeneralSheet
@@ -272,61 +373,11 @@ export default function DeliverySheetDetailSheet({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Documento</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead className="text-right">Monto</TableHead>
-                    <TableHead className="text-right">Cobrado</TableHead>
-                    <TableHead>Estado</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {deliverySheet.sales.map((sale) => (
-                    <TableRow key={sale.id}>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-muted-foreground">
-                            {sale.document_type}
-                          </span>
-                          <span className="font-mono font-semibold">
-                            {sale.full_document_number}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-[180px] truncate">
-                          {sale.customer.full_name}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {formatDate(sale.issue_date)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        S/. {sale.total_amount}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold text-primary">
-                        S/. {sale.collected_amount}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={getDeliveryStatusVariant(
-                            sale.delivery_status
-                          )}
-                        >
-                          {sale.delivery_status.replace("_", " ")}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <DataTable
+              columns={salesColumns}
+              data={deliverySheet.sales}
+              isVisibleColumnFilter={false}
+            />
           </CardContent>
         </Card>
 
@@ -340,44 +391,11 @@ export default function DeliverySheetDetailSheet({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead className="text-right">Efectivo</TableHead>
-                      <TableHead className="text-right">Tarjeta</TableHead>
-                      <TableHead className="text-right">Yape</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead>Usuario</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {deliverySheet.payments.map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {formatDate(payment.payment_date)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          S/. {payment.amount_cash}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          S/. {payment.amount_card}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          S/. {payment.amount_yape}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold text-primary">
-                          S/. {payment.total_amount}
-                        </TableCell>
-                        <TableCell>{payment.user.name}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              <DataTable
+                columns={paymentsColumns}
+                data={deliverySheet.payments}
+                isVisibleColumnFilter={false}
+              />
             </CardContent>
           </Card>
         )}

@@ -1,40 +1,25 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader } from "lucide-react";
-import { FormSelect } from "@/components/FormSelect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   settlementSchema,
   type SettlementSchema,
 } from "../lib/deliverysheet.schema";
 import type { DeliverySheetSale } from "../lib/deliverysheet.interface";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import GeneralSheet from "@/components/GeneralSheet";
 
 interface SettlementDialogProps {
   open: boolean;
@@ -50,12 +35,6 @@ const DELIVERY_STATUS_OPTIONS = [
   { value: "DEVUELTO", label: "Devuelto" },
 ];
 
-interface SaleSettlement {
-  sale_id: number;
-  delivery_status: string;
-  delivery_notes: string;
-}
-
 export function SettlementDialog({
   open,
   onClose,
@@ -63,139 +42,118 @@ export function SettlementDialog({
   isSubmitting = false,
   sales,
 }: SettlementDialogProps) {
-  const [settlements, setSettlements] = useState<SaleSettlement[]>(
-    sales.map((sale) => ({
-      sale_id: sale.id,
-      delivery_status: sale.delivery_status,
-      delivery_notes: sale.delivery_notes || "",
-    }))
-  );
-
   const form = useForm<SettlementSchema>({
     resolver: zodResolver(settlementSchema),
     defaultValues: {
-      sales: settlements.map((s) => ({
-        sale_id: s.sale_id,
-        delivery_status: s.delivery_status,
-        delivery_notes: s.delivery_notes,
+      sales: sales.map((sale) => ({
+        sale_id: sale.id,
+        delivery_status: sale.delivery_status,
+        delivery_notes: sale.delivery_notes || "",
       })),
     },
   });
 
-  const handleStatusChange = (saleId: number, status: string) => {
-    setSettlements((prev) =>
-      prev.map((s) =>
-        s.sale_id === saleId ? { ...s, delivery_status: status } : s
-      )
-    );
+  const handleStatusChange = (index: number, status: string) => {
+    form.setValue(`sales.${index}.delivery_status`, status);
   };
 
-  const handleNotesChange = (saleId: number, notes: string) => {
-    setSettlements((prev) =>
-      prev.map((s) =>
-        s.sale_id === saleId ? { ...s, delivery_notes: notes } : s
-      )
-    );
+  const handleNotesChange = (index: number, notes: string) => {
+    form.setValue(`sales.${index}.delivery_notes`, notes);
   };
 
-  const handleFormSubmit = () => {
-    const data: SettlementSchema = {
-      sales: settlements.map((s) => ({
-        sale_id: s.sale_id,
-        delivery_status: s.delivery_status,
-        delivery_notes: s.delivery_notes || undefined,
-      })),
-    };
+  const handleFormSubmit = (data: SettlementSchema) => {
     onSubmit(data);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Rendición de Planilla</DialogTitle>
-        </DialogHeader>
+    <GeneralSheet
+      open={open}
+      onClose={onClose}
+      title="Rendición de Planilla"
+      subtitle="Registre el estado de entrega de cada venta"
+      size="4xl"
+    >
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(handleFormSubmit)}
+          className="space-y-4"
+        >
+          <div className="grid grid-cols-1 gap-4">
+            {sales.map((sale, index) => {
+              const formValues = form.watch(`sales.${index}`);
+              return (
+                <div key={sale.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {sale.document_type}
+                        </span>
+                        <span className="font-mono font-semibold">
+                          {sale.full_document_number}
+                        </span>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {sale.customer.full_name}
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="shrink-0">
+                      S/. {sale.total_amount}
+                    </Badge>
+                  </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Documento</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Monto</TableHead>
-                    <TableHead>Estado Entrega</TableHead>
-                    <TableHead>Notas</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sales.map((sale, index) => {
-                    const settlement = settlements.find(
-                      (s) => s.sale_id === sale.id
-                    );
-                    return (
-                      <TableRow key={sale.id}>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="text-xs text-muted-foreground">
-                              {sale.document_type}
-                            </span>
-                            <span className="font-mono font-semibold">
-                              {sale.full_document_number}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="max-w-[150px] truncate">
-                            {sale.customer.full_name}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            S/. {sale.total_amount}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <FormSelect
-                            placeholder="Estado"
-                            items={DELIVERY_STATUS_OPTIONS}
-                            value={settlement?.delivery_status || "PENDIENTE"}
-                            onChange={(value) =>
-                              handleStatusChange(sale.id, value)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Textarea
-                            placeholder="Notas de entrega..."
-                            className="resize-none min-w-[200px]"
-                            value={settlement?.delivery_notes || ""}
-                            onChange={(e) =>
-                              handleNotesChange(sale.id, e.target.value)
-                            }
-                            rows={2}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Estado de Entrega
+                    </label>
+                    <Select
+                      value={formValues?.delivery_status || sale.delivery_status}
+                      onValueChange={(value) =>
+                        handleStatusChange(index, value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Estado" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DELIVERY_STATUS_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            <div className="flex justify-end gap-4 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-                Guardar Rendición
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Notas de Entrega
+                    </label>
+                    <Textarea
+                      placeholder="Notas de entrega..."
+                      className="resize-y min-h-[80px]"
+                      value={formValues?.delivery_notes || ""}
+                      onChange={(e) =>
+                        handleNotesChange(index, e.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-end gap-4 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+              Guardar Rendición
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </GeneralSheet>
   );
 }

@@ -50,6 +50,7 @@ import { BOX_SHIFT } from "@/pages/box-shift/lib/box-shift.interface";
 import { AccountsReceivableRoute } from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
 import { ACCOUNTS_PAYABLE } from "@/pages/accounts-payable/lib/accounts-payable.interface";
 import { WAREHOUSE_DOCUMENT } from "@/pages/warehouse-document/lib/warehouse-document.interface";
+import { DELIVERY_SHEET } from "@/pages/deliverysheet/lib/deliverysheet.interface";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -213,6 +214,12 @@ const {
   MODEL: { name: AccountsPayableTitle },
 } = ACCOUNTS_PAYABLE;
 
+const {
+  ICON_REACT: DeliverySheetIcon,
+  ROUTE: DeliverySheetRoute,
+  MODEL: { plural: DeliverySheetTitle },
+} = DELIVERY_SHEET;
+
 const data = {
   navMain: [
     {
@@ -364,6 +371,11 @@ const data = {
           title: GuideTitle,
           url: GuideRoute,
           icon: GuideIcon,
+        },
+        {
+          title: DeliverySheetTitle,
+          url: DeliverySheetRoute,
+          icon: DeliverySheetIcon,
         },
         {
           title: PaymentConceptTitle,

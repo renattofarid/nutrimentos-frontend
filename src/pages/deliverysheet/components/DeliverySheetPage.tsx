@@ -20,17 +20,18 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { DataTablePagination } from "@/components/DataTablePagination";
 import type {
   DeliverySheetStatusSchema,
   SettlementSchema,
   DeliverySheetPaymentSchema,
 } from "../lib/deliverysheet.schema";
+import DataTablePagination from "@/components/DataTablePagination";
+import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
 export default function DeliverySheetPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(15);
+  const [perPage, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [openDelete, setOpenDelete] = useState(false);
   const [deliverySheetToDelete, setDeliverySheetToDelete] = useState<
     number | null
@@ -172,24 +173,16 @@ export default function DeliverySheetPage() {
         columns={columns}
         data={deliverySheets || []}
         isLoading={isLoading}
-      >
-        <div className="flex items-center justify-between px-2 py-4">
-          <div className="text-sm text-muted-foreground">
-            {meta && (
-              <>
-                Mostrando {meta.from} - {meta.to} de {meta.total} registros
-              </>
-            )}
-          </div>
-          <DataTablePagination
-            currentPage={page}
-            totalPages={meta?.last_page || 1}
-            perPage={perPage}
-            onPageChange={setPage}
-            onPerPageChange={setPerPage}
-          />
-        </div>
-      </DeliverySheetTable>
+      />
+
+      <DataTablePagination
+        page={page}
+        totalPages={meta?.last_page || 1}
+        per_page={perPage}
+        onPageChange={setPage}
+        setPerPage={setPerPage}
+        totalData={meta?.total || 0}
+      />
 
       <SimpleDeleteDialog
         open={openDelete}

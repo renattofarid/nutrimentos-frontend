@@ -32,13 +32,14 @@ type DetailSchema = z.infer<typeof detailSchema>;
 export interface DetailFormData {
   product_id: string;
   product_name?: string;
-  quantity: string;
+  quantity: string; // Cantidad total en decimal (ej: 1.02) - SE ENVÍA AL BACKEND
+  quantity_sacks: string; // Cantidad de sacos ingresada por el usuario (ej: 1)
+  quantity_kg: string; // Kg adicionales ingresados por el usuario (ej: 1)
   unit_price: string;
   subtotal: number;
   igv: number;
   total: number;
-  additional_kg?: string;
-  total_kg?: number;
+  total_kg?: number; // Peso total en kg (ej: 51)
 }
 
 interface SaleProductSheetProps {
@@ -69,8 +70,8 @@ export const SaleProductSheet = ({
     resolver: zodResolver(detailSchema),
     defaultValues: {
       product_id: defaultValues?.product_id || "",
-      quantity: defaultValues?.quantity || "",
-      additional_kg: defaultValues?.additional_kg || "0",
+      quantity: defaultValues?.quantity_sacks || "",
+      additional_kg: defaultValues?.quantity_kg || "0",
     },
   });
 
@@ -87,8 +88,8 @@ export const SaleProductSheet = ({
     if (open && defaultValues && mode === "update") {
       form.reset({
         product_id: defaultValues.product_id || "",
-        quantity: defaultValues.quantity || "",
-        additional_kg: defaultValues.additional_kg || "0",
+        quantity: defaultValues.quantity_sacks || "",
+        additional_kg: defaultValues.quantity_kg || "0",
       });
     } else if (open && mode === "create") {
       form.reset({
@@ -175,21 +176,34 @@ export const SaleProductSheet = ({
       quantitySacksDecimal = quantity + additionalSacks;
     }
 
-    // Usar los valores del backend que ya están correctamente calculados
-    const subtotal = roundTo6Decimals(parseFloat(priceData.pricing.subtotal));
+    // Calcular el subtotal según el tipo de producto
+    // Si el producto se vende por kg (is_kg = 1), usar peso total × precio_por_kg
+    // Si no, usar cantidad de sacos × precio_unitario
+    let subtotal: number;
+    if (selectedProduct?.is_kg === 1) {
+      // Producto por kg: usar peso total en kg × precio por kg
+      const pricePerKg = parseFloat(priceData.pricing.price_per_kg);
+      const totalWeightKg = priceData.quantities.total_weight_kg;
+      subtotal = roundTo6Decimals(totalWeightKg * pricePerKg);
+    } else {
+      // Producto por unidad: usar cantidad de sacos × precio unitario
+      const unitPrice = parseFloat(priceData.pricing.unit_price);
+      subtotal = roundTo6Decimals(quantity * unitPrice);
+    }
     const igv = roundTo6Decimals(subtotal * 0.18);
     const total = roundTo6Decimals(subtotal + igv);
 
     const formData: DetailFormData = {
       product_id: data.product_id,
       product_name: selectedProduct?.name,
-      quantity: quantitySacksDecimal.toString(), // Usar la cantidad decimal calculada
+      quantity: quantitySacksDecimal.toString(), // Cantidad total en decimal (SE ENVÍA AL BACKEND)
+      quantity_sacks: data.quantity, // Sacos ingresados por el usuario
+      quantity_kg: data.additional_kg || "0", // Kg adicionales ingresados por el usuario
       unit_price: priceData.pricing.unit_price,
       subtotal,
       igv,
       total,
-      additional_kg: data.additional_kg || "0",
-      total_kg: priceData.quantities.total_weight_kg,
+      total_kg: priceData.quantities.total_weight_kg, // Peso total en kg
     };
 
     onSubmit(formData);
@@ -332,7 +346,20 @@ export const SaleProductSheet = ({
               <div className="flex justify-between items-center pt-2 border-t">
                 <span className="text-sm font-bold">Subtotal:</span>
                 <span className="text-lg font-bold text-primary">
-                  {priceData.pricing.currency} {priceData.pricing.subtotal}
+                  {priceData.pricing.currency} {
+                    (() => {
+                      // Calcular subtotal según el tipo de producto
+                      if (selectedProduct?.is_kg === 1) {
+                        // Producto por kg: peso total × precio por kg
+                        const pricePerKg = parseFloat(priceData.pricing.price_per_kg);
+                        const totalWeightKg = priceData.quantities.total_weight_kg;
+                        return (totalWeightKg * pricePerKg).toFixed(2);
+                      } else {
+                        // Producto por unidad: sacos × precio unitario
+                        return (parseFloat(selectedQuantity || "0") * parseFloat(priceData.pricing.unit_price)).toFixed(2);
+                      }
+                    })()
+                  }
                 </span>
               </div>
             </div>

@@ -85,13 +85,14 @@ interface SaleFormProps {
 interface DetailRow {
   product_id: string;
   product_name?: string;
-  quantity: string;
+  quantity: string; // Cantidad total en decimal (ej: 1.02) - SE ENVÍA AL BACKEND
+  quantity_sacks: string; // Cantidad de sacos ingresada por el usuario (ej: 1)
+  quantity_kg: string; // Kg adicionales ingresados por el usuario (ej: 1)
   unit_price: string;
   subtotal: number;
   igv: number;
   total: number;
-  additional_kg?: string; // kg adicionales cuando is_kg está habilitado
-  total_kg?: number; // peso total calculado (peso base * cantidad + kg adicionales)
+  total_kg?: number; // Peso total en kg (ej: 51)
 }
 
 interface InstallmentRow {
@@ -248,7 +249,7 @@ export const SaleForm = ({
           const productWeight = product?.weight
             ? parseFloat(product.weight)
             : 0;
-          const additionalKg = parseFloat(detail.additional_kg || "0");
+          const additionalKg = parseFloat(detail.quantity_kg || "0");
           const totalKg = roundTo6Decimals(
             productWeight * quantity + additionalKg
           );
@@ -256,12 +257,13 @@ export const SaleForm = ({
           return {
             product_id: detail.product_id,
             product_name: product?.name,
-            quantity: detail.quantity,
+            quantity: detail.quantity, // Cantidad total en decimal
+            quantity_sacks: detail.quantity_sacks || detail.quantity, // Sacos (si no existe, usar quantity)
+            quantity_kg: detail.quantity_kg || "0", // Kg adicionales
             unit_price: detail.unit_price,
             subtotal,
             igv,
             total,
-            additional_kg: detail.additional_kg || "0",
             total_kg: totalKg,
           };
         });

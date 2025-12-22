@@ -129,9 +129,8 @@ export const SaleForm = ({
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("");
   const [additionalKg, setAdditionalKg] = useState<string>("0");
-  const [manualPrice, setManualPrice] = useState<string>("");
-  const [manualKg, setManualKg] = useState<string>("");
-  const [useManualPrice, setUseManualPrice] = useState(false);
+  const [manualPricePerKg, setManualPricePerKg] = useState<string>("");
+  const [lastAttemptedProductId, setLastAttemptedProductId] = useState<string>("");
 
   const {
     fetchDynamicPrice,
@@ -394,7 +393,15 @@ export const SaleForm = ({
     const fetchPrice = async () => {
       const customerId = form.watch("customer_id");
 
-      if (!selectedProductId || !quantity || !customerId || useManualPrice) {
+      // Si cambió de producto, permitir nueva búsqueda incluso si hay error anterior
+      const productChanged = selectedProductId !== lastAttemptedProductId;
+
+      // Si ya hay error para este mismo producto, no buscar de nuevo
+      if (priceError && !productChanged) {
+        return;
+      }
+
+      if (!selectedProductId || !customerId) {
         setPriceData(null);
         return;
       }
@@ -422,6 +429,9 @@ export const SaleForm = ({
         quantitySacksDecimal = qty + additionalSacks;
       }
 
+      // Registrar el producto para el que intentamos buscar
+      setLastAttemptedProductId(selectedProductId);
+
       const result = await fetchDynamicPrice({
         product_id: selectedProductId,
         person_id: customerId,
@@ -441,7 +451,7 @@ export const SaleForm = ({
     quantity,
     additionalKg,
     form.watch("customer_id"),
-    useManualPrice,
+    priceError,
   ]);
 
   // Establecer fecha de emisión automáticamente al cargar el formulario
@@ -503,18 +513,27 @@ export const SaleForm = ({
     setSelectedProductId("");
     setQuantity("");
     setAdditionalKg("0");
-    setManualPrice("");
-    setManualKg("");
-    setUseManualPrice(false);
+    setManualPricePerKg("");
     setPriceData(null);
+    setLastAttemptedProductId("");
     setEditingDetailIndex(null);
   };
 
   const handleAddProduct = () => {
-    if (!selectedProductId || (!useManualPrice && !priceData)) return;
-    if (useManualPrice && (!manualPrice || parseFloat(manualPrice) <= 0))
-      return;
-    if (useManualPrice && (!manualKg || parseFloat(manualKg) <= 0)) return;
+    if (!selectedProductId) return;
+    
+    const qty = parseFloat(quantity) || 0;
+    const addKg = parseFloat(additionalKg || "0");
+
+    // Si hay error, validar que tengamos cantidad en kg y precio
+    if (priceError) {
+      if (addKg === 0 || !manualPricePerKg || parseFloat(manualPricePerKg) <= 0) return;
+    } else {
+      // Sin error, validar cantidad normal
+      if (qty === 0 && addKg === 0) return;
+      // Si no hay precio y no hay error, esperar
+      if (!priceData && !priceError) return;
+    }
 
     const selectedProduct = filteredProducts.find(
       (p) => p.id.toString() === selectedProductId
@@ -527,18 +546,18 @@ export const SaleForm = ({
     let unitPrice: number;
     let subtotal: number;
 
-    if (useManualPrice) {
-      totalWeightKg = parseFloat(manualKg || "0");
+    const productWeight = selectedProduct?.weight
+      ? parseFloat(selectedProduct.weight)
+      : 0;
+
+    // Si hay error de API, usar modo manual (kg y precio por kg)
+    if (priceError) {
+      totalWeightKg = addKg; // addKg contiene la cantidad en kg
       quantitySacksDecimal = 0;
-      unitPrice = parseFloat(manualPrice || "0");
+      unitPrice = parseFloat(manualPricePerKg); // manualPricePerKg contiene el precio por kg
       subtotal = roundTo6Decimals(totalWeightKg * unitPrice);
     } else {
-      const qty = parseFloat(quantity) || 0;
-      const addKg = parseFloat(additionalKg || "0");
-      const productWeight = selectedProduct?.weight
-        ? parseFloat(selectedProduct.weight)
-        : 0;
-
+      // Modo normal con API
       quantitySacksDecimal = qty;
       if (productWeight > 0 && addKg > 0) {
         const additionalSacks = addKg / productWeight;
@@ -558,11 +577,9 @@ export const SaleForm = ({
     const newDetail: DetailRow = {
       product_id: selectedProductId,
       product_name: selectedProduct?.name,
-      quantity: useManualPrice
-        ? totalWeightKg.toString()
-        : quantitySacksDecimal.toString(),
-      quantity_sacks: useManualPrice ? "0" : quantity,
-      quantity_kg: useManualPrice ? manualKg || "0" : additionalKg || "0",
+      quantity: priceError ? totalWeightKg.toString() : quantitySacksDecimal.toString(),
+      quantity_sacks: priceError ? "0" : quantity,
+      quantity_kg: priceError ? addKg.toString() : (additionalKg || "0"),
       unit_price: unitPrice.toString(),
       subtotal,
       igv,
@@ -990,7 +1007,16 @@ export const SaleForm = ({
                 </label>
                 <SearchableSelect
                   value={selectedProductId}
-                  onChange={setSelectedProductId}
+                  onChange={(value) => {
+                    // Resetear todo primero para limpiar cualquier estado anterior
+                    setQuantity("");
+                    setAdditionalKg("0");
+                    setManualPricePerKg("");
+                    setPriceData(null);
+                    setLastAttemptedProductId("");
+                    // Luego setear el producto seleccionado
+                    setSelectedProductId(value);
+                  }}
                   options={filteredProducts.map((product) => {
                     const stockInWarehouse = product.stock_warehouse?.find(
                       (stock) =>
@@ -1002,96 +1028,63 @@ export const SaleForm = ({
                       description: `Stock: ${stockInWarehouse?.stock ?? 0}`,
                     };
                   })}
-                  placeholder="Seleccione producto..."
+                  placeholder={!selectedWarehouseId ? "Seleccione almacén primero" : !form.watch("customer_id") ? "Seleccione cliente primero" : "Seleccione producto..."}
                   buttonSize="default"
                   className="md:w-full!"
+                  disabled={!selectedWarehouseId || !form.watch("customer_id")}
                 />
               </div>
 
-              {!useManualPrice ? (
-                <>
-                  {/* Cantidad Sacos */}
-                  <div className="md:col-span-2">
-                    <label className="text-sm font-medium mb-2 block">
-                      Cantidad
-                    </label>
-                    <Input
-                      type="number"
-                      placeholder="0"
-                      min="0"
-                      step="1"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      disabled={!selectedProductId}
-                    />
-                  </div>
+              {/* Cantidad Sacos - Siempre visible */}
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium mb-2 block">
+                  Cantidad
+                </label>
+                <Input
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  step="1"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  disabled={!selectedProductId || !!priceError}
+                />
+              </div>
 
-                  {/* Kg Adicionales */}
-                  {filteredProducts.find(
-                    (p) => p.id.toString() === selectedProductId
-                  )?.is_kg === 1 && (
-                    <div className="md:col-span-2">
-                      <label className="text-sm font-medium mb-2 block">
-                        Kg Adicionales
-                      </label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        min="0"
-                        value={additionalKg}
-                        onChange={(e) => setAdditionalKg(e.target.value)}
-                        disabled={!selectedProductId}
-                      />
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  {/* Cantidad en Kg (Manual) */}
-                  <div className="md:col-span-2">
-                    <label className="text-sm font-medium mb-2 block">
-                      Cantidad (Kg)
-                    </label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      min="0"
-                      value={manualKg}
-                      onChange={(e) => setManualKg(e.target.value)}
-                    />
-                  </div>
+              {/* Kg Adicionales - Siempre visible */}
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium mb-2 block">
+                  Kg Adicionales
+                </label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  min="0"
+                  value={additionalKg}
+                  onChange={(e) => setAdditionalKg(e.target.value)}
+                  disabled={!selectedProductId}
+                />
+              </div>
 
-                  {/* Precio por Kg (Manual) */}
-                  <div className="md:col-span-2">
-                    <label className="text-sm font-medium mb-2 block">
-                      Precio por Kg
-                    </label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      min="0"
-                      value={manualPrice}
-                      onChange={(e) => setManualPrice(e.target.value)}
-                    />
-                  </div>
-                </>
-              )}
+              {/* Precio por Kilo - Siempre visible */}
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium mb-2 block">
+                  Precio por Kg
+                </label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  min="0"
+                  value={manualPricePerKg}
+                  onChange={(e) => setManualPricePerKg(e.target.value)}
+                  disabled={!selectedProductId || !priceError}
+                />
+              </div>
 
               {/* Botones de Acción */}
-              <div
-                className={`md:col-span-${
-                  useManualPrice
-                    ? "4"
-                    : filteredProducts.find(
-                        (p) => p.id.toString() === selectedProductId
-                      )?.is_kg === 1
-                    ? "4"
-                    : "6"
-                } flex items-end gap-2`}
-              >
+              <div className="md:col-span-4 flex items-end gap-2">
                 <Button
                   type="button"
                   variant="default"
@@ -1099,12 +1092,7 @@ export const SaleForm = ({
                   onClick={handleAddProduct}
                   disabled={
                     !selectedProductId ||
-                    (!useManualPrice && !priceData && !isPriceLoading) ||
-                    (useManualPrice &&
-                      (!manualPrice ||
-                        parseFloat(manualPrice) <= 0 ||
-                        !manualKg ||
-                        parseFloat(manualKg) <= 0))
+                    (!priceData && !priceError && !isPriceLoading && (parseFloat(quantity) > 0 || parseFloat(additionalKg) > 0))
                   }
                   className="flex-1"
                 >
@@ -1141,26 +1129,13 @@ export const SaleForm = ({
                     Cancelar
                   </Button>
                 )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setUseManualPrice(!useManualPrice)}
-                  title={
-                    useManualPrice
-                      ? "Usar precio automático"
-                      : "Usar precio manual"
-                  }
-                >
-                  {useManualPrice ? "Auto" : "Manual"}
-                </Button>
               </div>
             </div>
 
             {/* Información del Precio Dinámico */}
-            {!useManualPrice && selectedProductId && (
+            {selectedProductId && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {isPriceLoading && (
+                {isPriceLoading && (parseFloat(quantity) > 0 || parseFloat(additionalKg) > 0) && (
                   <div className="md:col-span-3 flex items-center gap-2 p-3 bg-muted rounded-lg">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span className="text-sm text-muted-foreground">
@@ -1169,7 +1144,7 @@ export const SaleForm = ({
                   </div>
                 )}
 
-                {priceError && !isPriceLoading && (
+                {priceError && !isPriceLoading && (parseFloat(quantity) > 0 || parseFloat(additionalKg) > 0) && (
                   <div className="md:col-span-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
                     <p className="text-sm text-destructive">
                       Error: {priceError}
@@ -1177,7 +1152,7 @@ export const SaleForm = ({
                   </div>
                 )}
 
-                {priceData && !isPriceLoading && (
+                {priceData && !isPriceLoading && (parseFloat(quantity) > 0 || parseFloat(additionalKg) > 0) && (
                   <>
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">
@@ -1220,6 +1195,14 @@ export const SaleForm = ({
                       </p>
                     </div>
                   </>
+                )}
+
+                {!priceData && !isPriceLoading && (parseFloat(quantity) === 0 && parseFloat(additionalKg) === 0) && (
+                  <div className="md:col-span-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-700 font-medium">
+                      Selecciona cantidad para ver el precio por kilo
+                    </p>
+                  </div>
                 )}
               </div>
             )}

@@ -93,22 +93,38 @@ export const deleteSale = async (id: number): Promise<{ message: string }> => {
   return response.data;
 };
 
-export interface NextSeriesResponse {
+export interface NextSeriesData {
+  exists: boolean;
   serie: string;
-  numero: string;
+  current_number: number;
+  next_number: number;
+  next_formatted: string;
+  full_number: string;
+  document_type: string;
+  document_type_name: string;
+  branch_id: number;
+  branch_name: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NextSeriesResponse {
+  message: string;
+  data: NextSeriesData;
 }
 
 export const getNextSeries = async (
   branch_id: number,
   document_type: string
-): Promise<NextSeriesResponse> => {
+): Promise<NextSeriesData> => {
   const response = await api.get<NextSeriesResponse>(
-    `${SALE_ENDPOINT}/next-series`,
+    `/next-series`,
     {
       params: { branch_id, document_type },
     }
   );
-  return response.data;
+  return response.data.data;
 };
 
 // ============================================

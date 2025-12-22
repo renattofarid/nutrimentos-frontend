@@ -362,7 +362,7 @@ export const SaleForm = ({
             selectedDocumentType
           );
           setAutoSerie(response.serie);
-          setAutoNumero(response.numero);
+          setAutoNumero(response.next_formatted);
         } catch (error) {
           console.error("Error fetching next series:", error);
           setAutoSerie("");
@@ -674,6 +674,21 @@ export const SaleForm = ({
           icon={Users2}
           cols={{ sm: 1 }}
         >
+          {/* Serie y Número Automático */}
+          {mode === "create" && (autoSerie || autoNumero) && (
+            <div className="flex items-center justify-center gap-2 mb-4">
+              {autoSerie && (
+                <span className="text-xl font-semibold text-blue-600">{autoSerie}</span>
+              )}
+              {autoSerie && autoNumero && (
+                <span className="text-xl text-muted-foreground">-</span>
+              )}
+              {autoNumero && (
+                <span className="text-xl font-semibold text-blue-600">{autoNumero}</span>
+              )}
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <FormSelect
               control={form.control}
@@ -762,36 +777,6 @@ export const SaleForm = ({
                 label: dt.label,
               }))}
             />
-
-            {/* Auto-generated Serie */}
-            {mode === "create" && autoSerie && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Serie (Automática)
-                </label>
-                <Input
-                  value={autoSerie}
-                  readOnly
-                  className="bg-muted"
-                  placeholder="Serie automática"
-                />
-              </div>
-            )}
-
-            {/* Auto-generated Numero */}
-            {mode === "create" && autoNumero && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Número (Automático)
-                </label>
-                <Input
-                  value={autoNumero}
-                  readOnly
-                  className="bg-muted"
-                  placeholder="Número automático"
-                />
-              </div>
-            )}
 
             <DatePickerFormField
               control={form.control}

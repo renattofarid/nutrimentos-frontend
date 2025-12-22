@@ -92,7 +92,7 @@ export const getDeliverySheetColumns = ({
     header: "Conductor",
     cell: ({ row }) => (
       <div className="max-w-[180px] truncate">
-        {row.original.driver.full_name}
+        {row.original.driver?.full_name}
       </div>
     ),
   },
@@ -101,7 +101,7 @@ export const getDeliverySheetColumns = ({
     header: "Cliente",
     cell: ({ row }) => (
       <div className="max-w-[180px] truncate">
-        {row.original.customer.full_name}
+        {row.original.customer?.full_name}
       </div>
     ),
   },

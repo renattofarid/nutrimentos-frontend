@@ -120,7 +120,8 @@ export const useSaleStore = create<SaleStore>((set) => ({
         amount_other: data.amount_other || "0",
         details: data.details.map((detail) => ({
           product_id: Number(detail.product_id),
-          quantity: Number(detail.quantity),
+          quantity_sacks: Number(detail.quantity_sacks),
+          quantity_kg: Number(detail.quantity_kg),
           unit_price: Number(detail.unit_price),
         })),
         installments:
@@ -166,7 +167,8 @@ export const useSaleStore = create<SaleStore>((set) => ({
           data.details.length > 0 && {
             details: data.details.map((detail) => ({
               product_id: Number(detail.product_id),
-              quantity: Number(detail.quantity),
+              quantity_sacks: Number(detail.quantity_sacks),
+              quantity_kg: Number(detail.quantity_kg),
               unit_price: Number(detail.unit_price),
             })),
           }),

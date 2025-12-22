@@ -646,9 +646,17 @@ export const SaleForm = ({
 
     const totalWeight = calculateTotalWeight();
 
+    // Preparar detalles para enviar al backend con quantity_sacks y quantity_kg
+    const validDetails = details.map((detail) => ({
+      product_id: detail.product_id,
+      quantity_sacks: detail.quantity_sacks, // Cantidad de sacos
+      quantity_kg: detail.quantity_kg, // Kg adicionales
+      unit_price: detail.unit_price,
+    }));
+
     onSubmit({
       ...data,
-      details,
+      details: validDetails,
       installments: validInstallments,
       total_weight: totalWeight,
     });

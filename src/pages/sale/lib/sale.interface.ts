@@ -143,7 +143,8 @@ export interface SaleResponse {
 
 export interface CreateSaleDetailRequest {
   product_id: number;
-  quantity: number;
+  quantity_sacks: number;
+  quantity_kg: number;
   unit_price: number;
 }
 
@@ -187,7 +188,8 @@ export interface UpdateSaleRequest {
   observations?: string;
   details?: {
     product_id: number;
-    quantity: number;
+    quantity_sacks: number;
+    quantity_kg: number;
     unit_price: number;
   }[];
   installments?: {

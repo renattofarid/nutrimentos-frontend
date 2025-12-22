@@ -45,34 +45,6 @@ export const createSaleDetailColumns = ({
     },
   },
   {
-    id: "sacos",
-    header: () => <div className="text-right">Sacos</div>,
-    accessorKey: "quantity_sacks",
-    cell: ({ row }) => {
-      return <div className="text-right">{formatDecimalTrunc(parseFloat(row.original.quantity_sacks), 2)}</div>;
-    },
-  },
-  {
-    id: "kg_adicionales",
-    header: () => <div className="text-right">Kg Adic.</div>,
-    accessorKey: "quantity_kg",
-    cell: ({ row }) => {
-      return <div className="text-right">{formatDecimalTrunc(parseFloat(row.original.quantity_kg), 2)} kg</div>;
-    },
-  },
-  {
-    id: "peso_total_kg",
-    header: () => <div className="text-right">Peso Total</div>,
-    accessorKey: "total_kg",
-    cell: ({ row }) => {
-      return (
-        <div className="text-right text-green-600 font-semibold">
-          {formatDecimalTrunc(row.original.total_kg || 0, 2)} kg
-        </div>
-      );
-    },
-  },
-  {
     id: "precio_unitario",
     header: () => <div className="text-right">P. Unit.</div>,
     accessorKey: "unit_price",
@@ -116,32 +88,6 @@ export const createSaleDetailColumns = ({
       return (
         <div className="text-right font-bold text-primary">
           {formatNumber(row.original.total)}
-        </div>
-      );
-    },
-  },
-  {
-    id: "acciones",
-    header: () => <div className="text-center">Acciones</div>,
-    cell: ({ row }) => {
-      return (
-        <div className="flex justify-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onEdit(row.index)}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onDelete(row.index)}
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </Button>
         </div>
       );
     },

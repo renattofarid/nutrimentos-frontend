@@ -1003,7 +1003,8 @@ export const SaleForm = ({
                     };
                   })}
                   placeholder="Seleccione producto..."
-                  buttonSize="sm"
+                  buttonSize="default"
+                  className="md:w-full!"
                 />
               </div>
 
@@ -1119,6 +1120,17 @@ export const SaleForm = ({
                     </>
                   )}
                 </Button>
+                {details.length > 0 && editingDetailIndex === null && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleRemoveDetail(details.length - 1)}
+                    title="Eliminar el último producto"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
                 {editingDetailIndex !== null && (
                   <Button
                     type="button"

@@ -7,9 +7,9 @@ export const saleDetailSchema = z.object({
   product_id: requiredStringId("Debe seleccionar un producto"),
   quantity_sacks: z
     .string()
-    .min(1, { message: "La cantidad de sacos es requerida" })
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 1, {
-      message: "La cantidad de sacos debe ser un número mayor o igual a 1",
+    .min(0, { message: "La cantidad de sacos es requerida" })
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "La cantidad de sacos debe ser un número mayor o igual a 0",
     }),
   quantity_kg: z
     .string()

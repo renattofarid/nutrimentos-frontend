@@ -26,6 +26,7 @@ const detailSchema = z.object({
   quantity: z.string().min(1, "Ingrese la cantidad"),
   additional_kg: z.string().optional(),
   manual_price: z.string().optional(),
+  manual_kg: z.string().optional(), // Campo para kg cuando es modo manual
 });
 
 type DetailSchema = z.infer<typeof detailSchema>;
@@ -64,7 +65,11 @@ export const SaleProductSheet = ({
   defaultValues,
   mode,
 }: SaleProductSheetProps) => {
-  const { fetchDynamicPrice, isLoading: isPriceLoading, error: priceError } = useDynamicPrice();
+  const {
+    fetchDynamicPrice,
+    isLoading: isPriceLoading,
+    error: priceError,
+  } = useDynamicPrice();
   const [priceData, setPriceData] = useState<any>(null);
   const [useManualPrice, setUseManualPrice] = useState(false);
 
@@ -75,6 +80,7 @@ export const SaleProductSheet = ({
       quantity: defaultValues?.quantity_sacks || "",
       additional_kg: defaultValues?.quantity_kg || "0",
       manual_price: "",
+      manual_kg: "",
     },
   });
 
@@ -82,6 +88,7 @@ export const SaleProductSheet = ({
   const selectedQuantity = form.watch("quantity");
   const selectedAdditionalKg = form.watch("additional_kg");
   const manualPrice = form.watch("manual_price");
+  const manualKg = form.watch("manual_kg");
 
   const selectedProduct = products.find(
     (p) => p.id.toString() === selectedProductId
@@ -94,12 +101,14 @@ export const SaleProductSheet = ({
         product_id: defaultValues.product_id || "",
         quantity: defaultValues.quantity_sacks || "",
         additional_kg: defaultValues.quantity_kg || "0",
+        manual_kg: "",
       });
     } else if (open && mode === "create") {
       form.reset({
         product_id: "",
         quantity: "",
         additional_kg: "0",
+        manual_kg: "",
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -109,7 +118,11 @@ export const SaleProductSheet = ({
   useEffect(() => {
     const fetchPrice = async () => {
       if (!selectedProductId || !selectedQuantity || !customerId) {
-        console.log("Falta información:", { selectedProductId, selectedQuantity, customerId });
+        console.log("Falta información:", {
+          selectedProductId,
+          selectedQuantity,
+          customerId,
+        });
         setPriceData(null);
         return;
       }
@@ -126,7 +139,9 @@ export const SaleProductSheet = ({
       // Calcular la cantidad en decimales considerando el peso del saco
       // Fórmula: cantidad_decimal = sacos + (kg_adicionales / peso_del_saco)
       let quantitySacksDecimal = quantity;
-      const productWeight = selectedProduct?.weight ? parseFloat(selectedProduct.weight) : 0;
+      const productWeight = selectedProduct?.weight
+        ? parseFloat(selectedProduct.weight)
+        : 0;
 
       if (productWeight > 0 && additionalKg > 0) {
         // Convertir kg adicionales a fracción de sacos
@@ -165,43 +180,59 @@ export const SaleProductSheet = ({
   const handleSubmit = (data: DetailSchema) => {
     // Validar que tengamos precio (ya sea dinámico o manual)
     if (!useManualPrice && !priceData) return;
-    if (useManualPrice && (!data.manual_price || parseFloat(data.manual_price) <= 0)) return;
+    if (
+      useManualPrice &&
+      (!data.manual_price || parseFloat(data.manual_price) <= 0)
+    )
+      return;
+    if (useManualPrice && (!data.manual_kg || parseFloat(data.manual_kg) <= 0))
+      return;
 
     const roundTo6Decimals = (value: number): number => {
       return Math.round(value * 1000000) / 1000000;
     };
 
     // Calcular la cantidad decimal (igual que en el useEffect)
-    const quantity = parseFloat(data.quantity) || 0;
-    const additionalKg = parseFloat(data.additional_kg || "0");
-    const productWeight = selectedProduct?.weight ? parseFloat(selectedProduct.weight) : 0;
+    let quantity: number;
+    let additionalKg: number;
+    let quantitySacksDecimal: number;
+    let totalWeightKg: number;
 
-    let quantitySacksDecimal = quantity;
-    if (productWeight > 0 && additionalKg > 0) {
-      const additionalSacks = additionalKg / productWeight;
-      quantitySacksDecimal = quantity + additionalSacks;
+    if (useManualPrice) {
+      // En modo manual solo usamos kg
+      quantity = 0;
+      additionalKg = 0;
+      totalWeightKg = parseFloat(data.manual_kg || "0");
+      quantitySacksDecimal = 0; // No hay sacos en modo manual
+    } else {
+      // Modo con API (precio dinámico)
+      quantity = parseFloat(data.quantity) || 0;
+      additionalKg = parseFloat(data.additional_kg || "0");
+      const productWeight = selectedProduct?.weight
+        ? parseFloat(selectedProduct.weight)
+        : 0;
+
+      quantitySacksDecimal = quantity;
+      if (productWeight > 0 && additionalKg > 0) {
+        const additionalSacks = additionalKg / productWeight;
+        quantitySacksDecimal = quantity + additionalSacks;
+      }
+
+      // Calcular peso total en kg
+      totalWeightKg =
+        productWeight > 0
+          ? roundTo6Decimals(productWeight * quantity + additionalKg)
+          : 0;
     }
-
-    // Calcular peso total en kg
-    const totalWeightKg = productWeight > 0
-      ? roundTo6Decimals(productWeight * quantity + additionalKg)
-      : 0;
 
     // Usar precio manual o precio dinámico
     let unitPrice: number;
     let subtotal: number;
 
     if (useManualPrice) {
-      // Precio manual
+      // Precio manual: siempre es por kg
       unitPrice = parseFloat(data.manual_price || "0");
-
-      if (selectedProduct?.is_kg === 1) {
-        // Producto por kg: precio manual es por kg
-        subtotal = roundTo6Decimals(totalWeightKg * unitPrice);
-      } else {
-        // Producto por unidad: precio manual es por saco
-        subtotal = roundTo6Decimals(quantity * unitPrice);
-      }
+      subtotal = roundTo6Decimals(totalWeightKg * unitPrice);
     } else {
       // Precio dinámico
       if (selectedProduct?.is_kg === 1) {
@@ -222,9 +253,13 @@ export const SaleProductSheet = ({
     const formData: DetailFormData = {
       product_id: data.product_id,
       product_name: selectedProduct?.name,
-      quantity: quantitySacksDecimal.toString(), // Cantidad total en decimal (SE ENVÍA AL BACKEND)
-      quantity_sacks: data.quantity, // Sacos ingresados por el usuario
-      quantity_kg: data.additional_kg || "0", // Kg adicionales ingresados por el usuario
+      quantity: useManualPrice
+        ? totalWeightKg.toString()
+        : quantitySacksDecimal.toString(), // En modo manual son los kg totales
+      quantity_sacks: useManualPrice ? "0" : data.quantity, // En modo manual es 0
+      quantity_kg: useManualPrice
+        ? data.manual_kg || "0"
+        : data.additional_kg || "0", // En modo manual usamos manual_kg
       unit_price: unitPrice.toString(),
       subtotal,
       igv,
@@ -310,47 +345,50 @@ export const SaleProductSheet = ({
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="quantity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cantidad (Sacos)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    min="0"
-                    step="1"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {!useManualPrice && (
+            <>
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cantidad (Sacos)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        min="0"
+                        step="1"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {selectedProduct?.is_kg === 1 && (
-            <FormField
-              control={form.control}
-              name="additional_kg"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Kg Adicionales</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      min="0"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              {selectedProduct?.is_kg === 1 && (
+                <FormField
+                  control={form.control}
+                  name="additional_kg"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Kg Adicionales</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          min="0"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
-            />
-            
+            </>
           )}
 
           {/* Vista previa del precio */}
@@ -380,28 +418,33 @@ export const SaleProductSheet = ({
             </div>
           )}
 
-          {!priceData && !isPriceLoading && !priceError && selectedProductId && selectedQuantity && !useManualPrice && (
-            <div className="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg space-y-3">
-              <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
-                No se encontró precio para este producto
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setUseManualPrice(true)}
-                className="w-full"
-              >
-                Ingresar Precio Manual
-              </Button>
-            </div>
-          )}
+          {!priceData &&
+            !isPriceLoading &&
+            !priceError &&
+            selectedProductId &&
+            selectedQuantity &&
+            !useManualPrice && (
+              <div className="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg space-y-3">
+                <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
+                  No se encontró precio para este producto
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setUseManualPrice(true)}
+                  className="w-full"
+                >
+                  Ingresar Precio Manual
+                </Button>
+              </div>
+            )}
 
           {useManualPrice && (
             <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                  Modo: Precio Manual
+                  Modo: Precio Manual (solo kg)
                 </span>
                 <Button
                   type="button"
@@ -410,6 +453,7 @@ export const SaleProductSheet = ({
                   onClick={() => {
                     setUseManualPrice(false);
                     form.setValue("manual_price", "");
+                    form.setValue("manual_kg", "");
                   }}
                 >
                   Cancelar
@@ -417,12 +461,29 @@ export const SaleProductSheet = ({
               </div>
               <FormField
                 control={form.control}
+                name="manual_kg"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cantidad (Kg)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        min="0"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="manual_price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Precio {selectedProduct?.is_kg === 1 ? "por Kg" : "por Saco"}
-                    </FormLabel>
+                    <FormLabel>Precio por Kg</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -482,20 +543,25 @@ export const SaleProductSheet = ({
               <div className="flex justify-between items-center pt-2 border-t">
                 <span className="text-sm font-bold">Subtotal:</span>
                 <span className="text-lg font-bold text-primary">
-                  {priceData.pricing.currency} {
-                    (() => {
-                      // Calcular subtotal según el tipo de producto
-                      if (selectedProduct?.is_kg === 1) {
-                        // Producto por kg: peso total × precio por kg
-                        const pricePerKg = parseFloat(priceData.pricing.price_per_kg);
-                        const totalWeightKg = priceData.quantities.total_weight_kg;
-                        return (totalWeightKg * pricePerKg).toFixed(2);
-                      } else {
-                        // Producto por unidad: sacos × precio unitario
-                        return (parseFloat(selectedQuantity || "0") * parseFloat(priceData.pricing.unit_price)).toFixed(2);
-                      }
-                    })()
-                  }
+                  {priceData.pricing.currency}{" "}
+                  {(() => {
+                    // Calcular subtotal según el tipo de producto
+                    if (selectedProduct?.is_kg === 1) {
+                      // Producto por kg: peso total × precio por kg
+                      const pricePerKg = parseFloat(
+                        priceData.pricing.price_per_kg
+                      );
+                      const totalWeightKg =
+                        priceData.quantities.total_weight_kg;
+                      return (totalWeightKg * pricePerKg).toFixed(2);
+                    } else {
+                      // Producto por unidad: sacos × precio unitario
+                      return (
+                        parseFloat(selectedQuantity || "0") *
+                        parseFloat(priceData.pricing.unit_price)
+                      ).toFixed(2);
+                    }
+                  })()}
                 </span>
               </div>
             </div>
@@ -510,7 +576,11 @@ export const SaleProductSheet = ({
               disabled={
                 isPriceLoading ||
                 (!useManualPrice && !priceData) ||
-                (useManualPrice && (!manualPrice || parseFloat(manualPrice) <= 0))
+                (useManualPrice &&
+                  (!manualPrice ||
+                    parseFloat(manualPrice) <= 0 ||
+                    !manualKg ||
+                    parseFloat(manualKg) <= 0))
               }
             >
               {mode === "create" ? "Agregar" : "Actualizar"}

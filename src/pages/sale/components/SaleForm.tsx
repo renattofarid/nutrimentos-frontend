@@ -886,7 +886,8 @@ export const SaleForm = ({
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Subtotal:</span>
                 <span className="font-bold">
-                  {getCurrencySymbol()} {formatNumber(calculateDetailsSubtotal())}
+                  {getCurrencySymbol()}{" "}
+                  {formatNumber(calculateDetailsSubtotal())}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -1062,13 +1063,15 @@ export const SaleForm = ({
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Total de la Venta:</span>
                   <span className="text-lg font-bold text-primary">
-                    {getCurrencySymbol()} {formatNumber(roundTo2Decimals(calculateDetailsTotal()))}
+                    {getCurrencySymbol()}{" "}
+                    {formatNumber(roundTo2Decimals(calculateDetailsTotal()))}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Total Pagado:</span>
                   <span className="text-lg font-bold text-blue-600">
-                    {getCurrencySymbol()} {formatNumber(calculatePaymentTotal())}
+                    {getCurrencySymbol()}{" "}
+                    {formatNumber(calculatePaymentTotal())}
                   </span>
                 </div>
                 {!paymentAmountsMatchTotal() && (
@@ -1206,7 +1209,8 @@ export const SaleForm = ({
                           TOTAL CUOTAS:
                         </TableCell>
                         <TableCell className="text-right font-bold text-lg text-blue-600">
-                          {getCurrencySymbol()} {formatDecimalTrunc(calculateInstallmentsTotal(), 6)}
+                          {getCurrencySymbol()}{" "}
+                          {formatDecimalTrunc(calculateInstallmentsTotal(), 6)}
                         </TableCell>
                         <TableCell></TableCell>
                       </TableRow>
@@ -1216,10 +1220,10 @@ export const SaleForm = ({
                 {!installmentsMatchTotal() && (
                   <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
                     <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                      ⚠️ El total de cuotas (
-                      {getCurrencySymbol()} {formatNumber(calculateInstallmentsTotal())}) debe ser
-                      igual al total de la venta (
-                      {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())})
+                      ⚠️ El total de cuotas ({getCurrencySymbol()}{" "}
+                      {formatNumber(calculateInstallmentsTotal())}) debe ser
+                      igual al total de la venta ({getCurrencySymbol()}{" "}
+                      {formatNumber(calculateDetailsTotal())})
                     </p>
                   </div>
                 )}
@@ -1246,6 +1250,9 @@ export const SaleForm = ({
         </pre>
         <Button onClick={() => form.trigger()}>Button</Button> */}
 
+        {/* <pre>
+          <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
+        </pre> */}
         {/* Botones */}
         <div className="flex gap-4 w-full justify-end">
           <Button type="button" variant="neutral" onClick={onCancel}>

@@ -328,8 +328,9 @@ export const SaleEditRoute = "/ventas/actualizar/:id";
 export const DOCUMENT_TYPES = [
   { value: "FACTURA", label: "Factura" },
   { value: "BOLETA", label: "Boleta" },
-  { value: "NOTA DE VENTA", label: "Nota de Venta" },
-  { value: "NOTA DE CREDITO", label: "Nota de Crédito Factura" },
+  { value: "NOTA_VENTA", label: "Nota de Venta" },
+  { value: "NOTA_CREDITO", label: "Nota de Crédito" },
+  { value: "NOTA_DEBITO", label: "Nota de Débito" },
   // { value: "GUIA", label: "Guía de Remisión" },
 ] as const;
 

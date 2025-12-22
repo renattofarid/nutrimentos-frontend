@@ -65,8 +65,10 @@ import { ClientDialog } from "@/pages/client/components/ClientDialog";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { getNextSeries } from "../lib/sale.actions";
 import { DataTable } from "@/components/DataTable";
-import { SaleProductSheet, type DetailFormData } from "./SaleProductSheet";
 import { createSaleDetailColumns } from "./sale-details-columns";
+import { useDynamicPrice } from "../lib/dynamic-price.hook";
+import { Loader2 } from "lucide-react";
+import { SearchableSelect } from "@/components/SearchableSelect";
 
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
@@ -122,10 +124,21 @@ export const SaleForm = ({
   );
 
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
-  const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
-  const [editingProductData, setEditingProductData] = useState<
-    DetailFormData | undefined
-  >(undefined);
+
+  // Estados para formulario inline de productos
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [quantity, setQuantity] = useState<string>("");
+  const [additionalKg, setAdditionalKg] = useState<string>("0");
+  const [manualPrice, setManualPrice] = useState<string>("");
+  const [manualKg, setManualKg] = useState<string>("");
+  const [useManualPrice, setUseManualPrice] = useState(false);
+
+  const {
+    fetchDynamicPrice,
+    isLoading: isPriceLoading,
+    error: priceError,
+  } = useDynamicPrice();
+  const [priceData, setPriceData] = useState<any>(null);
 
   // Hook para obtener vendedores
   const { data: workers = [] } = useAllWorkers();
@@ -376,6 +389,61 @@ export const SaleForm = ({
     fetchNextSeries();
   }, [selectedBranchId, selectedDocumentType, mode]);
 
+  // Efecto para obtener precio dinámico
+  useEffect(() => {
+    const fetchPrice = async () => {
+      const customerId = form.watch("customer_id");
+
+      if (!selectedProductId || !quantity || !customerId || useManualPrice) {
+        setPriceData(null);
+        return;
+      }
+
+      const qty = parseFloat(quantity) || 0;
+      const addKg = parseFloat(additionalKg || "0");
+
+      if (qty === 0 && addKg === 0) {
+        setPriceData(null);
+        return;
+      }
+
+      const selectedProduct = filteredProducts.find(
+        (p) => p.id.toString() === selectedProductId
+      );
+      if (!selectedProduct) return;
+
+      let quantitySacksDecimal = qty;
+      const productWeight = selectedProduct?.weight
+        ? parseFloat(selectedProduct.weight)
+        : 0;
+
+      if (productWeight > 0 && addKg > 0) {
+        const additionalSacks = addKg / productWeight;
+        quantitySacksDecimal = qty + additionalSacks;
+      }
+
+      const result = await fetchDynamicPrice({
+        product_id: selectedProductId,
+        person_id: customerId,
+        quantity_sacks: quantitySacksDecimal,
+        quantity_kg: 0,
+      });
+
+      if (result) {
+        setPriceData(result);
+      }
+    };
+
+    fetchPrice();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedProductId,
+    quantity,
+    additionalKg,
+    form.watch("customer_id"),
+    useManualPrice,
+  ]);
+
   // Establecer fecha de emisión automáticamente al cargar el formulario
   useEffect(() => {
     // Inicializar montos de pago a 0
@@ -415,9 +483,14 @@ export const SaleForm = ({
   // Funciones para detalles
   const handleEditDetail = (index: number) => {
     const detail = details[index];
-    setEditingProductData(detail as DetailFormData);
+    setSelectedProductId(detail.product_id);
+    setQuantity(detail.quantity_sacks);
+    setAdditionalKg(detail.quantity_kg);
     setEditingDetailIndex(index);
-    setIsProductSheetOpen(true);
+    // Hacer scroll al formulario
+    document
+      .getElementById("product-form")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleRemoveDetail = (index: number) => {
@@ -426,28 +499,89 @@ export const SaleForm = ({
     form.setValue("details", updatedDetails);
   };
 
-  const handleAddProductClick = () => {
-    setEditingProductData(undefined);
+  const handleClearProductForm = () => {
+    setSelectedProductId("");
+    setQuantity("");
+    setAdditionalKg("0");
+    setManualPrice("");
+    setManualKg("");
+    setUseManualPrice(false);
+    setPriceData(null);
     setEditingDetailIndex(null);
-    setIsProductSheetOpen(true);
   };
 
-  const handleProductSubmit = (data: DetailFormData) => {
+  const handleAddProduct = () => {
+    if (!selectedProductId || (!useManualPrice && !priceData)) return;
+    if (useManualPrice && (!manualPrice || parseFloat(manualPrice) <= 0))
+      return;
+    if (useManualPrice && (!manualKg || parseFloat(manualKg) <= 0)) return;
+
+    const selectedProduct = filteredProducts.find(
+      (p) => p.id.toString() === selectedProductId
+    );
+    if (!selectedProduct) return;
+
+    // Calcular la cantidad decimal
+    let quantitySacksDecimal: number;
+    let totalWeightKg: number;
+    let unitPrice: number;
+    let subtotal: number;
+
+    if (useManualPrice) {
+      totalWeightKg = parseFloat(manualKg || "0");
+      quantitySacksDecimal = 0;
+      unitPrice = parseFloat(manualPrice || "0");
+      subtotal = roundTo6Decimals(totalWeightKg * unitPrice);
+    } else {
+      const qty = parseFloat(quantity) || 0;
+      const addKg = parseFloat(additionalKg || "0");
+      const productWeight = selectedProduct?.weight
+        ? parseFloat(selectedProduct.weight)
+        : 0;
+
+      quantitySacksDecimal = qty;
+      if (productWeight > 0 && addKg > 0) {
+        const additionalSacks = addKg / productWeight;
+        quantitySacksDecimal = qty + additionalSacks;
+      }
+
+      totalWeightKg =
+        productWeight > 0 ? roundTo6Decimals(productWeight * qty + addKg) : 0;
+
+      unitPrice = parseFloat(priceData.pricing.unit_price);
+      subtotal = parseFloat(priceData.pricing.subtotal);
+    }
+
+    const igv = roundTo6Decimals(subtotal * 0.18);
+    const total = roundTo6Decimals(subtotal + igv);
+
+    const newDetail: DetailRow = {
+      product_id: selectedProductId,
+      product_name: selectedProduct?.name,
+      quantity: useManualPrice
+        ? totalWeightKg.toString()
+        : quantitySacksDecimal.toString(),
+      quantity_sacks: useManualPrice ? "0" : quantity,
+      quantity_kg: useManualPrice ? manualKg || "0" : additionalKg || "0",
+      unit_price: unitPrice.toString(),
+      subtotal,
+      igv,
+      total,
+      total_kg: totalWeightKg,
+    };
+
     if (editingDetailIndex !== null) {
-      // Actualizar detalle existente
       const updatedDetails = [...details];
-      updatedDetails[editingDetailIndex] = data;
+      updatedDetails[editingDetailIndex] = newDetail;
       setDetails(updatedDetails);
       form.setValue("details", updatedDetails);
-      setEditingDetailIndex(null);
     } else {
-      // Agregar nuevo detalle
-      const updatedDetails = [...details, data];
+      const updatedDetails = [...details, newDetail];
       setDetails(updatedDetails);
       form.setValue("details", updatedDetails);
     }
-    setIsProductSheetOpen(false);
-    setEditingProductData(undefined);
+
+    handleClearProductForm();
   };
 
   const calculateDetailsSubtotal = () => {
@@ -678,17 +812,21 @@ export const SaleForm = ({
           {mode === "create" && (autoSerie || autoNumero) && (
             <div className="flex items-center justify-center gap-2 mb-4">
               {autoSerie && (
-                <span className="text-xl font-semibold text-blue-600">{autoSerie}</span>
+                <span className="text-xl font-semibold text-blue-600">
+                  {autoSerie}
+                </span>
               )}
               {autoSerie && autoNumero && (
                 <span className="text-xl text-muted-foreground">-</span>
               )}
               {autoNumero && (
-                <span className="text-xl font-semibold text-blue-600">{autoNumero}</span>
+                <span className="text-xl font-semibold text-blue-600">
+                  {autoNumero}
+                </span>
               )}
             </div>
           )}
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <FormSelect
               control={form.control}
@@ -839,6 +977,243 @@ export const SaleForm = ({
           icon={ListChecks}
           cols={{ sm: 1 }}
         >
+          {/* Formulario Inline para Agregar Productos */}
+          <div
+            id="product-form"
+            className="space-y-4 p-4 bg-muted/30 rounded-lg border"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              {/* Selector de Producto - Ocupa más espacio */}
+              <div className="md:col-span-4">
+                <label className="text-sm font-medium mb-2 block">
+                  Producto
+                </label>
+                <SearchableSelect
+                  value={selectedProductId}
+                  onChange={setSelectedProductId}
+                  options={filteredProducts.map((product) => {
+                    const stockInWarehouse = product.stock_warehouse?.find(
+                      (stock) =>
+                        stock.warehouse_id.toString() === selectedWarehouseId
+                    );
+                    return {
+                      value: product.id.toString(),
+                      label: `${product.codigo} - ${product.name}`,
+                      description: `Stock: ${stockInWarehouse?.stock ?? 0}`,
+                    };
+                  })}
+                  placeholder="Seleccione producto..."
+                  buttonSize="sm"
+                />
+              </div>
+
+              {!useManualPrice ? (
+                <>
+                  {/* Cantidad Sacos */}
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium mb-2 block">
+                      Cantidad
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      min="0"
+                      step="1"
+                      value={quantity}
+                      onChange={(e) => setQuantity(e.target.value)}
+                      disabled={!selectedProductId}
+                    />
+                  </div>
+
+                  {/* Kg Adicionales */}
+                  {filteredProducts.find(
+                    (p) => p.id.toString() === selectedProductId
+                  )?.is_kg === 1 && (
+                    <div className="md:col-span-2">
+                      <label className="text-sm font-medium mb-2 block">
+                        Kg Adicionales
+                      </label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        min="0"
+                        value={additionalKg}
+                        onChange={(e) => setAdditionalKg(e.target.value)}
+                        disabled={!selectedProductId}
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* Cantidad en Kg (Manual) */}
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium mb-2 block">
+                      Cantidad (Kg)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      min="0"
+                      value={manualKg}
+                      onChange={(e) => setManualKg(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Precio por Kg (Manual) */}
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium mb-2 block">
+                      Precio por Kg
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      min="0"
+                      value={manualPrice}
+                      onChange={(e) => setManualPrice(e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Botones de Acción */}
+              <div
+                className={`md:col-span-${
+                  useManualPrice
+                    ? "4"
+                    : filteredProducts.find(
+                        (p) => p.id.toString() === selectedProductId
+                      )?.is_kg === 1
+                    ? "4"
+                    : "6"
+                } flex items-end gap-2`}
+              >
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={handleAddProduct}
+                  disabled={
+                    !selectedProductId ||
+                    (!useManualPrice && !priceData && !isPriceLoading) ||
+                    (useManualPrice &&
+                      (!manualPrice ||
+                        parseFloat(manualPrice) <= 0 ||
+                        !manualKg ||
+                        parseFloat(manualKg) <= 0))
+                  }
+                  className="flex-1"
+                >
+                  {editingDetailIndex !== null ? (
+                    <>
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Actualizar
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Agregar
+                    </>
+                  )}
+                </Button>
+                {editingDetailIndex !== null && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearProductForm}
+                  >
+                    Cancelar
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setUseManualPrice(!useManualPrice)}
+                  title={
+                    useManualPrice
+                      ? "Usar precio automático"
+                      : "Usar precio manual"
+                  }
+                >
+                  {useManualPrice ? "Auto" : "Manual"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Información del Precio Dinámico */}
+            {!useManualPrice && selectedProductId && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {isPriceLoading && (
+                  <div className="md:col-span-3 flex items-center gap-2 p-3 bg-muted rounded-lg">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm text-muted-foreground">
+                      Calculando precio...
+                    </span>
+                  </div>
+                )}
+
+                {priceError && !isPriceLoading && (
+                  <div className="md:col-span-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                    <p className="text-sm text-destructive">
+                      Error: {priceError}
+                    </p>
+                  </div>
+                )}
+
+                {priceData && !isPriceLoading && (
+                  <>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">
+                        Categoría Cliente
+                      </p>
+                      <Badge variant="secondary">
+                        {priceData.client_category.name}
+                      </Badge>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">
+                        Rango de Peso
+                      </p>
+                      <Badge variant="secondary">
+                        {priceData.weight_range.formatted_range}
+                      </Badge>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">
+                        Peso Total
+                      </p>
+                      <p className="text-sm font-bold text-blue-600">
+                        {priceData.quantities.total_weight_kg} kg
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">
+                        Precio Unitario
+                      </p>
+                      <p className="text-sm font-bold">
+                        {priceData.pricing.currency}{" "}
+                        {priceData.pricing.unit_price}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Subtotal</p>
+                      <p className="text-lg font-bold text-primary">
+                        {priceData.pricing.currency}{" "}
+                        {parseFloat(priceData.pricing.subtotal).toFixed(2)}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Tabla de Detalles */}
           <DataTable
             columns={createSaleDetailColumns({
               onEdit: handleEditDetail,
@@ -846,18 +1221,7 @@ export const SaleForm = ({
             })}
             data={details}
             isVisibleColumnFilter={false}
-          >
-            <Button
-              type="button"
-              variant="default"
-              size="sm"
-              onClick={handleAddProductClick}
-              disabled={!selectedWarehouseId || !form.watch("customer_id")}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Agregar Producto
-            </Button>
-          </DataTable>
+          />
 
           {/* Resumen de totales */}
           {details.length > 0 && (
@@ -1275,22 +1639,6 @@ export const SaleForm = ({
         onClientCreated={() => {
           onRefreshClients?.();
         }}
-      />
-
-      {/* Sheet para agregar/editar productos */}
-      <SaleProductSheet
-        open={isProductSheetOpen}
-        onClose={() => {
-          setIsProductSheetOpen(false);
-          setEditingProductData(undefined);
-          setEditingDetailIndex(null);
-        }}
-        products={filteredProducts}
-        customerId={form.watch("customer_id") || ""}
-        warehouseId={selectedWarehouseId || ""}
-        onSubmit={handleProductSubmit}
-        defaultValues={editingProductData}
-        mode={editingDetailIndex !== null ? "update" : "create"}
       />
     </Form>
   );

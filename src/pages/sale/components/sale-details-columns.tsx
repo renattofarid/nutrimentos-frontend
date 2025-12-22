@@ -7,13 +7,14 @@ import { formatDecimalTrunc } from "@/lib/utils";
 export interface SaleDetailRow {
   product_id: string;
   product_name?: string;
-  quantity: string;
+  quantity: string; // Cantidad total en decimal (ej: 1.02) - SE ENVÍA AL BACKEND
+  quantity_sacks: string; // Cantidad de sacos ingresada por el usuario (ej: 1)
+  quantity_kg: string; // Kg adicionales ingresados por el usuario (ej: 1)
   unit_price: string;
   subtotal: number;
   igv: number;
   total: number;
-  additional_kg?: string;
-  total_kg?: number;
+  total_kg?: number; // Peso total en kg (ej: 51)
 }
 
 interface CreateColumnsProps {
@@ -36,20 +37,36 @@ export const createSaleDetailColumns = ({
     },
   },
   {
-    id: "sacos",
-    header: () => <div className="text-right">Sacos</div>,
+    id: "cantidad_total",
+    header: () => <div className="text-right">Cantidad Total</div>,
     accessorKey: "quantity",
     cell: ({ row }) => {
-      return <div className="text-right">{formatDecimalTrunc(parseFloat(row.original.quantity), 6)}</div>;
+      return <div className="text-right font-semibold text-blue-600">{formatDecimalTrunc(parseFloat(row.original.quantity), 6)}</div>;
     },
   },
   {
-    id: "kg_total",
-    header: () => <div className="text-right">Kg Total</div>,
+    id: "sacos",
+    header: () => <div className="text-right">Sacos</div>,
+    accessorKey: "quantity_sacks",
+    cell: ({ row }) => {
+      return <div className="text-right">{formatDecimalTrunc(parseFloat(row.original.quantity_sacks), 2)}</div>;
+    },
+  },
+  {
+    id: "kg_adicionales",
+    header: () => <div className="text-right">Kg Adic.</div>,
+    accessorKey: "quantity_kg",
+    cell: ({ row }) => {
+      return <div className="text-right">{formatDecimalTrunc(parseFloat(row.original.quantity_kg), 2)} kg</div>;
+    },
+  },
+  {
+    id: "peso_total_kg",
+    header: () => <div className="text-right">Peso Total</div>,
     accessorKey: "total_kg",
     cell: ({ row }) => {
       return (
-        <div className="text-right text-blue-600 font-semibold">
+        <div className="text-right text-green-600 font-semibold">
           {formatDecimalTrunc(row.original.total_kg || 0, 2)} kg
         </div>
       );

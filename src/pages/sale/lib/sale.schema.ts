@@ -5,11 +5,17 @@ import { z } from "zod";
 
 export const saleDetailSchema = z.object({
   product_id: requiredStringId("Debe seleccionar un producto"),
-  quantity: z
+  quantity_sacks: z
     .string()
-    .min(1, { message: "La cantidad es requerida" })
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "La cantidad debe ser un número mayor a 0",
+    .min(0, { message: "La cantidad de sacos es requerida" })
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "La cantidad de sacos debe ser un número mayor o igual a 0",
+    }),
+  quantity_kg: z
+    .string()
+    .min(1, { message: "La cantidad en kg es requerida" })
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "La cantidad en kg debe ser un número válido",
     }),
   unit_price: z
     .string()

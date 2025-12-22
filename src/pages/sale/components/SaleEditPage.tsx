@@ -80,7 +80,8 @@ export const SaleEditPage = () => {
     details:
       data.details?.map((detail) => ({
         product_id: detail.product_id.toString(),
-        quantity: detail.quantity.toString(),
+        quantity_sacks: detail.quantity.toString(), // Por ahora usar quantity como quantity_sacks
+        quantity_kg: "0", // Por defecto 0 si no viene del backend
         unit_price: detail.unit_price.toString(),
       })) ?? [],
     installments:

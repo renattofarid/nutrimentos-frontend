@@ -59,7 +59,8 @@ export function PurchaseDetailTable({
             <TableRow>
               <TableHead>Producto</TableHead>
               <TableHead>Código</TableHead>
-              <TableHead className="text-right">Cantidad</TableHead>
+              <TableHead className="text-right">Kg</TableHead>
+              <TableHead className="text-right">Sacos</TableHead>
               <TableHead className="text-right">P. Unit.</TableHead>
               <TableHead className="text-right">Subtotal</TableHead>
               <TableHead className="text-right">Impuesto</TableHead>
@@ -77,7 +78,10 @@ export function PurchaseDetailTable({
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  {detail.quantity.toFixed(2)}
+                  {detail.quantity_kg.toFixed(2)}
+                </TableCell>
+                <TableCell className="text-right">
+                  {detail.quantity_sacks.toFixed(2)}
                 </TableCell>
                 <TableCell className="text-right">
                   {detail.unit_price.toFixed(2)}
@@ -161,7 +165,7 @@ export function PurchaseDetailTable({
               </TableRow>
             ))}
             <TableRow className="bg-sidebar">
-              <TableCell colSpan={6} className="text-right font-bold">
+              <TableCell colSpan={7} className="text-right font-bold">
                 TOTAL:
               </TableCell>
               <TableCell className="text-right font-bold text-lg text-primary">

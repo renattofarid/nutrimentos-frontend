@@ -1,6 +1,4 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
 import { formatNumber } from "@/lib/formatCurrency";
 import { formatDecimalTrunc } from "@/lib/utils";
 
@@ -17,15 +15,7 @@ export interface SaleDetailRow {
   total_kg?: number; // Peso total en kg (ej: 51)
 }
 
-interface CreateColumnsProps {
-  onEdit: (index: number) => void;
-  onDelete: (index: number) => void;
-}
-
-export const createSaleDetailColumns = ({
-  onEdit, 
-  onDelete,
-}: CreateColumnsProps): ColumnDef<SaleDetailRow>[] => [
+export const createSaleDetailColumns = (): ColumnDef<SaleDetailRow>[] => [
   {
     id: "producto",
     header: "Producto",

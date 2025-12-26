@@ -92,7 +92,6 @@ export const PurchaseOptions = ({
         value={warehouse_id}
         onChange={setWarehouseId}
         placeholder="Almacén"
-        widthPopover="w-48!"
       />
 
       {/* Document Type Filter */}
@@ -101,7 +100,6 @@ export const PurchaseOptions = ({
         value={document_type}
         onChange={setDocumentType}
         placeholder="Tipo de documento"
-        widthPopover="w-32!"
       />
 
       {/* Payment Type Filter */}
@@ -110,7 +108,6 @@ export const PurchaseOptions = ({
         value={payment_type}
         onChange={setPaymentType}
         placeholder="Tipo de Pago"
-        widthPopover="w-32!"
       />
 
       {/* Status Filter */}
@@ -119,7 +116,6 @@ export const PurchaseOptions = ({
         value={status}
         onChange={setStatus}
         placeholder="Estado"
-        widthPopover="w-36!"
       />
 
       {/* Date Range Filter */}

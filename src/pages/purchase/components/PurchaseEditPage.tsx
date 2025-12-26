@@ -73,7 +73,8 @@ export default function PurchaseEditPage() {
       observations: data.observations || "",
       details: data.details.map((detail) => ({
         product_id: detail.product.id.toString(),
-        quantity: detail.quantity.toString(),
+        quantity_kg: detail.quantity_kg.toString(),
+        quantity_sacks: detail.quantity_sacks.toString(),
         unit_price: detail.unit_price.toString(),
         tax: detail.tax.toString(),
       })),

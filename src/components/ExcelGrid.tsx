@@ -190,30 +190,47 @@ export function ExcelGrid<T extends Record<string, any>>({
       case "product-search":
         const currentValue = row[column.accessor as string] || "";
         const searchByCode = column.type === "product-code";
+        const datalistId = `products-${searchByCode ? 'code' : 'name'}-${rowIndex}`;
 
         return (
-          <select
-            ref={(el) => {
-              if (el) inputRefs.current[cellKey] = el as any;
-            }}
-            value={row["product_id" as keyof T] || ""}
-            onChange={(e) => {
-              const selectedProduct = productOptions.find(p => p.id === e.target.value);
-              if (selectedProduct && onProductSelect) {
-                onProductSelect(rowIndex, selectedProduct);
-              }
-            }}
-            onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
-            onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
-            className="w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent appearance-none cursor-pointer"
-          >
-            <option value="">{currentValue || (searchByCode ? "Seleccionar..." : "Seleccionar...")}</option>
-            {productOptions.map((product) => (
-              <option key={product.id} value={product.id}>
-                {searchByCode ? product.codigo : product.name}
-              </option>
-            ))}
-          </select>
+          <>
+            <input
+              ref={(el) => { inputRefs.current[cellKey] = el; }}
+              type="text"
+              value={currentValue}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                // Buscar el producto por el valor ingresado
+                const product = productOptions.find(p =>
+                  searchByCode
+                    ? p.codigo.toLowerCase() === value.toLowerCase()
+                    : p.name.toLowerCase() === value.toLowerCase()
+                );
+
+                // Si se encontró el producto, seleccionarlo
+                if (product && onProductSelect) {
+                  onProductSelect(rowIndex, product);
+                } else {
+                  // Si no se encontró, solo actualizar el valor del campo
+                  onCellChange(rowIndex, column.accessor as string, value);
+                }
+              }}
+              onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
+              onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
+              placeholder={searchByCode ? "Código..." : "Producto..."}
+              className="w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent"
+              list={datalistId}
+              autoComplete="off"
+            />
+            <datalist id={datalistId}>
+              {productOptions.map((product) => (
+                <option key={product.id} value={searchByCode ? product.codigo : product.name}>
+                  {searchByCode ? product.name : product.codigo}
+                </option>
+              ))}
+            </datalist>
+          </>
         );
 
       case "number":

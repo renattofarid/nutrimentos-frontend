@@ -104,7 +104,7 @@ export interface CreatePurchaseRequest {
   include_igv: boolean;
   currency: string;
   details: CreatePurchaseDetailRequest[];
-  installments: CreatePurchaseInstallmentRequest[];
+  installments?: CreatePurchaseInstallmentRequest[];
 }
 
 export interface UpdatePurchaseRequest {

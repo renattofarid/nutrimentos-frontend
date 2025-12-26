@@ -588,34 +588,18 @@ export const PurchaseForm = ({
     }
 
     // Preparar cuotas según el tipo de pago
-    let validInstallments;
+    let validInstallments: { due_days: string; amount: number }[] | undefined;
 
     if (selectedPaymentType === "CONTADO") {
-      // En modo edición, si ya hay cuotas, usarlas (no crear nuevas)
-      if (mode === "update" && installments.length > 0) {
-        validInstallments = installments
-          .filter((inst) => inst.due_days && inst.amount)
-          .map((inst) => ({
-            due_days: inst.due_days,
-            amount: inst.amount,
-          }));
-      } else {
-        // En modo creación, crear automáticamente una cuota con el total
-        const totalAmount = calculatePurchaseTotal();
-        validInstallments = [
-          {
-            due_days: "1",
-            amount: totalAmount,
-          },
-        ];
-      }
+      // Cuando es al contado, no se envían cuotas
+      validInstallments = undefined;
     } else {
       // Para pagos a crédito, usar las cuotas ingresadas
       validInstallments = installments
         .filter((inst) => inst.due_days && inst.amount)
         .map((inst) => ({
           due_days: inst.due_days,
-          amount: inst.amount,
+          amount: parseFloat(inst.amount),
         }));
     }
 
@@ -627,11 +611,17 @@ export const PurchaseForm = ({
       tax: parseFloat(d.tax),
     }));
 
-    onSubmit({
+    const submitData: any = {
       ...data,
       details: formattedDetails,
-      installments: validInstallments,
-    });
+    };
+
+    // Solo agregar installments si no es undefined
+    if (validInstallments !== undefined) {
+      submitData.installments = validInstallments;
+    }
+
+    onSubmit(submitData);
   };
 
   const selectedWarehouseId = form.watch("warehouse_id");

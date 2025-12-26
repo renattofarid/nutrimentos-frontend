@@ -462,8 +462,27 @@ export const SaleForm = ({
 
               setDetails(finalDetails);
               form.setValue("details", finalDetails);
+            } else {
+              // Si la API no retorna resultado, resetear quantity_sacks a 0 y mantener quantity_kg
+              const clearedDetails = [...updatedDetails];
+              clearedDetails[index] = {
+                ...clearedDetails[index],
+                quantity: "0",  // Resetear quantity_sacks a 0
+                quantity_sacks: "0",  // Resetear quantity_sacks a 0
+                unit_price: "",
+                subtotal: 0,
+                igv: 0,
+                total: 0,
+                total_kg: addKg,  // Solo los kg adicionales
+                price_from_api: false,
+              };
+
+              setDetails(clearedDetails);
+              form.setValue("details", clearedDetails);
+
+              errorToast("Error al obtener el precio dinámico. Por favor, ingrese el precio manualmente.");
             }
-          } catch (error) {
+          } catch (error: any) {
             console.error("Error fetching dynamic price:", error);
 
             // Si la API falla, resetear quantity_sacks a 0 y mantener quantity_kg
@@ -483,7 +502,8 @@ export const SaleForm = ({
             setDetails(clearedDetails);
             form.setValue("details", clearedDetails);
 
-            errorToast("Error al obtener el precio dinámico. Por favor, ingrese el precio manualmente.");
+            const errorMessage = error?.response?.data?.message || error?.response?.data?.error || "Error al obtener el precio dinámico. Por favor, ingrese el precio manualmente.";
+            errorToast(errorMessage);
           }
         }
       } else {

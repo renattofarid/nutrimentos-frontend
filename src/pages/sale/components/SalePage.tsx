@@ -15,14 +15,15 @@ import {
 } from "../lib/sale.interface";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import SaleDetailSheet from "./SaleDetailSheet";
-import { findSaleById } from "../lib/sale.actions";
+import { findSaleById, exportBulkTickets } from "../lib/sale.actions";
 import TitleComponent from "@/components/TitleComponent";
-import { errorToast } from "@/lib/core.function";
+import { errorToast, successToast } from "@/lib/core.function";
 import { InstallmentPaymentManagementSheet } from "@/pages/accounts-receivable/components";
 import PageWrapper from "@/components/PageWrapper";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 export default function SalePage() {
   const navigate = useNavigate();

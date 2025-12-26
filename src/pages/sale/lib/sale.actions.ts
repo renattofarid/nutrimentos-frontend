@@ -349,3 +349,24 @@ export const deleteSalePayment = async (
   );
   return response.data;
 };
+
+// ============================================
+// SALE TICKETS - Bulk Export
+// ============================================
+
+export interface BulkTicketsRequest {
+  sale_ids: number[];
+}
+
+export const exportBulkTickets = async (
+  sale_ids: number[]
+): Promise<Blob> => {
+  const response = await api.post(
+    `/sales/tickets/bulk`,
+    { sale_ids },
+    {
+      responseType: 'blob',
+    }
+  );
+  return response.data;
+};

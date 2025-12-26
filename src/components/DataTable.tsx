@@ -6,6 +6,8 @@ import {
   getCoreRowModel,
   useReactTable,
   type ColumnDef,
+  type RowSelectionState,
+  type OnChangeFn,
 } from "@tanstack/react-table";
 
 import {
@@ -17,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { VisibilityState } from "@tanstack/react-table";
 import DataTableColumnFilter from "./DataTableColumnFilter";
 import FormSkeleton from "./FormSkeleton";
@@ -30,6 +32,9 @@ interface DataTableProps<TData, TValue> {
   initialColumnVisibility?: VisibilityState;
   isVisibleColumnFilter?: boolean;
   mobileCardRender?: (row: TData, index: number) => React.ReactNode;
+  enableRowSelection?: boolean;
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
 }
 
 export function DataTable<TData, TValue>({
@@ -40,19 +45,36 @@ export function DataTable<TData, TValue>({
   initialColumnVisibility,
   isVisibleColumnFilter = true,
   mobileCardRender,
+  enableRowSelection = false,
+  rowSelection: controlledRowSelection,
+  onRowSelectionChange,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
     initialColumnVisibility ?? {}
   );
+  const [internalRowSelection, setInternalRowSelection] = useState<RowSelectionState>({});
+
+  // Use controlled or internal row selection
+  const rowSelection = controlledRowSelection !== undefined ? controlledRowSelection : internalRowSelection;
+  const setRowSelection = onRowSelectionChange || setInternalRowSelection;
+
+  // Reset selection when data changes (e.g., pagination or filters)
+  useEffect(() => {
+    if (controlledRowSelection === undefined) {
+      setInternalRowSelection({});
+    }
+  }, [data, controlledRowSelection]);
 
   const table = useReactTable({
     data,
     columns,
     manualPagination: true,
+    enableRowSelection,
     state: {
       columnFilters,
       columnVisibility,
+      rowSelection,
       pagination: {
         pageIndex: 0,
         pageSize: 10,
@@ -61,6 +83,8 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    getRowId: (row: any) => row.id?.toString() || Math.random().toString(),
   });
 
   return (

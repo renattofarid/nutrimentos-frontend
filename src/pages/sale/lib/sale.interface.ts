@@ -165,13 +165,6 @@ export interface CreateSaleRequest {
   total_weight: number;
   currency: string;
   observations: string;
-  amount_cash: string;
-  amount_card: string;
-  amount_yape: string;
-  amount_plin: string;
-  amount_deposit: string;
-  amount_transfer: string;
-  amount_other: string;
   details: CreateSaleDetailRequest[];
   installments?: CreateSaleInstallmentRequest[];
 }

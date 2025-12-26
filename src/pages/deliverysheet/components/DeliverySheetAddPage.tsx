@@ -6,7 +6,6 @@ import { useDeliverySheetStore } from "../lib/deliverysheet.store";
 import type { DeliverySheetSchema } from "../lib/deliverysheet.schema";
 import { DELIVERY_SHEET } from "../lib/deliverysheet.interface";
 import TitleFormComponent from "@/components/TitleFormComponent";
-import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { useAllClients } from "@/pages/client/lib/client.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
@@ -23,7 +22,6 @@ export default function DeliverySheetAddPage() {
   } = useDeliverySheetStore();
 
   const { data: allBranches = [] } = useAllBranches();
-  const { data: workers = [] } = useAllWorkers();
   const { data: customers = [] } = useAllClients();
   const { data: zones = [] } = useAllZones();
 
@@ -76,7 +74,6 @@ export default function DeliverySheetAddPage() {
         mode="create"
         branches={allBranches || []}
         zones={zones || []}
-        drivers={workers || []}
         customers={customers || []}
         availableSales={availableSales || []}
         onSearchSales={handleSearchSales}

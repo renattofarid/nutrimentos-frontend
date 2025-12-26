@@ -80,19 +80,10 @@ export const getDeliverySheetColumns = ({
     header: "Zona",
     cell: ({ row }) => (
       <div className="flex flex-col">
-        <span className="font-medium">{row.original.zone.name}</span>
+        <span className="font-medium">{row.original.zone?.name}</span>
         <span className="text-xs text-muted-foreground">
-          {row.original.zone.code}
+          {row.original.zone?.code}
         </span>
-      </div>
-    ),
-  },
-  {
-    accessorKey: "driver",
-    header: "Conductor",
-    cell: ({ row }) => (
-      <div className="max-w-[180px] truncate">
-        {row.original.driver.full_name}
       </div>
     ),
   },
@@ -101,7 +92,7 @@ export const getDeliverySheetColumns = ({
     header: "Cliente",
     cell: ({ row }) => (
       <div className="max-w-[180px] truncate">
-        {row.original.customer.full_name}
+        {row.original.customer?.full_name}
       </div>
     ),
   },

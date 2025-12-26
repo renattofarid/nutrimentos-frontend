@@ -111,13 +111,6 @@ export const useSaleStore = create<SaleStore>((set) => ({
         total_weight: data.total_weight || 0,
         currency: data.currency,
         observations: data.observations || "",
-        amount_cash: data.amount_cash || "0",
-        amount_card: data.amount_card || "0",
-        amount_yape: data.amount_yape || "0",
-        amount_plin: data.amount_plin || "0",
-        amount_deposit: data.amount_deposit || "0",
-        amount_transfer: data.amount_transfer || "0",
-        amount_other: data.amount_other || "0",
         details: data.details.map((detail) => ({
           product_id: Number(detail.product_id),
           quantity_sacks: Number(detail.quantity_sacks),

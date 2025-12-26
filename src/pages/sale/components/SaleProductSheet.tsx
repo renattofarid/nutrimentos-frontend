@@ -234,17 +234,9 @@ export const SaleProductSheet = ({
       unitPrice = parseFloat(data.manual_price || "0");
       subtotal = roundTo6Decimals(totalWeightKg * unitPrice);
     } else {
-      // Precio dinámico
-      if (selectedProduct?.is_kg === 1) {
-        // Producto por kg: usar peso total en kg × precio por kg
-        const pricePerKg = parseFloat(priceData.pricing.price_per_kg);
-        unitPrice = pricePerKg;
-        subtotal = roundTo6Decimals(totalWeightKg * pricePerKg);
-      } else {
-        // Producto por unidad: usar cantidad de sacos × precio unitario
-        unitPrice = parseFloat(priceData.pricing.unit_price);
-        subtotal = roundTo6Decimals(quantity * unitPrice);
-      }
+      // Precio dinámico - usar el subtotal que viene de la API
+      unitPrice = parseFloat(priceData.pricing.unit_price);
+      subtotal = parseFloat(priceData.pricing.subtotal);
     }
 
     const igv = roundTo6Decimals(subtotal * 0.18);
@@ -544,24 +536,7 @@ export const SaleProductSheet = ({
                 <span className="text-sm font-bold">Subtotal:</span>
                 <span className="text-lg font-bold text-primary">
                   {priceData.pricing.currency}{" "}
-                  {(() => {
-                    // Calcular subtotal según el tipo de producto
-                    if (selectedProduct?.is_kg === 1) {
-                      // Producto por kg: peso total × precio por kg
-                      const pricePerKg = parseFloat(
-                        priceData.pricing.price_per_kg
-                      );
-                      const totalWeightKg =
-                        priceData.quantities.total_weight_kg;
-                      return (totalWeightKg * pricePerKg).toFixed(2);
-                    } else {
-                      // Producto por unidad: sacos × precio unitario
-                      return (
-                        parseFloat(selectedQuantity || "0") *
-                        parseFloat(priceData.pricing.unit_price)
-                      ).toFixed(2);
-                    }
-                  })()}
+                  {parseFloat(priceData.pricing.subtotal).toFixed(2)}
                 </span>
               </div>
             </div>

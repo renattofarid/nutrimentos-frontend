@@ -115,7 +115,6 @@ export default function SaleOptions({
         value={branch_id}
         onChange={setBranchId}
         placeholder="Sucursal"
-        widthPopover="w-48!"
       />
 
       {/* Warehouse Filter */}
@@ -124,7 +123,6 @@ export default function SaleOptions({
         value={warehouse_id}
         onChange={setWarehouseId}
         placeholder="Almacén"
-        widthPopover="w-48!"
       />
 
       {/* Vendedor Filter */}
@@ -133,7 +131,6 @@ export default function SaleOptions({
         value={vendedor_id}
         onChange={setVendedorId}
         placeholder="Vendedor"
-        widthPopover="w-48!"
       />
 
       {/* Document Type Filter */}
@@ -142,7 +139,6 @@ export default function SaleOptions({
         value={document_type}
         onChange={setDocumentType}
         placeholder="Tipo de documento"
-        widthPopover="w-32!"
       />
 
       {/* Status Filter */}
@@ -151,7 +147,6 @@ export default function SaleOptions({
         value={status}
         onChange={setStatus}
         placeholder="Estado"
-        widthPopover="w-36!"
       />
 
       {/* Date Range Filter */}

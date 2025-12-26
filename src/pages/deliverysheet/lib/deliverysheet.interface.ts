@@ -152,8 +152,7 @@ export interface DeliverySheetResourceById {
 
 export interface CreateDeliverySheetRequest {
   branch_id: number;
-  zone_id: number;
-  driver_id: number;
+  zone_id?: number;
   customer_id?: number;
   type: "CONTADO" | "CREDITO";
   issue_date: string;
@@ -164,7 +163,6 @@ export interface CreateDeliverySheetRequest {
 
 export interface UpdateDeliverySheetRequest {
   zone_id?: number;
-  driver_id?: number;
   customer_id?: number;
   type?: "CONTADO" | "CREDITO";
   issue_date?: string;

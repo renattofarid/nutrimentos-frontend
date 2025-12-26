@@ -117,14 +117,19 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
         currency: data.currency,
         details: data.details.map((detail) => ({
           product_id: Number(detail.product_id),
-          quantity: Number(detail.quantity),
+          quantity_kg: Number(detail.quantity_kg),
+          quantity_sacks: Number(detail.quantity_sacks),
           unit_price: Number(detail.unit_price),
           tax: Number(detail.tax),
         })),
-        installments: data.installments.map((installment) => ({
-          due_days: Number(installment.due_days),
-          amount: Number(installment.amount),
-        })),
+        ...(data.installments.length > 0 && data.installments !== undefined
+          ? {
+              installments: data.installments.map((installment) => ({
+                due_days: Number(installment.due_days),
+                amount: Number(installment.amount),
+              })),
+            }
+          : undefined),
       };
 
       await storePurchase(request);
@@ -159,16 +164,19 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
         ...(data.details && {
           details: data.details.map((detail) => ({
             product_id: Number(detail.product_id),
-            quantity: Number(detail.quantity),
+            quantity_kg: Number(detail.quantity_kg),
+            quantity_sacks: Number(detail.quantity_sacks),
             unit_price: Number(detail.unit_price),
           })),
         }),
-        ...(data.installments && {
-          installments: data.installments.map((installment) => ({
-            due_days: Number(installment.due_days),
-            amount: Number(installment.amount),
-          })),
-        }),
+        ...(data.installments !== undefined && data.installments?.length > 0
+          ? {
+              installments: data.installments.map((installment) => ({
+                due_days: Number(installment.due_days),
+                amount: Number(installment.amount),
+              })),
+            }
+          : undefined),
       };
 
       await updatePurchase(id, request);

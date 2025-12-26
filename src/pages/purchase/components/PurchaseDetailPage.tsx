@@ -161,7 +161,8 @@ export default function PurchaseDetailPage() {
             <TableRow>
               <TableHead>Código</TableHead>
               <TableHead>Producto</TableHead>
-              <TableHead className="text-right">Cantidad</TableHead>
+              <TableHead className="text-right">Kg</TableHead>
+              <TableHead className="text-right">Sacos</TableHead>
               <TableHead className="text-right">Precio Unit.</TableHead>
               <TableHead className="text-right">Subtotal</TableHead>
               <TableHead className="text-right">IGV</TableHead>
@@ -175,7 +176,8 @@ export default function PurchaseDetailPage() {
                   {detail.product.codigo}
                 </TableCell>
                 <TableCell>{detail.product.name}</TableCell>
-                <TableCell className="text-right">{detail.quantity}</TableCell>
+                <TableCell className="text-right">{detail.quantity_kg.toFixed(2)}</TableCell>
+                <TableCell className="text-right">{detail.quantity_sacks.toFixed(2)}</TableCell>
                 <TableCell className="text-right">
                   {purchase.currency === "PEN" ? "S/." : "$"}{" "}
                   {detail.unit_price.toFixed(2)}

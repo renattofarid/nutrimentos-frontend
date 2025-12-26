@@ -162,8 +162,7 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
     try {
       const request: CreateDeliverySheetRequest = {
         branch_id: Number(data.branch_id),
-        zone_id: Number(data.zone_id),
-        driver_id: Number(data.driver_id),
+        zone_id: data.zone_id ? Number(data.zone_id) : undefined,
         customer_id: data.customer_id ? Number(data.customer_id) : undefined,
         type: data.type as "CONTADO" | "CREDITO",
         issue_date: data.issue_date,
@@ -190,7 +189,6 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
     try {
       const request: UpdateDeliverySheetRequest = {
         ...(data.zone_id && { zone_id: Number(data.zone_id) }),
-        ...(data.driver_id && { driver_id: Number(data.driver_id) }),
         ...(data.customer_id && { customer_id: Number(data.customer_id) }),
         ...(data.type && { type: data.type as "CONTADO" | "CREDITO" }),
         ...(data.issue_date && { issue_date: data.issue_date }),

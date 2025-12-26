@@ -15,14 +15,15 @@ import {
 } from "../lib/sale.interface";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import SaleDetailSheet from "./SaleDetailSheet";
-import { findSaleById } from "../lib/sale.actions";
+import { findSaleById, exportBulkTickets } from "../lib/sale.actions";
 import TitleComponent from "@/components/TitleComponent";
-import { errorToast } from "@/lib/core.function";
+import { errorToast, successToast } from "@/lib/core.function";
 import { InstallmentPaymentManagementSheet } from "@/pages/accounts-receivable/components";
 import PageWrapper from "@/components/PageWrapper";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 export default function SalePage() {
   const navigate = useNavigate();
@@ -48,6 +49,7 @@ export default function SalePage() {
   const [selectedInstallment, setSelectedInstallment] =
     useState<SaleInstallmentResource | null>(null);
   const [openPaymentSheet, setOpenPaymentSheet] = useState(false);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const company_id = user?.company_id;
 
   const {
@@ -192,6 +194,40 @@ export default function SalePage() {
     }
   };
 
+  const handleExportTickets = async () => {
+    try {
+      // Get selected IDs from rowSelection state
+      const selectedIds = Object.keys(rowSelection)
+        .filter((key) => rowSelection[key])
+        .map((id) => parseInt(id));
+
+      if (selectedIds.length === 0) {
+        errorToast("No hay ventas seleccionadas");
+        return;
+      }
+
+      const blob = await exportBulkTickets(selectedIds);
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `tickets_${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      successToast(`${selectedIds.length} ticket(s) exportado(s) correctamente`);
+
+      // Clear selection after export
+      setRowSelection({});
+    } catch (error) {
+      console.error("Error al exportar tickets", error);
+      errorToast("Error al exportar tickets");
+    }
+  };
+
   const { MODEL, ICON } = SALE;
 
   const columns = getSaleColumns({
@@ -250,6 +286,11 @@ export default function SalePage() {
     serie,
   ]);
 
+  // Calculate number of selected rows
+  const selectedCount = Object.keys(rowSelection).filter(
+    (key) => rowSelection[key]
+  ).length;
+
   return (
     <PageWrapper>
       <div className="flex items-center justify-between">
@@ -258,10 +299,21 @@ export default function SalePage() {
           subtitle="Administrar todas las ventas registradas en el sistema"
           icon={ICON}
         />
-        <SaleActions excelEndpoint={exportEndpoint} />
+        <SaleActions
+          excelEndpoint={exportEndpoint}
+          selectedCount={selectedCount}
+          onExportTickets={handleExportTickets}
+        />
       </div>
 
-      <SaleTable columns={columns} data={sales || []} isLoading={isLoading}>
+      <SaleTable
+        columns={columns}
+        data={sales || []}
+        isLoading={isLoading}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+      >
         <SaleOptions
           branch_id={branch_id}
           setBranchId={setBranchId}

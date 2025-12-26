@@ -11,7 +11,8 @@ export interface PurchaseDetailResource {
     name: string;
     codigo: string;
   };
-  quantity: number;
+  quantity_kg: number;
+  quantity_sacks: number;
   unit_price: number;
   subtotal: number;
   tax: number;
@@ -82,7 +83,8 @@ export interface PurchaseResponse {
 
 export interface CreatePurchaseDetailRequest {
   product_id: number;
-  quantity: number;
+  quantity_kg: number;
+  quantity_sacks: number;
   unit_price: number;
 }
 
@@ -104,7 +106,7 @@ export interface CreatePurchaseRequest {
   include_igv: boolean;
   currency: string;
   details: CreatePurchaseDetailRequest[];
-  installments: CreatePurchaseInstallmentRequest[];
+  installments?: CreatePurchaseInstallmentRequest[];
 }
 
 export interface UpdatePurchaseRequest {
@@ -147,14 +149,16 @@ export interface PurchaseDetailResourceById {
 export interface CreatePurchaseDetailRequestFull {
   purchase_id: number;
   product_id: number;
-  quantity: number;
+  quantity_kg: number;
+  quantity_sacks: number;
   unit_price: number;
   tax: number;
 }
 
 export interface UpdatePurchaseDetailRequest {
   product_id?: number;
-  quantity?: number;
+  quantity_kg?: number;
+  quantity_sacks?: number;
   unit_price?: number;
   tax?: number;
 }

@@ -38,7 +38,6 @@ import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import { useState, useEffect } from "react";
 import { formatDecimalTrunc } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatCurrency";
-import { Badge } from "@/components/ui/badge";
 import {
   Empty,
   EmptyDescription,
@@ -64,9 +63,8 @@ import { GroupFormSection } from "@/components/GroupFormSection";
 import { ClientDialog } from "@/pages/client/components/ClientDialog";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { getNextSeries } from "../lib/sale.actions";
-import { DataTable } from "@/components/DataTable";
-import { SaleProductSheet, type DetailFormData } from "./SaleProductSheet";
-import { createSaleDetailColumns } from "./sale-details-columns";
+import { useDynamicPrice } from "../lib/dynamic-price.hook";
+import { ExcelGrid, type ExcelGridColumn, type ProductOption } from "@/components/ExcelGrid";
 
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
@@ -84,11 +82,12 @@ interface SaleFormProps {
 
 interface DetailRow {
   product_id: string;
+  product_code?: string;
   product_name?: string;
   quantity: string; // Cantidad total en decimal (ej: 1.02) - SE ENVÍA AL BACKEND
   quantity_sacks: string; // Cantidad de sacos ingresada por el usuario (ej: 1)
   quantity_kg: string; // Kg adicionales ingresados por el usuario (ej: 1)
-  unit_price: string;
+  unit_price: string; // Precio unitario
   subtotal: number;
   igv: number;
   total: number;
@@ -122,10 +121,8 @@ export const SaleForm = ({
   );
 
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
-  const [isProductSheetOpen, setIsProductSheetOpen] = useState(false);
-  const [editingProductData, setEditingProductData] = useState<
-    DetailFormData | undefined
-  >(undefined);
+
+  const { fetchDynamicPrice } = useDynamicPrice();
 
   // Hook para obtener vendedores
   const { data: workers = [] } = useAllWorkers();
@@ -136,10 +133,6 @@ export const SaleForm = ({
 
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
-
-  const [editingDetailIndex, setEditingDetailIndex] = useState<number | null>(
-    null
-  );
 
   // Estados para cuotas
   const [installments, setInstallments] = useState<InstallmentRow[]>([]);
@@ -256,6 +249,7 @@ export const SaleForm = ({
 
           return {
             product_id: detail.product_id,
+            product_code: product?.codigo,
             product_name: product?.name,
             quantity: detail.quantity, // Cantidad total en decimal
             quantity_sacks: detail.quantity_sacks || detail.quantity, // Sacos (si no existe, usar quantity)
@@ -362,7 +356,7 @@ export const SaleForm = ({
             selectedDocumentType
           );
           setAutoSerie(response.serie);
-          setAutoNumero(response.numero);
+          setAutoNumero(response.next_formatted);
         } catch (error) {
           console.error("Error fetching next series:", error);
           setAutoSerie("");
@@ -376,79 +370,214 @@ export const SaleForm = ({
     fetchNextSeries();
   }, [selectedBranchId, selectedDocumentType, mode]);
 
-  // Establecer fecha de emisión automáticamente al cargar el formulario
-  useEffect(() => {
-    // Inicializar montos de pago a 0
-    if (!form.getValues("amount_cash")) {
-      form.setValue("amount_cash", "0");
-    }
-    if (!form.getValues("amount_card")) {
-      form.setValue("amount_card", "0");
-    }
-    if (!form.getValues("amount_yape")) {
-      form.setValue("amount_yape", "0");
-    }
-    if (!form.getValues("amount_plin")) {
-      form.setValue("amount_plin", "0");
-    }
-    if (!form.getValues("amount_deposit")) {
-      form.setValue("amount_deposit", "0");
-    }
-    if (!form.getValues("amount_transfer")) {
-      form.setValue("amount_transfer", "0");
-    }
-    if (!form.getValues("amount_other")) {
-      form.setValue("amount_other", "0");
-    }
-  }, [form]);
-
   // Función de redondeo a 6 decimales
   const roundTo6Decimals = (value: number): number => {
     return Math.round(value * 1000000) / 1000000;
   };
 
-  // Función de redondeo a 2 decimales para pagos
-  const roundTo2Decimals = (value: number): number => {
-    return Math.round(value * 100) / 100;
+  // Funciones para el ExcelGrid
+  const handleAddRow = () => {
+    const newDetail: DetailRow = {
+      product_id: "",
+      product_code: "",
+      product_name: "",
+      quantity: "",
+      quantity_sacks: "",
+      quantity_kg: "0",
+      unit_price: "",
+      subtotal: 0,
+      igv: 0,
+      total: 0,
+      total_kg: 0,
+    };
+    const updatedDetails = [...details, newDetail];
+    setDetails(updatedDetails);
+    form.setValue("details", updatedDetails);
   };
 
-  // Funciones para detalles
-  const handleEditDetail = (index: number) => {
-    const detail = details[index];
-    setEditingProductData(detail as DetailFormData);
-    setEditingDetailIndex(index);
-    setIsProductSheetOpen(true);
-  };
-
-  const handleRemoveDetail = (index: number) => {
+  const handleRemoveRow = (index: number) => {
     const updatedDetails = details.filter((_, i) => i !== index);
     setDetails(updatedDetails);
     form.setValue("details", updatedDetails);
   };
 
-  const handleAddProductClick = () => {
-    setEditingProductData(undefined);
-    setEditingDetailIndex(null);
-    setIsProductSheetOpen(true);
-  };
+  const handleCellChange = async (index: number, field: string, value: string) => {
+    const updatedDetails = [...details];
+    updatedDetails[index] = { ...updatedDetails[index], [field]: value };
 
-  const handleProductSubmit = (data: DetailFormData) => {
-    if (editingDetailIndex !== null) {
-      // Actualizar detalle existente
-      const updatedDetails = [...details];
-      updatedDetails[editingDetailIndex] = data;
+    // Recalcular totales cuando cambian cantidad o kg adicionales
+    if (field === "quantity_sacks" || field === "quantity_kg") {
+      const detail = updatedDetails[index];
+      const product = filteredProducts.find(p => p.id.toString() === detail.product_id);
+
+      if (product && detail.product_id) {
+        const qty = parseFloat(detail.quantity_sacks) || 0;
+        const addKg = parseFloat(detail.quantity_kg) || 0;
+
+        // Solo hacer la llamada si hay producto y al menos algún valor
+        const customerId = form.watch("customer_id");
+        const productWeight = parseFloat(product.weight || "0");
+
+        let quantitySacksDecimal = qty;
+        if (productWeight > 0 && addKg > 0) {
+          const additionalSacks = addKg / productWeight;
+          quantitySacksDecimal = qty + additionalSacks;
+        }
+
+        // Actualizar el estado inmediatamente con los nuevos valores
+        setDetails(updatedDetails);
+        form.setValue("details", updatedDetails);
+
+        // Solo llamar a la API si hay cantidad
+        if (qty > 0 || addKg > 0) {
+          try {
+            const result = await fetchDynamicPrice({
+              product_id: detail.product_id,
+              person_id: customerId || "",
+              quantity_sacks: quantitySacksDecimal,
+              quantity_kg: 0,
+            });
+
+            if (result) {
+              const unitPrice = parseFloat(result.pricing.unit_price);
+              const subtotal = parseFloat(result.pricing.subtotal);
+              const igv = roundTo6Decimals(subtotal * 0.18);
+              const total = roundTo6Decimals(subtotal + igv);
+              const totalWeightKg = productWeight > 0 ? roundTo6Decimals(productWeight * qty + addKg) : addKg;
+
+              // Actualizar con los precios de la API
+              const finalDetails = [...updatedDetails];
+              finalDetails[index] = {
+                ...finalDetails[index],
+                quantity: quantitySacksDecimal.toString(),
+                unit_price: unitPrice.toString(),
+                subtotal,
+                igv,
+                total,
+                total_kg: totalWeightKg,
+              };
+
+              setDetails(finalDetails);
+              form.setValue("details", finalDetails);
+            }
+          } catch (error) {
+            console.error("Error fetching dynamic price:", error);
+            // Si la API falla, no pasa nada. Todo queda editable para que el usuario ingrese manualmente.
+          }
+        }
+      } else {
+        // Si no hay producto, solo actualizar el estado
+        setDetails(updatedDetails);
+        form.setValue("details", updatedDetails);
+      }
+    } else if (field === "unit_price") {
+      // Cuando cambia el precio unitario manualmente, recalcular totales
+      // NOTA: Aquí se calcula PRECIO × CANTIDAD DE KG únicamente
+      const detail = updatedDetails[index];
+      const unitPrice = parseFloat(value) || 0;
+      const kg = parseFloat(detail.quantity_kg) || 0;
+
+      // Subtotal = Precio × Kg (no se usa cantidad de sacos)
+      const subtotal = kg > 0 && unitPrice > 0 ? roundTo6Decimals(kg * unitPrice) : 0;
+      const igv = subtotal > 0 ? roundTo6Decimals(subtotal * 0.18) : 0;
+      const total = subtotal > 0 ? roundTo6Decimals(subtotal + igv) : 0;
+
+      updatedDetails[index] = {
+        ...updatedDetails[index],
+        quantity: "0", // Cantidad de sacos = 0 porque se vende por kg
+        subtotal,
+        igv,
+        total,
+      };
+
       setDetails(updatedDetails);
       form.setValue("details", updatedDetails);
-      setEditingDetailIndex(null);
     } else {
-      // Agregar nuevo detalle
-      const updatedDetails = [...details, data];
+      // Para otros campos, solo actualizar el estado
       setDetails(updatedDetails);
       form.setValue("details", updatedDetails);
     }
-    setIsProductSheetOpen(false);
-    setEditingProductData(undefined);
   };
+
+  const handleProductSelect = async (index: number, product: ProductOption) => {
+    const selectedProduct = filteredProducts.find(p => p.id.toString() === product.id);
+    if (!selectedProduct) return;
+
+    const updatedDetails = [...details];
+    updatedDetails[index] = {
+      ...updatedDetails[index],
+      product_id: product.id,
+      product_code: product.codigo,
+      product_name: product.name,
+      quantity_sacks: "",
+      quantity_kg: "0",
+      unit_price: "",
+      subtotal: 0,
+      igv: 0,
+      total: 0,
+      total_kg: 0,
+    };
+
+    setDetails(updatedDetails);
+    form.setValue("details", updatedDetails);
+  };
+
+  // Configuración de columnas para ExcelGrid
+  const gridColumns: ExcelGridColumn<DetailRow>[] = [
+    {
+      id: "product_code",
+      header: "Código",
+      type: "product-code",
+      width: "120px",
+      accessor: "product_code",
+    },
+    {
+      id: "product",
+      header: "Descripción",
+      type: "product-search",
+      width: "300px",
+      accessor: "product_name",
+    },
+    {
+      id: "quantity_sacks",
+      header: "Cantidad",
+      type: "number",
+      width: "100px",
+      accessor: "quantity_sacks",
+    },
+    {
+      id: "quantity_kg",
+      header: "Kg Adic.",
+      type: "number",
+      width: "100px",
+      accessor: "quantity_kg",
+    },
+    {
+      id: "unit_price",
+      header: "Precio",
+      type: "number",
+      width: "120px",
+      accessor: "unit_price",
+    },
+    {
+      id: "subtotal",
+      header: "Subtotal",
+      type: "readonly",
+      width: "120px",
+      render: (row) => (
+        <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold">
+          {row.subtotal ? `${getCurrencySymbol()} ${formatNumber(row.subtotal)}` : "-"}
+        </div>
+      ),
+    },
+  ];
+
+  // Preparar opciones de productos para el grid
+  const productOptions: ProductOption[] = filteredProducts.map((product) => ({
+    id: product.id.toString(),
+    codigo: product.codigo,
+    name: product.name,
+  }));
 
   const calculateDetailsSubtotal = () => {
     const sum = details.reduce(
@@ -565,43 +694,8 @@ export const SaleForm = ({
     return Math.abs(saleTotal - installmentsTotal) < 0.000001;
   };
 
-  // Funciones para montos de pago
-  const calculatePaymentTotal = () => {
-    const cash = parseFloat(form.watch("amount_cash") || "0");
-    const card = parseFloat(form.watch("amount_card") || "0");
-    const yape = parseFloat(form.watch("amount_yape") || "0");
-    const plin = parseFloat(form.watch("amount_plin") || "0");
-    const deposit = parseFloat(form.watch("amount_deposit") || "0");
-    const transfer = parseFloat(form.watch("amount_transfer") || "0");
-    const other = parseFloat(form.watch("amount_other") || "0");
-    const sum = cash + card + yape + plin + deposit + transfer + other;
-    return roundTo2Decimals(sum);
-  };
-
-  const paymentAmountsMatchTotal = () => {
-    if (selectedPaymentType !== "CONTADO") return true;
-    const saleTotal = calculateDetailsTotal();
-    const paymentTotal = calculatePaymentTotal();
-    // Redondear ambos a 2 decimales para comparación
-    const saleTotalRounded = roundTo2Decimals(saleTotal);
-    const paymentTotalRounded = roundTo2Decimals(paymentTotal);
-    return Math.abs(saleTotalRounded - paymentTotalRounded) < 0.01;
-  };
-
   const handleFormSubmit = (data: any) => {
     const currencySymbol = getCurrencySymbol();
-
-    // Validar que si es al contado, los montos de pago deben coincidir con el total
-    if (selectedPaymentType === "CONTADO" && !paymentAmountsMatchTotal()) {
-      errorToast(
-        `El total pagado (${currencySymbol} ${formatNumber(
-          calculatePaymentTotal()
-        )}) debe ser igual al total de la venta (${currencySymbol} ${formatNumber(
-          roundTo2Decimals(calculateDetailsTotal())
-        )})`
-      );
-      return;
-    }
 
     // Validar que si es a crédito, debe tener cuotas
     if (selectedPaymentType === "CREDITO" && installments.length === 0) {
@@ -674,6 +768,25 @@ export const SaleForm = ({
           icon={Users2}
           cols={{ sm: 1 }}
         >
+          {/* Serie y Número Automático */}
+          {mode === "create" && (autoSerie || autoNumero) && (
+            <div className="flex items-center justify-center gap-2 mb-4">
+              {autoSerie && (
+                <span className="text-xl font-semibold text-blue-600">
+                  {autoSerie}
+                </span>
+              )}
+              {autoSerie && autoNumero && (
+                <span className="text-xl text-muted-foreground">-</span>
+              )}
+              {autoNumero && (
+                <span className="text-xl font-semibold text-blue-600">
+                  {autoNumero}
+                </span>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <FormSelect
               control={form.control}
@@ -763,36 +876,6 @@ export const SaleForm = ({
               }))}
             />
 
-            {/* Auto-generated Serie */}
-            {mode === "create" && autoSerie && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Serie (Automática)
-                </label>
-                <Input
-                  value={autoSerie}
-                  readOnly
-                  className="bg-muted"
-                  placeholder="Serie automática"
-                />
-              </div>
-            )}
-
-            {/* Auto-generated Numero */}
-            {mode === "create" && autoNumero && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Número (Automático)
-                </label>
-                <Input
-                  value={autoNumero}
-                  readOnly
-                  className="bg-muted"
-                  placeholder="Número automático"
-                />
-              </div>
-            )}
-
             <DatePickerFormField
               control={form.control}
               name="issue_date"
@@ -854,25 +937,18 @@ export const SaleForm = ({
           icon={ListChecks}
           cols={{ sm: 1 }}
         >
-          <DataTable
-            columns={createSaleDetailColumns({
-              onEdit: handleEditDetail,
-              onDelete: handleRemoveDetail,
-            })}
+          {/* Excel Grid para Detalles */}
+          <ExcelGrid
+            columns={gridColumns}
             data={details}
-            isVisibleColumnFilter={false}
-          >
-            <Button
-              type="button"
-              variant="default"
-              size="sm"
-              onClick={handleAddProductClick}
-              disabled={!selectedWarehouseId || !form.watch("customer_id")}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Agregar Producto
-            </Button>
-          </DataTable>
+            onAddRow={handleAddRow}
+            onRemoveRow={handleRemoveRow}
+            onCellChange={handleCellChange}
+            productOptions={productOptions}
+            onProductSelect={handleProductSelect}
+            emptyMessage="Seleccione un almacén y cliente para comenzar."
+            disabled={!selectedWarehouseId || !form.watch("customer_id")}
+          />
 
           {/* Resumen de totales */}
           {details.length > 0 && (
@@ -908,185 +984,6 @@ export const SaleForm = ({
           )}
         </GroupFormSection>
 
-        {/* Métodos de Pago - Solo mostrar si es al contado */}
-        {mode === "create" && selectedPaymentType === "CONTADO" && (
-          <GroupFormSection
-            title="Métodos de Pago"
-            icon={CreditCard}
-            cols={{ sm: 1 }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              <FormField
-                control={form.control}
-                name="amount_cash"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monto en Efectivo</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.0001"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="amount_card"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monto con Tarjeta</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.0001"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="amount_yape"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monto Yape</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.0001"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="amount_plin"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monto Plin</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.0001"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="amount_deposit"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monto Depósito</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.0001"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="amount_transfer"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monto Transferencia</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.0001"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="amount_other"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Otro Método</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.0001"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Mostrar total de pagos vs total de venta */}
-            {details.length > 0 && (
-              <div className="mt-4 p-4 bg-sidebar rounded-lg space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold">Total de la Venta:</span>
-                  <span className="text-lg font-bold text-primary">
-                    {getCurrencySymbol()}{" "}
-                    {formatNumber(roundTo2Decimals(calculateDetailsTotal()))}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold">Total Pagado:</span>
-                  <span className="text-lg font-bold text-blue-600">
-                    {getCurrencySymbol()}{" "}
-                    {formatNumber(calculatePaymentTotal())}
-                  </span>
-                </div>
-                {!paymentAmountsMatchTotal() && (
-                  <Badge
-                    variant="amber"
-                    size="lg"
-                    className="w-full justify-center p-2"
-                  >
-                    ⚠️ El total pagado debe ser igual al total de la venta
-                  </Badge>
-                )}
-              </div>
-            )}
-          </GroupFormSection>
-        )}
 
         {/* Cuotas - Solo mostrar si es a crédito */}
         {selectedPaymentType === "CREDITO" && (
@@ -1265,9 +1162,6 @@ export const SaleForm = ({
               isSubmitting ||
               (mode === "create" && details.length === 0) ||
               (mode === "create" &&
-                selectedPaymentType === "CONTADO" &&
-                !paymentAmountsMatchTotal()) ||
-              (mode === "create" &&
                 selectedPaymentType === "CREDITO" &&
                 installments.length === 0) ||
               (mode === "create" &&
@@ -1290,22 +1184,6 @@ export const SaleForm = ({
         onClientCreated={() => {
           onRefreshClients?.();
         }}
-      />
-
-      {/* Sheet para agregar/editar productos */}
-      <SaleProductSheet
-        open={isProductSheetOpen}
-        onClose={() => {
-          setIsProductSheetOpen(false);
-          setEditingProductData(undefined);
-          setEditingDetailIndex(null);
-        }}
-        products={filteredProducts}
-        customerId={form.watch("customer_id") || ""}
-        warehouseId={selectedWarehouseId || ""}
-        onSubmit={handleProductSubmit}
-        defaultValues={editingProductData}
-        mode={editingDetailIndex !== null ? "update" : "create"}
       />
     </Form>
   );

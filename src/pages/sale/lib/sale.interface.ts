@@ -165,13 +165,6 @@ export interface CreateSaleRequest {
   total_weight: number;
   currency: string;
   observations: string;
-  amount_cash: string;
-  amount_card: string;
-  amount_yape: string;
-  amount_plin: string;
-  amount_deposit: string;
-  amount_transfer: string;
-  amount_other: string;
   details: CreateSaleDetailRequest[];
   installments?: CreateSaleInstallmentRequest[];
 }
@@ -328,8 +321,9 @@ export const SaleEditRoute = "/ventas/actualizar/:id";
 export const DOCUMENT_TYPES = [
   { value: "FACTURA", label: "Factura" },
   { value: "BOLETA", label: "Boleta" },
-  { value: "NOTA DE VENTA", label: "Nota de Venta" },
-  { value: "NOTA DE CREDITO", label: "Nota de Crédito Factura" },
+  { value: "NOTA_VENTA", label: "Nota de Venta" },
+  { value: "NOTA_CREDITO", label: "Nota de Crédito" },
+  { value: "NOTA_DEBITO", label: "Nota de Débito" },
   // { value: "GUIA", label: "Guía de Remisión" },
 ] as const;
 

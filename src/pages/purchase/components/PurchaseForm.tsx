@@ -47,6 +47,8 @@ import {
 } from "../lib/purchase.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
+import { ExcelGrid, type ExcelGridColumn, type ProductOption } from "@/components/ExcelGrid";
+import { formatNumber } from "@/lib/formatCurrency";
 
 interface PurchaseFormProps {
   defaultValues: Partial<PurchaseSchema>;
@@ -65,6 +67,7 @@ interface PurchaseFormProps {
 
 interface DetailRow {
   product_id: string;
+  product_code?: string;
   product_name?: string;
   quantity: string;
   unit_price: string;
@@ -105,18 +108,6 @@ export const PurchaseForm = ({
 
   const IGV_RATE = 0.18;
 
-  const [editingDetailIndex, setEditingDetailIndex] = useState<number | null>(
-    null
-  );
-  const [currentDetail, setCurrentDetail] = useState<DetailRow>({
-    product_id: "",
-    quantity: "",
-    unit_price: "",
-    tax: "",
-    subtotal: 0,
-    total: 0,
-  });
-
   // Estados para cuotas
   const [installments, setInstallments] = useState<InstallmentRow[]>([]);
   const [editingInstallmentIndex, setEditingInstallmentIndex] = useState<
@@ -127,15 +118,7 @@ export const PurchaseForm = ({
     amount: "",
   });
 
-  // Formularios temporales
-  const detailTempForm = useForm({
-    defaultValues: {
-      temp_product_id: currentDetail.product_id,
-      temp_quantity: currentDetail.quantity,
-      temp_unit_price: currentDetail.unit_price,
-    },
-  });
-
+  // Formulario temporal solo para cuotas
   const installmentTempForm = useForm({
     defaultValues: {
       temp_due_days: currentInstallment.due_days,
@@ -143,45 +126,9 @@ export const PurchaseForm = ({
     },
   });
 
-  // Watchers para detalles
-  const selectedProductId = detailTempForm.watch("temp_product_id");
-  const selectedQuantity = detailTempForm.watch("temp_quantity");
-  const selectedUnitPrice = detailTempForm.watch("temp_unit_price");
-
   // Watchers para cuotas
   const selectedDueDays = installmentTempForm.watch("temp_due_days");
   const selectedAmount = installmentTempForm.watch("temp_amount");
-
-  // Observers para detalles
-  useEffect(() => {
-    if (selectedProductId !== currentDetail.product_id) {
-      setCurrentDetail((prev) => ({
-        ...prev,
-        product_id: selectedProductId || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProductId]);
-
-  useEffect(() => {
-    if (selectedQuantity !== currentDetail.quantity) {
-      setCurrentDetail((prev) => ({
-        ...prev,
-        quantity: selectedQuantity || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedQuantity]);
-
-  useEffect(() => {
-    if (selectedUnitPrice !== currentDetail.unit_price) {
-      setCurrentDetail((prev) => ({
-        ...prev,
-        unit_price: selectedUnitPrice || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedUnitPrice]);
 
   // Observers para cuotas
   useEffect(() => {
@@ -193,16 +140,6 @@ export const PurchaseForm = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDueDays]);
-
-  useEffect(() => {
-    if (selectedAmount !== currentInstallment.amount) {
-      setCurrentInstallment((prev) => ({
-        ...prev,
-        amount: selectedAmount || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAmount]);
 
   useEffect(() => {
     if (selectedAmount !== currentInstallment.amount) {
@@ -312,6 +249,7 @@ export const PurchaseForm = ({
 
         return {
           product_id: detail.product_id,
+          product_code: product?.codigo,
           product_name: product?.name,
           quantity: detail.quantity,
           unit_price: detail.unit_price,
@@ -331,86 +269,81 @@ export const PurchaseForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Funciones para detalles
-  const handleAddDetail = () => {
-    if (
-      !currentDetail.product_id ||
-      !currentDetail.quantity ||
-      !currentDetail.unit_price
-    ) {
-      return;
-    }
-
-    const product = products.find(
-      (p) => p.id.toString() === currentDetail.product_id
-    );
-    const quantity = parseFloat(currentDetail.quantity);
-    const unitPrice = parseFloat(currentDetail.unit_price);
-    let subtotal = quantity * unitPrice;
-    let tax = 0;
-    let total = 0;
-
-    if (includeIgv) {
-      // includeIgv=true: El precio NO incluye IGV, se lo agregamos
-      tax = subtotal * IGV_RATE;
-      total = subtotal + tax;
-    } else {
-      // includeIgv=false: El precio YA incluye IGV, lo descomponemos
-      const totalIncl = quantity * unitPrice;
-      subtotal = totalIncl / (1 + IGV_RATE);
-      tax = totalIncl - subtotal;
-      total = totalIncl;
-    }
-
+  // Funciones para ExcelGrid
+  const handleAddRow = () => {
     const newDetail: DetailRow = {
-      ...currentDetail,
-      product_name: product?.name,
-      tax: tax.toFixed(2),
-      subtotal,
-      total,
-    };
-
-    if (editingDetailIndex !== null) {
-      const updatedDetails = [...details];
-      updatedDetails[editingDetailIndex] = newDetail;
-      setDetails(updatedDetails);
-      form.setValue("details", updatedDetails);
-      setEditingDetailIndex(null);
-    } else {
-      const updatedDetails = [...details, newDetail];
-      setDetails(updatedDetails);
-      form.setValue("details", updatedDetails);
-    }
-
-    // Limpiar formulario y estado
-    const emptyDetail = {
       product_id: "",
+      product_code: "",
+      product_name: "",
       quantity: "",
       unit_price: "",
       tax: "",
       subtotal: 0,
       total: 0,
     };
-    setCurrentDetail(emptyDetail);
-    detailTempForm.reset({
-      temp_product_id: "",
-      temp_quantity: "",
-      temp_unit_price: "",
-    });
+    const updatedDetails = [...details, newDetail];
+    setDetails(updatedDetails);
+    form.setValue("details", updatedDetails);
   };
 
-  const handleEditDetail = (index: number) => {
-    const detail = details[index];
-    setCurrentDetail(detail);
-    // Actualizar formulario temporal manualmente
-    detailTempForm.setValue("temp_product_id", detail.product_id);
-    detailTempForm.setValue("temp_quantity", detail.quantity);
-    detailTempForm.setValue("temp_unit_price", detail.unit_price);
-    setEditingDetailIndex(index);
-  };
-
-  const handleRemoveDetail = (index: number) => {
+  const handleRemoveRow = (index: number) => {
     const updatedDetails = details.filter((_, i) => i !== index);
+    setDetails(updatedDetails);
+    form.setValue("details", updatedDetails);
+  };
+
+  const handleCellChange = (index: number, field: string, value: string) => {
+    const updatedDetails = [...details];
+    updatedDetails[index] = { ...updatedDetails[index], [field]: value };
+
+    // Recalcular totales cuando cambian cantidad o precio
+    if (field === "quantity" || field === "unit_price") {
+      const detail = updatedDetails[index];
+      const quantity = parseFloat(detail.quantity) || 0;
+      const unitPrice = parseFloat(detail.unit_price) || 0;
+      let subtotal = 0;
+      let tax = 0;
+      let total = 0;
+
+      if (quantity > 0 && unitPrice > 0) {
+        if (includeIgv) {
+          // includeIgv=true: El precio NO incluye IGV, se lo agregamos
+          subtotal = quantity * unitPrice;
+          tax = subtotal * IGV_RATE;
+          total = subtotal + tax;
+        } else {
+          // includeIgv=false: El precio YA incluye IGV, lo descomponemos
+          const totalIncl = quantity * unitPrice;
+          subtotal = totalIncl / (1 + IGV_RATE);
+          tax = totalIncl - subtotal;
+          total = totalIncl;
+        }
+      }
+
+      updatedDetails[index] = {
+        ...updatedDetails[index],
+        tax: tax.toFixed(2),
+        subtotal,
+        total,
+      };
+    }
+
+    setDetails(updatedDetails);
+    form.setValue("details", updatedDetails);
+  };
+
+  const handleProductSelect = (index: number, product: ProductOption) => {
+    const selectedProduct = products.find(p => p.id.toString() === product.id);
+    if (!selectedProduct) return;
+
+    const updatedDetails = [...details];
+    updatedDetails[index] = {
+      ...updatedDetails[index],
+      product_id: product.id,
+      product_code: product.codigo,
+      product_name: product.name,
+    };
+
     setDetails(updatedDetails);
     form.setValue("details", updatedDetails);
   };
@@ -482,6 +415,78 @@ export const PurchaseForm = ({
     form.setValue("details", recalculated);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [includeIgv]);
+
+  // Configuración de columnas para ExcelGrid
+  const gridColumns: ExcelGridColumn<DetailRow>[] = [
+    {
+      id: "product_code",
+      header: "Código",
+      type: "product-code",
+      width: "120px",
+      accessor: "product_code",
+    },
+    {
+      id: "product",
+      header: "Descripción",
+      type: "product-search",
+      width: "300px",
+      accessor: "product_name",
+    },
+    {
+      id: "quantity",
+      header: "Cantidad",
+      type: "number",
+      width: "100px",
+      accessor: "quantity",
+    },
+    {
+      id: "unit_price",
+      header: "Precio",
+      type: "number",
+      width: "120px",
+      accessor: "unit_price",
+    },
+    {
+      id: "subtotal",
+      header: "Subtotal",
+      type: "readonly",
+      width: "120px",
+      render: (row) => (
+        <div className="h-full flex items-center justify-end px-2 py-1 text-sm">
+          {row.subtotal ? `S/. ${formatNumber(row.subtotal)}` : "-"}
+        </div>
+      ),
+    },
+    {
+      id: "tax",
+      header: "IGV",
+      type: "readonly",
+      width: "100px",
+      render: (row) => (
+        <div className="h-full flex items-center justify-end px-2 py-1 text-sm">
+          {row.tax ? `S/. ${formatNumber(parseFloat(row.tax))}` : "-"}
+        </div>
+      ),
+    },
+    {
+      id: "total",
+      header: "Total",
+      type: "readonly",
+      width: "120px",
+      render: (row) => (
+        <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold">
+          {row.total ? `S/. ${formatNumber(row.total)}` : "-"}
+        </div>
+      ),
+    },
+  ];
+
+  // Preparar opciones de productos para el grid
+  const productOptions: ProductOption[] = products.map((product) => ({
+    id: product.id.toString(),
+    codigo: product.codigo,
+    name: product.name,
+  }));
 
   // Funciones para cuotas
   const handleAddInstallment = () => {
@@ -917,179 +922,40 @@ export const PurchaseForm = ({
           icon={Users2}
           cols={{ sm: 1 }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
-            <div className="md:col-span-2">
-              <Form {...detailTempForm}>
-                <FormSelect
-                  control={detailTempForm.control}
-                  name="temp_product_id"
-                  label="Producto"
-                  placeholder="Seleccione"
-                  options={products.map((product) => {
-                    const stockInWarehouse = product.stock_warehouse?.find(
-                      (stock) =>
-                        stock.warehouse_id.toString() === selectedWarehouseId
-                    );
-                    return {
-                      value: product.id.toString(),
-                      label: product.name,
-                      description: `${product.codigo} | Stock: ${
-                        stockInWarehouse?.stock ?? 0
-                      }`,
-                    };
-                  })}
-                />
-              </Form>
-            </div>
+          <ExcelGrid
+            columns={gridColumns}
+            data={details}
+            onAddRow={handleAddRow}
+            onRemoveRow={handleRemoveRow}
+            onCellChange={handleCellChange}
+            productOptions={productOptions}
+            onProductSelect={handleProductSelect}
+            emptyMessage="Agregue productos a la compra"
+            disabled={!selectedWarehouseId}
+          />
 
-            <FormField
-              control={detailTempForm.control}
-              name="temp_quantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cantidad</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      variant="default"
-                      placeholder="0"
-                      {...field}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={detailTempForm.control}
-              name="temp_unit_price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Precio Unit.</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.000001"
-                      variant="default"
-                      placeholder="0.000000"
-                      {...field}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <div className="md:col-span-4 flex justify-end">
-              <Button
-                type="button"
-                variant="default"
-                onClick={handleAddDetail}
-                disabled={
-                  !currentDetail.product_id ||
-                  !currentDetail.quantity ||
-                  !currentDetail.unit_price
-                }
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {editingDetailIndex !== null ? "Actualizar" : "Agregar"}
-              </Button>
-            </div>
-          </div>
-
-          {details.length > 0 ? (
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Producto</TableHead>
-                    <TableHead className="text-right">Cantidad</TableHead>
-                    <TableHead className="text-right">P. Unit.</TableHead>
-                    <TableHead className="text-right">Subtotal</TableHead>
-                    <TableHead className="text-right">Impuesto</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-center">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {details.map((detail, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{detail.product_name}</TableCell>
-                      <TableCell className="text-right">
-                        {detail.quantity}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {isNaN(parseFloat(detail.unit_price))
-                          ? detail.unit_price
-                          : parseFloat(detail.unit_price).toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {detail.subtotal.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {parseFloat(detail.tax || "0").toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-primary">
-                        {detail.total.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center gap-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditDetail(index)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveDetail(index)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-right font-bold">
-                      SUBTOTAL
-                    </TableCell>
-                    <TableCell className="text-right font-bold">
-                      {calculateSubtotalTotal().toFixed(2)}
-                    </TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-right font-bold">
-                      IGV (18%)
-                    </TableCell>
-                    <TableCell className="text-right font-bold">
-                      {calculateTaxTotal().toFixed(2)}
-                    </TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-right font-bold">
-                      TOTAL
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-lg text-primary">
-                      {calculateDetailsTotal().toFixed(2)}
-                    </TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Badge variant="outline" className="text-lg p-3">
-                No hay detalles agregados
-              </Badge>
+          {details.length > 0 && (
+            <div className="mt-4 space-y-2 p-4 bg-muted/30 rounded-lg border">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold">Subtotal:</span>
+                <span className="font-bold">
+                  S/. {formatNumber(calculateSubtotalTotal())}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-orange-600">
+                  IGV (18%):
+                </span>
+                <span className="font-bold text-orange-600">
+                  S/. {formatNumber(calculateTaxTotal())}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t">
+                <span className="text-lg font-bold">Total:</span>
+                <span className="text-xl font-bold text-primary">
+                  S/. {formatNumber(calculateDetailsTotal())}
+                </span>
+              </div>
             </div>
           )}
         </GroupFormSection>

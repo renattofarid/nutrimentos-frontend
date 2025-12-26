@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -11,29 +10,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Command,
-  CommandInput,
-  CommandList,
-  CommandItem,
-  CommandEmpty,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface ExcelGridColumn<T> {
   id: string;
   header: string;
-  type: "product-search" | "text" | "number" | "readonly";
+  type: "product-search" | "product-code" | "text" | "number" | "readonly";
   width?: string;
   accessor?: keyof T;
   render?: (row: T, index: number) => React.ReactNode;
   onCellChange?: (index: number, value: string) => void;
+  hidden?: (row: T) => boolean; // Función para determinar si la columna debe ocultarse para una fila específica
+  disabled?: (row: T) => boolean; // Función para determinar si el campo debe estar deshabilitado
 }
 
 export interface ProductOption {
@@ -52,6 +41,7 @@ interface ExcelGridProps<T> {
   onProductSelect?: (index: number, product: ProductOption) => void;
   className?: string;
   emptyMessage?: string;
+  disabled?: boolean;
 }
 
 export function ExcelGrid<T extends Record<string, any>>({
@@ -64,28 +54,37 @@ export function ExcelGrid<T extends Record<string, any>>({
   onProductSelect,
   className,
   emptyMessage = "No hay datos. Agregue una nueva fila para comenzar.",
+  disabled = false,
 }: ExcelGridProps<T>) {
-  const [_focusedCell, setFocusedCell] = React.useState<{
+  const [focusedCell, setFocusedCell] = React.useState<{
     row: number;
     col: number;
   } | null>(null);
-  const [openPopover, setOpenPopover] = React.useState<number | null>(null);
-  const [searchValues, setSearchValues] = React.useState<Record<number, string>>({});
   const inputRefs = React.useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Función para verificar si una columna está oculta para una fila específica
+  const isColumnHidden = (column: ExcelGridColumn<T>, row: T): boolean => {
+    return column.hidden ? column.hidden(row) : false;
+  };
 
   // Función para obtener la siguiente celda editable
   const getNextEditableCell = (currentRow: number, currentCol: number): { row: number; col: number } | null => {
+    const currentRowData = data[currentRow];
+
     // Buscar en la misma fila
     for (let col = currentCol + 1; col < columns.length; col++) {
-      if (columns[col].type !== "readonly") {
+      const column = columns[col];
+      if (column.type !== "readonly" && !isColumnHidden(column, currentRowData)) {
         return { row: currentRow, col };
       }
     }
 
     // Si llegamos al final de la fila, ir a la siguiente
     if (currentRow < data.length - 1) {
+      const nextRowData = data[currentRow + 1];
       for (let col = 0; col < columns.length; col++) {
-        if (columns[col].type !== "readonly") {
+        const column = columns[col];
+        if (column.type !== "readonly" && !isColumnHidden(column, nextRowData)) {
           return { row: currentRow + 1, col };
         }
       }
@@ -95,17 +94,22 @@ export function ExcelGrid<T extends Record<string, any>>({
   };
 
   const getPreviousEditableCell = (currentRow: number, currentCol: number): { row: number; col: number } | null => {
+    const currentRowData = data[currentRow];
+
     // Buscar en la misma fila
     for (let col = currentCol - 1; col >= 0; col--) {
-      if (columns[col].type !== "readonly") {
+      const column = columns[col];
+      if (column.type !== "readonly" && !isColumnHidden(column, currentRowData)) {
         return { row: currentRow, col };
       }
     }
 
     // Si llegamos al inicio de la fila, ir a la anterior
     if (currentRow > 0) {
+      const prevRowData = data[currentRow - 1];
       for (let col = columns.length - 1; col >= 0; col--) {
-        if (columns[col].type !== "readonly") {
+        const column = columns[col];
+        if (column.type !== "readonly" && !isColumnHidden(column, prevRowData)) {
           return { row: currentRow - 1, col };
         }
       }
@@ -131,12 +135,26 @@ export function ExcelGrid<T extends Record<string, any>>({
           const key = `${nextCell.row}-${nextCell.col}`;
           inputRefs.current[key]?.focus();
         }, 0);
+      } else if (!e.shiftKey) {
+        // Si no hay siguiente celda y estamos en la última fila, agregar nueva fila
+        if (rowIndex === data.length - 1 && !disabled) {
+          onAddRow();
+          setTimeout(() => {
+            // Enfocar la primera celda editable de la nueva fila
+            const firstEditableCol = columns.findIndex(col => col.type !== "readonly");
+            if (firstEditableCol !== -1) {
+              const key = `${data.length}-${firstEditableCol}`;
+              inputRefs.current[key]?.focus();
+              setFocusedCell({ row: data.length, col: firstEditableCol });
+            }
+          }, 50);
+        }
       }
     } else if (e.key === "Enter") {
       e.preventDefault();
 
       // Si estamos en la última fila, agregar una nueva
-      if (rowIndex === data.length - 1) {
+      if (rowIndex === data.length - 1 && !disabled) {
         onAddRow();
         setTimeout(() => {
           // Enfocar la primera celda editable de la nueva fila
@@ -159,39 +177,6 @@ export function ExcelGrid<T extends Record<string, any>>({
     }
   };
 
-  const handleProductSearch = (rowIndex: number, searchTerm: string) => {
-    setSearchValues(prev => ({ ...prev, [rowIndex]: searchTerm }));
-  };
-
-  const handleProductSelect = (rowIndex: number, product: ProductOption) => {
-    if (onProductSelect) {
-      onProductSelect(rowIndex, product);
-    }
-    setOpenPopover(null);
-    setSearchValues(prev => ({ ...prev, [rowIndex]: "" }));
-
-    // Mover al siguiente campo después de seleccionar
-    const colIndex = columns.findIndex(col => col.type === "product-search");
-    const nextCell = getNextEditableCell(rowIndex, colIndex);
-    if (nextCell) {
-      setTimeout(() => {
-        const key = `${nextCell.row}-${nextCell.col}`;
-        inputRefs.current[key]?.focus();
-        setFocusedCell(nextCell);
-      }, 0);
-    }
-  };
-
-  const getFilteredProducts = (rowIndex: number) => {
-    const searchValue = searchValues[rowIndex]?.toLowerCase() || "";
-    if (!searchValue) return productOptions;
-
-    return productOptions.filter(
-      (product) =>
-        product.codigo.toLowerCase().includes(searchValue) ||
-        product.name.toLowerCase().includes(searchValue)
-    );
-  };
 
   const renderCell = (row: T, rowIndex: number, column: ExcelGridColumn<T>, colIndex: number) => {
     const cellKey = `${rowIndex}-${colIndex}`;
@@ -201,75 +186,67 @@ export function ExcelGrid<T extends Record<string, any>>({
     }
 
     switch (column.type) {
+      case "product-code":
       case "product-search":
+        const currentValue = row[column.accessor as string] || "";
+        const searchByCode = column.type === "product-code";
+
         return (
-          <Popover
-            open={openPopover === rowIndex}
-            onOpenChange={(open) => setOpenPopover(open ? rowIndex : null)}
+          <select
+            ref={(el) => {
+              if (el) inputRefs.current[cellKey] = el as any;
+            }}
+            value={row["product_id" as keyof T] || ""}
+            onChange={(e) => {
+              const selectedProduct = productOptions.find(p => p.id === e.target.value);
+              if (selectedProduct && onProductSelect) {
+                onProductSelect(rowIndex, selectedProduct);
+              }
+            }}
+            onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
+            onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
+            className="w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent appearance-none cursor-pointer"
           >
-            <PopoverTrigger asChild>
-              <div className="relative">
-                <Input
-                  ref={(el) => { inputRefs.current[cellKey] = el; }}
-                  value={searchValues[rowIndex] || row[column.accessor as string] || ""}
-                  onChange={(e) => handleProductSearch(rowIndex, e.target.value)}
-                  onFocus={() => {
-                    setFocusedCell({ row: rowIndex, col: colIndex });
-                    setOpenPopover(rowIndex);
-                  }}
-                  onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
-                  placeholder="Buscar producto..."
-                  className="h-9 text-sm"
-                />
-              </div>
-            </PopoverTrigger>
-            <PopoverContent className="p-0 w-[400px]" align="start">
-              <Command>
-                <CommandInput
-                  placeholder="Buscar por código o nombre..."
-                  value={searchValues[rowIndex] || ""}
-                  onValueChange={(value) => handleProductSearch(rowIndex, value)}
-                />
-                <CommandList className="max-h-[200px]">
-                  <CommandEmpty>No se encontraron productos.</CommandEmpty>
-                  {getFilteredProducts(rowIndex).map((product) => (
-                    <CommandItem
-                      key={product.id}
-                      onSelect={() => handleProductSelect(rowIndex, product)}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium">{product.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          Código: {product.codigo}
-                        </span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+            <option value="">{currentValue || (searchByCode ? "Seleccionar..." : "Seleccionar...")}</option>
+            {productOptions.map((product) => (
+              <option key={product.id} value={product.id}>
+                {searchByCode ? product.codigo : product.name}
+              </option>
+            ))}
+          </select>
         );
 
       case "number":
+        const isDisabled = column.disabled ? column.disabled(row) : false;
         return (
-          <Input
+          <input
             ref={(el) => { inputRefs.current[cellKey] = el; }}
             type="number"
             value={row[column.accessor as string] || ""}
-            onChange={(e) => column.onCellChange?.(rowIndex, e.target.value) ||
-                           onCellChange(rowIndex, column.accessor as string, e.target.value)}
+            onChange={(e) => {
+              const fieldName = column.accessor as string;
+              const value = e.target.value;
+
+              // Solo permitir valores positivos o vacío
+              if (value === "" || parseFloat(value) >= 0) {
+                onCellChange(rowIndex, fieldName, value);
+              }
+            }}
             onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
             onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
-            className="h-9 text-sm"
+            className={cn(
+              "w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent text-right",
+              isDisabled && "opacity-50 cursor-not-allowed"
+            )}
             step="any"
+            min="0"
+            disabled={isDisabled}
           />
         );
 
       case "text":
         return (
-          <Input
+          <input
             ref={(el) => { inputRefs.current[cellKey] = el; }}
             type="text"
             value={row[column.accessor as string] || ""}
@@ -277,13 +254,13 @@ export function ExcelGrid<T extends Record<string, any>>({
                            onCellChange(rowIndex, column.accessor as string, e.target.value)}
             onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
             onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
-            className="h-9 text-sm"
+            className="w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent"
           />
         );
 
       case "readonly":
         return (
-          <div className="h-9 flex items-center px-3 text-sm text-muted-foreground">
+          <div className="h-full flex items-center px-2 py-1 text-sm text-muted-foreground">
             {row[column.accessor as string] || "-"}
           </div>
         );
@@ -303,34 +280,50 @@ export function ExcelGrid<T extends Record<string, any>>({
           size="sm"
           variant="outline"
           className="gap-2"
+          disabled={disabled}
         >
           <Plus className="h-4 w-4" />
           Agregar línea
         </Button>
+        <Button
+          type="button"
+          onClick={() => {
+            if (focusedCell !== null && data.length > 0) {
+              onRemoveRow(focusedCell.row);
+              setFocusedCell(null);
+            }
+          }}
+          size="sm"
+          variant="outline"
+          className="gap-2 text-destructive hover:text-destructive"
+          disabled={focusedCell === null || data.length === 0}
+        >
+          <X className="h-4 w-4" />
+          Quitar línea
+        </Button>
       </div>
 
       {/* Tabla */}
-      <div className="border rounded-md">
+      <div className="border rounded-md overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="border-b">
               {columns.map((column) => (
                 <TableHead
                   key={column.id}
                   style={{ width: column.width }}
-                  className="font-semibold"
+                  className="font-semibold border-r h-10 bg-muted/50"
                 >
                   {column.header}
                 </TableHead>
               ))}
-              <TableHead className="w-[50px]">Acción</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length + 1}
+                  colSpan={columns.length}
                   className="text-center py-8 text-muted-foreground"
                 >
                   {emptyMessage}
@@ -338,23 +331,25 @@ export function ExcelGrid<T extends Record<string, any>>({
               </TableRow>
             ) : (
               data.map((row, rowIndex) => (
-                <TableRow key={rowIndex}>
-                  {columns.map((column, colIndex) => (
-                    <TableCell key={column.id} className="p-2">
-                      {renderCell(row, rowIndex, column, colIndex)}
-                    </TableCell>
-                  ))}
-                  <TableCell className="p-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onRemoveRow(rowIndex)}
-                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
+                <TableRow key={rowIndex} className="group hover:bg-muted/50">
+                  {columns.map((column, colIndex) => {
+                    const hidden = isColumnHidden(column, row);
+                    return (
+                      <TableCell
+                        key={column.id}
+                        className={cn(
+                          "p-0 h-9 border-r last:border-r-0",
+                          hidden && "pointer-events-none"
+                        )}
+                        style={{
+                          visibility: hidden ? 'hidden' : 'visible',
+                          width: column.width
+                        }}
+                      >
+                        {!hidden && renderCell(row, rowIndex, column, colIndex)}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             )}

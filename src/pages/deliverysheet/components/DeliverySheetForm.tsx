@@ -2,16 +2,8 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   deliverySheetSchemaCreate,
   type DeliverySheetSchema,
@@ -21,6 +13,14 @@ import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSwitch } from "@/components/FormSwitch";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +48,6 @@ interface DeliverySheetFormProps {
   mode?: "create" | "update";
   branches: BranchResource[];
   zones: ZoneResource[];
-  drivers: PersonResource[];
   customers: PersonResource[];
   availableSales: AvailableSale[];
   onSearchSales: (params: {
@@ -69,7 +68,6 @@ export const DeliverySheetForm = ({
   mode = "create",
   branches,
   zones,
-  drivers,
   customers,
   availableSales,
   onSearchSales,
@@ -91,7 +89,6 @@ export const DeliverySheetForm = ({
     defaultValues: {
       branch_id: defaultValues.branch_id || "",
       zone_id: defaultValues.zone_id || "",
-      driver_id: defaultValues.driver_id || "",
       customer_id: defaultValues.customer_id || "",
       type: defaultValues.type || "",
       issue_date: defaultValues.issue_date,
@@ -115,7 +112,9 @@ export const DeliverySheetForm = ({
     onSearchSales({
       payment_type: searchParams.payment_type,
       zone_id: searchParams.zone_id ? Number(searchParams.zone_id) : undefined,
-      customer_id: searchParams.customer_id ? Number(searchParams.customer_id) : undefined,
+      customer_id: searchParams.customer_id
+        ? Number(searchParams.customer_id)
+        : undefined,
       date_from: searchParams.date_from
         ? format(searchParams.date_from, "yyyy-MM-dd")
         : undefined,
@@ -156,11 +155,19 @@ export const DeliverySheetForm = ({
     if (forSingleCustomer) {
       // Si es cliente único, limpiar zona y sincronizar customer_id
       form.setValue("zone_id", "");
-      setSearchParams((prev) => ({ ...prev, zone_id: "", customer_id: customerValue || "" }));
+      setSearchParams((prev) => ({
+        ...prev,
+        zone_id: "",
+        customer_id: customerValue || "",
+      }));
     } else {
       // Si es multi-cliente, limpiar cliente y sincronizar zone_id
       form.setValue("customer_id", "");
-      setSearchParams((prev) => ({ ...prev, customer_id: "", zone_id: zoneValue || "" }));
+      setSearchParams((prev) => ({
+        ...prev,
+        customer_id: "",
+        zone_id: zoneValue || "",
+      }));
     }
   }, [forSingleCustomer, zoneValue, customerValue, form]);
 
@@ -244,17 +251,6 @@ export const DeliverySheetForm = ({
             />
           )}
 
-          <FormSelect
-            control={form.control}
-            name="driver_id"
-            label="Conductor"
-            placeholder="Seleccione un conductor"
-            options={drivers.map((driver) => ({
-              value: driver.id.toString(),
-              label: driver.names ?? driver.business_name,
-            }))}
-          />
-
           <DatePickerFormField
             control={form.control}
             name="issue_date"
@@ -275,12 +271,11 @@ export const DeliverySheetForm = ({
             control={form.control}
             name="observations"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="md:col-span-3">
                 <FormLabel>Observaciones</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Observaciones adicionales..."
-                    className="resize-none"
+                    placeholder="Ingrese observaciones (opcional)"
                     {...field}
                   />
                 </FormControl>
@@ -413,6 +408,10 @@ export const DeliverySheetForm = ({
             </div>
           </GroupFormSection>
         )}
+
+        <pre>
+          <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
+        </pre>
 
         <div className="flex justify-end gap-4">
           {onCancel && (

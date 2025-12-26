@@ -82,11 +82,12 @@ interface SaleFormProps {
 
 interface DetailRow {
   product_id: string;
+  product_code?: string;
   product_name?: string;
   quantity: string; // Cantidad total en decimal (ej: 1.02) - SE ENVÍA AL BACKEND
   quantity_sacks: string; // Cantidad de sacos ingresada por el usuario (ej: 1)
   quantity_kg: string; // Kg adicionales ingresados por el usuario (ej: 1)
-  unit_price: string;
+  unit_price: string; // Precio unitario
   subtotal: number;
   igv: number;
   total: number;
@@ -248,6 +249,7 @@ export const SaleForm = ({
 
           return {
             product_id: detail.product_id,
+            product_code: product?.codigo,
             product_name: product?.name,
             quantity: detail.quantity, // Cantidad total en decimal
             quantity_sacks: detail.quantity_sacks || detail.quantity, // Sacos (si no existe, usar quantity)
@@ -377,6 +379,7 @@ export const SaleForm = ({
   const handleAddRow = () => {
     const newDetail: DetailRow = {
       product_id: "",
+      product_code: "",
       product_name: "",
       quantity: "",
       quantity_sacks: "",
@@ -411,16 +414,22 @@ export const SaleForm = ({
         const qty = parseFloat(detail.quantity_sacks) || 0;
         const addKg = parseFloat(detail.quantity_kg) || 0;
 
+        // Solo hacer la llamada si hay producto y al menos algún valor
+        const customerId = form.watch("customer_id");
+        const productWeight = parseFloat(product.weight || "0");
+
+        let quantitySacksDecimal = qty;
+        if (productWeight > 0 && addKg > 0) {
+          const additionalSacks = addKg / productWeight;
+          quantitySacksDecimal = qty + additionalSacks;
+        }
+
+        // Actualizar el estado inmediatamente con los nuevos valores
+        setDetails(updatedDetails);
+        form.setValue("details", updatedDetails);
+
+        // Solo llamar a la API si hay cantidad
         if (qty > 0 || addKg > 0) {
-          const customerId = form.watch("customer_id");
-          const productWeight = parseFloat(product.weight || "0");
-
-          let quantitySacksDecimal = qty;
-          if (productWeight > 0 && addKg > 0) {
-            const additionalSacks = addKg / productWeight;
-            quantitySacksDecimal = qty + additionalSacks;
-          }
-
           try {
             const result = await fetchDynamicPrice({
               product_id: detail.product_id,
@@ -434,10 +443,12 @@ export const SaleForm = ({
               const subtotal = parseFloat(result.pricing.subtotal);
               const igv = roundTo6Decimals(subtotal * 0.18);
               const total = roundTo6Decimals(subtotal + igv);
-              const totalWeightKg = productWeight > 0 ? roundTo6Decimals(productWeight * qty + addKg) : 0;
+              const totalWeightKg = productWeight > 0 ? roundTo6Decimals(productWeight * qty + addKg) : addKg;
 
-              updatedDetails[index] = {
-                ...updatedDetails[index],
+              // Actualizar con los precios de la API
+              const finalDetails = [...updatedDetails];
+              finalDetails[index] = {
+                ...finalDetails[index],
                 quantity: quantitySacksDecimal.toString(),
                 unit_price: unitPrice.toString(),
                 subtotal,
@@ -445,16 +456,47 @@ export const SaleForm = ({
                 total,
                 total_kg: totalWeightKg,
               };
+
+              setDetails(finalDetails);
+              form.setValue("details", finalDetails);
             }
           } catch (error) {
             console.error("Error fetching dynamic price:", error);
+            // Si la API falla, no pasa nada. Todo queda editable para que el usuario ingrese manualmente.
           }
         }
+      } else {
+        // Si no hay producto, solo actualizar el estado
+        setDetails(updatedDetails);
+        form.setValue("details", updatedDetails);
       }
-    }
+    } else if (field === "unit_price") {
+      // Cuando cambia el precio unitario manualmente, recalcular totales
+      // NOTA: Aquí se calcula PRECIO × CANTIDAD DE KG únicamente
+      const detail = updatedDetails[index];
+      const unitPrice = parseFloat(value) || 0;
+      const kg = parseFloat(detail.quantity_kg) || 0;
 
-    setDetails(updatedDetails);
-    form.setValue("details", updatedDetails);
+      // Subtotal = Precio × Kg (no se usa cantidad de sacos)
+      const subtotal = kg > 0 && unitPrice > 0 ? roundTo6Decimals(kg * unitPrice) : 0;
+      const igv = subtotal > 0 ? roundTo6Decimals(subtotal * 0.18) : 0;
+      const total = subtotal > 0 ? roundTo6Decimals(subtotal + igv) : 0;
+
+      updatedDetails[index] = {
+        ...updatedDetails[index],
+        quantity: "0", // Cantidad de sacos = 0 porque se vende por kg
+        subtotal,
+        igv,
+        total,
+      };
+
+      setDetails(updatedDetails);
+      form.setValue("details", updatedDetails);
+    } else {
+      // Para otros campos, solo actualizar el estado
+      setDetails(updatedDetails);
+      form.setValue("details", updatedDetails);
+    }
   };
 
   const handleProductSelect = async (index: number, product: ProductOption) => {
@@ -465,6 +507,7 @@ export const SaleForm = ({
     updatedDetails[index] = {
       ...updatedDetails[index],
       product_id: product.id,
+      product_code: product.codigo,
       product_name: product.name,
       quantity_sacks: "",
       quantity_kg: "0",
@@ -482,47 +525,39 @@ export const SaleForm = ({
   // Configuración de columnas para ExcelGrid
   const gridColumns: ExcelGridColumn<DetailRow>[] = [
     {
+      id: "product_code",
+      header: "Código",
+      type: "product-code",
+      width: "120px",
+      accessor: "product_code",
+    },
+    {
       id: "product",
-      header: "Producto",
+      header: "Descripción",
       type: "product-search",
       width: "300px",
       accessor: "product_name",
     },
     {
       id: "quantity_sacks",
-      header: "Cantidad (Sacos)",
+      header: "Cantidad",
       type: "number",
-      width: "150px",
+      width: "100px",
       accessor: "quantity_sacks",
     },
     {
       id: "quantity_kg",
-      header: "Kg Adicionales",
+      header: "Kg Adic.",
       type: "number",
-      width: "150px",
+      width: "100px",
       accessor: "quantity_kg",
     },
     {
-      id: "total_kg",
-      header: "Peso Total (kg)",
-      type: "readonly",
-      width: "150px",
-      render: (row) => (
-        <div className="h-9 flex items-center px-3 text-sm font-semibold text-blue-600">
-          {row.total_kg ? formatDecimalTrunc(row.total_kg, 2) : "-"}
-        </div>
-      ),
-    },
-    {
       id: "unit_price",
-      header: "Precio Unitario",
-      type: "readonly",
-      width: "150px",
-      render: (row) => (
-        <div className="h-9 flex items-center px-3 text-sm">
-          {row.unit_price ? `${getCurrencySymbol()} ${formatNumber(parseFloat(row.unit_price))}` : "-"}
-        </div>
-      ),
+      header: "Precio",
+      type: "number",
+      width: "120px",
+      accessor: "unit_price",
     },
     {
       id: "subtotal",
@@ -530,30 +565,8 @@ export const SaleForm = ({
       type: "readonly",
       width: "120px",
       render: (row) => (
-        <div className="h-9 flex items-center px-3 text-sm">
+        <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold">
           {row.subtotal ? `${getCurrencySymbol()} ${formatNumber(row.subtotal)}` : "-"}
-        </div>
-      ),
-    },
-    {
-      id: "igv",
-      header: "IGV",
-      type: "readonly",
-      width: "120px",
-      render: (row) => (
-        <div className="h-9 flex items-center px-3 text-sm">
-          {row.igv ? `${getCurrencySymbol()} ${formatNumber(row.igv)}` : "-"}
-        </div>
-      ),
-    },
-    {
-      id: "total",
-      header: "Total",
-      type: "readonly",
-      width: "120px",
-      render: (row) => (
-        <div className="h-9 flex items-center px-3 text-sm font-semibold text-primary">
-          {row.total ? `${getCurrencySymbol()} ${formatNumber(row.total)}` : "-"}
         </div>
       ),
     },
@@ -933,7 +946,8 @@ export const SaleForm = ({
             onCellChange={handleCellChange}
             productOptions={productOptions}
             onProductSelect={handleProductSelect}
-            emptyMessage="No hay productos. Agregue una nueva línea para comenzar."
+            emptyMessage="Seleccione un almacén y cliente para comenzar."
+            disabled={!selectedWarehouseId || !form.watch("customer_id")}
           />
 
           {/* Resumen de totales */}

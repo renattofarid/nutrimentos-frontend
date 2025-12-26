@@ -76,7 +76,6 @@ export default function DeliverySheetAddPage() {
         mode="create"
         branches={allBranches || []}
         zones={zones || []}
-        drivers={workers || []}
         customers={customers || []}
         availableSales={availableSales || []}
         onSearchSales={handleSearchSales}

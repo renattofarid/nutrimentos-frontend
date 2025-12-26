@@ -472,22 +472,37 @@ export const SaleForm = ({
       }
     } else if (field === "unit_price") {
       // Cuando cambia el precio unitario manualmente, recalcular totales
-      // NOTA: Aquí se calcula PRECIO × CANTIDAD DE KG únicamente
       const detail = updatedDetails[index];
       const unitPrice = parseFloat(value) || 0;
-      const kg = parseFloat(detail.quantity_kg) || 0;
+      const qtySacks = parseFloat(detail.quantity_sacks) || 0;
+      const addKg = parseFloat(detail.quantity_kg) || 0;
 
-      // Subtotal = Precio × Kg (no se usa cantidad de sacos)
-      const subtotal = kg > 0 && unitPrice > 0 ? roundTo6Decimals(kg * unitPrice) : 0;
+      // Obtener el peso del producto para calcular cantidad total
+      const product = filteredProducts.find(p => p.id.toString() === detail.product_id);
+      const productWeight = product?.weight ? parseFloat(product.weight) : 0;
+
+      // Calcular cantidad total en decimal (sacos + kg adicionales)
+      let quantityDecimal = qtySacks;
+      if (productWeight > 0 && addKg > 0) {
+        const additionalSacks = addKg / productWeight;
+        quantityDecimal = qtySacks + additionalSacks;
+      }
+
+      // Calcular totales basados en cantidad total × precio
+      const subtotal = quantityDecimal > 0 && unitPrice > 0 ? roundTo6Decimals(quantityDecimal * unitPrice) : 0;
       const igv = subtotal > 0 ? roundTo6Decimals(subtotal * 0.18) : 0;
       const total = subtotal > 0 ? roundTo6Decimals(subtotal + igv) : 0;
 
+      // Calcular peso total en kg
+      const totalWeightKg = productWeight > 0 ? roundTo6Decimals(productWeight * qtySacks + addKg) : addKg;
+
       updatedDetails[index] = {
         ...updatedDetails[index],
-        quantity: "0", // Cantidad de sacos = 0 porque se vende por kg
+        quantity: quantityDecimal.toString(),
         subtotal,
         igv,
         total,
+        total_kg: totalWeightKg,
       };
 
       setDetails(updatedDetails);

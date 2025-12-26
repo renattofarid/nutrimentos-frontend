@@ -5,11 +5,17 @@ import { z } from "zod";
 
 export const purchaseDetailSchema = z.object({
   product_id: requiredStringId("Debe seleccionar un producto"),
-  quantity: z
+  quantity_kg: z
     .string()
-    .min(1, { message: "La cantidad es requerida" })
+    .min(1, { message: "La cantidad en kg es requerida" })
     .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
       message: "La cantidad debe ser un número mayor a 0",
+    }),
+  quantity_sacks: z
+    .string()
+    .min(1, { message: "La cantidad de sacos es requerida" })
+    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+      message: "La cantidad de sacos debe ser un número mayor a 0",
     }),
   unit_price: z
     .string()
@@ -110,11 +116,17 @@ export type PurchaseUpdateSchema = z.infer<typeof purchaseSchemaUpdate>;
 export const purchaseDetailSchemaCreate = z.object({
   purchase_id: requiredStringId("El ID de compra es requerido"),
   product_id: requiredStringId("Debe seleccionar un producto"),
-  quantity: z
+  quantity_kg: z
     .string()
-    .min(1, { message: "La cantidad es requerida" })
+    .min(1, { message: "La cantidad en kg es requerida" })
     .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
       message: "La cantidad debe ser un número mayor a 0",
+    }),
+  quantity_sacks: z
+    .string()
+    .min(1, { message: "La cantidad de sacos es requerida" })
+    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+      message: "La cantidad de sacos debe ser un número mayor a 0",
     }),
   unit_price: z
     .string()

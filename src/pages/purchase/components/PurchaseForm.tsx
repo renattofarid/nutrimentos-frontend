@@ -69,7 +69,8 @@ interface DetailRow {
   product_id: string;
   product_code?: string;
   product_name?: string;
-  quantity: string;
+  quantity_kg: string;
+  quantity_sacks: string;
   unit_price: string;
   tax: string;
   subtotal: number;
@@ -241,17 +242,18 @@ export const PurchaseForm = ({
         const product = products.find(
           (p) => p.id.toString() === detail.product_id
         );
-        const quantity = parseFloat(detail.quantity);
+        const quantityKg = parseFloat(detail.quantity_kg);
         const unitPrice = parseFloat(detail.unit_price);
         const tax = parseFloat(detail.tax);
-        const subtotal = quantity * unitPrice;
+        const subtotal = quantityKg * unitPrice;
         const total = subtotal + tax;
 
         return {
           product_id: detail.product_id,
           product_code: product?.codigo,
           product_name: product?.name,
-          quantity: detail.quantity,
+          quantity_kg: detail.quantity_kg,
+          quantity_sacks: detail.quantity_sacks,
           unit_price: detail.unit_price,
           tax: detail.tax,
           subtotal,
@@ -275,7 +277,8 @@ export const PurchaseForm = ({
       product_id: "",
       product_code: "",
       product_name: "",
-      quantity: "",
+      quantity_kg: "",
+      quantity_sacks: "",
       unit_price: "",
       tax: "",
       subtotal: 0,
@@ -296,24 +299,24 @@ export const PurchaseForm = ({
     const updatedDetails = [...details];
     updatedDetails[index] = { ...updatedDetails[index], [field]: value };
 
-    // Recalcular totales cuando cambian cantidad o precio
-    if (field === "quantity" || field === "unit_price") {
+    // Recalcular totales cuando cambian cantidad_kg o precio
+    if (field === "quantity_kg" || field === "unit_price") {
       const detail = updatedDetails[index];
-      const quantity = parseFloat(detail.quantity) || 0;
+      const quantityKg = parseFloat(detail.quantity_kg) || 0;
       const unitPrice = parseFloat(detail.unit_price) || 0;
       let subtotal = 0;
       let tax = 0;
       let total = 0;
 
-      if (quantity > 0 && unitPrice > 0) {
+      if (quantityKg > 0 && unitPrice > 0) {
         if (includeIgv) {
           // includeIgv=true: El precio NO incluye IGV, se lo agregamos
-          subtotal = quantity * unitPrice;
+          subtotal = quantityKg * unitPrice;
           tax = subtotal * IGV_RATE;
           total = subtotal + tax;
         } else {
           // includeIgv=false: El precio YA incluye IGV, lo descomponemos
-          const totalIncl = quantity * unitPrice;
+          const totalIncl = quantityKg * unitPrice;
           subtotal = totalIncl / (1 + IGV_RATE);
           tax = totalIncl - subtotal;
           total = totalIncl;
@@ -384,7 +387,7 @@ export const PurchaseForm = ({
     if (!details || details.length === 0) return;
 
     const recalculated = details.map((d) => {
-      const q = parseFloat(d.quantity || "0");
+      const q = parseFloat(d.quantity_kg || "0");
       const up = parseFloat(d.unit_price || "0");
       let subtotal = 0;
       let tax = 0;
@@ -433,11 +436,18 @@ export const PurchaseForm = ({
       accessor: "product_name",
     },
     {
-      id: "quantity",
-      header: "Cantidad",
+      id: "quantity_kg",
+      header: "Cantidad (KG)",
+      type: "number",
+      width: "120px",
+      accessor: "quantity_kg",
+    },
+    {
+      id: "quantity_sacks",
+      header: "Sacos",
       type: "number",
       width: "100px",
-      accessor: "quantity",
+      accessor: "quantity_sacks",
     },
     {
       id: "unit_price",
@@ -606,7 +616,8 @@ export const PurchaseForm = ({
     // Formatear detalles para el backend
     const formattedDetails = details.map((d) => ({
       product_id: parseInt(d.product_id),
-      quantity: parseFloat(d.quantity),
+      quantity_kg: parseFloat(d.quantity_kg),
+      quantity_sacks: parseFloat(d.quantity_sacks),
       unit_price: parseFloat(d.unit_price),
       tax: parseFloat(d.tax),
     }));

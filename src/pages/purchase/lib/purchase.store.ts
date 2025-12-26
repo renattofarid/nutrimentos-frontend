@@ -117,7 +117,8 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
         currency: data.currency,
         details: data.details.map((detail) => ({
           product_id: Number(detail.product_id),
-          quantity: Number(detail.quantity),
+          quantity_kg: Number(detail.quantity_kg),
+          quantity_sacks: Number(detail.quantity_sacks),
           unit_price: Number(detail.unit_price),
           tax: Number(detail.tax),
         })),
@@ -163,7 +164,8 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
         ...(data.details && {
           details: data.details.map((detail) => ({
             product_id: Number(detail.product_id),
-            quantity: Number(detail.quantity),
+            quantity_kg: Number(detail.quantity_kg),
+            quantity_sacks: Number(detail.quantity_sacks),
             unit_price: Number(detail.unit_price),
           })),
         }),

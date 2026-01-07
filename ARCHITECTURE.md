@@ -10,9 +10,11 @@ Este documento describe los lineamientos, convenciones y patrones arquitectónic
 4. [Convenciones de Nomenclatura](#convenciones-de-nomenclatura)
 5. [Gestión de Estado](#gestión-de-estado)
 6. [Manejo de Errores y Toasts](#manejo-de-errores-y-toasts)
-7. [Formularios](#formularios)
-8. [Componentes Compartidos](#componentes-compartidos)
-9. [Guía de Implementación Completa](#guía-de-implementación-completa)
+7. [Vistas vs Modales - Cuándo usar cada uno](#vistas-vs-modales---cuándo-usar-cada-uno)
+8. [Formularios con Detalles (Master-Detail)](#formularios-con-detalles-master-detail)
+9. [Formularios](#formularios)
+10. [Componentes Compartidos](#componentes-compartidos)
+11. [Guía de Implementación Completa](#guía-de-implementación-completa)
 
 ---
 
@@ -436,6 +438,212 @@ try {
 | Usar `toast()` | Usar `successToast()` y `errorToast()` |
 | `catch (error)` | `catch (error: any)` |
 | Asumir solo `error.response.data.message` | Verificar `error.response.data.error` OR `error.response.data.message` |
+
+---
+
+## Vistas vs Modales - Cuándo usar cada uno
+
+### Regla Principal
+
+**USAR VISTAS (AddPage/EditPage) cuando:**
+- El formulario tiene **más de 10 campos**
+- El request tiene **detalles** (array de items dentro del request)
+- Necesita una **tabla de detalles** dentro del formulario (Master-Detail)
+
+**USAR MODALES cuando:**
+- El formulario tiene **10 campos o menos**
+- Es un CRUD simple sin detalles
+- No requiere tablas internas
+
+### Ejemplos
+
+```typescript
+// ❌ NO usar modal - tiene más de 10 campos
+interface ProductRequest {
+  name: string;
+  code: string;
+  description: string;
+  category_id: number;
+  brand_id: number;
+  unit_id: number;
+  price: number;
+  stock: number;
+  min_stock: number;
+  max_stock: number;
+  barcode: string;
+  image: string;
+  // ✅ USAR VISTA (ProductAddPage.tsx, ProductEditPage.tsx)
+}
+
+// ❌ NO usar modal - tiene detalles (array)
+interface PurchaseRequest {
+  supplier_id: number;
+  date: string;
+  total: number;
+  details: PurchaseDetail[]; // Array de detalles
+  // ✅ USAR VISTA (PurchaseAddPage.tsx, PurchaseEditPage.tsx)
+}
+
+// ✅ CORRECTO usar modal - simple, sin detalles, pocos campos
+interface BrandRequest {
+  name: string;
+  code: string;
+  // ✅ USAR MODAL (BrandModal.tsx)
+}
+```
+
+---
+
+## Formularios con Detalles (Master-Detail)
+
+### Filosofía: Navegación Estilo Excel
+
+**IMPORTANTE:** Este proyecto prioriza la **velocidad de captura de datos** mediante teclado sobre el uso del mouse.
+
+### Principios
+
+1. **Tab es el rey** - La navegación entre campos debe ser fluida usando TAB
+2. **Enter para agregar** - Al presionar Enter en el último campo, agregar el detalle a la tabla
+3. **Foco automático** - Después de agregar, el foco vuelve al primer campo del detalle
+4. **Edición rápida** - Doble click o Enter en la tabla para editar
+5. **Eliminar rápido** - Tecla Delete o botón visible
+
+### Estructura de Vista con Detalles
+
+```
+{Model}AddPage.tsx o {Model}EditPage.tsx
+├── Campos del Master (encabezado)
+├── DataTable para los detalles
+│   ├── Fila de captura (inputs inline)
+│   └── Filas de datos capturados
+└── Botones de acción (Guardar/Cancelar)
+```
+
+### Componentes Requeridos
+
+#### Para Sheets (recomendado)
+- `<GeneralSheet />` - Para agregar/editar items desde un sheet lateral
+- Ejemplo: Al seleccionar un producto, abrir sheet con su información
+
+#### Para Modales
+- `<GeneralModal />` - Para confirmaciones o formularios pequeños
+- Ejemplo: Confirmar eliminación de un detalle
+
+### Ejemplo de Tabla de Detalles
+
+```tsx
+// En PurchaseAddPage.tsx
+import { DataTable } from "@/components/DataTable";
+
+export default function PurchaseAddPage() {
+  const [details, setDetails] = useState<PurchaseDetail[]>([]);
+  const [currentDetail, setCurrentDetail] = useState<PurchaseDetail>({
+    product_id: "",
+    quantity: 0,
+    price: 0,
+  });
+
+  const handleAddDetail = () => {
+    setDetails([...details, currentDetail]);
+    setCurrentDetail({ product_id: "", quantity: 0, price: 0 });
+    // Foco automático al primer campo
+    document.getElementById("product_id")?.focus();
+  };
+
+  return (
+    <PageWrapper>
+      {/* Campos del Master */}
+      <div className="grid grid-cols-2 gap-4">
+        <FormSelect name="supplier_id" label="Proveedor" />
+        <DatePickerFormField name="date" label="Fecha" />
+      </div>
+
+      {/* Tabla de Detalles */}
+      <div className="space-y-2">
+        <h3>Detalles de Compra</h3>
+
+        {/* Fila de captura */}
+        <div className="grid grid-cols-4 gap-2">
+          <FormSelect
+            id="product_id"
+            value={currentDetail.product_id}
+            onChange={(value) => setCurrentDetail({ ...currentDetail, product_id: value })}
+            onKeyDown={(e) => e.key === "Tab" && /* mover al siguiente */}
+          />
+          <FormInput
+            type="number"
+            value={currentDetail.quantity}
+            onChange={(e) => setCurrentDetail({ ...currentDetail, quantity: e.target.value })}
+            onKeyDown={(e) => e.key === "Tab" && /* mover al siguiente */}
+          />
+          <FormInput
+            type="number"
+            value={currentDetail.price}
+            onChange={(e) => setCurrentDetail({ ...currentDetail, price: e.target.value })}
+            onKeyDown={(e) => e.key === "Enter" && handleAddDetail()}
+          />
+          <Button onClick={handleAddDetail}>Agregar</Button>
+        </div>
+
+        {/* DataTable con los detalles capturados */}
+        <DataTable
+          data={details}
+          columns={detailColumns}
+          onRowDoubleClick={(row) => editDetail(row)}
+          onRowDelete={(row) => deleteDetail(row)}
+        />
+      </div>
+
+      {/* Botones de acción */}
+      <div className="flex gap-4 justify-end">
+        <Button variant="neutral" onClick={() => navigate(-1)}>
+          Cancelar
+        </Button>
+        <Button onClick={handleSubmit}>Guardar</Button>
+      </div>
+    </PageWrapper>
+  );
+}
+```
+
+### Atajos de Teclado Recomendados
+
+| Tecla | Acción |
+|-------|--------|
+| **Tab** | Navegar al siguiente campo |
+| **Shift + Tab** | Navegar al campo anterior |
+| **Enter** | Agregar detalle (en último campo) |
+| **Enter** | Editar fila (con foco en tabla) |
+| **Delete** | Eliminar fila seleccionada |
+| **Esc** | Cancelar edición |
+| **Ctrl + S** | Guardar formulario |
+
+### Validaciones en Detalles
+
+- Validar cada detalle antes de agregarlo a la tabla
+- No permitir detalles duplicados (mismo producto, etc.)
+- Mostrar errores inline en la fila de captura
+- Validar que haya al menos 1 detalle antes de guardar el master
+
+### Request Final con Detalles
+
+```typescript
+interface PurchaseRequest {
+  // Campos del master
+  supplier_id: number;
+  date: string;
+  warehouse_id: number;
+
+  // Array de detalles
+  details: [
+    {
+      product_id: number;
+      quantity: number;
+      price: number;
+    }
+  ];
+}
+```
 
 ---
 
@@ -1194,6 +1402,20 @@ const { ROUTE: ModelRoute } = MODEL;
    - Funciones de validación desde `@/lib/core.schema`
    - `api` (instancia Axios) desde `@/lib/config`
    - Toasts y mensajes desde `@/lib/core.function`
+
+9. **Vistas vs Modales**
+   - **Usar VISTA** si tiene más de 10 campos
+   - **Usar VISTA** si el request tiene detalles (array de items)
+   - **Usar MODAL** solo para CRUDs simples (≤10 campos, sin detalles)
+
+10. **Formularios con Detalles (Master-Detail)**
+   - **Navegación estilo Excel** - Tab es el rey, Enter para agregar
+   - **DataTable** para mostrar los detalles capturados
+   - **Fila de captura** inline para agregar detalles rápidamente
+   - **Usar `<GeneralSheet />`** para sheets laterales
+   - **Usar `<GeneralModal />`** para modales/confirmaciones
+   - **Validar detalles** antes de agregar y antes de guardar el master
+   - **Atajos de teclado** - Tab, Enter, Delete, Esc, Ctrl+S
 
 ---
 

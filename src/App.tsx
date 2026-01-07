@@ -12,6 +12,7 @@ import BranchPage from "./pages/branch/components/BranchPage";
 import WarehousePage from "./pages/warehouse/components/WarehousePage";
 import BrandPage from "./pages/brand/components/BrandPage";
 import BoxPage from "./pages/box/components/BoxPage";
+import VehiclePage from "./pages/vehicle/components/VehiclePage";
 import UnitPage from "./pages/unit/components/UnitPage";
 import CategoryPage from "./pages/category/components/CategoryPage";
 import ProductPage from "./pages/product/components/ProductPage";
@@ -46,6 +47,7 @@ import { BRANCH } from "./pages/branch/lib/branch.interface";
 import { WAREHOUSE } from "./pages/warehouse/lib/warehouse.interface";
 import { BRAND } from "./pages/brand/lib/brand.interface";
 import { BOX } from "./pages/box/lib/box.interface";
+import { VEHICLE } from "./pages/vehicle/lib/vehicle.interface";
 import { UNIT } from "./pages/unit/lib/unit.interface";
 import { CATEGORY } from "./pages/category/lib/category.interface";
 import { PRODUCT } from "./pages/product/lib/product.interface";
@@ -103,6 +105,7 @@ const { ROUTE: BranchRoute } = BRANCH;
 const { ROUTE: WarehouseRoute } = WAREHOUSE;
 const { ROUTE: BrandRoute } = BRAND;
 const { ROUTE: BoxRoute } = BOX;
+const { ROUTE: VehicleRoute } = VEHICLE;
 const { ROUTE: UnitRoute } = UNIT;
 const { ROUTE: CategoryRoute } = CATEGORY;
 const { ROUTE: ProductRoute } = PRODUCT;
@@ -250,6 +253,15 @@ export default function App() {
             element={
               <ProtectedRoute path={BrandRoute}>
                 <BrandPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={VehicleRoute}
+            element={
+              <ProtectedRoute path={VehicleRoute}>
+                <VehiclePage />
               </ProtectedRoute>
             }
           />

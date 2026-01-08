@@ -25,6 +25,7 @@ import { BRANCH } from "@/pages/branch/lib/branch.interface";
 import { WAREHOUSE } from "@/pages/warehouse/lib/warehouse.interface";
 import { BRAND } from "@/pages/brand/lib/brand.interface";
 import { BOX } from "@/pages/box/lib/box.interface";
+import { VEHICLE } from "@/pages/vehicle/lib/vehicle.interface";
 import { UNIT } from "@/pages/unit/lib/unit.interface";
 import { CATEGORY } from "@/pages/category/lib/category.interface";
 import { PRODUCT } from "@/pages/product/lib/product.interface";
@@ -93,6 +94,12 @@ const {
   ROUTE: BoxRoute,
   MODEL: { name: BoxTitle },
 } = BOX;
+
+const {
+  ICON_REACT: VehicleIcon,
+  ROUTE: VehicleRoute,
+  MODEL: { name: VehicleTitle },
+} = VEHICLE;
 
 const {
   ICON_REACT: UnitIcon,
@@ -376,6 +383,11 @@ const data = {
           title: GuideTitle,
           url: GuideRoute,
           icon: GuideIcon,
+        },
+        {
+          title: VehicleTitle,
+          url: VehicleRoute,
+          icon: VehicleIcon,
         },
         {
           title: PaymentConceptTitle,

@@ -1335,6 +1335,117 @@ const { ROUTE: ModelRoute } = MODEL;
 />
 ```
 
+### 9. Agregar Ruta al Sidebar
+
+**Archivo:** `src/components/app-sidebar.tsx`
+
+Cada nuevo módulo debe agregarse al sidebar en la sección correspondiente.
+
+#### Pasos:
+
+1. **Importar la constante del modelo:**
+
+```tsx
+import { MODEL } from "@/pages/{model}/lib/{model}.interface";
+```
+
+2. **Extraer los valores necesarios:**
+
+```tsx
+const {
+  ICON_REACT: ModelIcon,
+  ROUTE: ModelRoute,
+  MODEL: { name: ModelTitle },
+} = MODEL;
+```
+
+3. **Agregar el item al array `data.navMain`:**
+
+Ubicar la sección apropiada dentro del array `data.navMain` y agregar el nuevo item:
+
+```tsx
+const data = {
+  navMain: [
+    // ... otras secciones
+    {
+      title: "Sección Correspondiente", // Ej: "Productos", "Personas", "Operaciones"
+      url: "#",
+      icon: SectionIcon,
+      items: [
+        // ... otros items
+        {
+          title: ModelTitle,
+          url: ModelRoute,
+          icon: ModelIcon,
+        },
+      ],
+    },
+  ],
+};
+```
+
+#### Secciones del Sidebar:
+
+- **Dashboard** - Página principal
+- **Ventas** - Ventas, Cuentas por Cobrar, Hojas de Despacho
+- **Compras** - Compras, Cuentas por Pagar
+- **Productos** - Productos, Categorías, Marcas, Unidades, Tipos, Listas de Precios
+- **Personas** - Clientes, Proveedores, Trabajadores
+- **Organización** - Empresas, Sucursales, Almacenes, Zonas
+- **Operaciones** - Documentos de Almacén, Cajas, Turnos, Guías, Conceptos de Pago
+- **Configuración** - Configuración, Nacionalidades, Tipos de Negocio, Cargos, Tipos de Documento
+- **Seguridad** - Usuarios, Tipos de Usuario
+
+#### Ejemplo completo:
+
+```tsx
+// 1. Importar
+import { VEHICLE } from "@/pages/vehicle/lib/vehicle.interface";
+
+// 2. Extraer valores (después de las otras importaciones)
+const {
+  ICON_REACT: VehicleIcon,
+  ROUTE: VehicleRoute,
+  MODEL: { name: VehicleTitle },
+} = VEHICLE;
+
+// 3. Agregar al sidebar en la sección "Operaciones"
+const data = {
+  navMain: [
+    // ... otras secciones
+    {
+      title: "Operaciones",
+      url: "#",
+      icon: BoxIcon,
+      items: [
+        {
+          title: WarehouseDocumentTitle,
+          url: WarehouseDocumentRoute,
+          icon: WarehouseDocumentIcon,
+        },
+        {
+          title: BoxTitle,
+          url: BoxRoute,
+          icon: BoxIcon,
+        },
+        // Agregar aquí
+        {
+          title: VehicleTitle,
+          url: VehicleRoute,
+          icon: VehicleIcon,
+        },
+      ],
+    },
+  ],
+};
+```
+
+**IMPORTANTE:**
+- El orden de los items en el sidebar debe ser lógico y consistente
+- Agregar el nuevo módulo en la sección que mejor corresponda según su funcionalidad
+- Si el módulo no encaja en ninguna sección existente, considerar crear una nueva sección
+- Mantener el mismo patrón de extracción de constantes que los demás módulos
+
 ---
 
 ## Resumen de Convenciones
@@ -1419,4 +1530,4 @@ const { ROUTE: ModelRoute } = MODEL;
 
 ---
 
-**Última actualización:** 2026-01-07
+**Última actualización:** 2026-01-07 (Agregada sección del Sidebar)

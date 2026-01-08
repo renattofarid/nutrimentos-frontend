@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { requiredNumberId } from "@/lib/core.schema";
+import { requiredStringId } from "@/lib/core.schema";
 
 export const vehicleSchemaCreate = z.object({
   plate: z
@@ -73,7 +73,7 @@ export const vehicleSchemaCreate = z.object({
         message: "El peso máximo debe ser mayor o igual a 0",
       })
   ),
-  owner_id: requiredNumberId("El propietario es requerido"),
+  owner_id: requiredStringId("El proveedor es requerido"),
   observations: z
     .string()
     .max(500, {

@@ -10,7 +10,6 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -19,14 +18,10 @@ import {
   type VehicleSchema,
 } from "../lib/vehicle.schema.ts";
 import { Loader } from "lucide-react";
-import { useAllPersons } from "@/pages/person/lib/person.hook";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useAllSuppliers } from "@/pages/supplier/lib/supplier.hook";
+import { FormSelect } from "@/components/FormSelect";
+import { FormInput } from "@/components/FormInput";
+import type { Option } from "@/lib/core.interface";
 
 interface VehicleFormProps {
   defaultValues: Partial<VehicleSchema>;
@@ -43,7 +38,7 @@ export const VehicleForm = ({
   isSubmitting = false,
   mode = "create",
 }: VehicleFormProps) => {
-  const { data: persons } = useAllPersons();
+  const { data: suppliers } = useAllSuppliers();
 
   const form = useForm({
     resolver: zodResolver(
@@ -57,180 +52,84 @@ export const VehicleForm = ({
       color: "",
       vehicle_type: "",
       max_weight: 0,
-      owner_id: 0,
+      owner_id: "",
       observations: "",
       ...defaultValues,
     },
     mode: "onChange",
   });
 
+  // Convertir suppliers a opciones para FormSelect
+  const supplierOptions: Option[] =
+    suppliers?.map((supplier) => ({
+      value: supplier.id.toString(),
+      label: `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`,
+    })) || [];
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sidebar p-4 rounded-lg">
-          <FormField
+          <FormInput
             control={form.control}
             name="plate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Placa</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: ABC-123"
-                    className="font-mono uppercase"
-                    maxLength={20}
-                    {...field}
-                    onChange={(e) => {
-                      const value = e.target.value.toUpperCase();
-                      field.onChange(value);
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Placa"
+            placeholder="Ej: ABC-123"
+            className="font-mono uppercase"
+            maxLength={20}
+            onChange={(value) => form.setValue("plate", value.toUpperCase())}
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="brand"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Marca</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: HYUNDAI"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Marca"
+            placeholder="Ej: HYUNDAI"
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="model"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Modelo</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: MODELO 1"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Modelo"
+            placeholder="Ej: MODELO 1"
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="year"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Año</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    type="number"
-                    placeholder="Ej: 2020"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Año"
+            type="number"
+            placeholder="Ej: 2020"
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="color"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Color</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: negro"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Color"
+            placeholder="Ej: negro"
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="vehicle_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tipo de Vehículo</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: carga"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Tipo de Vehículo"
+            placeholder="Ej: carga"
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="max_weight"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Peso Máximo (kg)</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    type="number"
-                    placeholder="Ej: 100"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Peso Máximo (kg)"
+            type="number"
+            placeholder="Ej: 100"
           />
 
-          <FormField
+          <FormSelect
             control={form.control}
             name="owner_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Propietario</FormLabel>
-                <Select
-                  onValueChange={(value) => field.onChange(Number(value))}
-                  value={field.value?.toString() || ""}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccione un propietario" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {persons?.map((person) => (
-                      <SelectItem key={person.id} value={person.id.toString()}>
-                        {person.names} {person.father_surname}{" "}
-                        {person.mother_surname}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Proveedor"
+            placeholder="Seleccione un proveedor"
+            options={supplierOptions}
           />
 
           <FormField

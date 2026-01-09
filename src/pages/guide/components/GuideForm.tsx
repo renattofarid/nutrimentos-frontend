@@ -22,16 +22,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Loader, Plus, Trash2, Pencil, Truck, MapPin, Search } from "lucide-react";
+import { Loader, Truck, MapPin, Search } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { SelectSearchForm } from "@/components/SelectSearchForm";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { GroupFormSection } from "@/components/GroupFormSection";
+import { SearchableSelect } from "@/components/SearchableSelect";
+import { FormInput } from "@/components/FormInput";
 import { guideSchema, type GuideSchema } from "../lib/guide.schema";
 import { searchUbigeos } from "../lib/ubigeo.actions";
 import type { UbigeoResource } from "../lib/ubigeo.interface";
-import { searchRUC, searchDNI, isValidData } from "@/lib/document-search.service";
+import {
+  searchRUC,
+  searchDNI,
+  isValidData,
+} from "@/lib/document-search.service";
 import {
   MODALITIES,
   CARRIER_DOCUMENT_TYPES,
@@ -46,6 +51,12 @@ import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import {
+  getSalesByRange,
+  type SalesByRangeResponse,
+} from "@/pages/sale/lib/sale.actions";
+import type { SaleResource } from "@/pages/sale/lib/sale.interface";
+import { toast } from "sonner";
 
 interface GuideFormProps {
   defaultValues: Partial<GuideSchema>;
@@ -59,14 +70,6 @@ interface GuideFormProps {
   customers: PersonResource[];
   motives: GuideMotiveResource[];
   guide?: GuideResource;
-}
-
-interface DetailRow {
-  product_id: string;
-  product_name?: string;
-  quantity: string;
-  unit_code: string;
-  description: string;
 }
 
 export const GuideForm = ({
@@ -84,25 +87,27 @@ export const GuideForm = ({
   const [filteredWarehouses, setFilteredWarehouses] = useState<
     WarehouseResource[]
   >([]);
-  const [details, setDetails] = useState<DetailRow[]>([]);
-  const [editingDetailIndex, setEditingDetailIndex] = useState<number | null>(
-    null
-  );
-  const [currentDetail, setCurrentDetail] = useState<DetailRow>({
-    product_id: "",
-    quantity: "",
-    unit_code: "",
-    description: "",
-  });
-  const [localProducts] = useState<ProductResource[]>(products);
 
   // Estado local para ubigeos de origen
   const [originUbigeos, setOriginUbigeos] = useState<UbigeoResource[]>([]);
   const [isSearchingOrigin, setIsSearchingOrigin] = useState(false);
 
   // Estado local para ubigeos de destino
-  const [destinationUbigeos, setDestinationUbigeos] = useState<UbigeoResource[]>([]);
+  const [destinationUbigeos, setDestinationUbigeos] = useState<
+    UbigeoResource[]
+  >([]);
   const [isSearchingDestination, setIsSearchingDestination] = useState(false);
+
+  // Estados para búsqueda de ventas por rango
+  const [salesByRange, setSalesByRange] = useState<SaleResource[]>([]);
+  const [selectedSales, setSelectedSales] = useState<number[]>([]);
+  const [isSearchingSales, setIsSearchingSales] = useState(false);
+  const [searchParams, setSearchParams] = useState({
+    document_type: "FACTURA",
+    serie: "",
+    numero_inicio: "",
+    numero_fin: "",
+  });
 
   const formatUbigeoLabel = (ubigeo: UbigeoResource): string => {
     const parts = ubigeo.cadena.split("-");
@@ -127,27 +132,21 @@ export const GuideForm = ({
   }, []);
 
   // Función para buscar ubigeos de destino
-  const handleSearchDestinationUbigeos = useCallback(async (cadena?: string) => {
-    setIsSearchingDestination(true);
-    try {
-      const response = await searchUbigeos(cadena, 15);
-      setDestinationUbigeos(response.data);
-    } catch (error) {
-      console.error("Error searching destination ubigeos:", error);
-      setDestinationUbigeos([]);
-    } finally {
-      setIsSearchingDestination(false);
-    }
-  }, []);
-
-  const detailTempForm = useForm({
-    defaultValues: {
-      temp_product_id: currentDetail.product_id,
-      temp_quantity: currentDetail.quantity,
-      temp_unit_code: currentDetail.unit_code,
-      temp_description: currentDetail.description,
+  const handleSearchDestinationUbigeos = useCallback(
+    async (cadena?: string) => {
+      setIsSearchingDestination(true);
+      try {
+        const response = await searchUbigeos(cadena, 15);
+        setDestinationUbigeos(response.data);
+      } catch (error) {
+        console.error("Error searching destination ubigeos:", error);
+        setDestinationUbigeos([]);
+      } finally {
+        setIsSearchingDestination(false);
+      }
     },
-  });
+    []
+  );
 
   const form = useForm({
     resolver: zodResolver(guideSchema) as any,
@@ -156,12 +155,6 @@ export const GuideForm = ({
     },
     mode: "onChange",
   });
-
-  // Watchers para detalles
-  const selectedProductId = detailTempForm.watch("temp_product_id");
-  const selectedQuantity = detailTempForm.watch("temp_quantity");
-  const selectedUnitCode = detailTempForm.watch("temp_unit_code");
-  const selectedDescription = detailTempForm.watch("temp_description");
 
   const selectedBranchId = form.watch("branch_id");
   const carrierRuc = form.watch("carrier_ruc");
@@ -174,22 +167,7 @@ export const GuideForm = ({
     }
   }, [carrierRuc, carrierDocumentType, form]);
 
-  // Inicializar detalles y cuotas desde defaultValues (para modo edición)
-  useEffect(() => {
-    if (mode === "update" && defaultValues) {
-      if (defaultValues.branch_id) {
-        const filtered = warehouses.filter(
-          (warehouse) =>
-            warehouse.branch_id.toString() === defaultValues.branch_id
-        );
-        setFilteredWarehouses(filtered);
-      }
-      // Disparar validación después de setear valores en modo edición
-      form.trigger();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+  // Filtrar warehouses por branch
   useEffect(() => {
     if (selectedBranchId) {
       const filtered = warehouses.filter(
@@ -214,22 +192,6 @@ export const GuideForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBranchId, warehouses]);
 
-  // Observers para detalles
-  useEffect(() => {
-    setCurrentDetail((prev) => ({
-      ...prev,
-      product_id: selectedProductId || "",
-      quantity: selectedQuantity || "",
-      unit_code: selectedUnitCode || "",
-      description: selectedDescription || "",
-    }));
-  }, [
-    selectedProductId,
-    selectedQuantity,
-    selectedUnitCode,
-    selectedDescription,
-  ]);
-
   // Función para buscar RUC del transportista
   const handleSearchCarrierRUC = async () => {
     const ruc = form.getValues("carrier_ruc");
@@ -241,7 +203,10 @@ export const GuideForm = ({
       const result = await searchRUC({ search: ruc });
       if (result && isValidData(result.message) && result.data) {
         form.setValue("carrier_name", result.data.business_name || "");
-        form.setValue("carrier_document_number", result.data.number_document || "");
+        form.setValue(
+          "carrier_document_number",
+          result.data.number_document || ""
+        );
         form.setValue("carrier_document_type", "RUC");
       }
     } catch (error) {
@@ -268,6 +233,65 @@ export const GuideForm = ({
     }
   };
 
+  // Función para buscar ventas por rango
+  const handleSearchSalesByRange = async () => {
+    if (
+      !searchParams.serie ||
+      !searchParams.numero_inicio ||
+      !searchParams.numero_fin
+    ) {
+      toast.error("Complete todos los campos de búsqueda");
+      return;
+    }
+
+    setIsSearchingSales(true);
+    try {
+      const response = await getSalesByRange(searchParams);
+
+      if (response.data.length === 0) {
+        toast.warning("No se encontraron ventas en el rango especificado");
+        setSalesByRange([]);
+        return;
+      }
+
+      setSalesByRange(response.data);
+      toast.success(`Se encontraron ${response.data.length} ventas`);
+
+      if (response.meta.tiene_faltantes) {
+        toast.warning(
+          `Hay números faltantes en el rango: ${response.meta.numeros_faltantes?.join(
+            ", "
+          )}`
+        );
+      }
+    } catch (error) {
+      console.error("Error searching sales by range:", error);
+      toast.error("Error al buscar ventas");
+      setSalesByRange([]);
+    } finally {
+      setIsSearchingSales(false);
+    }
+  };
+
+  // Función para seleccionar/deseleccionar venta
+  const handleToggleSale = (saleId: number) => {
+    setSelectedSales((prev) => {
+      if (prev.includes(saleId)) {
+        return prev.filter((id) => id !== saleId);
+      }
+      return [...prev, saleId];
+    });
+  };
+
+  // Función para seleccionar todas las ventas
+  const handleSelectAllSales = () => {
+    if (selectedSales.length === salesByRange.length) {
+      setSelectedSales([]);
+    } else {
+      setSelectedSales(salesByRange.map((sale) => sale.id));
+    }
+  };
+
   // Establecer fechas automáticamente
   useEffect(() => {
     const today = new Date();
@@ -276,101 +300,18 @@ export const GuideForm = ({
     form.setValue("transfer_date", formattedDate);
   }, [form]);
 
-  // Cargar detalles existentes en modo edición
-  useEffect(() => {
-    if (defaultValues.details && defaultValues.details.length > 0) {
-      const mappedDetails = defaultValues.details.map((detail: any) => {
-        const product = localProducts.find(
-          (p) => p.id.toString() === detail.product_id
-        );
-        return {
-          product_id: detail.product_id,
-          product_name: product?.name,
-          quantity: detail.quantity,
-          unit_code: detail.unit_code,
-          description: detail.description,
-        };
-      });
-      setDetails(mappedDetails);
-      form.setValue("details", mappedDetails);
-    }
-  }, [defaultValues.details, localProducts, form]);
-
-  const handleAddDetail = () => {
-    if (
-      !currentDetail.product_id ||
-      !currentDetail.quantity ||
-      !currentDetail.unit_code ||
-      !currentDetail.description
-    ) {
+  const handleFormSubmit = (data: any) => {
+    // Validar que se hayan seleccionado ventas
+    if (selectedSales.length === 0) {
+      toast.error("Debe seleccionar al menos una venta");
       return;
     }
-
-    const product = localProducts.find(
-      (p) => p.id.toString() === currentDetail.product_id
-    );
-
-    const newDetail: DetailRow = {
-      ...currentDetail,
-      product_name: product?.name,
-    };
-
-    if (editingDetailIndex !== null) {
-      const updatedDetails = [...details];
-      updatedDetails[editingDetailIndex] = newDetail;
-      setDetails(updatedDetails);
-      form.setValue("details", updatedDetails);
-      setEditingDetailIndex(null);
-    } else {
-      const updatedDetails = [...details, newDetail];
-      setDetails(updatedDetails);
-      form.setValue("details", updatedDetails);
-    }
-
-    const emptyDetail = {
-      product_id: "",
-      quantity: "",
-      unit_code: "",
-      description: "",
-    };
-    setCurrentDetail(emptyDetail);
-    detailTempForm.reset({
-      temp_product_id: "",
-      temp_quantity: "",
-      temp_unit_code: "",
-      temp_description: "",
-    });
-  };
-
-  const handleEditDetail = (index: number) => {
-    const detail = details[index];
-    setCurrentDetail(detail);
-    detailTempForm.setValue("temp_product_id", detail.product_id);
-    detailTempForm.setValue("temp_quantity", detail.quantity);
-    detailTempForm.setValue("temp_unit_code", detail.unit_code);
-    detailTempForm.setValue("temp_description", detail.description);
-    setEditingDetailIndex(index);
-  };
-
-  const handleRemoveDetail = (index: number) => {
-    const updatedDetails = details.filter((_, i) => i !== index);
-    setDetails(updatedDetails);
-    form.setValue("details", updatedDetails);
-  };
-
-  const handleFormSubmit = (data: any) => {
-    const formattedDetails = details.map((d) => ({
-      product_id: parseInt(d.product_id),
-      quantity: parseFloat(d.quantity),
-      unit_code: d.unit_code,
-      description: d.description,
-    }));
 
     // Crear payload con los campos parseados correctamente
     const payload = {
       branch_id: parseInt(data.branch_id),
       warehouse_id: parseInt(data.warehouse_id),
-      sale_id: data.sale_id ? parseInt(data.sale_id) : null,
+      sale_ids: selectedSales,
       customer_id: parseInt(data.customer_id),
       issue_date: data.issue_date,
       transfer_date: data.transfer_date,
@@ -395,14 +336,11 @@ export const GuideForm = ({
       total_weight: data.total_weight,
       total_packages: data.total_packages,
       observations: data.observations || "",
-      details: formattedDetails,
     };
 
     console.log("✅ Payload final siendo enviado:", payload);
     onSubmit(payload);
   };
-
-  const selectedWarehouseId = form.watch("warehouse_id");
 
   return (
     <Form {...form}>
@@ -506,6 +444,180 @@ export const GuideForm = ({
               </FormItem>
             )}
           />
+        </GroupFormSection>
+
+        {/* Búsqueda de Ventas por Rango */}
+        <GroupFormSection
+          title="Búsqueda de Ventas por Rango"
+          icon={Search}
+          cols={{ sm: 1 }}
+        >
+          <div className="space-y-4">
+            {/* Filtros de búsqueda */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
+              <SearchableSelect
+                label="Tipo de Documento"
+                options={[
+                  { value: "FACTURA", label: "FACTURA" },
+                  { value: "BOLETA", label: "BOLETA" },
+                ]}
+                value={searchParams.document_type}
+                onChange={(value) =>
+                  setSearchParams({ ...searchParams, document_type: value })
+                }
+                placeholder="Seleccione tipo"
+                className="md:w-full"
+              />
+
+              <FormInput
+                name="serie"
+                label="Serie"
+                placeholder="Ej: F001"
+                value={searchParams.serie}
+                onChange={(e) =>
+                  setSearchParams({ ...searchParams, serie: e.target.value })
+                }
+              />
+
+              <FormInput
+                name="numero_inicio"
+                label="Número Inicio"
+                type="number"
+                placeholder="Ej: 1"
+                value={searchParams.numero_inicio}
+                onChange={(e) =>
+                  setSearchParams({
+                    ...searchParams,
+                    numero_inicio: e.target.value,
+                  })
+                }
+              />
+
+              <FormInput
+                name="numero_fin"
+                label="Número Fin"
+                placeholder="Ej: 100"
+                type="number"
+                value={searchParams.numero_fin}
+                onChange={(e) =>
+                  setSearchParams({
+                    ...searchParams,
+                    numero_fin: e.target.value,
+                  })
+                }
+              />
+
+              <div className="md:col-span-4 flex justify-end">
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={handleSearchSalesByRange}
+                  disabled={isSearchingSales}
+                >
+                  {isSearchingSales ? (
+                    <>
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-4 w-4" />
+                      Buscar Ventas
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Lista de ventas encontradas */}
+            {salesByRange.length > 0 && (
+              <div className="border rounded-lg overflow-hidden">
+                <div className="p-4 bg-sidebar border-b flex justify-between items-center">
+                  <h3 className="font-semibold">
+                    Ventas encontradas ({salesByRange.length})
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAllSales}
+                  >
+                    {selectedSales.length === salesByRange.length
+                      ? "Deseleccionar Todas"
+                      : "Seleccionar Todas"}
+                  </Button>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <input
+                          type="checkbox"
+                          checked={selectedSales.length === salesByRange.length}
+                          onChange={handleSelectAllSales}
+                          className="cursor-pointer"
+                        />
+                      </TableHead>
+                      <TableHead>Documento</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="text-right">Peso (kg)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salesByRange.map((sale) => (
+                      <TableRow
+                        key={sale.id}
+                        className={
+                          selectedSales.includes(sale.id) ? "bg-muted/50" : ""
+                        }
+                      >
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={selectedSales.includes(sale.id)}
+                            onChange={() => handleToggleSale(sale.id)}
+                            className="cursor-pointer"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">
+                              {sale.full_document_number}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {sale.document_type}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {sale.customer.business_name ||
+                            `${sale.customer.names} ${sale.customer.father_surname}`}
+                        </TableCell>
+                        <TableCell>{sale.issue_date}</TableCell>
+                        <TableCell className="text-right">
+                          {sale.currency} {sale.total_amount.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {sale.total_weight}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* Resumen de ventas seleccionadas */}
+            {selectedSales.length > 0 && (
+              <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                  {selectedSales.length} venta(s) seleccionada(s) para la guía
+                </p>
+              </div>
+            )}
+          </div>
         </GroupFormSection>
 
         {/* Información del Transportista */}
@@ -848,159 +960,6 @@ export const GuideForm = ({
           />
         </GroupFormSection>
 
-        {/* Detalles de Productos */}
-        <GroupFormSection
-          title="Detalles de la Guía"
-          icon={Truck}
-          cols={{ sm: 1 }}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
-            <div className="md:col-span-2">
-              <Form {...detailTempForm}>
-                <FormSelect
-                  control={detailTempForm.control}
-                  name="temp_product_id"
-                  label="Producto"
-                  placeholder="Seleccione un producto"
-                  options={products.map((product) => {
-                    const stockInWarehouse = product.stock_warehouse?.find(
-                      (stock) =>
-                        stock.warehouse_id.toString() === selectedWarehouseId
-                    );
-                    return {
-                      value: product.id.toString(),
-                      label: product.name,
-                      description: `${product.codigo} | Stock: ${
-                        stockInWarehouse?.stock ?? 0
-                      }`,
-                    };
-                  })}
-                />
-              </Form>
-            </div>
-
-            <FormField
-              control={detailTempForm.control}
-              name="temp_quantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cantidad</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      variant="default"
-                      placeholder="0"
-                      {...field}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={detailTempForm.control}
-              name="temp_unit_code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Código de Unidad</FormLabel>
-                  <FormControl>
-                    <Input variant="default" placeholder="Ej: NIU" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <div className="md:col-span-4">
-              <FormField
-                control={detailTempForm.control}
-                name="temp_description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descripción</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Descripción del producto"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="md:col-span-4 flex justify-end">
-              <Button
-                type="button"
-                variant="default"
-                onClick={handleAddDetail}
-                disabled={
-                  !currentDetail.product_id ||
-                  !currentDetail.quantity ||
-                  !currentDetail.unit_code ||
-                  !currentDetail.description
-                }
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {editingDetailIndex !== null ? "Actualizar" : "Agregar"}
-              </Button>
-            </div>
-          </div>
-
-          {details.length > 0 ? (
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Producto</TableHead>
-                    <TableHead className="text-right">Cantidad</TableHead>
-                    <TableHead>Unidad</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead className="text-center">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {details.map((detail, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{detail.product_name}</TableCell>
-                      <TableCell className="text-right">
-                        {detail.quantity}
-                      </TableCell>
-                      <TableCell>{detail.unit_code}</TableCell>
-                      <TableCell>{detail.description}</TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center gap-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditDetail(index)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveDetail(index)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Badge variant="outline" className="text-lg p-3">
-                No hay detalles agregados
-              </Badge>
-            </div>
-          )}
-        </GroupFormSection>
-
         {/* Observaciones */}
         <div className="bg-sidebar p-4 rounded-lg space-y-4">
           <h3 className="text-lg font-semibold">Observaciones (Opcional)</h3>
@@ -1030,9 +989,7 @@ export const GuideForm = ({
 
           <Button
             type="submit"
-            disabled={
-              isSubmitting || (mode === "create" && details.length === 0)
-            }
+            disabled={isSubmitting || selectedSales.length === 0}
           >
             <Loader
               className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`}

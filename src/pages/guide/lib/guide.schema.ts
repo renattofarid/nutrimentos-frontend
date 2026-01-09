@@ -18,7 +18,7 @@ export const guideDetailSchema = z.object({
 export const guideSchema = z.object({
   branch_id: requiredStringId("Debe seleccionar una tienda"),
   warehouse_id: requiredStringId("Debe seleccionar un almacén"),
-  sale_id: z.string().optional(),
+  sale_ids: z.array(z.number()).optional(),
   customer_id: requiredStringId("Debe seleccionar un cliente"),
   issue_date: z.string().min(1, { message: "La fecha de emisión es requerida" }),
   transfer_date: z.string().min(1, { message: "La fecha de traslado es requerida" }),
@@ -55,7 +55,7 @@ export const guideSchema = z.object({
       message: "El total de bultos debe ser mayor a 0",
     }),
   observations: z.string().optional(),
-  details: z.array(guideDetailSchema).min(1, { message: "Debe agregar al menos un detalle" }),
+  details: z.array(guideDetailSchema).optional(),
 });
 
 export type GuideSchema = z.infer<typeof guideSchema>;

@@ -139,7 +139,7 @@ export interface CreateGuideDetailRequest {
 export interface CreateGuideRequest {
   branch_id: number;
   warehouse_id: number;
-  sale_id?: number | null;
+  sale_ids?: number[];
   customer_id: number;
   issue_date: string;
   transfer_date: string;
@@ -164,13 +164,13 @@ export interface CreateGuideRequest {
   total_weight: number;
   total_packages: number;
   observations?: string;
-  details: CreateGuideDetailRequest[];
+  details?: CreateGuideDetailRequest[];
 }
 
 export interface UpdateGuideRequest {
   branch_id?: number;
   warehouse_id?: number;
-  sale_id?: number | null;
+  sale_ids?: number[];
   customer_id?: number;
   issue_date?: string;
   transfer_date?: string;

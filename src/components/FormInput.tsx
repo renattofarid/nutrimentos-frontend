@@ -7,6 +7,7 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import type { Control } from "react-hook-form";
 import React from "react";
 import {
   Tooltip,
@@ -14,61 +15,147 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import type { Control } from "react-hook-form";
+import RequiredField from "./RequiredField";
+import { cn } from "@/lib/utils";
 
-interface FormInputProps {
+interface FormInputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "name"> {
   name: string;
   description?: string;
-  label: string | (() => React.ReactNode);
-  placeholder?: string;
-  control: Control<any>;
-  disabled?: boolean;
+  label?: string | React.ReactNode;
+  control?: Control<any>;
   tooltip?: string | React.ReactNode;
-  type?: "text" | "number" | "email" | "password" | "tel" | "url";
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
-  className?: string;
-  maxLength?: number;
-  min?: number;
-  max?: number;
-  step?: number;
-  autoComplete?: string;
-  onChange?: (value: any) => void;
+  children?: React.ReactNode;
+  required?: boolean;
+  addonStart?: React.ReactNode;
+  addonEnd?: React.ReactNode;
+  error?: string;
 }
 
 export function FormInput({
   name,
   description,
   label,
-  placeholder,
   control,
-  disabled,
   tooltip,
-  type = "text",
-  variant = "default",
+  children,
+  required,
   className,
-  maxLength,
-  min,
-  max,
-  step,
-  autoComplete,
+  addonStart,
+  addonEnd,
+  error,
+  value,
   onChange,
+  ...inputProps
 }: FormInputProps) {
+  const isNumberType = inputProps.type === "number";
+
+  // Si no hay control, funcionar como input controlado estándar
+  if (!control) {
+    const handleStandaloneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (onChange) {
+        if (isNumberType) {
+          const val = e.target.value;
+          // Crear un evento sintético con el valor numérico
+          const syntheticEvent = {
+            ...e,
+            target: {
+              ...e.target,
+              value: val === "" ? "" : Number(val),
+            },
+          } as React.ChangeEvent<HTMLInputElement>;
+          onChange(syntheticEvent);
+        } else {
+          onChange(e);
+        }
+      }
+    };
+
+    return (
+      <div className="flex flex-col justify-between">
+        {label && (
+          <label className="flex justify-start items-center text-xs md:text-sm mb-1 font-medium">
+            {label}
+            {required && <RequiredField />}
+            {tooltip && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant="tertiary"
+                    className="ml-2 p-0 aspect-square w-4 h-4 text-center justify-center"
+                  >
+                    ?
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>{tooltip}</TooltipContent>
+              </Tooltip>
+            )}
+          </label>
+        )}
+        <div className="flex flex-col gap-2 items-center">
+          <div className="relative w-full">
+            {addonStart && (
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-muted-foreground pointer-events-none z-10">
+                {addonStart}
+              </div>
+            )}
+            <Input
+              name={name}
+              className={cn(
+                "h-8 md:h-9 text-xs md:text-sm",
+                addonStart && "pl-10",
+                addonEnd && "pr-10",
+                className
+              )}
+              {...inputProps}
+              onChange={handleStandaloneChange}
+              value={value ?? ""}
+            />
+            {addonEnd && (
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center text-muted-foreground z-10">
+                {addonEnd}
+              </div>
+            )}
+          </div>
+          {children}
+        </div>
+
+        {description && (
+          <p className="text-xs text-muted-foreground mt-1">{description}</p>
+        )}
+        {error && (
+          <p className="text-xs font-medium text-destructive mt-1">{error}</p>
+        )}
+      </div>
+    );
+  }
+
+  // Si hay control, funcionar como FormField (comportamiento original)
   return (
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem className="flex flex-col justify-start">
-          {typeof label === "function" ? (
-            label()
-          ) : (
-            <FormLabel className="flex justify-start items-center">
+      render={({ field }) => {
+        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          if (isNumberType) {
+            const val = e.target.value;
+            // Permitir string vacío temporalmente
+            field.onChange(val === "" ? "" : Number(val));
+          } else {
+            field.onChange(e);
+          }
+        };
+
+        return (
+          <FormItem className="flex flex-col justify-between">
+            <FormLabel className="flex justify-start items-center text-xs md:text-sm mb-1">
               {label}
+              {required && <RequiredField />}
               {tooltip && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Badge
-                      variant="default"
+                      variant="tertiary"
                       className="ml-2 p-0 aspect-square w-4 h-4 text-center justify-center"
                     >
                       ?
@@ -78,38 +165,45 @@ export function FormInput({
                 </Tooltip>
               )}
             </FormLabel>
-          )}
+            <div className="flex flex-col gap-2 items-center">
+              <div className="relative w-full">
+                {addonStart && (
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-muted-foreground pointer-events-none z-10">
+                    {addonStart}
+                  </div>
+                )}
+                <FormControl>
+                  <Input
+                    className={cn(
+                      "h-8 md:h-10 text-xs md:text-sm",
+                      addonStart && "pl-10",
+                      addonEnd && "pr-10",
+                      className
+                    )}
+                    {...field}
+                    {...inputProps}
+                    onChange={handleChange}
+                    value={field.value ?? ""}
+                  />
+                </FormControl>
+                {addonEnd && (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center text-muted-foreground z-10">
+                    {addonEnd}
+                  </div>
+                )}
+              </div>
+              {children}
+            </div>
 
-          {description && (
-            <FormDescription className="text-sm text-muted-foreground !mb-0">
-              {description}
-            </FormDescription>
-          )}
-
-          <FormControl>
-            <Input
-              type={type}
-              variant={variant}
-              placeholder={placeholder}
-              className={className}
-              maxLength={maxLength}
-              min={min}
-              max={max}
-              step={step}
-              autoComplete={autoComplete}
-              disabled={disabled}
-              {...field}
-              onChange={(e) => {
-                const value = type === "number" ? Number(e.target.value) : e.target.value;
-                field.onChange(value);
-                onChange?.(value);
-              }}
-            />
-          </FormControl>
-
-          <FormMessage />
-        </FormItem>
-      )}
+            {description && (
+              <FormDescription className="text-xs text-muted-foreground mb-0!">
+                {description}
+              </FormDescription>
+            )}
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 }

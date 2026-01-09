@@ -52,6 +52,7 @@ import { AccountsReceivableRoute } from "@/pages/accounts-receivable/lib/account
 import { ACCOUNTS_PAYABLE } from "@/pages/accounts-payable/lib/accounts-payable.interface";
 import { WAREHOUSE_DOCUMENT } from "@/pages/warehouse-document/lib/warehouse-document.interface";
 import { DELIVERY_SHEET } from "@/pages/deliverysheet/lib/deliverysheet.interface";
+import { DRIVER } from "@/pages/driver/lib/driver.interface";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -148,6 +149,12 @@ const {
   ROUTE: WorkerRoute,
   MODEL: { name: WorkerTitle },
 } = WORKER;
+
+const {
+  ICON_REACT: DriverIcon,
+  ROUTE: DriverRoute,
+  MODEL: { name: DriverTitle },
+} = DRIVER;
 
 const {
   ICON_REACT: PaymentConceptIcon,
@@ -329,6 +336,11 @@ const data = {
           title: WorkerTitle,
           url: WorkerRoute,
           icon: WorkerIcon,
+        },
+        {
+          title: DriverTitle,
+          url: DriverRoute,
+          icon: DriverIcon,
         },
       ],
     },

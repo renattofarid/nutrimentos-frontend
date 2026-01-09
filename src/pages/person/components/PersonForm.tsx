@@ -296,7 +296,7 @@ export const PersonForm = ({
             name="document_type_id"
             label="Tipo de Documento"
             placeholder="Seleccione tipo"
-            disabled={isWorker || isLoadingDocumentTypes} // Workers can only use DNI
+            disabled={isLoadingDocumentTypes} // Workers can only use DNI
             options={
               isLoadingDocumentTypes
                 ? []
@@ -304,7 +304,7 @@ export const PersonForm = ({
                 ? (documentTypes || [])
                     .filter(
                       (dt: DocumentTypeResource) =>
-                        dt.name === TYPE_DOCUMENT.DNI.id
+                        dt.name === TYPE_DOCUMENT.DNI.name
                     )
                     .map((dt: DocumentTypeResource) => ({
                       value: dt.id.toString(),
@@ -945,7 +945,7 @@ export const PersonForm = ({
           )}
           <Button
             type="submit"
-            disabled={isSubmitting || !isValid}
+            disabled={isSubmitting}
             className={`gap-2 ${!isValid ? "opacity-50" : ""}`}
           >
             {isSubmitting ? (

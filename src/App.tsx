@@ -97,6 +97,10 @@ import WarehouseDocumentDetailPage from "./pages/warehouse-document/components/W
 import DeliverySheetPage from "./pages/deliverysheet/components/DeliverySheetPage";
 import { DELIVERY_SHEET } from "./pages/deliverysheet/lib/deliverysheet.interface";
 import { DeliverySheetAddPage } from "./pages/deliverysheet";
+import { DRIVER } from "./pages/driver/lib/driver.interface";
+import DriverPage from "./pages/driver/components/DriverPage";
+import DriverAddPage from "./pages/driver/components/DriverAddPage";
+import DriverEditPage from "./pages/driver/components/DriverEditPage";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -127,6 +131,7 @@ const { ROUTE: GuideRoute } = GUIDE;
 const { ROUTE: BoxShiftRoute } = BOX_SHIFT;
 const { ROUTE: AccountsPayableRoute } = ACCOUNTS_PAYABLE;
 const { ROUTE: WarehouseDocumentRoute } = WAREHOUSE_DOCUMENT;
+const { ROUTE: DriverRoute } = DRIVER;
 const {
   ROUTE: DeliverySheetRoute,
   ROUTE_ADD: DeliverySheetRouteAdd,
@@ -477,6 +482,33 @@ export default function App() {
             element={
               <ProtectedRoute path={WorkerRoute}>
                 <WorkerEditPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={DriverRoute}
+            element={
+              <ProtectedRoute path={DriverRoute}>
+                <DriverPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/conductores/agregar"
+            element={
+              <ProtectedRoute path={DriverRoute}>
+                <DriverAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/conductores/editar/:id"
+            element={
+              <ProtectedRoute path={DriverRoute}>
+                <DriverEditPage />
               </ProtectedRoute>
             }
           />

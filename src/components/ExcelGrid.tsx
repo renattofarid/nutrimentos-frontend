@@ -183,7 +183,11 @@ export function ExcelGrid<T extends Record<string, any>>({
         setFocusedCell(nextCell);
         setTimeout(() => {
           const key = `${nextCell.row}-${nextCell.col}`;
-          inputRefs.current[key]?.focus();
+          const input = inputRefs.current[key];
+          if (input) {
+            input.focus();
+            input.select(); // Seleccionar todo el texto
+          }
         }, 0);
       } else if (!e.shiftKey) {
         // Si no hay siguiente celda y estamos en la última fila, agregar nueva fila
@@ -194,7 +198,11 @@ export function ExcelGrid<T extends Record<string, any>>({
             const firstEditableCol = columns.findIndex(col => col.type !== "readonly");
             if (firstEditableCol !== -1) {
               const key = `${data.length}-${firstEditableCol}`;
-              inputRefs.current[key]?.focus();
+              const input = inputRefs.current[key];
+              if (input) {
+                input.focus();
+                input.select(); // Seleccionar todo el texto
+              }
               setFocusedCell({ row: data.length, col: firstEditableCol });
             }
           }, 50);
@@ -211,7 +219,11 @@ export function ExcelGrid<T extends Record<string, any>>({
           const firstEditableCol = columns.findIndex(col => col.type !== "readonly");
           if (firstEditableCol !== -1) {
             const key = `${data.length}-${firstEditableCol}`;
-            inputRefs.current[key]?.focus();
+            const input = inputRefs.current[key];
+            if (input) {
+              input.focus();
+              input.select(); // Seleccionar todo el texto
+            }
             setFocusedCell({ row: data.length, col: firstEditableCol });
           }
         }, 50);
@@ -221,8 +233,33 @@ export function ExcelGrid<T extends Record<string, any>>({
         setFocusedCell({ row: nextRow, col: colIndex });
         setTimeout(() => {
           const key = `${nextRow}-${colIndex}`;
-          inputRefs.current[key]?.focus();
+          const input = inputRefs.current[key];
+          if (input) {
+            input.focus();
+            input.select(); // Seleccionar todo el texto
+          }
         }, 0);
+      }
+    } else if (e.key === "Delete" && !disabled) {
+      // Si presiona Delete/Suprimir en una celda vacía, eliminar la fila
+      const currentValue = data[rowIndex][column.accessor as string];
+      const isEmpty = !currentValue || currentValue.toString().trim() === "";
+
+      if (isEmpty && data.length > 1) {
+        e.preventDefault();
+        onRemoveRow(rowIndex);
+
+        // Enfocar la misma celda en la fila anterior o siguiente
+        setTimeout(() => {
+          const targetRow = rowIndex > 0 ? rowIndex - 1 : 0;
+          const key = `${targetRow}-${colIndex}`;
+          const input = inputRefs.current[key];
+          if (input) {
+            input.focus();
+            input.select();
+          }
+          setFocusedCell({ row: targetRow, col: colIndex });
+        }, 50);
       }
     }
   };

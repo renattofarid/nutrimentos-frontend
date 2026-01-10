@@ -2,14 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import {
   saleSchemaCreate,
@@ -18,9 +11,6 @@ import {
 } from "../lib/sale.schema";
 import {
   Loader,
-  Plus,
-  Trash2,
-  Pencil,
   Users2,
   CreditCard,
   ListChecks,
@@ -36,21 +26,6 @@ import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import { useState, useEffect } from "react";
 import { formatDecimalTrunc } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatCurrency";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   DOCUMENT_TYPES,
   PAYMENT_TYPES,
@@ -141,61 +116,6 @@ export const SaleForm = ({
 
   // Estados para cuotas
   const [installments, setInstallments] = useState<InstallmentRow[]>([]);
-  const [editingInstallmentIndex, setEditingInstallmentIndex] = useState<
-    number | null
-  >(null);
-  const [currentInstallment, setCurrentInstallment] = useState<InstallmentRow>({
-    installment_number: "",
-    due_days: "",
-    amount: "",
-  });
-
-  // Formularios temporales
-  const installmentTempForm = useForm({
-    defaultValues: {
-      temp_installment_number: currentInstallment.installment_number,
-      temp_due_days: currentInstallment.due_days,
-      temp_amount: currentInstallment.amount,
-    },
-  });
-
-  // Watchers para cuotas
-  const selectedInstallmentNumber = installmentTempForm.watch(
-    "temp_installment_number"
-  );
-  const selectedDueDays = installmentTempForm.watch("temp_due_days");
-  const selectedAmount = installmentTempForm.watch("temp_amount");
-
-  // Observers para cuotas
-  useEffect(() => {
-    if (selectedInstallmentNumber !== currentInstallment.installment_number) {
-      setCurrentInstallment((prev) => ({
-        ...prev,
-        installment_number: selectedInstallmentNumber || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedInstallmentNumber]);
-
-  useEffect(() => {
-    if (selectedDueDays !== currentInstallment.due_days) {
-      setCurrentInstallment((prev) => ({
-        ...prev,
-        due_days: selectedDueDays || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDueDays]);
-
-  useEffect(() => {
-    if (selectedAmount !== currentInstallment.amount) {
-      setCurrentInstallment((prev) => ({
-        ...prev,
-        amount: selectedAmount || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAmount]);
 
   const form = useForm({
     resolver: zodResolver(
@@ -607,7 +527,7 @@ export const SaleForm = ({
     form.setValue("details", updatedDetails);
   };
 
-  // Configuración de columnas para ExcelGrid
+  // Configuración de columnas para ExcelGrid de Detalles
   const gridColumns: ExcelGridColumn<DetailRow>[] = [
     {
       id: "product_code",
@@ -693,83 +613,113 @@ export const SaleForm = ({
     return roundTo6Decimals(totalWeight);
   };
 
-  // Funciones para cuotas
-  const handleAddInstallment = () => {
-    if (
-      !currentInstallment.installment_number ||
-      !currentInstallment.due_days ||
-      !currentInstallment.amount
-    ) {
-      return;
-    }
-
-    const newAmount = parseFloat(currentInstallment.amount);
+  // Funciones para cuotas con ExcelGrid
+  const handleAddInstallmentRow = () => {
     const saleTotal = calculateDetailsTotal();
+    const currentTotal = calculateInstallmentsTotal();
+    const remainingAmount = roundTo6Decimals(saleTotal - currentTotal);
 
-    // Calcular el total de cuotas (excluyendo la que se está editando si aplica)
-    let currentInstallmentsTotal = installments.reduce((sum, inst, idx) => {
-      if (editingInstallmentIndex !== null && idx === editingInstallmentIndex) {
-        return sum;
-      }
-      return sum + parseFloat(inst.amount);
-    }, 0);
+    const newInstallment: InstallmentRow = {
+      installment_number: (installments.length + 1).toString(),
+      due_days: installments.length === 0 ? "0" : "",
+      amount: remainingAmount > 0 ? remainingAmount.toString() : "0",
+    };
 
-    // Validar que no exceda el total de la venta
-    if (currentInstallmentsTotal + newAmount > saleTotal) {
-      errorToast(
-        `El total de cuotas no puede exceder el total de la venta (${formatDecimalTrunc(
-          saleTotal,
-          6
-        )})`
-      );
-      return;
-    }
-
-    const newInstallment: InstallmentRow = { ...currentInstallment };
-
-    if (editingInstallmentIndex !== null) {
-      const updatedInstallments = [...installments];
-      updatedInstallments[editingInstallmentIndex] = newInstallment;
-      setInstallments(updatedInstallments);
-      form.setValue("installments", updatedInstallments);
-      setEditingInstallmentIndex(null);
-    } else {
-      const updatedInstallments = [...installments, newInstallment];
-      setInstallments(updatedInstallments);
-      form.setValue("installments", updatedInstallments);
-    }
-
-    setCurrentInstallment({
-      installment_number: "",
-      due_days: "",
-      amount: "",
-    });
-    installmentTempForm.setValue("temp_installment_number", "");
-    installmentTempForm.setValue("temp_due_days", "");
-    installmentTempForm.setValue("temp_amount", "");
-  };
-
-  const handleEditInstallment = (index: number) => {
-    const inst = installments[index];
-    setCurrentInstallment(inst);
-    installmentTempForm.setValue(
-      "temp_installment_number",
-      inst.installment_number
-    );
-    installmentTempForm.setValue("temp_due_days", inst.due_days);
-    installmentTempForm.setValue("temp_amount", inst.amount);
-    setEditingInstallmentIndex(index);
-  };
-
-  const handleRemoveInstallment = (index: number) => {
-    const updatedInstallments = installments.filter((_, i) => i !== index);
+    const updatedInstallments = [...installments, newInstallment];
     setInstallments(updatedInstallments);
     form.setValue("installments", updatedInstallments);
   };
 
+  const handleInstallmentCellChange = (
+    index: number,
+    field: string,
+    value: string
+  ) => {
+    const updatedInstallments = [...installments];
+    updatedInstallments[index] = {
+      ...updatedInstallments[index],
+      [field]: value,
+    };
+
+    setInstallments(updatedInstallments);
+    form.setValue("installments", updatedInstallments);
+  };
+
+  const handleRemoveInstallment = (index: number) => {
+    const updatedInstallments = installments.filter((_, i) => i !== index);
+
+    // Renumerar las cuotas
+    const renumberedInstallments = updatedInstallments.map((inst, idx) => ({
+      ...inst,
+      installment_number: (idx + 1).toString(),
+    }));
+
+    setInstallments(renumberedInstallments);
+    form.setValue("installments", renumberedInstallments);
+  };
+
+  // Función auxiliar para calcular la fecha de vencimiento
+  const calculateDueDate = (days: string): string => {
+    const issueDate = form.watch("issue_date");
+    if (!issueDate || !days) return "-";
+
+    const daysNum = parseInt(days);
+    if (isNaN(daysNum)) return "-";
+
+    const date = new Date(issueDate);
+    date.setDate(date.getDate() + daysNum);
+
+    // Formatear como DD/MM/YYYY
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
+
+  // Configuración de columnas para ExcelGrid de Cuotas
+  const installmentColumns: ExcelGridColumn<InstallmentRow>[] = [
+    {
+      id: "installment_number",
+      header: "N° Cuota",
+      type: "readonly",
+      width: "100px",
+      render: (row) => (
+        <div className="h-full flex items-center justify-center px-2 py-1 text-sm font-semibold bg-muted/50 text-muted-foreground">
+          Cuota {row.installment_number}
+        </div>
+      ),
+    },
+    {
+      id: "due_days",
+      header: "Días",
+      type: "number",
+      width: "100px",
+      accessor: "due_days",
+    },
+    {
+      id: "amount",
+      header: "Monto",
+      type: "number",
+      width: "150px",
+      accessor: "amount",
+    },
+    {
+      id: "due_date",
+      header: "Fecha Venc.",
+      type: "readonly",
+      width: "120px",
+      render: (row) => (
+        <div className="h-full flex items-center justify-center px-2 py-1 text-sm bg-muted/50 text-muted-foreground">
+          {calculateDueDate(row.due_days)}
+        </div>
+      ),
+    },
+  ];
+
   const calculateInstallmentsTotal = () => {
     const sum = installments.reduce(
-      (sum, inst) => sum + parseFloat(inst.amount),
+      (sum, inst) => sum + (parseFloat(inst.amount) || 0),
       0
     );
     return roundTo6Decimals(sum);
@@ -1026,141 +976,24 @@ export const SaleForm = ({
                 icon={CreditCard}
                 cols={{ sm: 1 }}
               >
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
-                  <FormField
-                    control={installmentTempForm.control}
-                    name="temp_installment_number"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Número de Cuota</FormLabel>
-                        <FormControl>
-                          <Input type="number" placeholder="1" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                <ExcelGrid
+                  columns={installmentColumns}
+                  data={installments}
+                  onAddRow={handleAddInstallmentRow}
+                  onRemoveRow={handleRemoveInstallment}
+                  onCellChange={handleInstallmentCellChange}
+                  emptyMessage="Agregue las cuotas de pago."
+                  disabled={details.length === 0}
+                />
 
-                  <FormField
-                    control={installmentTempForm.control}
-                    name="temp_due_days"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Días de Vencimiento</FormLabel>
-                        <FormControl>
-                          <Input type="number" placeholder="30" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={installmentTempForm.control}
-                    name="temp_amount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Monto</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.0001"
-                            placeholder="0.00"
-                            {...field}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="flex items-end justify-end">
-                    <Button
-                      type="button"
-                      variant="default"
-                      size={"sm"}
-                      onClick={handleAddInstallment}
-                      disabled={
-                        !currentInstallment.installment_number ||
-                        !currentInstallment.due_days ||
-                        !currentInstallment.amount
-                      }
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      {editingInstallmentIndex !== null
-                        ? "Actualizar"
-                        : "Agregar"}
-                    </Button>
-                  </div>
-                </div>
-
-                {installments.length > 0 ? (
-                  <>
-                    <div className="border rounded-lg overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Cuota #</TableHead>
-                            <TableHead className="text-right">
-                              Días Vencimiento
-                            </TableHead>
-                            <TableHead className="text-right">Monto</TableHead>
-                            <TableHead className="text-center">
-                              Acciones
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {installments.map((inst, index) => (
-                            <TableRow key={index}>
-                              <TableCell>
-                                Cuota {inst.installment_number}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                {inst.due_days} días
-                              </TableCell>
-                              <TableCell className="text-right font-semibold">
-                                {formatDecimalTrunc(parseFloat(inst.amount), 6)}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <div className="flex justify-center gap-2">
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleEditInstallment(index)}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() =>
-                                      handleRemoveInstallment(index)
-                                    }
-                                  >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                          <TableRow>
-                            <TableCell
-                              colSpan={2}
-                              className="text-right font-bold"
-                            >
-                              TOTAL CUOTAS:
-                            </TableCell>
-                            <TableCell className="text-right font-bold text-lg text-blue-600">
-                              {getCurrencySymbol()}{" "}
-                              {formatDecimalTrunc(
-                                calculateInstallmentsTotal(),
-                                6
-                              )}
-                            </TableCell>
-                            <TableCell></TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
+                {installments.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <div className="flex justify-between items-center p-4 bg-muted/30 rounded-lg border">
+                      <span className="font-bold">TOTAL CUOTAS:</span>
+                      <span className="text-xl font-bold text-blue-600">
+                        {getCurrencySymbol()}{" "}
+                        {formatNumber(calculateInstallmentsTotal())}
+                      </span>
                     </div>
                     {!installmentsMatchTotal() && (
                       <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
@@ -1172,19 +1005,7 @@ export const SaleForm = ({
                         </p>
                       </div>
                     )}
-                  </>
-                ) : (
-                  <Empty className="border border-dashed">
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <CreditCard />
-                      </EmptyMedia>
-                      <EmptyTitle>No hay cuotas agregadas</EmptyTitle>
-                      <EmptyDescription>
-                        Agregue las cuotas de pago utilizando el formulario
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
+                  </div>
                 )}
               </GroupFormSection>
             )}

@@ -29,6 +29,7 @@ import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { FormInput } from "@/components/FormInput";
+import { Checkbox } from "@/components/ui/checkbox";
 import { guideSchema, type GuideSchema } from "../lib/guide.schema";
 import { searchUbigeos } from "../lib/ubigeo.actions";
 import type { UbigeoResource } from "../lib/ubigeo.interface";
@@ -51,10 +52,7 @@ import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import {
-  getSalesByRange,
-  type SalesByRangeResponse,
-} from "@/pages/sale/lib/sale.actions";
+import { getSalesByRange } from "@/pages/sale/lib/sale.actions";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import { toast } from "sonner";
 
@@ -77,10 +75,8 @@ export const GuideForm = ({
   defaultValues,
   onSubmit,
   isSubmitting = false,
-  mode = "create",
   branches,
   warehouses,
-  products,
   customers,
   motives,
 }: GuideFormProps) => {
@@ -551,10 +547,12 @@ export const GuideForm = ({
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        <input
-                          type="checkbox"
-                          checked={selectedSales.length === salesByRange.length}
-                          onChange={handleSelectAllSales}
+                        <Checkbox
+                          checked={
+                            salesByRange.length > 0 &&
+                            selectedSales.length === salesByRange.length
+                          }
+                          onCheckedChange={handleSelectAllSales}
                           className="cursor-pointer"
                         />
                       </TableHead>
@@ -569,15 +567,15 @@ export const GuideForm = ({
                     {salesByRange.map((sale) => (
                       <TableRow
                         key={sale.id}
-                        className={
+                        className={`cursor-pointer hover:bg-muted/30 ${
                           selectedSales.includes(sale.id) ? "bg-muted/50" : ""
-                        }
+                        }`}
+                        onClick={() => handleToggleSale(sale.id)}
                       >
-                        <TableCell>
-                          <input
-                            type="checkbox"
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
                             checked={selectedSales.includes(sale.id)}
-                            onChange={() => handleToggleSale(sale.id)}
+                            onCheckedChange={() => handleToggleSale(sale.id)}
                             className="cursor-pointer"
                           />
                         </TableCell>

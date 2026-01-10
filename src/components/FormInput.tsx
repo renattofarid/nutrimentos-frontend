@@ -148,7 +148,7 @@ export function FormInput({
 
         return (
           <FormItem className="flex flex-col justify-between">
-            <FormLabel className="flex justify-start items-center text-xs md:text-sm mb-1">
+            <FormLabel className="flex justify-start items-center">
               {label}
               {required && <RequiredField />}
               {tooltip && (
@@ -175,7 +175,7 @@ export function FormInput({
                 <FormControl>
                   <Input
                     className={cn(
-                      "h-8 md:h-10 text-xs md:text-sm",
+                      "h-8 md:h-9 text-xs md:text-sm",
                       addonStart && "pl-10",
                       addonEnd && "pr-10",
                       className

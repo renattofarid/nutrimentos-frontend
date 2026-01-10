@@ -8,11 +8,9 @@ import {
   FormItem,
   FormLabel,
   FormControl,
-  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   saleSchemaCreate,
   saleSchemaUpdate,
@@ -69,6 +67,8 @@ import {
   type ExcelGridColumn,
   type ProductOption,
 } from "@/components/ExcelGrid";
+import { FormInput } from "@/components/FormInput";
+import { Badge } from "@/components/ui/badge";
 
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
@@ -854,168 +854,145 @@ export const SaleForm = ({
         <GroupFormSection
           title="Información General"
           icon={Users2}
-          cols={{ sm: 1 }}
+          cols={{ sm: 1, md: 3, lg: 5 }}
+          headerExtra={
+            mode === "create" &&
+            autoSerie &&
+            autoNumero && (
+              <Badge variant="default" className="px-3 py-1" size="default">
+                {autoSerie} - {autoNumero}
+              </Badge>
+            )
+          }
         >
-          {/* Serie y Número Automático */}
-          {mode === "create" && (autoSerie || autoNumero) && (
-            <div className="flex items-center justify-center gap-2 mb-4">
-              {autoSerie && (
-                <span className="text-xl font-semibold text-blue-600">
-                  {autoSerie}
-                </span>
-              )}
-              {autoSerie && autoNumero && (
-                <span className="text-xl text-muted-foreground">-</span>
-              )}
-              {autoNumero && (
-                <span className="text-xl font-semibold text-blue-600">
-                  {autoNumero}
-                </span>
-              )}
-            </div>
-          )}
+          <FormSelect
+            control={form.control}
+            name="branch_id"
+            label="Tienda"
+            placeholder="Seleccione una tienda"
+            options={
+              branches?.map((branch) => ({
+                value: branch.id.toString(),
+                label: branch.name,
+                description: branch.address,
+              })) || []
+            }
+            disabled={mode === "update"}
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <FormSelect
-              control={form.control}
-              name="branch_id"
-              label="Tienda"
-              placeholder="Seleccione una tienda"
-              options={
-                branches?.map((branch) => ({
-                  value: branch.id.toString(),
-                  label: branch.name,
-                  description: branch.address,
-                })) || []
-              }
-              disabled={mode === "update"}
-            />
-
-            <div className="flex gap-2 items-end">
-              <div className="truncate! flex-1">
-                <FormSelect
-                  control={form.control}
-                  name="customer_id"
-                  label="Cliente"
-                  placeholder="Seleccione un cliente"
-                  options={customers.map((customer) => ({
-                    value: customer.id.toString(),
-                    label:
-                      customer.business_name ??
-                      customer.names +
-                        " " +
-                        customer.father_surname +
-                        " " +
-                        customer.mother_surname,
-                    description:
-                      (customer.number_document ?? "-") +
-                      " | " +
-                      (customer.zone_name ?? "-"),
-                  }))}
-                  disabled={mode === "update"}
-                />
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => setIsClientDialogOpen(true)}
-                title="Agregar nuevo cliente"
-              >
-                <UserPlus className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <FormSelect
-              control={form.control}
-              name="vendedor_id"
-              label="Vendedor"
-              placeholder="Seleccionar vendedor (opcional)"
-              options={[
-                { value: "", label: "Sin vendedor" },
-                ...(workers?.map((worker) => ({
-                  value: worker.id.toString(),
-                  label: `${worker.names} ${worker.father_surname}`,
-                  description: worker.number_document ?? "-",
-                })) || []),
-              ]}
-            />
-
-            <FormSelect
-              control={form.control}
-              name="warehouse_id"
-              label="Almacén"
-              placeholder="Seleccione un almacén"
-              options={filteredWarehouses.map((warehouse) => ({
-                value: warehouse.id.toString(),
-                label: warehouse.name,
-              }))}
-              disabled={mode === "update" || !selectedBranchId}
-            />
-
-            <FormSelect
-              control={form.control}
-              name="document_type"
-              label="Tipo de Documento"
-              placeholder="Seleccione tipo"
-              options={DOCUMENT_TYPES.map((dt) => ({
-                value: dt.value,
-                label: dt.label,
-              }))}
-            />
-
-            <DatePickerFormField
-              control={form.control}
-              name="issue_date"
-              label="Fecha de Emisión"
-              placeholder="Seleccione fecha"
-              dateFormat="dd/MM/yyyy"
-              disabledRange={{
-                after: new Date(),
-              }}
-            />
-
-            <FormSelect
-              control={form.control}
-              name="payment_type"
-              label="Tipo de Pago"
-              placeholder="Seleccione tipo"
-              options={PAYMENT_TYPES.map((pt) => ({
-                value: pt.value,
-                label: pt.label,
-              }))}
-            />
-
-            <FormSelect
-              control={form.control}
-              name="currency"
-              label="Moneda"
-              placeholder="Seleccione moneda"
-              options={CURRENCIES.map((c) => ({
-                value: c.value,
-                label: c.label,
-              }))}
-            />
-
-            <div className="md:col-span-2 lg:col-span-3">
-              <FormField
+          <div className="flex gap-2 items-end">
+            <div className="truncate! flex-1">
+              <FormSelect
                 control={form.control}
-                name="observations"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Observaciones</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Ingrese observaciones adicionales"
-                        className="resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                name="customer_id"
+                label="Cliente"
+                placeholder="Seleccione un cliente"
+                options={customers.map((customer) => ({
+                  value: customer.id.toString(),
+                  label:
+                    customer.business_name ??
+                    customer.names +
+                      " " +
+                      customer.father_surname +
+                      " " +
+                      customer.mother_surname,
+                  description:
+                    (customer.number_document ?? "-") +
+                    " | " +
+                    (customer.zone_name ?? "-"),
+                }))}
+                disabled={mode === "update"}
               />
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setIsClientDialogOpen(true)}
+              title="Agregar nuevo cliente"
+            >
+              <UserPlus className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <FormSelect
+            control={form.control}
+            name="vendedor_id"
+            label="Vendedor"
+            placeholder="Seleccionar vendedor (opcional)"
+            options={[
+              { value: "", label: "Sin vendedor" },
+              ...(workers?.map((worker) => ({
+                value: worker.id.toString(),
+                label: `${worker.names} ${worker.father_surname}`,
+                description: worker.number_document ?? "-",
+              })) || []),
+            ]}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="warehouse_id"
+            label="Almacén"
+            placeholder="Seleccione un almacén"
+            options={filteredWarehouses.map((warehouse) => ({
+              value: warehouse.id.toString(),
+              label: warehouse.name,
+            }))}
+            disabled={mode === "update" || !selectedBranchId}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="document_type"
+            label="Tipo de Documento"
+            placeholder="Seleccione tipo"
+            options={DOCUMENT_TYPES.map((dt) => ({
+              value: dt.value,
+              label: dt.label,
+            }))}
+          />
+
+          <DatePickerFormField
+            control={form.control}
+            name="issue_date"
+            label="Fecha de Emisión"
+            placeholder="Seleccione fecha"
+            dateFormat="dd/MM/yyyy"
+            disabledRange={{
+              after: new Date(),
+            }}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="payment_type"
+            label="Tipo de Pago"
+            placeholder="Seleccione tipo"
+            options={PAYMENT_TYPES.map((pt) => ({
+              value: pt.value,
+              label: pt.label,
+            }))}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="currency"
+            label="Moneda"
+            placeholder="Seleccione moneda"
+            options={CURRENCIES.map((c) => ({
+              value: c.value,
+              label: c.label,
+            }))}
+          />
+
+          <div className="lg:col-span-2">
+            <FormInput
+              name="observations"
+              control={form.control}
+              label="Observaciones"
+              placeholder="Ingrese observaciones adicionales"
+            />
           </div>
         </GroupFormSection>
 

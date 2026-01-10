@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { SaleForm } from "./SaleForm";
@@ -15,9 +15,12 @@ import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { SALE } from "../lib/sale.interface";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
+import PageWrapper from "@/components/PageWrapper";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export const SaleAddPage = () => {
   const { ICON } = SALE;
+  const { setOpen, setOpenMobile } = useSidebar();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuthStore();
@@ -31,6 +34,11 @@ export const SaleAddPage = () => {
   } = useClients();
   const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
   const { data: products, isLoading: productsLoading } = useAllProducts();
+
+  useEffect(() => {
+    setOpen(false);
+    setOpenMobile(false);
+  }, [setOpen, setOpenMobile]);
 
   const { createSale } = useSaleStore();
 
@@ -78,7 +86,7 @@ export const SaleAddPage = () => {
   }
 
   return (
-    <FormWrapper>
+    <PageWrapper fluid>
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <TitleFormComponent title="Venta" mode="create" icon={ICON} />
@@ -106,6 +114,6 @@ export const SaleAddPage = () => {
             onRefreshClients={onRefreshClients}
           />
         )}
-    </FormWrapper>
+    </PageWrapper>
   );
 };

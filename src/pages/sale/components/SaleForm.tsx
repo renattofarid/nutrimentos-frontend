@@ -15,6 +15,7 @@ import {
   CreditCard,
   ListChecks,
   UserPlus,
+  FileText,
 } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
@@ -947,7 +948,7 @@ export const SaleForm = ({
         </GroupFormSection>
 
         {/* Detalles, Cuotas y Resumen */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6">
           {/* Columna Izquierda: Detalles y Cuotas */}
           <div className="space-y-6">
             {/* Detalles */}
@@ -1012,88 +1013,96 @@ export const SaleForm = ({
           </div>
 
           {/* Columna Derecha: Resumen Sticky */}
-          <div className="lg:sticky lg:top-4 lg:self-start">
+          <div className="xl:sticky xl:top-4 xl:self-start">
             <GroupFormSection
               title="Resumen"
-              icon={CreditCard}
+              icon={FileText}
               cols={{ sm: 1 }}
+              headerExtra={
+                mode === "create" &&
+                autoSerie &&
+                autoNumero && (
+                  <Badge variant="default" className="px-3 py-1" size="default">
+                    {autoSerie} - {autoNumero}
+                  </Badge>
+                )
+              }
             >
-              <div className="space-y-3">
+              <div className="space-y-6">
                 {/* Peso Total */}
-                <div className="flex flex-col gap-1 pb-3 border-b">
-                  <span className="text-xs uppercase font-medium text-muted-foreground">
+                <div className="space-y-1">
+                  <div className="text-[10px] uppercase tracking-wider text-blue-600/70 dark:text-blue-400/70 font-medium">
                     Peso Total
-                  </span>
-                  <span className="text-2xl font-bold text-blue-600">
+                  </div>
+                  <div className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
                     {formatDecimalTrunc(calculateTotalWeight(), 2)} kg
-                  </span>
+                  </div>
                 </div>
 
-                {/* Subtotal */}
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-muted-foreground">
-                    Subtotal
-                  </span>
-                  <span className="font-semibold">
-                    {getCurrencySymbol()}{" "}
-                    {formatNumber(calculateDetailsSubtotal())}
-                  </span>
+                <div className="border-t" />
+
+                {/* Desglose */}
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="font-medium text-foreground">
+                      {getCurrencySymbol()} {formatNumber(calculateDetailsSubtotal())}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">IGV (18%)</span>
+                    <span className="font-medium text-orange-600 dark:text-orange-400">
+                      {getCurrencySymbol()} {formatNumber(calculateDetailsIGV())}
+                    </span>
+                  </div>
                 </div>
 
-                {/* IGV */}
-                <div className="flex justify-between items-center py-2 border-t">
-                  <span className="text-sm text-muted-foreground">
-                    IGV (18%)
-                  </span>
-                  <span className="font-semibold text-orange-600">
-                    {getCurrencySymbol()} {formatNumber(calculateDetailsIGV())}
-                  </span>
-                </div>
+                <div className="border-t" />
 
-                {/* Total */}
-                <div className="flex flex-col gap-1 pt-3 border-t-2">
-                  <span className="text-xs uppercase font-medium text-muted-foreground">
+                {/* Total a Pagar */}
+                <div className="space-y-1">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
                     Total a Pagar
-                  </span>
-                  <span className="text-3xl font-bold text-primary">
-                    {getCurrencySymbol()}{" "}
-                    {formatNumber(calculateDetailsTotal())}
-                  </span>
+                  </div>
+                  <div className="text-3xl font-semibold text-primary">
+                    {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())}
+                  </div>
                 </div>
 
                 {/* Resumen de Cuotas si es a crédito */}
                 {selectedPaymentType === "CREDITO" &&
                   installments.length > 0 && (
-                    <div className="mt-4 pt-4 border-t space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs uppercase font-medium text-muted-foreground">
-                          Cuotas
-                        </span>
-                        <Badge variant="secondary" size="sm">
-                          {installments.length}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">
-                          Total Cuotas
-                        </span>
-                        <span
-                          className={`font-semibold ${
-                            installmentsMatchTotal()
-                              ? "text-green-600"
-                              : "text-orange-600"
-                          }`}
-                        >
-                          {getCurrencySymbol()}{" "}
-                          {formatNumber(calculateInstallmentsTotal())}
-                        </span>
-                      </div>
-                      {!installmentsMatchTotal() && (
-                        <div className="text-xs text-orange-600 bg-orange-50 dark:bg-orange-950 p-2 rounded">
-                          ⚠️ No coincide con el total
+                    <>
+                      <div className="border-t" />
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                            Cuotas ({installments.length})
+                          </div>
                         </div>
-                      )}
-                    </div>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-sm text-muted-foreground">
+                            Total en cuotas
+                          </span>
+                          <span
+                            className={`text-lg font-semibold ${
+                              installmentsMatchTotal()
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-orange-600 dark:text-orange-400"
+                            }`}
+                          >
+                            {getCurrencySymbol()}{" "}
+                            {formatNumber(calculateInstallmentsTotal())}
+                          </span>
+                        </div>
+                        {!installmentsMatchTotal() && (
+                          <div className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
+                            <span>⚠</span>
+                            <span>No coincide con el total</span>
+                          </div>
+                        )}
+                      </div>
+                    </>
                   )}
               </div>
             </GroupFormSection>

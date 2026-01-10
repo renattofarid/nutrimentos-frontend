@@ -14,6 +14,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -34,6 +35,7 @@ export function NavMain({
   }[];
 }) {
   const location = useLocation();
+  const { state, setOpen } = useSidebar();
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
 
   // Función para verificar si algún subitem coincide con la ruta actual
@@ -63,6 +65,25 @@ export function NavMain({
     setOpenItems(newOpenItems);
   }, [location.pathname, items]);
 
+  // Función para manejar el clic en un item cuando el sidebar está colapsado
+  const handleItemClick = (itemTitle: string, isOpen: boolean) => {
+    if (state === "collapsed") {
+      // Si el sidebar está colapsado, abrirlo primero
+      setOpen(true);
+      // Luego abrir el item
+      setOpenItems((prev) => ({
+        ...prev,
+        [itemTitle]: true,
+      }));
+    } else {
+      // Si el sidebar está expandido, comportamiento normal de toggle
+      setOpenItems((prev) => ({
+        ...prev,
+        [itemTitle]: isOpen,
+      }));
+    }
+  };
+
   return (
     <SidebarGroup>
       <SidebarMenu>
@@ -73,10 +94,7 @@ export function NavMain({
               asChild
               open={openItems[item.title]}
               onOpenChange={(isOpen) => {
-                setOpenItems((prev) => ({
-                  ...prev,
-                  [item.title]: isOpen,
-                }));
+                handleItemClick(item.title, isOpen);
               }}
               className="group/collapsible"
             >

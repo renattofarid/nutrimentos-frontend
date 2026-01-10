@@ -38,7 +38,7 @@ export const SaleAddPage = () => {
   useEffect(() => {
     setOpen(false);
     setOpenMobile(false);
-  }, [setOpen, setOpenMobile]);
+  }, []);
 
   const { createSale } = useSaleStore();
 

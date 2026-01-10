@@ -867,17 +867,13 @@ export const SaleForm = ({
         >
           <FormSelect
             control={form.control}
-            name="branch_id"
-            label="Tienda"
-            placeholder="Seleccione una tienda"
-            options={
-              branches?.map((branch) => ({
-                value: branch.id.toString(),
-                label: branch.name,
-                description: branch.address,
-              })) || []
-            }
-            disabled={mode === "update"}
+            name="document_type"
+            label="Tipo de Documento"
+            placeholder="Seleccione tipo"
+            options={DOCUMENT_TYPES.map((dt) => ({
+              value: dt.value,
+              label: dt.label,
+            }))}
           />
 
           <div className="flex gap-2 items-end">
@@ -917,17 +913,17 @@ export const SaleForm = ({
 
           <FormSelect
             control={form.control}
-            name="vendedor_id"
-            label="Vendedor"
-            placeholder="Seleccionar vendedor (opcional)"
-            options={[
-              { value: "", label: "Sin vendedor" },
-              ...(workers?.map((worker) => ({
-                value: worker.id.toString(),
-                label: `${worker.names} ${worker.father_surname}`,
-                description: worker.number_document ?? "-",
-              })) || []),
-            ]}
+            name="branch_id"
+            label="Tienda"
+            placeholder="Seleccione una tienda"
+            options={
+              branches?.map((branch) => ({
+                value: branch.id.toString(),
+                label: branch.name,
+                description: branch.address,
+              })) || []
+            }
+            disabled={mode === "update"}
           />
 
           <FormSelect
@@ -944,12 +940,27 @@ export const SaleForm = ({
 
           <FormSelect
             control={form.control}
-            name="document_type"
-            label="Tipo de Documento"
+            name="vendedor_id"
+            label="Vendedor"
+            placeholder="Seleccionar vendedor (opcional)"
+            options={[
+              { value: "", label: "Sin vendedor" },
+              ...(workers?.map((worker) => ({
+                value: worker.id.toString(),
+                label: `${worker.names} ${worker.father_surname}`,
+                description: worker.number_document ?? "-",
+              })) || []),
+            ]}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="payment_type"
+            label="Tipo de Pago"
             placeholder="Seleccione tipo"
-            options={DOCUMENT_TYPES.map((dt) => ({
-              value: dt.value,
-              label: dt.label,
+            options={PAYMENT_TYPES.map((pt) => ({
+              value: pt.value,
+              label: pt.label,
             }))}
           />
 
@@ -962,17 +973,6 @@ export const SaleForm = ({
             disabledRange={{
               after: new Date(),
             }}
-          />
-
-          <FormSelect
-            control={form.control}
-            name="payment_type"
-            label="Tipo de Pago"
-            placeholder="Seleccione tipo"
-            options={PAYMENT_TYPES.map((pt) => ({
-              value: pt.value,
-              label: pt.label,
-            }))}
           />
 
           <FormSelect
@@ -996,214 +996,288 @@ export const SaleForm = ({
           </div>
         </GroupFormSection>
 
-        {/* Detalles */}
-        <GroupFormSection
-          title="Detalles de la Venta"
-          icon={ListChecks}
-          cols={{ sm: 1 }}
-        >
-          {/* Excel Grid para Detalles */}
-          <ExcelGrid
-            columns={gridColumns}
-            data={details}
-            onAddRow={handleAddRow}
-            onRemoveRow={handleRemoveRow}
-            onCellChange={handleCellChange}
-            productOptions={productOptions}
-            onProductSelect={handleProductSelect}
-            emptyMessage="Seleccione un almacén y cliente para comenzar."
-            disabled={!selectedWarehouseId || !form.watch("customer_id")}
-          />
-
-          {/* Resumen de totales */}
-          {details.length > 0 && (
-            <div className="mt-4 space-y-2 p-4 bg-muted/30 rounded-lg border">
-              <div className="flex justify-between items-center pb-2 border-b">
-                <span className="font-bold text-blue-600">Peso Total:</span>
-                <span className="text-lg font-bold text-blue-600">
-                  {formatDecimalTrunc(calculateTotalWeight(), 2)} kg
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Subtotal:</span>
-                <span className="font-bold">
-                  {getCurrencySymbol()}{" "}
-                  {formatNumber(calculateDetailsSubtotal())}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold text-orange-600">
-                  IGV (18%):
-                </span>
-                <span className="font-bold text-orange-600">
-                  {getCurrencySymbol()} {formatNumber(calculateDetailsIGV())}
-                </span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t">
-                <span className="text-lg font-bold">Total:</span>
-                <span className="text-xl font-bold text-primary">
-                  {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())}
-                </span>
-              </div>
-            </div>
-          )}
-        </GroupFormSection>
-
-        {/* Cuotas - Solo mostrar si es a crédito */}
-        {selectedPaymentType === "CREDITO" && (
-          <GroupFormSection
-            title="Cuotas de Pago"
-            icon={ListChecks}
-            cols={{ sm: 1 }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
-              <FormField
-                control={installmentTempForm.control}
-                name="temp_installment_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Número de Cuota</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="1" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
+        {/* Detalles, Cuotas y Resumen */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+          {/* Columna Izquierda: Detalles y Cuotas */}
+          <div className="space-y-6">
+            {/* Detalles */}
+            <GroupFormSection
+              title="Detalles de la Venta"
+              icon={ListChecks}
+              cols={{ sm: 1 }}
+            >
+              <ExcelGrid
+                columns={gridColumns}
+                data={details}
+                onAddRow={handleAddRow}
+                onRemoveRow={handleRemoveRow}
+                onCellChange={handleCellChange}
+                productOptions={productOptions}
+                onProductSelect={handleProductSelect}
+                emptyMessage="Seleccione un almacén y cliente para comenzar."
+                disabled={!selectedWarehouseId || !form.watch("customer_id")}
               />
+            </GroupFormSection>
 
-              <FormField
-                control={installmentTempForm.control}
-                name="temp_due_days"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Días de Vencimiento</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="30" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+            {/* Cuotas - Solo mostrar si es a crédito */}
+            {selectedPaymentType === "CREDITO" && (
+              <GroupFormSection
+                title="Cuotas de Pago"
+                icon={CreditCard}
+                cols={{ sm: 1 }}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
+                  <FormField
+                    control={installmentTempForm.control}
+                    name="temp_installment_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Número de Cuota</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="1" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={installmentTempForm.control}
-                name="temp_amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monto</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.0001"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={installmentTempForm.control}
+                    name="temp_due_days"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Días de Vencimiento</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="30" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-              <div className="flex items-end justify-end">
-                <Button
-                  type="button"
-                  variant="default"
-                  size={"sm"}
-                  onClick={handleAddInstallment}
-                  disabled={
-                    !currentInstallment.installment_number ||
-                    !currentInstallment.due_days ||
-                    !currentInstallment.amount
-                  }
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  {editingInstallmentIndex !== null ? "Actualizar" : "Agregar"}
-                </Button>
-              </div>
-            </div>
+                  <FormField
+                    control={installmentTempForm.control}
+                    name="temp_amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Monto</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.0001"
+                            placeholder="0.00"
+                            {...field}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-            {installments.length > 0 ? (
-              <>
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Cuota #</TableHead>
-                        <TableHead className="text-right">
-                          Días Vencimiento
-                        </TableHead>
-                        <TableHead className="text-right">Monto</TableHead>
-                        <TableHead className="text-center">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {installments.map((inst, index) => (
-                        <TableRow key={index}>
-                          <TableCell>Cuota {inst.installment_number}</TableCell>
-                          <TableCell className="text-right">
-                            {inst.due_days} días
-                          </TableCell>
-                          <TableCell className="text-right font-semibold">
-                            {formatDecimalTrunc(parseFloat(inst.amount), 6)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex justify-center gap-2">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditInstallment(index)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveInstallment(index)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow>
-                        <TableCell colSpan={2} className="text-right font-bold">
-                          TOTAL CUOTAS:
-                        </TableCell>
-                        <TableCell className="text-right font-bold text-lg text-blue-600">
-                          {getCurrencySymbol()}{" "}
-                          {formatDecimalTrunc(calculateInstallmentsTotal(), 6)}
-                        </TableCell>
-                        <TableCell></TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-                {!installmentsMatchTotal() && (
-                  <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-                    <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                      ⚠️ El total de cuotas ({getCurrencySymbol()}{" "}
-                      {formatNumber(calculateInstallmentsTotal())}) debe ser
-                      igual al total de la venta ({getCurrencySymbol()}{" "}
-                      {formatNumber(calculateDetailsTotal())})
-                    </p>
+                  <div className="flex items-end justify-end">
+                    <Button
+                      type="button"
+                      variant="default"
+                      size={"sm"}
+                      onClick={handleAddInstallment}
+                      disabled={
+                        !currentInstallment.installment_number ||
+                        !currentInstallment.due_days ||
+                        !currentInstallment.amount
+                      }
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      {editingInstallmentIndex !== null
+                        ? "Actualizar"
+                        : "Agregar"}
+                    </Button>
                   </div>
+                </div>
+
+                {installments.length > 0 ? (
+                  <>
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Cuota #</TableHead>
+                            <TableHead className="text-right">
+                              Días Vencimiento
+                            </TableHead>
+                            <TableHead className="text-right">Monto</TableHead>
+                            <TableHead className="text-center">
+                              Acciones
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {installments.map((inst, index) => (
+                            <TableRow key={index}>
+                              <TableCell>
+                                Cuota {inst.installment_number}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {inst.due_days} días
+                              </TableCell>
+                              <TableCell className="text-right font-semibold">
+                                {formatDecimalTrunc(parseFloat(inst.amount), 6)}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <div className="flex justify-center gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditInstallment(index)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleRemoveInstallment(index)
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          <TableRow>
+                            <TableCell
+                              colSpan={2}
+                              className="text-right font-bold"
+                            >
+                              TOTAL CUOTAS:
+                            </TableCell>
+                            <TableCell className="text-right font-bold text-lg text-blue-600">
+                              {getCurrencySymbol()}{" "}
+                              {formatDecimalTrunc(
+                                calculateInstallmentsTotal(),
+                                6
+                              )}
+                            </TableCell>
+                            <TableCell></TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
+                    {!installmentsMatchTotal() && (
+                      <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+                        <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
+                          ⚠️ El total de cuotas ({getCurrencySymbol()}{" "}
+                          {formatNumber(calculateInstallmentsTotal())}) debe ser
+                          igual al total de la venta ({getCurrencySymbol()}{" "}
+                          {formatNumber(calculateDetailsTotal())})
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Empty className="border border-dashed">
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <CreditCard />
+                      </EmptyMedia>
+                      <EmptyTitle>No hay cuotas agregadas</EmptyTitle>
+                      <EmptyDescription>
+                        Agregue las cuotas de pago utilizando el formulario
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
                 )}
-              </>
-            ) : (
-              <Empty className="border border-dashed">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <CreditCard />
-                  </EmptyMedia>
-                  <EmptyTitle>No hay cuotas agregadas</EmptyTitle>
-                  <EmptyDescription>
-                    Agregue las cuotas de pago utilizando el formulario
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+              </GroupFormSection>
             )}
-          </GroupFormSection>
-        )}
+          </div>
+
+          {/* Columna Derecha: Resumen Sticky */}
+          <div className="lg:sticky lg:top-4 lg:self-start">
+            <GroupFormSection
+              title="Resumen"
+              icon={CreditCard}
+              cols={{ sm: 1 }}
+            >
+              <div className="space-y-3">
+                {/* Peso Total */}
+                <div className="flex flex-col gap-1 pb-3 border-b">
+                  <span className="text-xs uppercase font-medium text-muted-foreground">
+                    Peso Total
+                  </span>
+                  <span className="text-2xl font-bold text-blue-600">
+                    {formatDecimalTrunc(calculateTotalWeight(), 2)} kg
+                  </span>
+                </div>
+
+                {/* Subtotal */}
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm text-muted-foreground">
+                    Subtotal
+                  </span>
+                  <span className="font-semibold">
+                    {getCurrencySymbol()}{" "}
+                    {formatNumber(calculateDetailsSubtotal())}
+                  </span>
+                </div>
+
+                {/* IGV */}
+                <div className="flex justify-between items-center py-2 border-t">
+                  <span className="text-sm text-muted-foreground">
+                    IGV (18%)
+                  </span>
+                  <span className="font-semibold text-orange-600">
+                    {getCurrencySymbol()} {formatNumber(calculateDetailsIGV())}
+                  </span>
+                </div>
+
+                {/* Total */}
+                <div className="flex flex-col gap-1 pt-3 border-t-2">
+                  <span className="text-xs uppercase font-medium text-muted-foreground">
+                    Total a Pagar
+                  </span>
+                  <span className="text-3xl font-bold text-primary">
+                    {getCurrencySymbol()}{" "}
+                    {formatNumber(calculateDetailsTotal())}
+                  </span>
+                </div>
+
+                {/* Resumen de Cuotas si es a crédito */}
+                {selectedPaymentType === "CREDITO" &&
+                  installments.length > 0 && (
+                    <div className="mt-4 pt-4 border-t space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs uppercase font-medium text-muted-foreground">
+                          Cuotas
+                        </span>
+                        <Badge variant="secondary" size="sm">
+                          {installments.length}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">
+                          Total Cuotas
+                        </span>
+                        <span
+                          className={`font-semibold ${
+                            installmentsMatchTotal()
+                              ? "text-green-600"
+                              : "text-orange-600"
+                          }`}
+                        >
+                          {getCurrencySymbol()}{" "}
+                          {formatNumber(calculateInstallmentsTotal())}
+                        </span>
+                      </div>
+                      {!installmentsMatchTotal() && (
+                        <div className="text-xs text-orange-600 bg-orange-50 dark:bg-orange-950 p-2 rounded">
+                          ⚠️ No coincide con el total
+                        </div>
+                      )}
+                    </div>
+                  )}
+              </div>
+            </GroupFormSection>
+          </div>
+        </div>
 
         {/* <pre>
           <code>{JSON.stringify(form.getValues(), null, 2)}</code>

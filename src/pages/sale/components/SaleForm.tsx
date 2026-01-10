@@ -64,7 +64,11 @@ import { ClientDialog } from "@/pages/client/components/ClientDialog";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { getNextSeries } from "../lib/sale.actions";
 import { useDynamicPrice } from "../lib/dynamic-price.hook";
-import { ExcelGrid, type ExcelGridColumn, type ProductOption } from "@/components/ExcelGrid";
+import {
+  ExcelGrid,
+  type ExcelGridColumn,
+  type ProductOption,
+} from "@/components/ExcelGrid";
 
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
@@ -404,14 +408,20 @@ export const SaleForm = ({
     form.setValue("details", updatedDetails);
   };
 
-  const handleCellChange = async (index: number, field: string, value: string) => {
+  const handleCellChange = async (
+    index: number,
+    field: string,
+    value: string
+  ) => {
     const updatedDetails = [...details];
     updatedDetails[index] = { ...updatedDetails[index], [field]: value };
 
     // Recalcular totales cuando cambian cantidad o kg adicionales
     if (field === "quantity_sacks" || field === "quantity_kg") {
       const detail = updatedDetails[index];
-      const product = filteredProducts.find(p => p.id.toString() === detail.product_id);
+      const product = filteredProducts.find(
+        (p) => p.id.toString() === detail.product_id
+      );
 
       if (product && detail.product_id) {
         const qty = parseFloat(detail.quantity_sacks) || 0;
@@ -419,7 +429,10 @@ export const SaleForm = ({
         const productWeight = parseFloat(product.weight || "0");
 
         // Calcular peso total en kg (sacos × peso_por_saco + kg_adicionales)
-        const totalWeightKg = productWeight > 0 ? roundTo6Decimals(productWeight * qty + addKg) : addKg;
+        const totalWeightKg =
+          productWeight > 0
+            ? roundTo6Decimals(productWeight * qty + addKg)
+            : addKg;
 
         // El campo quantity representa solo la cantidad de sacos
         // Los kg adicionales se manejan por separado en quantity_kg
@@ -467,20 +480,22 @@ export const SaleForm = ({
               const clearedDetails = [...updatedDetails];
               clearedDetails[index] = {
                 ...clearedDetails[index],
-                quantity: "0",  // Resetear quantity_sacks a 0
-                quantity_sacks: "0",  // Resetear quantity_sacks a 0
+                quantity: "0", // Resetear quantity_sacks a 0
+                quantity_sacks: "0", // Resetear quantity_sacks a 0
                 unit_price: "",
                 subtotal: 0,
                 igv: 0,
                 total: 0,
-                total_kg: addKg,  // Solo los kg adicionales
+                total_kg: addKg, // Solo los kg adicionales
                 price_from_api: false,
               };
 
               setDetails(clearedDetails);
               form.setValue("details", clearedDetails);
 
-              errorToast("Error al obtener el precio dinámico. Por favor, ingrese el precio manualmente.");
+              errorToast(
+                "Error al obtener el precio dinámico. Por favor, ingrese el precio manualmente."
+              );
             }
           } catch (error: any) {
             console.error("Error fetching dynamic price:", error);
@@ -489,20 +504,23 @@ export const SaleForm = ({
             const clearedDetails = [...updatedDetails];
             clearedDetails[index] = {
               ...clearedDetails[index],
-              quantity: "0",  // Resetear quantity_sacks a 0
-              quantity_sacks: "0",  // Resetear quantity_sacks a 0
+              quantity: "0", // Resetear quantity_sacks a 0
+              quantity_sacks: "0", // Resetear quantity_sacks a 0
               unit_price: "",
               subtotal: 0,
               igv: 0,
               total: 0,
-              total_kg: addKg,  // Solo los kg adicionales
+              total_kg: addKg, // Solo los kg adicionales
               price_from_api: false,
             };
 
             setDetails(clearedDetails);
             form.setValue("details", clearedDetails);
 
-            const errorMessage = error?.response?.data?.message || error?.response?.data?.error || "Error al obtener el precio dinámico. Por favor, ingrese el precio manualmente.";
+            const errorMessage =
+              error?.response?.data?.message ||
+              error?.response?.data?.error ||
+              "Error al obtener el precio dinámico. Por favor, ingrese el precio manualmente.";
             errorToast(errorMessage);
           }
         }
@@ -521,17 +539,25 @@ export const SaleForm = ({
       const addKg = parseFloat(detail.quantity_kg) || 0;
 
       // Obtener el peso del producto
-      const product = filteredProducts.find(p => p.id.toString() === detail.product_id);
+      const product = filteredProducts.find(
+        (p) => p.id.toString() === detail.product_id
+      );
       const productWeight = product?.weight ? parseFloat(product.weight) : 0;
 
       // Calcular peso total en kg (sacos × peso_por_saco + kg_adicionales)
-      const totalWeightKg = productWeight > 0 ? roundTo6Decimals(productWeight * qtySacks + addKg) : addKg;
+      const totalWeightKg =
+        productWeight > 0
+          ? roundTo6Decimals(productWeight * qtySacks + addKg)
+          : addKg;
 
       // El campo quantity representa solo la cantidad de sacos
       const quantityDecimal = qtySacks;
 
       // Calcular totales basados en peso_total_kg × precio_por_kg
-      const subtotal = totalWeightKg > 0 && unitPrice > 0 ? roundTo6Decimals(totalWeightKg * unitPrice) : 0;
+      const subtotal =
+        totalWeightKg > 0 && unitPrice > 0
+          ? roundTo6Decimals(totalWeightKg * unitPrice)
+          : 0;
       const igv = subtotal > 0 ? roundTo6Decimals(subtotal * 0.18) : 0;
       const total = subtotal > 0 ? roundTo6Decimals(subtotal + igv) : 0;
 
@@ -556,7 +582,9 @@ export const SaleForm = ({
   };
 
   const handleProductSelect = async (index: number, product: ProductOption) => {
-    const selectedProduct = filteredProducts.find(p => p.id.toString() === product.id);
+    const selectedProduct = filteredProducts.find(
+      (p) => p.id.toString() === product.id
+    );
     if (!selectedProduct) return;
 
     const updatedDetails = [...details];
@@ -624,7 +652,9 @@ export const SaleForm = ({
       width: "120px",
       render: (row) => (
         <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold">
-          {row.subtotal ? `${getCurrencySymbol()} ${formatNumber(row.subtotal)}` : "-"}
+          {row.subtotal
+            ? `${getCurrencySymbol()} ${formatNumber(row.subtotal)}`
+            : "-"}
         </div>
       ),
     },
@@ -1041,7 +1071,6 @@ export const SaleForm = ({
             </div>
           )}
         </GroupFormSection>
-
 
         {/* Cuotas - Solo mostrar si es a crédito */}
         {selectedPaymentType === "CREDITO" && (

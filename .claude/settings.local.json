@@ -16,6 +16,9 @@
       "Bash(grep:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "c:\\Users\\david\\Documents\\data\\front\\nutrimentos-frontend\\src\\pages\\reports"
+    ]
   }
 }

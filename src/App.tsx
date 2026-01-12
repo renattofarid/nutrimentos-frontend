@@ -74,6 +74,9 @@ import PurchaseEditPage from "./pages/purchase/components/PurchaseEditPage";
 import { SaleRoute } from "./pages/sale/lib/sale.interface";
 import { SaleAddPage, SaleEditPage, SalePage } from "./pages/sale/components";
 import SaleManagePage from "./pages/sale/components/SaleManagePage";
+import { CREDIT_NOTE } from "./pages/credit-note/lib/credit-note.interface";
+import CreditNotePage from "./pages/credit-note/components/CreditNotePage";
+import CreditNoteAddPage from "./pages/credit-note/components/CreditNoteAddPage";
 import GuidePage from "./pages/guide/components/GuidePage";
 import GuideAddPage from "./pages/guide/components/GuideAddPage";
 import GuideEditPage from "./pages/guide/components/GuideEditPage";
@@ -101,6 +104,8 @@ import { DRIVER } from "./pages/driver/lib/driver.interface";
 import DriverPage from "./pages/driver/components/DriverPage";
 import DriverAddPage from "./pages/driver/components/DriverAddPage";
 import DriverEditPage from "./pages/driver/components/DriverEditPage";
+import { CustomerAccountStatementPage } from "./pages/reports/components";
+import { CUSTOMER_ACCOUNT_STATEMENT_ROUTE } from "./pages/reports/lib/reports.interface";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -137,6 +142,10 @@ const {
   ROUTE_ADD: DeliverySheetRouteAdd,
   ROUTE_UPDATE: DeliverySheetRouteUpdate,
 } = DELIVERY_SHEET;
+const {
+  ROUTE: CreditNoteRoute,
+  ROUTE_ADD: CreditNoteRouteAdd,
+} = CREDIT_NOTE;
 
 export const hasAccessToRoute = (access: Access[], route: string): boolean => {
   const transformRoute = route.split("/").pop();
@@ -676,6 +685,24 @@ export default function App() {
           />
 
           <Route
+            path={CreditNoteRoute}
+            element={
+              <ProtectedRoute path={CreditNoteRoute}>
+                <CreditNotePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={CreditNoteRouteAdd}
+            element={
+              <ProtectedRoute path={CreditNoteRoute}>
+                <CreditNoteAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path={GuideRoute}
             element={
               <ProtectedRoute path={GuideRoute}>
@@ -773,6 +800,16 @@ export default function App() {
             element={
               <ProtectedRoute path={DeliverySheetRouteUpdate}>
                 <DeliverySheetAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rutas de Reportes */}
+          <Route
+            path={CUSTOMER_ACCOUNT_STATEMENT_ROUTE}
+            element={
+              <ProtectedRoute path={CUSTOMER_ACCOUNT_STATEMENT_ROUTE}>
+                <CustomerAccountStatementPage />
               </ProtectedRoute>
             }
           />

@@ -27,6 +27,13 @@ export const BoxShiftColumns = ({
     ),
   },
   {
+    accessorKey: "box.name",
+    header: "Caja",
+    cell: ({ getValue }) => (
+      <span className="font-medium">{getValue() as string}</span>
+    ),
+  },
+  {
     accessorKey: "open_date",
     header: "Fecha Apertura",
     cell: ({ getValue }) => {
@@ -44,7 +51,9 @@ export const BoxShiftColumns = ({
     accessorKey: "started_amount",
     header: "Monto Inicial",
     cell: ({ getValue }) => (
-      <span className="font-medium">{formatCurrency(getValue() as number)}</span>
+      <span className="font-medium">
+        {formatCurrency(getValue() as number)}
+      </span>
     ),
   },
   {
@@ -63,7 +72,10 @@ export const BoxShiftColumns = ({
       const status = row.original.status;
       const isOpen = status === "ABIERTO";
       return (
-        <Badge variant={isOpen ? "default" : "secondary"} className="font-medium">
+        <Badge
+          variant={isOpen ? "default" : "secondary"}
+          className="font-medium"
+        >
           {status}
         </Badge>
       );

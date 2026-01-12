@@ -6,6 +6,7 @@ import {
   Package,
   ShoppingBag,
   DollarSign,
+  FileText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -47,12 +48,17 @@ import { hasAccessToRoute } from "@/App";
 import { useEffect, useState } from "react";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
 import { SaleRoute } from "@/pages/sale/lib/sale.interface";
+import { CREDIT_NOTE } from "@/pages/credit-note/lib/credit-note.interface";
 import { BOX_SHIFT } from "@/pages/box-shift/lib/box-shift.interface";
 import { AccountsReceivableRoute } from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
 import { ACCOUNTS_PAYABLE } from "@/pages/accounts-payable/lib/accounts-payable.interface";
 import { WAREHOUSE_DOCUMENT } from "@/pages/warehouse-document/lib/warehouse-document.interface";
 import { DELIVERY_SHEET } from "@/pages/deliverysheet/lib/deliverysheet.interface";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
+import {
+  CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+  REPORTS,
+} from "@/pages/reports/lib/reports.interface";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -234,6 +240,17 @@ const {
   MODEL: { plural: DeliverySheetTitle },
 } = DELIVERY_SHEET;
 
+const {
+  ICON_REACT: CreditNoteIcon,
+  ROUTE: CreditNoteRoute,
+  MODEL: { plural: CreditNoteTitle },
+} = CREDIT_NOTE;
+
+const {
+  ICON_REACT: ReportsIcon,
+  MODEL: { name: ReportsTitle },
+} = REPORTS;
+
 const data = {
   navMain: [
     {
@@ -250,6 +267,11 @@ const data = {
           title: "Ventas",
           url: SaleRoute,
           icon: ShoppingBag,
+        },
+        {
+          title: CreditNoteTitle,
+          url: CreditNoteRoute,
+          icon: CreditNoteIcon,
         },
         {
           title: "Cuentas por Cobrar",
@@ -454,6 +476,18 @@ const data = {
           title: TypeUserTitle,
           url: TypeUserRoute,
           icon: TypeUserIcon,
+        },
+      ],
+    },
+    {
+      title: ReportsTitle,
+      url: "#",
+      icon: FileText,
+      items: [
+        {
+          title: "Estado de Cuenta Clientes",
+          url: CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+          icon: FileText,
         },
       ],
     },

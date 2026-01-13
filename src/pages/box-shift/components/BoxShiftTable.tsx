@@ -20,6 +20,7 @@ export default function BoxShiftTable({
       columns={columns}
       data={data}
       isLoading={isLoading}
+      initialColumnVisibility={{ id: false }}
     >
       {children}
     </DataTable>

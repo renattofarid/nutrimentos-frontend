@@ -34,6 +34,13 @@ export const BoxShiftColumns = ({
     ),
   },
   {
+    accessorKey: "box.serie",
+    header: "Serie",
+    cell: ({ getValue }) => (
+      <span className="font-medium">{getValue() as string}</span>
+    ),
+  },
+  {
     accessorKey: "open_date",
     header: "Fecha Apertura",
     cell: ({ getValue }) => {

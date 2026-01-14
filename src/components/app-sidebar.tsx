@@ -6,7 +6,6 @@ import {
   Package,
   ShoppingBag,
   DollarSign,
-  FileText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -482,12 +481,12 @@ const data = {
     {
       title: ReportsTitle,
       url: "#",
-      icon: FileText,
+      icon: ReportsIcon,
       items: [
         {
           title: "Estado de Cuenta Clientes",
           url: CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
-          icon: FileText,
+          icon: ReportsIcon,
         },
       ],
     },

@@ -3,7 +3,10 @@ import { useCustomerAccountStatement } from "../lib/reports.hook";
 import TitleComponent from "@/components/TitleComponent";
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { CustomerAccountStatementItem } from "../lib/reports.interface";
+import type {
+  CustomerAccountStatementItem,
+  CustomerAccountStatementParams,
+} from "../lib/reports.interface";
 import { Badge } from "@/components/ui/badge";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
@@ -11,7 +14,7 @@ import { useAllClients } from "@/pages/client/lib/client.hook";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, FileSpreadsheet, FileText, Search } from "lucide-react";
+import { FileSpreadsheet, FileText, Search } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -121,10 +124,12 @@ export default function CustomerAccountStatementPage() {
   const [zoneId, setZoneId] = useState<string>("");
   const [customerId, setCustomerId] = useState<string>("");
   const [vendedorId, setVendedorId] = useState<string>("");
-  const [paymentType, setPaymentType] = useState<string>("");
+  const [paymentType, setPaymentType] = useState<
+    "CONTADO" | "CREDITO" | "ALL"
+  >("ALL");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [queryType, setQueryType] = useState<string>("todo");
+  const [queryType, setQueryType] = useState<"solo_deuda" | "todo">("todo");
   const [showOld, setShowOld] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -135,35 +140,35 @@ export default function CustomerAccountStatementPage() {
   const { data, isLoading, meta, fetch } = useCustomerAccountStatement();
 
   const handleSearch = () => {
-    const params = {
+    const params: CustomerAccountStatementParams = {
       zone_id: zoneId ? Number(zoneId) : null,
       customer_id: customerId ? Number(customerId) : null,
       vendedor_id: vendedorId ? Number(vendedorId) : null,
-      payment_type: paymentType || null,
+      payment_type: paymentType === "ALL" ? null : paymentType,
       start_date: startDate || null,
       end_date: endDate || null,
-      query_type: queryType || null,
+      query_type: queryType,
       show_old: showOld,
     };
 
-    fetch(params as any);
+    fetch(params);
   };
 
   const handleExport = async (exportType: "excel" | "pdf") => {
     setIsExporting(true);
     try {
-      const params = {
+      const params: CustomerAccountStatementParams = {
         zone_id: zoneId ? Number(zoneId) : null,
         customer_id: customerId ? Number(customerId) : null,
         vendedor_id: vendedorId ? Number(vendedorId) : null,
-        payment_type: paymentType || null,
+        payment_type: paymentType === "ALL" ? null : paymentType,
         start_date: startDate || null,
         end_date: endDate || null,
-        query_type: queryType || null,
+        query_type: queryType,
         show_old: showOld,
       };
 
-      const blob = await exportCustomerAccountStatement(params as any, exportType);
+      const blob = await exportCustomerAccountStatement(params, exportType);
 
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -199,14 +204,14 @@ export default function CustomerAccountStatementPage() {
             <div className="space-y-2">
               <Label>Zona</Label>
               <SearchableSelect
-                items={
+                options={
                   zones?.map((zone) => ({
                     value: zone.id.toString(),
                     label: zone.name,
                   })) || []
                 }
                 value={zoneId}
-                onValueChange={setZoneId}
+                onChange={setZoneId}
                 placeholder="Seleccionar zona"
               />
             </div>
@@ -214,14 +219,14 @@ export default function CustomerAccountStatementPage() {
             <div className="space-y-2">
               <Label>Cliente</Label>
               <SearchableSelect
-                items={
+                options={
                   clients?.map((client) => ({
                     value: client.id.toString(),
-                    label: `${client.name} ${client.last_name}`,
+                    label: `${client.names} ${client.father_surname} ${client.mother_surname}`,
                   })) || []
                 }
                 value={customerId}
-                onValueChange={setCustomerId}
+                onChange={setCustomerId}
                 placeholder="Seleccionar cliente"
               />
             </div>
@@ -229,26 +234,31 @@ export default function CustomerAccountStatementPage() {
             <div className="space-y-2">
               <Label>Vendedor</Label>
               <SearchableSelect
-                items={
+                options={
                   workers?.map((worker) => ({
                     value: worker.id.toString(),
-                    label: `${worker.name} ${worker.last_name}`,
+                    label: `${worker.names} ${worker.father_surname} ${worker.mother_surname}`,
                   })) || []
                 }
                 value={vendedorId}
-                onValueChange={setVendedorId}
+                onChange={setVendedorId}
                 placeholder="Seleccionar vendedor"
               />
             </div>
 
             <div className="space-y-2">
               <Label>Tipo de Pago</Label>
-              <Select value={paymentType} onValueChange={setPaymentType}>
+              <Select
+                value={paymentType}
+                onValueChange={(value) =>
+                  setPaymentType(value as "CONTADO" | "CREDITO" | "ALL")
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="ALL">Todos</SelectItem>
                   <SelectItem value="CONTADO">Contado</SelectItem>
                   <SelectItem value="CREDITO">Crédito</SelectItem>
                 </SelectContent>
@@ -275,7 +285,12 @@ export default function CustomerAccountStatementPage() {
 
             <div className="space-y-2">
               <Label>Tipo de Consulta</Label>
-              <Select value={queryType} onValueChange={setQueryType}>
+              <Select
+                value={queryType}
+                onValueChange={(value) =>
+                  setQueryType(value as "solo_deuda" | "todo")
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar tipo" />
                 </SelectTrigger>

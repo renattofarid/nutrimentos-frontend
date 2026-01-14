@@ -17,6 +17,8 @@ import { SALE } from "../lib/sale.interface";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
 import { useSidebar } from "@/components/ui/sidebar";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export const SaleAddPage = () => {
   const { ICON } = SALE;
@@ -85,6 +87,14 @@ export const SaleAddPage = () => {
     );
   }
 
+  const missingDependencies = [];
+  if (!branches || branches.length === 0) missingDependencies.push("Sucursales");
+  if (!customers || customers.length === 0) missingDependencies.push("Clientes");
+  if (!warehouses || warehouses.length === 0) missingDependencies.push("Almacenes");
+  if (!products || products.length === 0) missingDependencies.push("Productos");
+
+  const canShowForm = missingDependencies.length === 0;
+
   return (
     <PageWrapper fluid>
       <div className="mb-6">
@@ -93,27 +103,35 @@ export const SaleAddPage = () => {
         </div>
       </div>
 
-      {branches &&
-        branches.length > 0 &&
-        customers &&
-        customers.length > 0 &&
-        warehouses &&
-        warehouses.length > 0 &&
-        products &&
-        products.length > 0 && (
-          <SaleForm
-            defaultValues={getDefaultValues()}
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-            mode="create"
-            branches={branches}
-            customers={customers}
-            warehouses={warehouses}
-            products={products}
-            onCancel={() => navigate("/ventas")}
-            onRefreshClients={onRefreshClients}
-          />
-        )}
+      {!canShowForm && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>No se puede crear una venta</AlertTitle>
+          <AlertDescription>
+            Para crear una venta, primero debes registrar los siguientes datos:
+            <ul className="list-disc list-inside mt-2">
+              {missingDependencies.map((dep) => (
+                <li key={dep}>{dep}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {canShowForm && (
+        <SaleForm
+          defaultValues={getDefaultValues()}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          mode="create"
+          branches={branches!}
+          customers={customers!}
+          warehouses={warehouses!}
+          products={products!}
+          onCancel={() => navigate("/ventas")}
+          onRefreshClients={onRefreshClients}
+        />
+      )}
     </PageWrapper>
   );
 };

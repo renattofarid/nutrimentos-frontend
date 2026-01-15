@@ -130,7 +130,7 @@ export default function ProductEditPage() {
     !product;
 
   return (
-    <PageWrapper fluid>
+    <PageWrapper size="3xl">
       <TitleFormComponent title={MODEL.name} mode="edit" />
 
       {isLoading ? (

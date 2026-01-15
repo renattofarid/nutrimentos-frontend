@@ -123,6 +123,9 @@ export const SaleForm = ({
       mode === "create" ? saleSchemaCreate : saleSchemaUpdate
     ),
     defaultValues: {
+      document_type: "FACTURA", // Por defecto Factura
+      currency: "PEN", // Por defecto Soles
+      payment_type: "CONTADO", // Por defecto al Contado
       ...defaultValues,
       details: details.length > 0 ? details : [],
       installments: installments.length > 0 ? installments : [],
@@ -248,6 +251,11 @@ export const SaleForm = ({
           form.setValue("warehouse_id", "");
         }
       }
+
+      // Si solo hay un almacén, seleccionarlo automáticamente
+      if (filtered.length === 1 && !currentWarehouseId && mode === "create") {
+        form.setValue("warehouse_id", filtered[0].id.toString());
+      }
     } else {
       setFilteredWarehouses([]);
       form.setValue("warehouse_id", "");
@@ -296,6 +304,22 @@ export const SaleForm = ({
     };
     fetchNextSeries();
   }, [selectedBranchId, selectedDocumentType, mode]);
+
+  // Efecto para hacer focus en el primer campo cuando se monta el formulario
+  useEffect(() => {
+    // Esperar un tick para asegurar que el DOM esté completamente renderizado
+    const timer = setTimeout(() => {
+      // Buscar el primer botón del formulario (que es el trigger del FormSelect)
+      const firstButton = document.querySelector(
+        'form button[role="combobox"]'
+      ) as HTMLButtonElement;
+      if (firstButton) {
+        firstButton.focus();
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Función de redondeo a 6 decimales
   const roundTo6Decimals = (value: number): number => {
@@ -1046,13 +1070,15 @@ export const SaleForm = ({
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
                     <span className="font-medium text-foreground">
-                      {getCurrencySymbol()} {formatNumber(calculateDetailsSubtotal())}
+                      {getCurrencySymbol()}{" "}
+                      {formatNumber(calculateDetailsSubtotal())}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">IGV (18%)</span>
                     <span className="font-medium text-orange-600 dark:text-orange-400">
-                      {getCurrencySymbol()} {formatNumber(calculateDetailsIGV())}
+                      {getCurrencySymbol()}{" "}
+                      {formatNumber(calculateDetailsIGV())}
                     </span>
                   </div>
                 </div>
@@ -1065,7 +1091,8 @@ export const SaleForm = ({
                     Total a Pagar
                   </div>
                   <div className="text-3xl font-semibold text-primary">
-                    {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())}
+                    {getCurrencySymbol()}{" "}
+                    {formatNumber(calculateDetailsTotal())}
                   </div>
                 </div>
 
@@ -1110,6 +1137,11 @@ export const SaleForm = ({
         </div>
 
         {/* <pre>
+          <code>{JSON.stringify(products, null, 2)}</code>
+          <code>{JSON.stringify(filteredProducts, null, 2)}</code>
+        </pre> */}
+
+        {/* <pre>
           <code>{JSON.stringify(form.getValues(), null, 2)}</code>
           <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
         </pre>
@@ -1124,7 +1156,7 @@ export const SaleForm = ({
             Cancelar
           </Button>
 
-         <Button
+          <Button
             size="sm"
             type="submit"
             disabled={

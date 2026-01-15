@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --breakpoint-3xl: 1920px;
   --font-family-poppins: "Poppins", sans-serif;
   --font-family-sans: "Poppins", sans-serif; /* 👈 Esto hace que sea por defecto */
   --radius-sm: calc(var(--radius) - 4px);

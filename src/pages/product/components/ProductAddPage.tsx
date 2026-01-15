@@ -104,7 +104,7 @@ export default function ProductAddPage() {
     !companies;
 
   return (
-    <PageWrapper fluid>
+    <PageWrapper size="3xl">
       <TitleFormComponent
         title={MODEL.name}
         icon={ICON}

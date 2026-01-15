@@ -26,7 +26,7 @@ export interface GuideResource {
   company_id: number;
   branch_id: number;
   warehouse_id: number;
-  sale_id?: string;
+  sale_id: number;
   customer_id: number;
   user_id: number;
   serie: string;
@@ -42,11 +42,11 @@ export interface GuideResource {
   carrier_name: string;
   carrier_ruc: string;
   carrier_mtc_number: string;
-  vehicle_plate?: string;
-  driver_document_type?: string;
-  driver_document_number?: string;
-  driver_name?: string;
-  driver_license?: string;
+  vehicle_plate: string;
+  driver_document_type: string;
+  driver_document_number: string;
+  driver_name: string;
+  driver_license: string;
   origin_address: string;
   origin_ubigeo: string;
   destination_address: string;
@@ -59,17 +59,119 @@ export interface GuideResource {
   observations: string;
   ubigeo_origin_id: number;
   ubigeo_destination_id: number;
+  ubigeo_origin: Ubigeoorigin;
+  ubigeo_destination: Ubigeoorigin;
   company: Company;
   branch: Branch;
   warehouse: Branch;
   customer: Customer;
   user: User;
-  motive: GuideMotiveResource;
-  sale?: string;
-  details: GuideDetailResource[];
-  electronic_document?: string;
+  motive: Motive;
+  sales: Sale[];
+  details: Detail[];
+  electronic_document: Electronicdocument;
   created_at: string;
   updated_at: string;
+}
+
+interface Electronicdocument {
+  id: number;
+  sale_shipping_guide_id: number;
+  serie: string;
+  numero: string;
+  full_document_number: string;
+  client_info: null[];
+  transport_info: null[];
+  carrier_info: null[];
+  files_info: null[];
+  status: string;
+  is_accepted: string;
+  has_error: string;
+  error_code: string;
+  error_text: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Detail {
+  id: number;
+  sale_shipping_guide_id: number;
+  sale_detail_id: number;
+  product_id: number;
+  quantity_sacks: string;
+  quantity_kg: string;
+  unit_code: string;
+  description: string;
+  product: Product;
+  created_at: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  codigo: string;
+}
+
+interface Sale {
+  id: string;
+  document_type: string;
+  serie: string;
+  numero: string;
+  full_document_number: string;
+  issue_date: string;
+  payment_type: string;
+  total_amount: number;
+  currency: string;
+  status: string;
+}
+
+interface Motive {
+  id: number;
+  code: string;
+  name: string;
+}
+
+interface Customer {
+  id: number;
+  names: string;
+  father_surname: string;
+  mother_surname: string;
+  full_name: string;
+  number_document: string;
+  business_name: string;
+  address: string;
+}
+
+interface Branch {
+  id: number;
+  name: string;
+  address: string;
+}
+
+interface Company {
+  id: number;
+  social_reason: string;
+  trade_name: string;
+  ruc: string;
+}
+
+interface Ubigeoorigin {
+  id: number;
+  name: string;
+  cadena: string;
+  ubigeo_code: string;
+  province: Province;
+}
+
+interface Province {
+  id: number;
+  name: string;
+  department: Department;
+}
+
+interface Department {
+  id: number;
+  name: string;
 }
 
 interface Product {

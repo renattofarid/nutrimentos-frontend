@@ -93,6 +93,10 @@ export default function ProductDetail() {
 
         <DetailField label="Marca" value={product.brand_name} />
 
+        <DetailField label="Peso (Kg)" value={product.weight} />
+
+        <DetailField label="Precio por Kg" value={product.price_per_kg} />
+
         <DetailField
           label="Stock por Almacén"
           className="md:col-span-2 lg:col-span-3"

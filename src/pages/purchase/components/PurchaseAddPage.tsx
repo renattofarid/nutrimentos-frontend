@@ -46,7 +46,7 @@ export default function PurchaseAddPage() {
     supplier_id: "",
     warehouse_id: "",
     purchase_order_id: "",
-    document_type: "",
+    document_type: "FACTURA",
     document_number: "",
     issue_date: "",
     reception_date: "",

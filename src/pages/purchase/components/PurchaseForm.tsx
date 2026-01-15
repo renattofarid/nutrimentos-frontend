@@ -73,8 +73,9 @@ interface DetailRow {
   product_id: string;
   product_code?: string;
   product_name?: string;
-  quantity_kg: string;
+  product_weight?: number; // Peso del producto en kg
   quantity_sacks: string;
+  quantity_kg: string;
   unit_price: string;
   tax: string;
   subtotal: number;
@@ -271,6 +272,7 @@ export const PurchaseForm = ({
         const product = products.find(
           (p) => p.id.toString() === detail.product_id
         );
+        const productWeight = product?.weight ? parseFloat(product.weight) : 0;
         const quantityKg = parseFloat(detail.quantity_kg);
         const unitPrice = parseFloat(detail.unit_price);
         const tax = parseFloat(detail.tax);
@@ -281,8 +283,9 @@ export const PurchaseForm = ({
           product_id: detail.product_id,
           product_code: product?.codigo,
           product_name: product?.name,
-          quantity_kg: detail.quantity_kg,
+          product_weight: productWeight,
           quantity_sacks: detail.quantity_sacks,
+          quantity_kg: detail.quantity_kg,
           unit_price: detail.unit_price,
           tax: detail.tax,
           subtotal,
@@ -306,8 +309,9 @@ export const PurchaseForm = ({
       product_id: "",
       product_code: "",
       product_name: "",
-      quantity_kg: "",
+      product_weight: 0,
       quantity_sacks: "",
+      quantity_kg: "",
       unit_price: "",
       tax: "",
       subtotal: 0,
@@ -328,8 +332,19 @@ export const PurchaseForm = ({
     const updatedDetails = [...details];
     updatedDetails[index] = { ...updatedDetails[index], [field]: value };
 
-    // Recalcular totales cuando cambian cantidad_kg o precio
-    if (field === "quantity_kg" || field === "unit_price") {
+    // Si cambia la cantidad de sacos, recalcular cantidad en kg
+    if (field === "quantity_sacks") {
+      const detail = updatedDetails[index];
+      const quantitySacks = parseFloat(value) || 0;
+      const productWeight = detail.product_weight || 0;
+
+      // Calcular cantidad en kg = sacos × peso del producto
+      const calculatedKg = quantitySacks * productWeight;
+      updatedDetails[index].quantity_kg = calculatedKg > 0 ? calculatedKg.toFixed(2) : "";
+    }
+
+    // Recalcular totales cuando cambian quantity_kg o precio
+    if (field === "quantity_sacks" || field === "quantity_kg" || field === "unit_price") {
       const detail = updatedDetails[index];
       const quantityKg = parseFloat(detail.quantity_kg) || 0;
       const unitPrice = parseFloat(detail.unit_price) || 0;
@@ -370,12 +385,15 @@ export const PurchaseForm = ({
     );
     if (!selectedProduct) return;
 
+    const productWeight = selectedProduct.weight ? parseFloat(selectedProduct.weight) : 0;
+
     const updatedDetails = [...details];
     updatedDetails[index] = {
       ...updatedDetails[index],
       product_id: product.id,
       product_code: product.codigo,
       product_name: product.name,
+      product_weight: productWeight,
     };
 
     setDetails(updatedDetails);
@@ -467,18 +485,18 @@ export const PurchaseForm = ({
       accessor: "product_name",
     },
     {
-      id: "quantity_kg",
-      header: "Cantidad (KG)",
-      type: "number",
-      width: "120px",
-      accessor: "quantity_kg",
-    },
-    {
       id: "quantity_sacks",
       header: "Sacos",
       type: "number",
       width: "100px",
       accessor: "quantity_sacks",
+    },
+    {
+      id: "quantity_kg",
+      header: "Cantidad (KG)",
+      type: "number",
+      width: "120px",
+      accessor: "quantity_kg",
     },
     {
       id: "unit_price",

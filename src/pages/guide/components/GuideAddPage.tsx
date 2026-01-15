@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { GuideForm } from "./GuideForm";
@@ -28,11 +28,13 @@ import type { GuideSchema } from "../lib/guide.schema";
 import { GUIDE } from "../lib/guide.interface";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export default function GuideAddPage() {
   const { ROUTE, MODEL, ICON } = GUIDE;
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { setOpen, setOpenMobile } = useSidebar();
   const { user } = useAuthStore();
 
   const { data: branches, isLoading: branchesLoading } = useAllBranches({
@@ -52,6 +54,11 @@ export default function GuideAddPage() {
   const { data: nationalities } = useAllNationalities();
 
   const { createGuide } = useGuideStore();
+
+  useEffect(() => {
+    setOpen(false);
+    setOpenMobile(false);
+  }, []);
 
   const isLoading =
     branchesLoading ||

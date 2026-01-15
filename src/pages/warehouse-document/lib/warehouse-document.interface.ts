@@ -73,7 +73,11 @@ export type DocumentMotive =
   | "DONACION"
   | "USO_INTERNO";
 
-export type DocumentStatus = "BORRADOR" | "CONFIRMADO" | "CANCELADO";
+export type DocumentStatus =
+  | "BORRADOR"
+  | "CONFIRMADO"
+  | "CANCELADO"
+  | "PROCESADO";
 
 // Warehouse Document Detail
 export interface WarehouseDocumentDetail {
@@ -99,9 +103,9 @@ export interface WarehouseDocumentResource {
   warehouse_destination?: Warehouse;
   responsible_origin: Company;
   responsible_destination?: Company;
-  purchase: Purchase;
+  purchase?: Purchase;
   status: DocumentStatus;
-  observations: string;
+  observations?: string;
   details: Detail[];
   user: User;
   created_at: string;
@@ -168,7 +172,8 @@ export interface CreateWarehouseDocumentRequest {
   observations?: string;
   details: {
     product_id: number;
-    quantity: number;
+    quantity_sacks: number;
+    quantity_kg?: number;
     unit_price: number;
     observations?: string;
   }[];

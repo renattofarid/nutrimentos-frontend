@@ -52,7 +52,7 @@ export const SaleAddPage = () => {
     customer_id: "",
     warehouse_id: "",
     vendedor_id: "",
-    document_type: "FACTURA",
+    document_type: "BOLETA",
     issue_date: format(new Date(), "yyyy-MM-dd"),
     payment_type: "CONTADO",
     currency: "PEN",

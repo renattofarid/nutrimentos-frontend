@@ -6,7 +6,7 @@ interface DetailRow {
   id: string;
   product_id: string;
   product_name: string;
-  quantity: number;
+  quantity_sacks: number;
   unit_price: number;
   total: number;
 }
@@ -24,10 +24,10 @@ export const createWarehouseDocumentDetailsColumns = (
     ),
   },
   {
-    accessorKey: "quantity",
+    accessorKey: "quantity_sacks",
     header: "Cantidad",
     cell: ({ row }) => (
-      <div className="text-right">{row.original.quantity}</div>
+      <div className="text-right">{row.original.quantity_sacks}</div>
     ),
   },
   {

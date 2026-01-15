@@ -13,9 +13,13 @@ import { requiredStringId } from "@/lib/core.schema";
 
 const detailFormSchema = z.object({
   product_id: requiredStringId("Debe seleccionar un producto"),
-  quantity: z
-    .number({ message: "La cantidad es requerida" })
+  quantity_sacks: z
+    .number({ message: "La cantidad en sacos es requerida" })
     .positive("La cantidad debe ser mayor a 0"),
+  quantity_kg: z
+    .number({ message: "La cantidad en kg debe ser un número" })
+    .nonnegative("La cantidad en kg no puede ser negativa")
+    .optional(),
   unit_price: z
     .number({ message: "El precio unitario es requerido" })
     .nonnegative("El precio unitario no puede ser negativo"),
@@ -33,7 +37,8 @@ interface WarehouseDocumentDetailSheetProps {
   products: ProductResource[];
   initialData?: {
     product_id: string;
-    quantity: number;
+    quantity_sacks: number;
+    quantity_kg?: number;
     unit_price: number;
     observations: string;
   };
@@ -52,7 +57,8 @@ export default function WarehouseDocumentDetailSheet({
     resolver: zodResolver(detailFormSchema) as any,
     defaultValues: {
       product_id: "",
-      quantity: 0,
+      quantity_sacks: 0,
+      quantity_kg: undefined,
       unit_price: 0,
       observations: "",
     },
@@ -65,7 +71,8 @@ export default function WarehouseDocumentDetailSheet({
       } else {
         form.reset({
           product_id: "",
-          quantity: 0,
+          quantity_sacks: 0,
+          quantity_kg: undefined,
           unit_price: 0,
           observations: "",
         });
@@ -106,25 +113,51 @@ export default function WarehouseDocumentDetailSheet({
             strictFilter
           />
 
-          <FormField
-            control={form.control as any}
-            name="quantity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cantidad</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control as any}
+              name="quantity_sacks"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cantidad (Sacos)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control as any}
+              name="quantity_kg"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cantidad (Kg) - Opcional</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value === "" ? undefined : parseFloat(value) || 0);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <FormField
             control={form.control as any}

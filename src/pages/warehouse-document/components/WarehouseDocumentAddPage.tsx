@@ -41,7 +41,8 @@ export default function WarehouseDocumentAddPage() {
         observations: data.observations,
         details: data.details.map((detail) => ({
           product_id: parseInt(detail.product_id),
-          quantity: detail.quantity,
+          quantity_sacks: detail.quantity_sacks,
+          quantity_kg: detail.quantity_kg,
           unit_price: detail.unit_price,
           observations: detail.observations,
         })),

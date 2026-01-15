@@ -22,10 +22,12 @@ import { useGuideStore } from "../lib/guide.store";
 import { GUIDE, type GuideResource } from "../lib/guide.interface";
 import type { GuideSchema } from "../lib/guide.schema";
 import PageWrapper from "@/components/PageWrapper";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export default function GuideEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { setOpen, setOpenMobile } = useSidebar();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { MODEL, ROUTE, ICON } = GUIDE;
   const { data: branches, isLoading: branchesLoading } = useAllBranches();
@@ -43,6 +45,10 @@ export default function GuideEditPage() {
   const { data: nationalities } = useAllNationalities();
 
   const { updateGuide, fetchGuide, guide, isFinding } = useGuideStore();
+  useEffect(() => {
+    setOpen(false);
+    setOpenMobile(false);
+  }, []);
 
   const isLoading =
     branchesLoading ||

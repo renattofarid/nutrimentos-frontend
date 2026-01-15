@@ -81,7 +81,8 @@ export default function WarehouseDocumentForm({
   const [initialDetailData, setInitialDetailData] = useState<
     | {
         product_id: string;
-        quantity: number;
+        quantity_sacks: number;
+        quantity_kg?: number;
         unit_price: number;
         observations: string;
       }
@@ -94,7 +95,8 @@ export default function WarehouseDocumentForm({
       const detail = fields[index];
       setInitialDetailData({
         product_id: detail.product_id,
-        quantity: detail.quantity,
+        quantity_sacks: detail.quantity_sacks,
+        quantity_kg: detail.quantity_kg,
         unit_price: detail.unit_price,
         observations: detail.observations || "",
       });
@@ -107,7 +109,8 @@ export default function WarehouseDocumentForm({
 
   const handleSaveDetail = (data: {
     product_id: string;
-    quantity: number;
+    quantity_sacks: number;
+    quantity_kg?: number;
     unit_price: number;
     observations: string;
   }) => {
@@ -128,9 +131,9 @@ export default function WarehouseDocumentForm({
       id: field.id,
       product_id: field.product_id,
       product_name: getProductName(field.product_id),
-      quantity: field.quantity,
+      quantity_sacks: field.quantity_sacks,
       unit_price: field.unit_price,
-      total: field.quantity * field.unit_price,
+      total: field.quantity_sacks * field.unit_price,
     }));
   }, [fields, products]);
 
@@ -191,6 +194,19 @@ export default function WarehouseDocumentForm({
             }))}
           />
 
+          <FormSelect
+            control={form.control}
+            name="responsible_origin_id"
+            label="Responsable de Origen"
+            placeholder="Seleccione una persona"
+            options={persons.map((p) => ({
+              value: p.id.toString(),
+              label: `${p.names} ${p.father_surname ?? ""} ${
+                p.mother_surname ?? ""
+              }`.trim(),
+            }))}
+          />
+
           {isTraslado && (
             <>
               <FormSelect
@@ -201,19 +217,6 @@ export default function WarehouseDocumentForm({
                 options={warehouses.map((w) => ({
                   value: w.id.toString(),
                   label: w.name,
-                }))}
-              />
-
-              <FormSelect
-                control={form.control}
-                name="responsible_origin_id"
-                label="Responsable de Origen"
-                placeholder="Seleccione una persona"
-                options={persons.map((p) => ({
-                  value: p.id.toString(),
-                  label: `${p.names} ${p.father_surname ?? ""} ${
-                    p.mother_surname ?? ""
-                  }`.trim(),
                 }))}
               />
 

@@ -13,10 +13,10 @@ export const purchaseDetailSchema = z.object({
     }),
   quantity_sacks: z
     .string()
-    .min(1, { message: "La cantidad de sacos es requerida" })
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "La cantidad de sacos debe ser un número mayor a 0",
-    }),
+    .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {
+      message: "La cantidad de sacos debe ser un número válido",
+    })
+    .default("0"),
   unit_price: z
     .string()
     .min(1, { message: "El precio unitario es requerido" })
@@ -124,10 +124,10 @@ export const purchaseDetailSchemaCreate = z.object({
     }),
   quantity_sacks: z
     .string()
-    .min(1, { message: "La cantidad de sacos es requerida" })
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "La cantidad de sacos debe ser un número mayor a 0",
-    }),
+    .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {
+      message: "La cantidad de sacos debe ser un número válido",
+    })
+    .default("0"),
   unit_price: z
     .string()
     .min(1, { message: "El precio unitario es requerido" })

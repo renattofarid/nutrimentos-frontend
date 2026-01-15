@@ -16,6 +16,7 @@ import { Loader, Plus, Trash2, Pencil, Users2, UserPlus } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
+import { Switch } from "@/components/ui/switch";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
@@ -74,12 +75,13 @@ interface DetailRow {
   product_code?: string;
   product_name?: string;
   product_weight?: number; // Peso del producto en kg
-  quantity_sacks: string;
-  quantity_kg: string;
+  quantity: string; // Cantidad (sacos o kg según el modo)
+  quantity_kg: string; // Siempre en kg (para cálculos internos)
   unit_price: string;
   tax: string;
   subtotal: number;
   total: number;
+  is_by_sack: boolean; // true = compra por saco, false = compra por kg
 }
 
 interface InstallmentRow {
@@ -278,18 +280,25 @@ export const PurchaseForm = ({
         const tax = parseFloat(detail.tax);
         const subtotal = quantityKg * unitPrice;
         const total = subtotal + tax;
+        const quantitySacks = parseFloat(detail.quantity_sacks);
+
+        // Determinar si está en modo saco o kg
+        // Si quantity_sacks > 0 y quantity_kg == quantity_sacks * product_weight, entonces está en modo saco
+        const isBySack = quantitySacks > 0 && productWeight > 0 &&
+                         Math.abs(quantityKg - (quantitySacks * productWeight)) < 0.01;
 
         return {
           product_id: detail.product_id,
           product_code: product?.codigo,
           product_name: product?.name,
           product_weight: productWeight,
-          quantity_sacks: detail.quantity_sacks,
+          quantity: isBySack ? detail.quantity_sacks : detail.quantity_kg,
           quantity_kg: detail.quantity_kg,
           unit_price: detail.unit_price,
           tax: detail.tax,
           subtotal,
           total,
+          is_by_sack: isBySack,
         };
       });
       setDetails(mappedDetails);
@@ -310,12 +319,13 @@ export const PurchaseForm = ({
       product_code: "",
       product_name: "",
       product_weight: 0,
-      quantity_sacks: "",
+      quantity: "",
       quantity_kg: "",
       unit_price: "",
       tax: "",
       subtotal: 0,
       total: 0,
+      is_by_sack: true, // Por defecto compra por saco
     };
     const updatedDetails = [...details, newDetail];
     setDetails(updatedDetails);
@@ -332,22 +342,27 @@ export const PurchaseForm = ({
     const updatedDetails = [...details];
     updatedDetails[index] = { ...updatedDetails[index], [field]: value };
 
-    // Si cambia la cantidad de sacos, recalcular cantidad en kg
-    if (field === "quantity_sacks") {
-      const detail = updatedDetails[index];
-      const quantitySacks = parseFloat(value) || 0;
+    const detail = updatedDetails[index];
+
+    // Si cambia la cantidad, calcular los kg según el modo
+    if (field === "quantity") {
+      const quantity = parseFloat(value) || 0;
       const productWeight = detail.product_weight || 0;
 
-      // Calcular cantidad en kg = sacos × peso del producto
-      const calculatedKg = quantitySacks * productWeight;
-      updatedDetails[index].quantity_kg = calculatedKg > 0 ? calculatedKg.toFixed(2) : "";
+      if (detail.is_by_sack) {
+        // Modo SACO: calcular kg = sacos × peso
+        const calculatedKg = quantity * productWeight;
+        updatedDetails[index].quantity_kg = calculatedKg > 0 ? calculatedKg.toFixed(2) : "";
+      } else {
+        // Modo KG: la cantidad ya está en kg
+        updatedDetails[index].quantity_kg = value;
+      }
     }
 
-    // Recalcular totales cuando cambian quantity_kg o precio
-    if (field === "quantity_sacks" || field === "quantity_kg" || field === "unit_price") {
-      const detail = updatedDetails[index];
-      const quantityKg = parseFloat(detail.quantity_kg) || 0;
-      const unitPrice = parseFloat(detail.unit_price) || 0;
+    // Recalcular totales cuando cambian quantity o precio
+    if (field === "quantity" || field === "unit_price") {
+      const quantityKg = parseFloat(updatedDetails[index].quantity_kg) || 0;
+      const unitPrice = parseFloat(updatedDetails[index].unit_price) || 0;
       let subtotal = 0;
       let tax = 0;
       let total = 0;
@@ -395,6 +410,34 @@ export const PurchaseForm = ({
       product_name: product.name,
       product_weight: productWeight,
     };
+
+    setDetails(updatedDetails);
+    form.setValue("details", updatedDetails);
+  };
+
+  // Nueva función para cambiar el modo de compra (saco/kg)
+  const handleTogglePurchaseMode = (index: number, checked: boolean) => {
+    const updatedDetails = [...details];
+    const isBySack = checked;
+
+    // Cambiar el modo
+    updatedDetails[index].is_by_sack = isBySack;
+
+    const quantityKg = parseFloat(updatedDetails[index].quantity_kg) || 0;
+    const productWeight = updatedDetails[index].product_weight || 0;
+
+    if (isBySack) {
+      // Cambió a modo SACO: calcular sacos desde kg
+      if (quantityKg > 0 && productWeight > 0) {
+        const calculatedSacks = quantityKg / productWeight;
+        updatedDetails[index].quantity = calculatedSacks.toFixed(2);
+      } else {
+        updatedDetails[index].quantity = "";
+      }
+    } else {
+      // Cambió a modo KG: la cantidad es directamente kg
+      updatedDetails[index].quantity = quantityKg > 0 ? quantityKg.toFixed(2) : "";
+    }
 
     setDetails(updatedDetails);
     form.setValue("details", updatedDetails);
@@ -485,18 +528,29 @@ export const PurchaseForm = ({
       accessor: "product_name",
     },
     {
-      id: "quantity_sacks",
-      header: "Sacos",
-      type: "number",
-      width: "100px",
-      accessor: "quantity_sacks",
+      id: "purchase_mode",
+      header: "Modo",
+      type: "readonly",
+      width: "120px",
+      render: (row, index) => (
+        <div className="h-full flex items-center justify-center px-2 py-1 gap-2">
+          <Switch
+            checked={row.is_by_sack}
+            onCheckedChange={(checked) => handleTogglePurchaseMode(index, checked)}
+            className="data-[state=checked]:bg-blue-600"
+          />
+          <span className="text-xs font-medium min-w-[25px]">
+            {row.is_by_sack ? "SAC" : "KG"}
+          </span>
+        </div>
+      ),
     },
     {
-      id: "quantity_kg",
-      header: "Cantidad (KG)",
+      id: "quantity",
+      header: "Cantidad",
       type: "number",
       width: "120px",
-      accessor: "quantity_kg",
+      accessor: "quantity",
     },
     {
       id: "unit_price",
@@ -666,7 +720,7 @@ export const PurchaseForm = ({
     const formattedDetails = details.map((d) => ({
       product_id: parseInt(d.product_id),
       quantity_kg: parseFloat(d.quantity_kg),
-      quantity_sacks: parseFloat(d.quantity_sacks),
+      quantity_sacks: d.is_by_sack ? (d.quantity === "" ? 0 : parseFloat(d.quantity)) : 0,
       unit_price: parseFloat(d.unit_price),
       tax: parseFloat(d.tax),
     }));

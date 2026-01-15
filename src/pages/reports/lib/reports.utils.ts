@@ -1,10 +1,6 @@
 import type {
   CustomerAccountStatementResponse,
   CustomerAccountStatementTableItem,
-  Zone,
-  Vendor,
-  Customer,
-  Sale,
 } from "./reports.interface";
 
 /**

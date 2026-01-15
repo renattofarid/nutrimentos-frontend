@@ -1,5 +1,4 @@
 import { api } from "@/lib/config";
-import type { AxiosRequestConfig } from "axios";
 import type {
   CustomerAccountStatementParams,
   CustomerAccountStatementResponse,
@@ -22,17 +21,17 @@ export async function exportCustomerAccountStatement(
   params: CustomerAccountStatementParams,
   exportType: "excel" | "pdf"
 ): Promise<Blob> {
-  const config: AxiosRequestConfig = {
-    params: {
-      ...params,
-      export: exportType,
-    },
-    responseType: "blob",
+  const body = {
+    ...params,
+    export: exportType,
   };
 
   const { data } = await api.post<Blob>(
     `${REPORTS_ENDPOINT}/customer-account-statement`,
-    config
+    body,
+    {
+      responseType: "blob",
+    }
   );
 
   return data;

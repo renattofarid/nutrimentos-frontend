@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { useCustomerAccountStatement } from "../lib/reports.hook";
 import TitleComponent from "@/components/TitleComponent";
 import { DataTable } from "@/components/DataTable";
-import type { ColumnDef, Row } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import type {
   CustomerAccountStatementTableItem,
   CustomerAccountStatementParams,
@@ -21,8 +21,6 @@ import {
   Search,
   Filter,
   DollarSign,
-  ChevronRight,
-  ChevronDown,
 } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
@@ -50,32 +48,9 @@ interface FilterFormValues {
 
 const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
   {
-    id: "expander",
-    header: () => null,
-    size: 40,
-    cell: ({ row }) => {
-      const item = row.original;
-      if (!item.hasChildren) return null;
-
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 w-6 p-0"
-          onClick={() => row.toggleExpanded()}
-        >
-          {row.getIsExpanded() ? (
-            <ChevronDown className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
-        </Button>
-      );
-    },
-  },
-  {
     accessorKey: "name",
     header: "Descripción",
+    size: 300,
     cell: ({ row }) => {
       const item = row.original;
       const indent = item.level * 24;
@@ -99,7 +74,10 @@ const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
         case "vendor":
           content = (
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+              <Badge
+                variant="secondary"
+                className="bg-purple-100 text-purple-700"
+              >
                 VENDEDOR
               </Badge>
               <span className="font-semibold">{item.vendedor_name}</span>
@@ -111,7 +89,10 @@ const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
         case "customer":
           content = (
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="bg-green-100 text-green-700">
+              <Badge
+                variant="secondary"
+                className="bg-green-100 text-green-700"
+              >
                 CLIENTE
               </Badge>
               <span className="font-medium">{item.customer_name}</span>
@@ -124,7 +105,9 @@ const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
           content = (
             <div className="flex items-center gap-3 text-sm">
               <Badge variant="outline">{item.document_type}</Badge>
-              <span className="font-mono font-medium">{item.document_number}</span>
+              <span className="font-mono font-medium">
+                {item.document_number}
+              </span>
               <span className="text-muted-foreground">{item.date}</span>
             </div>
           );
@@ -201,9 +184,7 @@ const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
 
       return (
         <span
-          className={`font-bold ${
-            hasDebt ? "text-red-600" : "text-gray-500"
-          }`}
+          className={`font-bold ${hasDebt ? "text-red-600" : "text-gray-500"}`}
         >
           S/ {Number(item.debt_amount).toFixed(2)}
         </span>
@@ -253,7 +234,6 @@ const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
 
 export default function CustomerAccountStatementPage() {
   const [isExporting, setIsExporting] = useState(false);
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   const { data: zones } = useAllZones();
   const { data: clients } = useAllClients();
@@ -262,17 +242,15 @@ export default function CustomerAccountStatementPage() {
   const { data: rawData, isLoading, fetch } = useCustomerAccountStatement();
 
   // Transformar datos y calcular métricas
-  const { tableData, rootRows, meta } = useMemo(() => {
+  const { tableData, meta } = useMemo(() => {
     if (!rawData) {
-      return { tableData: [], rootRows: [], meta: null };
+      return { tableData: [], meta: null };
     }
 
     const tableData = transformCustomerAccountStatementData(rawData);
-    // Solo las filas de nivel 0 (zonas) para la tabla
-    const rootRows = tableData.filter((item) => item.level === 0);
     const meta = calculateAccountStatementMetrics(rawData);
 
-    return { tableData, rootRows, meta };
+    return { tableData, meta };
   }, [rawData]);
 
   const form = useForm<FilterFormValues>({
@@ -406,7 +384,7 @@ export default function CustomerAccountStatementPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleExport("excel")}
-                  disabled={isExporting || !rootRows || rootRows.length === 0}
+                  disabled={isExporting || !tableData || tableData.length === 0}
                 >
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
                   Excel
@@ -416,7 +394,7 @@ export default function CustomerAccountStatementPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleExport("pdf")}
-                  disabled={isExporting || !rootRows || rootRows.length === 0}
+                  disabled={isExporting || !tableData || tableData.length === 0}
                 >
                   <FileText className="mr-2 h-4 w-4" />
                   PDF
@@ -516,13 +494,8 @@ export default function CustomerAccountStatementPage() {
             <CardContent className="pt-6">
               <DataTable
                 columns={columns}
-                data={rootRows}
+                data={tableData}
                 isLoading={isLoading}
-                enableExpanding
-                getSubRows={(row) => {
-                  // Retornar las filas hijas basándose en el parentId
-                  return tableData.filter((item) => item.parentId === row.id);
-                }}
               />
             </CardContent>
           </Card>

@@ -77,8 +77,8 @@ export const CreditNoteColumns = ({
       const motive = row.original.motive;
       return (
         <div className="flex flex-col gap-1">
-          <span className="font-semibold">{motive.name}</span>
-          <span className="text-xs text-muted-foreground">{motive.code}</span>
+          <span className="font-semibold">{motive?.name}</span>
+          <span className="text-xs text-muted-foreground">{motive?.code}</span>
         </div>
       );
     },

@@ -15,13 +15,7 @@ import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import {
-  FileSpreadsheet,
-  FileText,
-  Search,
-  Filter,
-  DollarSign,
-} from "lucide-react";
+import { FileSpreadsheet, Search, Filter, DollarSign } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
@@ -316,7 +310,7 @@ export default function CustomerAccountStatementPage() {
     fetch(params);
   };
 
-  const handleExport = async (exportType: "excel" | "pdf") => {
+  const handleExport = async (exportType: "excel") => {
     const values = form.getValues();
     setIsExporting(true);
     try {
@@ -389,16 +383,6 @@ export default function CustomerAccountStatementPage() {
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
                   Excel
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleExport("pdf")}
-                  disabled={isExporting || !tableData || tableData.length === 0}
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  PDF
-                </Button>
               </div>
             }
           >
@@ -456,6 +440,7 @@ export default function CustomerAccountStatementPage() {
               name="show_old"
               label="Mostrar antiguos"
               text="Incluir registros antiguos en la consulta"
+              size="lg"
             />
           </GroupFormSection>
 

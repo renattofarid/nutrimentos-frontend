@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
-import { Upload, Plus, Trash2, Eye } from "lucide-react";
+import { Upload, Plus, Trash2, Eye, ImageIcon } from "lucide-react";
 import { successToast, errorToast } from "@/lib/core.function";
 import { useProductStore } from "../lib/product.store";
 import { prodAssetStorageURL } from "@/lib/config";
+import { GroupFormSection } from "@/components/GroupFormSection";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/EmptyState";
 
 interface ProductImageGalleryProps {
   productId: number;
@@ -75,23 +78,28 @@ export function ProductImageGallery({ productId }: ProductImageGalleryProps) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header with add button */}
-      <div className="flex items-center justify-between">
-        <p className="text-muted-foreground">
-          {productImages?.data.length || 0} imagen(es) disponible(s)
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowImageUpload(true)}
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Agregar Imágenes
-        </Button>
-      </div>
-
+    <GroupFormSection
+      title="Galería de Imágenes"
+      icon={ImageIcon}
+      gap="gap-3"
+      cols={{ sm: 1 }}
+      headerExtra={
+        <div className="flex gap-2 items-center justify-between">
+          <Badge>
+            {productImages?.data.length || 0} imagen(es) disponible(s)
+          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowImageUpload(true)}
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Agregar Imágenes
+          </Button>
+        </div>
+      }
+    >
       {/* Images Grid */}
       {productImages?.data && productImages.data.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
@@ -136,21 +144,21 @@ export function ProductImageGallery({ productId }: ProductImageGalleryProps) {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 border-2 border-dashed border-muted rounded-xl">
-          <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No hay imágenes</h3>
-          <p className="text-muted-foreground mb-4">
-            Sube la primera imagen de este producto
-          </p>
-          <Button
-            variant="outline"
-            onClick={() => setShowImageUpload(true)}
-            className="gap-2"
-          >
-            <Upload className="h-4 w-4" />
-            Subir primera imagen
-          </Button>
-        </div>
+        <EmptyState
+          icon={Upload}
+          title="No hay imágenes"
+          description="Sube la primera imagen de este producto"
+          action={
+            <Button
+              variant="outline"
+              onClick={() => setShowImageUpload(true)}
+              className="gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Subir primera imagen
+            </Button>
+          }
+        />
       )}
 
       {/* Upload Modal */}
@@ -250,6 +258,6 @@ export function ProductImageGallery({ productId }: ProductImageGalleryProps) {
           onConfirm={handleDeleteImage}
         />
       )}
-    </div>
+    </GroupFormSection>
   );
 }

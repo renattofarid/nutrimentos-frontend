@@ -2,15 +2,14 @@ import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProductStore } from "../lib/product.store";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 import { ProductImageGallery } from "./ProductImageGallery";
 import FormSkeleton from "@/components/FormSkeleton";
 import FormWrapper from "@/components/FormWrapper";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { PRODUCT } from "../lib/product.interface";
+import { GroupFormSection } from "@/components/GroupFormSection";
 
 export default function ProductDetail() {
   const { ICON } = PRODUCT;
@@ -55,91 +54,74 @@ export default function ProductDetail() {
   return (
     <FormWrapper>
       <TitleFormComponent title="Detalle del Producto" icon={ICON} />
-      <Card>
-        <CardContent className="space-y-8">
-          {/* Basic Information */}
+      <GroupFormSection
+        title="Información General"
+        icon={Info}
+        gap="gap-3"
+        cols={{ sm: 1, md: 2, lg: 3 }}
+      >
+        {/* Basic Information */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">
+            Código
+          </label>
+          <p className="text-lg font-semibold font-mono">{product.codigo}</p>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">
+            Nombre
+          </label>
+          <p className="text-lg font-semibold">{product.name}</p>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">
+            Tipo
+          </label>
           <div>
-            <h3 className="text-lg font-semibold mb-4">Información General</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Código
-                </label>
-                <p className="text-lg font-semibold font-mono">
-                  {product.codigo}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Nombre
-                </label>
-                <p className="text-lg font-semibold">{product.name}</p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Tipo
-                </label>
-                <div>
-                  <Badge variant="outline" className="text-sm">
-                    {product.product_type_name}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Categoría
-                </label>
-                <p className="font-medium">{product.category_name}</p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Marca
-                </label>
-                <p className="font-medium">{product.brand_name}</p>
-              </div>
-
-              <div className="space-y-2 md:col-span-2 lg:col-span-3">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Stock por Almacén
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {product.stock_warehouse.map((warehouse) => (
-                    <div
-                      key={warehouse.warehouse_id}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <span className="font-medium text-sm">
-                        {warehouse.warehouse_name}
-                      </span>
-                      <Badge
-                        variant="secondary"
-                        className="text-sm font-semibold"
-                      >
-                        {warehouse.stock}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <Badge variant="outline" className="text-sm">
+              {product.product_type_name}
+            </Badge>
           </div>
+        </div>
 
-          <Separator />
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">
+            Categoría
+          </label>
+          <p className="font-medium">{product.category_name}</p>
+        </div>
 
-          {/* Images */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <ImageIcon className="h-5 w-5" />
-              <h3 className="text-lg font-semibold">Galería de Imágenes</h3>
-            </div>
-            <ProductImageGallery productId={parseInt(id!)} />
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">
+            Marca
+          </label>
+          <p className="font-medium">{product.brand_name}</p>
+        </div>
+
+        <div className="space-y-2 md:col-span-2 lg:col-span-3">
+          <label className="text-sm font-medium text-muted-foreground">
+            Stock por Almacén
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {product.stock_warehouse.map((warehouse) => (
+              <div
+                key={warehouse.warehouse_id}
+                className="flex items-center justify-between p-3 border rounded-lg"
+              >
+                <span className="font-medium text-sm">
+                  {warehouse.warehouse_name}
+                </span>
+                <Badge variant="secondary" className="text-sm font-semibold">
+                  {warehouse.stock}
+                </Badge>
+              </div>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </GroupFormSection>
+      {/* Images */} <ProductImageGallery productId={parseInt(id!)} />
     </FormWrapper>
   );
 }

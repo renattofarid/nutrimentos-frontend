@@ -9,11 +9,33 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { DialogDescription } from "@radix-ui/react-dialog";
+import { Trash2 } from "lucide-react";
 interface SimpleDeleteDialogProps {
   onConfirm: () => Promise<void>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+export const DeleteButton = ({
+  onClick,
+  icon = <Trash2 className="size-5 text-destructive" />,
+}: {
+  onClick: () => void;
+  icon?: React.ReactNode;
+}) => {
+  return (
+    <Button
+      type="button"
+      tooltip="Eliminar"
+      variant="outline"
+      size="icon"
+      className="size-7"
+      onClick={onClick}
+    >
+      {icon}
+    </Button>
+  );
+};
 
 export function SimpleDeleteDialog({
   onConfirm,

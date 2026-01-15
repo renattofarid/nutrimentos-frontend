@@ -78,7 +78,8 @@ export const ProductForm = ({
         <GroupFormSection
           title="Información Básica"
           icon={Info}
-          cols={{ sm: 1, md: 2 }}
+          gap="gap-3"
+          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
           <FormField
             control={form.control}
@@ -127,7 +128,9 @@ export const ProductForm = ({
             options={companies.map((company) => ({
               value: company.id.toString(),
               label: company.social_reason,
+              description: company.trade_name,
             }))}
+            withValue
           />
 
           <FormSelect
@@ -225,6 +228,7 @@ export const ProductForm = ({
                     variant="default"
                     type="number"
                     step="0.01"
+                    min={0}
                     placeholder="0.00"
                     {...field}
                   />
@@ -252,6 +256,7 @@ export const ProductForm = ({
                     variant="default"
                     type="number"
                     step="0.01"
+                    min={0}
                     placeholder="0.00"
                     {...field}
                   />

@@ -22,6 +22,7 @@ import { useAllNationalities } from "@/pages/nationality/lib/nationality.hook";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import FormSkeleton from "@/components/FormSkeleton";
+import { useSidebar } from "@/components/ui/sidebar";
 
 const { MODEL, ROUTE } = PRODUCT;
 
@@ -31,7 +32,6 @@ export default function ProductEditPage() {
   const { fetchProduct, updateProduct, product } = useProductStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
-
   const { data: companies } = useAllCompanies();
   const { data: categories } = useAllCategories();
   const { data: brands } = useAllBrands();
@@ -39,6 +39,12 @@ export default function ProductEditPage() {
   const { data: productTypes } = useAllProductTypes();
   const { data: nationalities } = useAllNationalities();
   const { data: suppliers } = useAllPersons();
+  const { setOpen, setOpenMobile } = useSidebar();
+
+  useEffect(() => {
+    setOpen(false);
+    setOpenMobile(false);
+  }, []);
 
   useEffect(() => {
     const loadProductData = async () => {
@@ -77,9 +83,9 @@ export default function ProductEditPage() {
     supplier_id: product.supplier_id.toString(),
     nationality_id: product.nationality_id?.toString() || "",
     comment: product.comment || "",
-    weight: product.weight?.toString() || "",
+    weight: product.weight?.toString() || "0",
     is_kg: product.is_kg === 1,
-    price_per_kg: product.price_per_kg?.toString() || "",
+    price_per_kg: product.price_per_kg?.toString() || "0",
     commission_percentage: product.commission_percentage?.toString() || "",
     accounting_cost: product.accounting_cost?.toString() || "",
     inventory_cost: product.inventory_cost?.toString() || "",

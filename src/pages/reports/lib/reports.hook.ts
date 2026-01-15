@@ -6,7 +6,6 @@ export function useCustomerAccountStatement(
 ) {
   const {
     customerAccountStatement,
-    meta,
     isLoading,
     error,
     fetchCustomerAccountStatement,
@@ -14,7 +13,6 @@ export function useCustomerAccountStatement(
 
   return {
     data: customerAccountStatement,
-    meta,
     isLoading,
     error,
     refetch: () => fetchCustomerAccountStatement(params || {}),

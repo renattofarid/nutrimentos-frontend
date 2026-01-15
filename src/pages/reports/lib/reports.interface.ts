@@ -50,24 +50,84 @@ export interface CustomerAccountStatementParams {
   export?: "excel" | "pdf" | null;
 }
 
-export interface CustomerAccountStatementItem {
-  customer_id: number;
-  customer_name: string;
+// Estructura de venta individual
+export interface Sale {
+  id: number;
+  date: string;
   document_number: string;
-  zone_name?: string;
-  total_debt: number;
-  pending_amount: number;
+  document_type: string;
+  payment_type: string;
+  total_amount: number;
   paid_amount: number;
-  last_payment_date?: string;
-  oldest_debt_date?: string;
+  debt_amount: number;
+  days_overdue: number;
+  reference: string;
 }
 
+// Estructura de cliente con sus ventas
+export interface Customer {
+  customer_id: number;
+  customer_name: string;
+  customer_zone: string;
+  total_debt: number;
+  sales: Sale[];
+}
+
+// Estructura de vendedor con sus clientes
+export interface Vendor {
+  vendedor_id: number;
+  vendedor_name: string;
+  total_debt: number;
+  customers: Customer[];
+}
+
+// Estructura de zona con sus vendedores
+export interface Zone {
+  zone_id: number;
+  zone_name: string;
+  total_debt: number;
+  vendors: Vendor[];
+}
+
+// Respuesta completa del backend
 export interface CustomerAccountStatementResponse {
-  data: CustomerAccountStatementItem[];
-  meta?: {
-    total: number;
-    total_debt: number;
-    total_pending: number;
-    total_paid: number;
+  message: string;
+  data: Zone[];
+  filters: {
+    zone_id: number | null;
+    customer_id: number | null;
+    vendedor_id: number | null;
+    payment_type: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    query_type: string;
+    show_old: boolean;
   };
+}
+
+// Item plano para la tabla con información de jerarquía
+export interface CustomerAccountStatementTableItem {
+  id: string;
+  type: "zone" | "vendor" | "customer" | "sale";
+  level: number;
+  zone_id?: number;
+  zone_name?: string;
+  vendedor_id?: number;
+  vendedor_name?: string;
+  customer_id?: number;
+  customer_name?: string;
+  customer_zone?: string;
+  sale_id?: number;
+  date?: string;
+  document_number?: string;
+  document_type?: string;
+  payment_type?: string;
+  total_amount?: number;
+  paid_amount?: number;
+  debt_amount?: number;
+  days_overdue?: number;
+  reference?: string;
+  total_debt: number;
+  parentId?: string;
+  hasChildren: boolean;
 }

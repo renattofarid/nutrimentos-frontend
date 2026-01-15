@@ -1,20 +1,14 @@
 import { create } from "zustand";
 import { getCustomerAccountStatement } from "./reports.actions";
 import type {
-  CustomerAccountStatementItem,
+  CustomerAccountStatementResponse,
   CustomerAccountStatementParams,
 } from "./reports.interface";
 
 interface ReportsStore {
-  customerAccountStatement: CustomerAccountStatementItem[] | null;
+  customerAccountStatement: CustomerAccountStatementResponse | null;
   isLoading: boolean;
   error: string | null;
-  meta: {
-    total: number;
-    total_debt: number;
-    total_pending: number;
-    total_paid: number;
-  } | null;
   fetchCustomerAccountStatement: (
     params: CustomerAccountStatementParams
   ) => Promise<void>;
@@ -24,7 +18,6 @@ export const useReportsStore = create<ReportsStore>((set) => ({
   customerAccountStatement: null,
   isLoading: false,
   error: null,
-  meta: null,
 
   fetchCustomerAccountStatement: async (
     params: CustomerAccountStatementParams
@@ -33,8 +26,7 @@ export const useReportsStore = create<ReportsStore>((set) => ({
     try {
       const response = await getCustomerAccountStatement(params);
       set({
-        customerAccountStatement: response.data,
-        meta: response.meta || null,
+        customerAccountStatement: response,
         isLoading: false,
       });
     } catch (err) {

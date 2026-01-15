@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useCustomerAccountStatement } from "../lib/reports.hook";
 import TitleComponent from "@/components/TitleComponent";
 import { DataTable } from "@/components/DataTable";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, Row } from "@tanstack/react-table";
 import type {
-  CustomerAccountStatementItem,
+  CustomerAccountStatementTableItem,
   CustomerAccountStatementParams,
 } from "../lib/reports.interface";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,8 @@ import {
   Search,
   Filter,
   DollarSign,
+  ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
@@ -30,6 +32,10 @@ import { toast } from "sonner";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import type { Option } from "@/lib/core.interface";
+import {
+  transformCustomerAccountStatementData,
+  calculateAccountStatementMetrics,
+} from "../lib/reports.utils";
 
 interface FilterFormValues {
   zone_id: string;
@@ -42,93 +48,204 @@ interface FilterFormValues {
   show_old: boolean;
 }
 
-const columns: ColumnDef<CustomerAccountStatementItem>[] = [
+const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
   {
-    accessorKey: "customer_name",
-    header: "Cliente",
-    cell: ({ getValue }) => (
-      <span className="font-semibold">{getValue() as string}</span>
-    ),
-  },
-  {
-    accessorKey: "document_number",
-    header: "Documento",
-    cell: ({ getValue }) => (
-      <span className="font-medium">{getValue() as string}</span>
-    ),
-  },
-  {
-    accessorKey: "zone_name",
-    header: "Zona",
-    cell: ({ getValue }) => {
-      const zone = getValue() as string;
-      return zone ? (
-        <Badge variant="outline">{zone}</Badge>
-      ) : (
-        <span className="text-muted-foreground">N/A</span>
+    id: "expander",
+    header: () => null,
+    size: 40,
+    cell: ({ row }) => {
+      const item = row.original;
+      if (!item.hasChildren) return null;
+
+      return (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 w-6 p-0"
+          onClick={() => row.toggleExpanded()}
+        >
+          {row.getIsExpanded() ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+        </Button>
       );
     },
   },
   {
-    accessorKey: "total_debt",
-    header: "Deuda Total",
-    cell: ({ getValue }) => {
-      const value = getValue() as number;
+    accessorKey: "name",
+    header: "Descripción",
+    cell: ({ row }) => {
+      const item = row.original;
+      const indent = item.level * 24;
+
+      let content: React.ReactNode = null;
+      let className = "";
+
+      switch (item.type) {
+        case "zone":
+          content = (
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                ZONA
+              </Badge>
+              <span className="font-bold text-base">{item.zone_name}</span>
+            </div>
+          );
+          className = "bg-blue-50";
+          break;
+
+        case "vendor":
+          content = (
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                VENDEDOR
+              </Badge>
+              <span className="font-semibold">{item.vendedor_name}</span>
+            </div>
+          );
+          className = "bg-purple-50";
+          break;
+
+        case "customer":
+          content = (
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-green-100 text-green-700">
+                CLIENTE
+              </Badge>
+              <span className="font-medium">{item.customer_name}</span>
+            </div>
+          );
+          className = "bg-green-50";
+          break;
+
+        case "sale":
+          content = (
+            <div className="flex items-center gap-3 text-sm">
+              <Badge variant="outline">{item.document_type}</Badge>
+              <span className="font-mono font-medium">{item.document_number}</span>
+              <span className="text-muted-foreground">{item.date}</span>
+            </div>
+          );
+          break;
+      }
+
       return (
-        <span className="font-bold text-lg">S/ {Number(value).toFixed(2)}</span>
+        <div
+          style={{ paddingLeft: `${indent}px` }}
+          className={`py-1 ${className}`}
+        >
+          {content}
+        </div>
       );
     },
   },
   {
-    accessorKey: "pending_amount",
-    header: "Pendiente",
-    cell: ({ getValue }) => {
-      const value = getValue() as number;
-      const variant = value > 0 ? "destructive" : "default";
+    accessorKey: "payment_type",
+    header: "Tipo Pago",
+    size: 120,
+    cell: ({ row }) => {
+      const item = row.original;
+      if (item.type !== "sale") return null;
+
+      const variant =
+        item.payment_type === "CREDITO" ? "destructive" : "default";
+
       return (
-        <Badge variant={variant} className="font-bold">
-          S/ {Number(value).toFixed(2)}
+        <Badge variant={variant} className="text-xs">
+          {item.payment_type}
         </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "total_amount",
+    header: "Monto Total",
+    size: 120,
+    cell: ({ row }) => {
+      const item = row.original;
+      if (item.type !== "sale") return null;
+
+      return (
+        <span className="font-medium">
+          S/ {Number(item.total_amount).toFixed(2)}
+        </span>
       );
     },
   },
   {
     accessorKey: "paid_amount",
     header: "Pagado",
-    cell: ({ getValue }) => {
-      const value = getValue() as number;
+    size: 120,
+    cell: ({ row }) => {
+      const item = row.original;
+      if (item.type !== "sale") return null;
+
       return (
         <span className="font-medium text-green-600">
-          S/ {Number(value).toFixed(2)}
+          S/ {Number(item.paid_amount).toFixed(2)}
         </span>
       );
     },
   },
   {
-    accessorKey: "last_payment_date",
-    header: "Último Pago",
-    cell: ({ getValue }) => {
-      const date = getValue() as string | undefined;
-      return date ? (
-        <span className="text-sm">
-          {new Date(date).toLocaleDateString("es-ES")}
+    accessorKey: "debt_amount",
+    header: "Deuda",
+    size: 120,
+    cell: ({ row }) => {
+      const item = row.original;
+      if (item.type !== "sale") return null;
+
+      const hasDebt = (item.debt_amount ?? 0) > 0;
+
+      return (
+        <span
+          className={`font-bold ${
+            hasDebt ? "text-red-600" : "text-gray-500"
+          }`}
+        >
+          S/ {Number(item.debt_amount).toFixed(2)}
         </span>
-      ) : (
-        <span className="text-muted-foreground">N/A</span>
       );
     },
   },
   {
-    accessorKey: "oldest_debt_date",
-    header: "Deuda Más Antigua",
-    cell: ({ getValue }) => {
-      const date = getValue() as string | undefined;
-      return date ? (
-        <span className="text-sm text-orange-600">
-          {new Date(date).toLocaleDateString("es-ES")}
+    accessorKey: "total_debt",
+    header: "Total Deuda",
+    size: 140,
+    cell: ({ row }) => {
+      const item = row.original;
+      if (item.type === "sale") return null;
+
+      return (
+        <span className="font-bold text-lg text-red-700">
+          S/ {Number(item.total_debt).toFixed(2)}
         </span>
-      ) : (
-        <span className="text-muted-foreground">N/A</span>
+      );
+    },
+  },
+  {
+    accessorKey: "days_overdue",
+    header: "Días Atraso",
+    size: 110,
+    cell: ({ row }) => {
+      const item = row.original;
+      if (item.type !== "sale") return null;
+
+      const days = item.days_overdue ?? 0;
+
+      if (days === 0) {
+        return <span className="text-muted-foreground text-sm">Al día</span>;
+      }
+
+      const variant =
+        days > 30 ? "destructive" : days > 15 ? "default" : "secondary";
+
+      return (
+        <Badge variant={variant}>
+          {days} {days === 1 ? "día" : "días"}
+        </Badge>
       );
     },
   },
@@ -136,12 +253,27 @@ const columns: ColumnDef<CustomerAccountStatementItem>[] = [
 
 export default function CustomerAccountStatementPage() {
   const [isExporting, setIsExporting] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   const { data: zones } = useAllZones();
   const { data: clients } = useAllClients();
   const { data: workers } = useAllWorkers();
 
-  const { data, isLoading, meta, fetch } = useCustomerAccountStatement();
+  const { data: rawData, isLoading, fetch } = useCustomerAccountStatement();
+
+  // Transformar datos y calcular métricas
+  const { tableData, rootRows, meta } = useMemo(() => {
+    if (!rawData) {
+      return { tableData: [], rootRows: [], meta: null };
+    }
+
+    const tableData = transformCustomerAccountStatementData(rawData);
+    // Solo las filas de nivel 0 (zonas) para la tabla
+    const rootRows = tableData.filter((item) => item.level === 0);
+    const meta = calculateAccountStatementMetrics(rawData);
+
+    return { tableData, rootRows, meta };
+  }, [rawData]);
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
@@ -274,7 +406,7 @@ export default function CustomerAccountStatementPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleExport("excel")}
-                  disabled={isExporting || !data || data.length === 0}
+                  disabled={isExporting || !rootRows || rootRows.length === 0}
                 >
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
                   Excel
@@ -284,7 +416,7 @@ export default function CustomerAccountStatementPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleExport("pdf")}
-                  disabled={isExporting || !data || data.length === 0}
+                  disabled={isExporting || !rootRows || rootRows.length === 0}
                 >
                   <FileText className="mr-2 h-4 w-4" />
                   PDF
@@ -384,8 +516,13 @@ export default function CustomerAccountStatementPage() {
             <CardContent className="pt-6">
               <DataTable
                 columns={columns}
-                data={data || []}
+                data={rootRows}
                 isLoading={isLoading}
+                enableExpanding
+                getSubRows={(row) => {
+                  // Retornar las filas hijas basándose en el parentId
+                  return tableData.filter((item) => item.parentId === row.id);
+                }}
               />
             </CardContent>
           </Card>

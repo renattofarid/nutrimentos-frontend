@@ -1,62 +1,43 @@
 import { useEffect } from "react";
-import { usePersonStore } from "@/pages/person/lib/person.store";
-import { CLIENT_ROLE_CODE } from "./client.interface";
+import { useClientStore } from "./client.store";
 
 export function useClients(params?: Record<string, unknown>) {
-  const { persons, meta, isLoading, error, fetchPersons } = usePersonStore();
+  const { clients, meta, isLoading, error, fetchClients } = useClientStore();
 
   useEffect(() => {
-    if (!persons) {
-      // Add role filter for clients
-      const clientParams = {
-        ...params,
-        role_names: [CLIENT_ROLE_CODE],
-      };
-      fetchPersons({ params: clientParams });
+    if (!clients) {
+      fetchClients({ params });
     }
-  }, [persons, fetchPersons]);
+  }, [clients, fetchClients]);
 
   return {
-    data: persons,
+    data: clients,
     meta,
     isLoading,
     error,
     refetch: (refetchParams?: Record<string, unknown>) => {
-      const clientParams = {
-        ...refetchParams,
-        role_names: [CLIENT_ROLE_CODE],
-      };
-      return fetchPersons({ params: clientParams });
+      return fetchClients({ params: refetchParams });
     },
   };
 }
 
 export function useAllClients(params?: Record<string, unknown>) {
-  const { allClients, meta, isLoadingAllClients, error, fetchAllClients } =
-    usePersonStore();
+  const { allClients, meta, isLoadingAll, error, fetchAllClients } =
+    useClientStore();
 
   useEffect(() => {
     if (!allClients) {
-      // Add role filter for clients
-      const clientParams = {
-        ...params,
-        role_names: [CLIENT_ROLE_CODE],
-      };
-      fetchAllClients({ params: clientParams });
+      fetchAllClients({ params });
     }
   }, [allClients, fetchAllClients]);
 
   return {
     data: allClients,
     meta,
-    isLoading: isLoadingAllClients,
+    isLoading: isLoadingAll,
     error,
     refetch: (refetchParams?: Record<string, unknown>) => {
-      const clientParams = {
-        ...refetchParams,
-        role_names: [CLIENT_ROLE_CODE],
-      };
-      return fetchAllClients({ params: clientParams });
+      return fetchAllClients({ params: refetchParams });
     },
   };
 }

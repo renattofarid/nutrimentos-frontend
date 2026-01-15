@@ -790,8 +790,15 @@ export const SaleForm = ({
     }[];
 
     if (selectedPaymentType === "CONTADO") {
-      // Para pagos al contado, las cuotas van vacías
-      validInstallments = [];
+      // Para pagos al contado, crear una cuota automática para hoy con el monto total
+      const totalAmount = calculateDetailsTotal();
+      validInstallments = [
+        {
+          installment_number: 1,
+          due_days: "0", // 0 días = fecha de hoy
+          amount: totalAmount.toString(),
+        },
+      ];
     } else {
       // Para pagos a crédito, usar las cuotas ingresadas
       validInstallments = installments

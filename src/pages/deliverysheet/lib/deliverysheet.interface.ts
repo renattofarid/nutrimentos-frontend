@@ -107,8 +107,8 @@ export interface DeliverySheetResource {
   collected_amount_raw: string;
   pending_amount: string;
   pending_amount_raw: string;
-  zone: Zone;
-  driver: Driver;
+  zone?: Zone;
+  driver?: Driver;
   customer: Customer;
   user: User;
   sales: DeliverySheetSale[];
@@ -120,6 +120,8 @@ export interface DeliverySheetResource {
   created_at: string;
   updated_at: string;
 }
+
+
 
 // ===== API RESPONSES =====
 

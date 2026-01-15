@@ -10,15 +10,9 @@ const REPORTS_ENDPOINT = "/reports";
 export async function getCustomerAccountStatement(
   params: CustomerAccountStatementParams
 ): Promise<CustomerAccountStatementResponse> {
-  const config: AxiosRequestConfig = {
-    params: {
-      ...params,
-    },
-  };
-
-  const { data } = await api.get<CustomerAccountStatementResponse>(
+  const { data } = await api.post<CustomerAccountStatementResponse>(
     `${REPORTS_ENDPOINT}/customer-account-statement`,
-    config
+    params
   );
 
   return data;
@@ -36,7 +30,7 @@ export async function exportCustomerAccountStatement(
     responseType: "blob",
   };
 
-  const { data } = await api.get<Blob>(
+  const { data } = await api.post<Blob>(
     `${REPORTS_ENDPOINT}/customer-account-statement`,
     config
   );

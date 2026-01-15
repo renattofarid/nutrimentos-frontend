@@ -700,8 +700,14 @@ export const PurchaseForm = ({
     let validInstallments: { due_days: string; amount: number }[] | undefined;
 
     if (selectedPaymentType === "CONTADO") {
-      // Cuando es al contado, no se envían cuotas
-      validInstallments = undefined;
+      // Cuando es al contado, enviar una sola cuota con el monto total
+      const purchaseTotal = calculatePurchaseTotal();
+      validInstallments = [
+        {
+          due_days: "1",
+          amount: purchaseTotal,
+        },
+      ];
     } else {
       // Para pagos a crédito, usar las cuotas ingresadas
       validInstallments = installments
@@ -724,12 +730,8 @@ export const PurchaseForm = ({
     const submitData: any = {
       ...data,
       details: formattedDetails,
+      installments: validInstallments, // Siempre enviar installments (sea contado o crédito)
     };
-
-    // Solo agregar installments si no es undefined
-    if (validInstallments !== undefined) {
-      submitData.installments = validInstallments;
-    }
 
     onSubmit(submitData);
   };

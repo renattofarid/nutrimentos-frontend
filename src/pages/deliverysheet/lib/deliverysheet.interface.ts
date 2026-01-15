@@ -98,7 +98,7 @@ export interface DeliverySheetResource {
   id: number;
   sheet_number: string;
   type: "CONTADO" | "CREDITO";
-  status: "PENDIENTE" | "EN_REPARTO" | "COMPLETADO" | "CANCELADO";
+  status: "PENDIENTE" | "EN_REPARTO" | "COMPLETADO" | "CANCELADO" | "RENDIDA";
   issue_date: string;
   delivery_date: string;
   total_amount: string;
@@ -120,8 +120,6 @@ export interface DeliverySheetResource {
   created_at: string;
   updated_at: string;
 }
-
-
 
 // ===== API RESPONSES =====
 

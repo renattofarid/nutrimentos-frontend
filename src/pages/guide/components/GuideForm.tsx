@@ -56,6 +56,7 @@ import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import { toast } from "sonner";
 import { useAllDrivers } from "@/pages/driver/lib/driver.hook";
 import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
+import { successToast } from "@/lib/core.function";
 
 interface GuideFormProps {
   defaultValues: Partial<GuideSchema>;
@@ -264,7 +265,8 @@ export const GuideForm = ({
       );
 
       if (existingDriver) {
-        const fullName = existingDriver.business_name ||
+        const fullName =
+          existingDriver.business_name ||
           `${existingDriver.names} ${existingDriver.father_surname} ${existingDriver.mother_surname}`.trim();
         form.setValue("driver_name", fullName);
         toast.success("Conductor encontrado en el sistema");
@@ -312,15 +314,23 @@ export const GuideForm = ({
       }
 
       setSalesByRange(response.data);
-      toast.success(`Se encontraron ${response.data.length} ventas`);
+      successToast(
+        `Se encontraron ${response.data.length} ventas`,
+        response?.meta?.numeros_encontrados &&
+          response?.meta?.numeros_encontrados?.length > 0
+          ? `Números encontrados: ${response.meta.numeros_encontrados.join(
+              ", "
+            )}`
+          : undefined
+      );
 
-      if (response.meta.tiene_faltantes) {
-        toast.warning(
-          `Hay números faltantes en el rango: ${response.meta.numeros_faltantes?.join(
-            ", "
-          )}`
-        );
-      }
+      // if (response.meta.tiene_faltantes) {
+      //   toast.warning(
+      //     `Hay números faltantes en el rango: ${response.meta.numeros_faltantes?.join(
+      //       ", "
+      //     )}`
+      //   );
+      // }
     } catch (error) {
       console.error("Error searching sales by range:", error);
       toast.error("Error al buscar ventas");
@@ -747,10 +757,10 @@ export const GuideForm = ({
                     disabled={
                       isSearchingCarrier ||
                       !field.value ||
-                      ((carrierDocumentType === "RUC" &&
+                      (carrierDocumentType === "RUC" &&
                         field.value.length !== 11) ||
-                        (carrierDocumentType === "DNI" &&
-                          field.value.length !== 8))
+                      (carrierDocumentType === "DNI" &&
+                        field.value.length !== 8)
                     }
                   >
                     {isSearchingCarrier ? (
@@ -889,8 +899,7 @@ export const GuideForm = ({
                     disabled={
                       isSearchingDriver ||
                       !field.value ||
-                      (driverDocumentType === "DNI" &&
-                        field.value.length !== 8)
+                      (driverDocumentType === "DNI" && field.value.length !== 8)
                     }
                   >
                     {isSearchingDriver ? (

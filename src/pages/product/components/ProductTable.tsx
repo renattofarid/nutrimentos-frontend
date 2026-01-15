@@ -21,7 +21,11 @@ export default function ProductTable({
         columns={columns}
         data={data}
         isLoading={isLoading}
-        initialColumnVisibility={{}}
+        initialColumnVisibility={{
+          purchase_price: false,
+          sale_price: false,
+          created_at: false,
+        }}
       >
         {children}
       </DataTable>

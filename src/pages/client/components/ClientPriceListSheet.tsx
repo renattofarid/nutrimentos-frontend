@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Loader2, Package, DollarSign, AlertCircle } from "lucide-react";
+import { Loader2, Package, AlertCircle } from "lucide-react";
 import { getClientPriceList } from "../lib/client.actions";
 import type {
   ClientPriceListData,
@@ -15,9 +8,9 @@ import type {
 } from "../lib/client.interface";
 import { errorToast } from "@/lib/core.function";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import AssignPriceListModal from "./AssignPriceListModal";
+import GeneralSheet from "@/components/GeneralSheet";
 
 interface ClientPriceListSheetProps {
   open: boolean;
@@ -79,21 +72,19 @@ export default function ClientPriceListSheet({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-3xl p-4">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <DollarSign className="size-5" />
-            Lista de Precios - {personName}
-          </SheetTitle>
-          <SheetDescription>
-            {priceListData
-              ? `${priceListData.price_list.name} - ${priceListData.total_products} productos`
-              : "Cargando información..."}
-          </SheetDescription>
-        </SheetHeader>
-
-        <div className="mt-6">
+    <GeneralSheet
+      open={open}
+      onClose={() => onOpenChange(false)}
+      title={`Lista de Precios - ${personName}`}
+      subtitle={
+        priceListData
+          ? `${priceListData.price_list.name} - ${priceListData.total_products} productos`
+          : "Cargando información..."
+      }
+      icon="DollarSign"
+      size="4xl"
+    >
+      <div className="space-y-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="size-8 animate-spin text-muted-foreground" />
@@ -168,13 +159,13 @@ export default function ClientPriceListSheet({
                     Matriz de Precios ({priceListData.total_products} productos)
                   </h4>
                 </div>
-                <ScrollArea className="h-[calc(100vh-28rem)]">
+                <div className="max-h-[calc(100vh-28rem)] overflow-auto">
                   {priceListData.products.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <p>No hay productos en esta lista de precios</p>
                     </div>
                   ) : (
-                    <div className="p-4 overflow-auto">
+                    <div className="p-4">
                       <table className="w-full border-collapse">
                         <thead>
                           <tr className="bg-muted/50">
@@ -295,12 +286,11 @@ export default function ClientPriceListSheet({
                       </table>
                     </div>
                   )}
-                </ScrollArea>
+                </div>
               </div>
             </div>
           )}
-        </div>
-      </SheetContent>
+      </div>
 
       {showAssignModal && (
         <AssignPriceListModal
@@ -311,6 +301,6 @@ export default function ClientPriceListSheet({
           onSuccess={handleAssignSuccess}
         />
       )}
-    </Sheet>
+    </GeneralSheet>
   );
 }

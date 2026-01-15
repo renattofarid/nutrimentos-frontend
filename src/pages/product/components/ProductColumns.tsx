@@ -2,7 +2,7 @@ import type { ProductResource } from "../lib/product.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil } from "lucide-react";
+import { CheckCircle, Eye, Pencil, XCircle } from "lucide-react";
 import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 export const ProductColumns = ({
@@ -18,7 +18,7 @@ export const ProductColumns = ({
     accessorKey: "codigo",
     header: "Código",
     cell: ({ getValue }) => (
-      <span className="font-semibold text-primary">{getValue() as string}</span>
+      <Badge className="font-semibold">{getValue() as string}</Badge>
     ),
   },
   {
@@ -97,10 +97,10 @@ export const ProductColumns = ({
     header: "Gravado",
     cell: ({ getValue }) => {
       const isTaxed = getValue() as number;
-      return (
-        <Badge variant={isTaxed ? "default" : "outline"}>
-          {isTaxed ? "Sí" : "No"}
-        </Badge>
+      return isTaxed ? (
+        <CheckCircle className="text-primary size-6" />
+      ) : (
+        <XCircle className="text-muted-foreground size-6" />
       );
     },
   },
@@ -109,10 +109,10 @@ export const ProductColumns = ({
     header: "Venta por Kg",
     cell: ({ getValue }) => {
       const isKg = getValue() as number;
-      return (
-        <Badge variant={isKg ? "default" : "outline"}>
-          {isKg ? "Sí" : "No"}
-        </Badge>
+      return isKg ? (
+        <CheckCircle className="text-primary size-6" />
+      ) : (
+        <XCircle className="text-muted-foreground size-6" />
       );
     },
   },

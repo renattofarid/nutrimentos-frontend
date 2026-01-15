@@ -2,17 +2,8 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   saleSchemaCreate,
   saleSchemaUpdate,
@@ -20,13 +11,11 @@ import {
 } from "../lib/sale.schema";
 import {
   Loader,
-  Plus,
-  Trash2,
-  Pencil,
   Users2,
   CreditCard,
   ListChecks,
   UserPlus,
+  FileText,
 } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
@@ -39,21 +28,6 @@ import { useState, useEffect } from "react";
 import { formatDecimalTrunc } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatCurrency";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   DOCUMENT_TYPES,
   PAYMENT_TYPES,
   CURRENCIES,
@@ -64,7 +38,13 @@ import { ClientDialog } from "@/pages/client/components/ClientDialog";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { getNextSeries } from "../lib/sale.actions";
 import { useDynamicPrice } from "../lib/dynamic-price.hook";
-import { ExcelGrid, type ExcelGridColumn, type ProductOption } from "@/components/ExcelGrid";
+import {
+  ExcelGrid,
+  type ExcelGridColumn,
+  type ProductOption,
+} from "@/components/ExcelGrid";
+import { FormInput } from "@/components/FormInput";
+import { Badge } from "@/components/ui/badge";
 
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
@@ -137,67 +117,15 @@ export const SaleForm = ({
 
   // Estados para cuotas
   const [installments, setInstallments] = useState<InstallmentRow[]>([]);
-  const [editingInstallmentIndex, setEditingInstallmentIndex] = useState<
-    number | null
-  >(null);
-  const [currentInstallment, setCurrentInstallment] = useState<InstallmentRow>({
-    installment_number: "",
-    due_days: "",
-    amount: "",
-  });
-
-  // Formularios temporales
-  const installmentTempForm = useForm({
-    defaultValues: {
-      temp_installment_number: currentInstallment.installment_number,
-      temp_due_days: currentInstallment.due_days,
-      temp_amount: currentInstallment.amount,
-    },
-  });
-
-  // Watchers para cuotas
-  const selectedInstallmentNumber = installmentTempForm.watch(
-    "temp_installment_number"
-  );
-  const selectedDueDays = installmentTempForm.watch("temp_due_days");
-  const selectedAmount = installmentTempForm.watch("temp_amount");
-
-  // Observers para cuotas
-  useEffect(() => {
-    if (selectedInstallmentNumber !== currentInstallment.installment_number) {
-      setCurrentInstallment((prev) => ({
-        ...prev,
-        installment_number: selectedInstallmentNumber || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedInstallmentNumber]);
-
-  useEffect(() => {
-    if (selectedDueDays !== currentInstallment.due_days) {
-      setCurrentInstallment((prev) => ({
-        ...prev,
-        due_days: selectedDueDays || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDueDays]);
-
-  useEffect(() => {
-    if (selectedAmount !== currentInstallment.amount) {
-      setCurrentInstallment((prev) => ({
-        ...prev,
-        amount: selectedAmount || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAmount]);
 
   const form = useForm({
     resolver: zodResolver(
       mode === "create" ? saleSchemaCreate : saleSchemaUpdate
     ),
     defaultValues: {
+      document_type: "FACTURA", // Por defecto Factura
+      currency: "PEN", // Por defecto Soles
+      payment_type: "CONTADO", // Por defecto al Contado
       ...defaultValues,
       details: details.length > 0 ? details : [],
       installments: installments.length > 0 ? installments : [],
@@ -315,13 +243,22 @@ export const SaleForm = ({
 
       // Si el warehouse seleccionado no está en la nueva lista filtrada, limpiar
       const currentWarehouseId = form.getValues("warehouse_id");
+      let warehouseCleared = false;
+
       if (currentWarehouseId) {
         const isValid = filtered.some(
           (warehouse) => warehouse.id.toString() === currentWarehouseId
         );
         if (!isValid) {
           form.setValue("warehouse_id", "");
+          warehouseCleared = true;
         }
+      }
+
+      // Si solo hay un almacén, seleccionarlo automáticamente
+      // Esto se ejecuta si: no hay almacén seleccionado, o el almacén fue limpiado
+      if (filtered.length === 1 && mode === "create" && (!currentWarehouseId || warehouseCleared)) {
+        form.setValue("warehouse_id", filtered[0].id.toString());
       }
     } else {
       setFilteredWarehouses([]);
@@ -372,6 +309,22 @@ export const SaleForm = ({
     fetchNextSeries();
   }, [selectedBranchId, selectedDocumentType, mode]);
 
+  // Efecto para hacer focus en el primer campo cuando se monta el formulario
+  useEffect(() => {
+    // Esperar un tick para asegurar que el DOM esté completamente renderizado
+    const timer = setTimeout(() => {
+      // Buscar el primer botón del formulario (que es el trigger del FormSelect)
+      const firstButton = document.querySelector(
+        'form button[role="combobox"]'
+      ) as HTMLButtonElement;
+      if (firstButton) {
+        firstButton.focus();
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   // Función de redondeo a 6 decimales
   const roundTo6Decimals = (value: number): number => {
     return Math.round(value * 1000000) / 1000000;
@@ -404,14 +357,20 @@ export const SaleForm = ({
     form.setValue("details", updatedDetails);
   };
 
-  const handleCellChange = async (index: number, field: string, value: string) => {
+  const handleCellChange = async (
+    index: number,
+    field: string,
+    value: string
+  ) => {
     const updatedDetails = [...details];
     updatedDetails[index] = { ...updatedDetails[index], [field]: value };
 
     // Recalcular totales cuando cambian cantidad o kg adicionales
     if (field === "quantity_sacks" || field === "quantity_kg") {
       const detail = updatedDetails[index];
-      const product = filteredProducts.find(p => p.id.toString() === detail.product_id);
+      const product = filteredProducts.find(
+        (p) => p.id.toString() === detail.product_id
+      );
 
       if (product && detail.product_id) {
         const qty = parseFloat(detail.quantity_sacks) || 0;
@@ -419,7 +378,10 @@ export const SaleForm = ({
         const productWeight = parseFloat(product.weight || "0");
 
         // Calcular peso total en kg (sacos × peso_por_saco + kg_adicionales)
-        const totalWeightKg = productWeight > 0 ? roundTo6Decimals(productWeight * qty + addKg) : addKg;
+        const totalWeightKg =
+          productWeight > 0
+            ? roundTo6Decimals(productWeight * qty + addKg)
+            : addKg;
 
         // El campo quantity representa solo la cantidad de sacos
         // Los kg adicionales se manejan por separado en quantity_kg
@@ -467,20 +429,22 @@ export const SaleForm = ({
               const clearedDetails = [...updatedDetails];
               clearedDetails[index] = {
                 ...clearedDetails[index],
-                quantity: "0",  // Resetear quantity_sacks a 0
-                quantity_sacks: "0",  // Resetear quantity_sacks a 0
+                quantity: "0", // Resetear quantity_sacks a 0
+                quantity_sacks: "0", // Resetear quantity_sacks a 0
                 unit_price: "",
                 subtotal: 0,
                 igv: 0,
                 total: 0,
-                total_kg: addKg,  // Solo los kg adicionales
+                total_kg: addKg, // Solo los kg adicionales
                 price_from_api: false,
               };
 
               setDetails(clearedDetails);
               form.setValue("details", clearedDetails);
 
-              errorToast("Error al obtener el precio dinámico. Por favor, ingrese el precio manualmente.");
+              errorToast(
+                "Error al obtener el precio dinámico. Por favor, ingrese el precio manualmente."
+              );
             }
           } catch (error: any) {
             console.error("Error fetching dynamic price:", error);
@@ -489,20 +453,23 @@ export const SaleForm = ({
             const clearedDetails = [...updatedDetails];
             clearedDetails[index] = {
               ...clearedDetails[index],
-              quantity: "0",  // Resetear quantity_sacks a 0
-              quantity_sacks: "0",  // Resetear quantity_sacks a 0
+              quantity: "0", // Resetear quantity_sacks a 0
+              quantity_sacks: "0", // Resetear quantity_sacks a 0
               unit_price: "",
               subtotal: 0,
               igv: 0,
               total: 0,
-              total_kg: addKg,  // Solo los kg adicionales
+              total_kg: addKg, // Solo los kg adicionales
               price_from_api: false,
             };
 
             setDetails(clearedDetails);
             form.setValue("details", clearedDetails);
 
-            const errorMessage = error?.response?.data?.message || error?.response?.data?.error || "Error al obtener el precio dinámico. Por favor, ingrese el precio manualmente.";
+            const errorMessage =
+              error?.response?.data?.message ||
+              error?.response?.data?.error ||
+              "Error al obtener el precio dinámico. Por favor, ingrese el precio manualmente.";
             errorToast(errorMessage);
           }
         }
@@ -521,17 +488,25 @@ export const SaleForm = ({
       const addKg = parseFloat(detail.quantity_kg) || 0;
 
       // Obtener el peso del producto
-      const product = filteredProducts.find(p => p.id.toString() === detail.product_id);
+      const product = filteredProducts.find(
+        (p) => p.id.toString() === detail.product_id
+      );
       const productWeight = product?.weight ? parseFloat(product.weight) : 0;
 
       // Calcular peso total en kg (sacos × peso_por_saco + kg_adicionales)
-      const totalWeightKg = productWeight > 0 ? roundTo6Decimals(productWeight * qtySacks + addKg) : addKg;
+      const totalWeightKg =
+        productWeight > 0
+          ? roundTo6Decimals(productWeight * qtySacks + addKg)
+          : addKg;
 
       // El campo quantity representa solo la cantidad de sacos
       const quantityDecimal = qtySacks;
 
       // Calcular totales basados en peso_total_kg × precio_por_kg
-      const subtotal = totalWeightKg > 0 && unitPrice > 0 ? roundTo6Decimals(totalWeightKg * unitPrice) : 0;
+      const subtotal =
+        totalWeightKg > 0 && unitPrice > 0
+          ? roundTo6Decimals(totalWeightKg * unitPrice)
+          : 0;
       const igv = subtotal > 0 ? roundTo6Decimals(subtotal * 0.18) : 0;
       const total = subtotal > 0 ? roundTo6Decimals(subtotal + igv) : 0;
 
@@ -556,7 +531,9 @@ export const SaleForm = ({
   };
 
   const handleProductSelect = async (index: number, product: ProductOption) => {
-    const selectedProduct = filteredProducts.find(p => p.id.toString() === product.id);
+    const selectedProduct = filteredProducts.find(
+      (p) => p.id.toString() === product.id
+    );
     if (!selectedProduct) return;
 
     const updatedDetails = [...details];
@@ -579,7 +556,7 @@ export const SaleForm = ({
     form.setValue("details", updatedDetails);
   };
 
-  // Configuración de columnas para ExcelGrid
+  // Configuración de columnas para ExcelGrid de Detalles
   const gridColumns: ExcelGridColumn<DetailRow>[] = [
     {
       id: "product_code",
@@ -624,7 +601,9 @@ export const SaleForm = ({
       width: "120px",
       render: (row) => (
         <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold">
-          {row.subtotal ? `${getCurrencySymbol()} ${formatNumber(row.subtotal)}` : "-"}
+          {row.subtotal
+            ? `${getCurrencySymbol()} ${formatNumber(row.subtotal)}`
+            : "-"}
         </div>
       ),
     },
@@ -663,83 +642,113 @@ export const SaleForm = ({
     return roundTo6Decimals(totalWeight);
   };
 
-  // Funciones para cuotas
-  const handleAddInstallment = () => {
-    if (
-      !currentInstallment.installment_number ||
-      !currentInstallment.due_days ||
-      !currentInstallment.amount
-    ) {
-      return;
-    }
-
-    const newAmount = parseFloat(currentInstallment.amount);
+  // Funciones para cuotas con ExcelGrid
+  const handleAddInstallmentRow = () => {
     const saleTotal = calculateDetailsTotal();
+    const currentTotal = calculateInstallmentsTotal();
+    const remainingAmount = roundTo6Decimals(saleTotal - currentTotal);
 
-    // Calcular el total de cuotas (excluyendo la que se está editando si aplica)
-    let currentInstallmentsTotal = installments.reduce((sum, inst, idx) => {
-      if (editingInstallmentIndex !== null && idx === editingInstallmentIndex) {
-        return sum;
-      }
-      return sum + parseFloat(inst.amount);
-    }, 0);
+    const newInstallment: InstallmentRow = {
+      installment_number: (installments.length + 1).toString(),
+      due_days: installments.length === 0 ? "0" : "",
+      amount: remainingAmount > 0 ? remainingAmount.toString() : "0",
+    };
 
-    // Validar que no exceda el total de la venta
-    if (currentInstallmentsTotal + newAmount > saleTotal) {
-      errorToast(
-        `El total de cuotas no puede exceder el total de la venta (${formatDecimalTrunc(
-          saleTotal,
-          6
-        )})`
-      );
-      return;
-    }
-
-    const newInstallment: InstallmentRow = { ...currentInstallment };
-
-    if (editingInstallmentIndex !== null) {
-      const updatedInstallments = [...installments];
-      updatedInstallments[editingInstallmentIndex] = newInstallment;
-      setInstallments(updatedInstallments);
-      form.setValue("installments", updatedInstallments);
-      setEditingInstallmentIndex(null);
-    } else {
-      const updatedInstallments = [...installments, newInstallment];
-      setInstallments(updatedInstallments);
-      form.setValue("installments", updatedInstallments);
-    }
-
-    setCurrentInstallment({
-      installment_number: "",
-      due_days: "",
-      amount: "",
-    });
-    installmentTempForm.setValue("temp_installment_number", "");
-    installmentTempForm.setValue("temp_due_days", "");
-    installmentTempForm.setValue("temp_amount", "");
-  };
-
-  const handleEditInstallment = (index: number) => {
-    const inst = installments[index];
-    setCurrentInstallment(inst);
-    installmentTempForm.setValue(
-      "temp_installment_number",
-      inst.installment_number
-    );
-    installmentTempForm.setValue("temp_due_days", inst.due_days);
-    installmentTempForm.setValue("temp_amount", inst.amount);
-    setEditingInstallmentIndex(index);
-  };
-
-  const handleRemoveInstallment = (index: number) => {
-    const updatedInstallments = installments.filter((_, i) => i !== index);
+    const updatedInstallments = [...installments, newInstallment];
     setInstallments(updatedInstallments);
     form.setValue("installments", updatedInstallments);
   };
 
+  const handleInstallmentCellChange = (
+    index: number,
+    field: string,
+    value: string
+  ) => {
+    const updatedInstallments = [...installments];
+    updatedInstallments[index] = {
+      ...updatedInstallments[index],
+      [field]: value,
+    };
+
+    setInstallments(updatedInstallments);
+    form.setValue("installments", updatedInstallments);
+  };
+
+  const handleRemoveInstallment = (index: number) => {
+    const updatedInstallments = installments.filter((_, i) => i !== index);
+
+    // Renumerar las cuotas
+    const renumberedInstallments = updatedInstallments.map((inst, idx) => ({
+      ...inst,
+      installment_number: (idx + 1).toString(),
+    }));
+
+    setInstallments(renumberedInstallments);
+    form.setValue("installments", renumberedInstallments);
+  };
+
+  // Función auxiliar para calcular la fecha de vencimiento
+  const calculateDueDate = (days: string): string => {
+    const issueDate = form.watch("issue_date");
+    if (!issueDate || !days) return "-";
+
+    const daysNum = parseInt(days);
+    if (isNaN(daysNum)) return "-";
+
+    const date = new Date(issueDate);
+    date.setDate(date.getDate() + daysNum);
+
+    // Formatear como DD/MM/YYYY
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
+
+  // Configuración de columnas para ExcelGrid de Cuotas
+  const installmentColumns: ExcelGridColumn<InstallmentRow>[] = [
+    {
+      id: "installment_number",
+      header: "N° Cuota",
+      type: "readonly",
+      width: "100px",
+      render: (row) => (
+        <div className="h-full flex items-center justify-center px-2 py-1 text-sm font-semibold bg-muted/50 text-muted-foreground">
+          Cuota {row.installment_number}
+        </div>
+      ),
+    },
+    {
+      id: "due_days",
+      header: "Días",
+      type: "number",
+      width: "100px",
+      accessor: "due_days",
+    },
+    {
+      id: "amount",
+      header: "Monto",
+      type: "number",
+      width: "150px",
+      accessor: "amount",
+    },
+    {
+      id: "due_date",
+      header: "Fecha Venc.",
+      type: "readonly",
+      width: "120px",
+      render: (row) => (
+        <div className="h-full flex items-center justify-center px-2 py-1 text-sm bg-muted/50 text-muted-foreground">
+          {calculateDueDate(row.due_days)}
+        </div>
+      ),
+    },
+  ];
+
   const calculateInstallmentsTotal = () => {
     const sum = installments.reduce(
-      (sum, inst) => sum + parseFloat(inst.amount),
+      (sum, inst) => sum + (parseFloat(inst.amount) || 0),
       0
     );
     return roundTo6Decimals(sum);
@@ -781,8 +790,15 @@ export const SaleForm = ({
     }[];
 
     if (selectedPaymentType === "CONTADO") {
-      // Para pagos al contado, las cuotas van vacías
-      validInstallments = [];
+      // Para pagos al contado, crear una cuota automática para hoy con el monto total
+      const totalAmount = calculateDetailsTotal();
+      validInstallments = [
+        {
+          installment_number: 1,
+          due_days: "0", // 0 días = fecha de hoy
+          amount: totalAmount.toString(),
+        },
+      ];
     } else {
       // Para pagos a crédito, usar las cuotas ingresadas
       validInstallments = installments
@@ -824,380 +840,317 @@ export const SaleForm = ({
         <GroupFormSection
           title="Información General"
           icon={Users2}
-          cols={{ sm: 1 }}
+          cols={{ sm: 1, md: 3, lg: 5 }}
+          headerExtra={
+            mode === "create" &&
+            autoSerie &&
+            autoNumero && (
+              <Badge variant="default" className="px-3 py-1" size="default">
+                {autoSerie} - {autoNumero}
+              </Badge>
+            )
+          }
         >
-          {/* Serie y Número Automático */}
-          {mode === "create" && (autoSerie || autoNumero) && (
-            <div className="flex items-center justify-center gap-2 mb-4">
-              {autoSerie && (
-                <span className="text-xl font-semibold text-blue-600">
-                  {autoSerie}
-                </span>
-              )}
-              {autoSerie && autoNumero && (
-                <span className="text-xl text-muted-foreground">-</span>
-              )}
-              {autoNumero && (
-                <span className="text-xl font-semibold text-blue-600">
-                  {autoNumero}
-                </span>
-              )}
-            </div>
-          )}
+          <FormSelect
+            control={form.control}
+            name="document_type"
+            label="Tipo de Documento"
+            placeholder="Seleccione tipo"
+            options={DOCUMENT_TYPES.map((dt) => ({
+              value: dt.value,
+              label: dt.label,
+            }))}
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <FormSelect
-              control={form.control}
-              name="branch_id"
-              label="Tienda"
-              placeholder="Seleccione una tienda"
-              options={
-                branches?.map((branch) => ({
-                  value: branch.id.toString(),
-                  label: branch.name,
-                  description: branch.address,
-                })) || []
-              }
-              disabled={mode === "update"}
-            />
-
-            <div className="flex gap-2 items-end">
-              <div className="truncate! flex-1">
-                <FormSelect
-                  control={form.control}
-                  name="customer_id"
-                  label="Cliente"
-                  placeholder="Seleccione un cliente"
-                  options={customers.map((customer) => ({
-                    value: customer.id.toString(),
-                    label:
-                      customer.business_name ??
-                      customer.names +
-                        " " +
-                        customer.father_surname +
-                        " " +
-                        customer.mother_surname,
-                    description:
-                      (customer.number_document ?? "-") +
-                      " | " +
-                      (customer.zone_name ?? "-"),
-                  }))}
-                  disabled={mode === "update"}
-                />
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => setIsClientDialogOpen(true)}
-                title="Agregar nuevo cliente"
-              >
-                <UserPlus className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <FormSelect
-              control={form.control}
-              name="vendedor_id"
-              label="Vendedor"
-              placeholder="Seleccionar vendedor (opcional)"
-              options={[
-                { value: "", label: "Sin vendedor" },
-                ...(workers?.map((worker) => ({
-                  value: worker.id.toString(),
-                  label: `${worker.names} ${worker.father_surname}`,
-                  description: worker.number_document ?? "-",
-                })) || []),
-              ]}
-            />
-
-            <FormSelect
-              control={form.control}
-              name="warehouse_id"
-              label="Almacén"
-              placeholder="Seleccione un almacén"
-              options={filteredWarehouses.map((warehouse) => ({
-                value: warehouse.id.toString(),
-                label: warehouse.name,
-              }))}
-              disabled={mode === "update" || !selectedBranchId}
-            />
-
-            <FormSelect
-              control={form.control}
-              name="document_type"
-              label="Tipo de Documento"
-              placeholder="Seleccione tipo"
-              options={DOCUMENT_TYPES.map((dt) => ({
-                value: dt.value,
-                label: dt.label,
-              }))}
-            />
-
-            <DatePickerFormField
-              control={form.control}
-              name="issue_date"
-              label="Fecha de Emisión"
-              placeholder="Seleccione fecha"
-              dateFormat="dd/MM/yyyy"
-              disabledRange={{
-                after: new Date(),
-              }}
-            />
-
-            <FormSelect
-              control={form.control}
-              name="payment_type"
-              label="Tipo de Pago"
-              placeholder="Seleccione tipo"
-              options={PAYMENT_TYPES.map((pt) => ({
-                value: pt.value,
-                label: pt.label,
-              }))}
-            />
-
-            <FormSelect
-              control={form.control}
-              name="currency"
-              label="Moneda"
-              placeholder="Seleccione moneda"
-              options={CURRENCIES.map((c) => ({
-                value: c.value,
-                label: c.label,
-              }))}
-            />
-
-            <div className="md:col-span-2 lg:col-span-3">
-              <FormField
+          <div className="flex gap-2 items-end">
+            <div className="truncate! flex-1">
+              <FormSelect
                 control={form.control}
-                name="observations"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Observaciones</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Ingrese observaciones adicionales"
-                        className="resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                name="customer_id"
+                label="Cliente"
+                placeholder="Seleccione un cliente"
+                options={customers.map((customer) => ({
+                  value: customer.id.toString(),
+                  label:
+                    customer.business_name ??
+                    customer.names +
+                      " " +
+                      customer.father_surname +
+                      " " +
+                      customer.mother_surname,
+                  description:
+                    (customer.number_document ?? "-") +
+                    " | " +
+                    (customer.zone_name ?? "-"),
+                }))}
+                disabled={mode === "update"}
               />
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setIsClientDialogOpen(true)}
+              title="Agregar nuevo cliente"
+            >
+              <UserPlus className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <FormSelect
+            control={form.control}
+            name="branch_id"
+            label="Tienda"
+            placeholder="Seleccione una tienda"
+            options={
+              branches?.map((branch) => ({
+                value: branch.id.toString(),
+                label: branch.name,
+                description: branch.address,
+              })) || []
+            }
+            disabled={mode === "update"}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="warehouse_id"
+            label="Almacén"
+            placeholder="Seleccione un almacén"
+            options={filteredWarehouses.map((warehouse) => ({
+              value: warehouse.id.toString(),
+              label: warehouse.name,
+            }))}
+            disabled={mode === "update" || !selectedBranchId}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="vendedor_id"
+            label="Vendedor"
+            placeholder="Seleccionar vendedor (opcional)"
+            options={[
+              { value: "", label: "Sin vendedor" },
+              ...(workers?.map((worker) => ({
+                value: worker.id.toString(),
+                label: `${worker.names} ${worker.father_surname}`,
+                description: worker.number_document ?? "-",
+              })) || []),
+            ]}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="payment_type"
+            label="Tipo de Pago"
+            placeholder="Seleccione tipo"
+            options={PAYMENT_TYPES.map((pt) => ({
+              value: pt.value,
+              label: pt.label,
+            }))}
+          />
+
+          <DatePickerFormField
+            control={form.control}
+            name="issue_date"
+            label="Fecha de Emisión"
+            placeholder="Seleccione fecha"
+            dateFormat="dd/MM/yyyy"
+            disabledRange={{
+              after: new Date(),
+            }}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="currency"
+            label="Moneda"
+            placeholder="Seleccione moneda"
+            options={CURRENCIES.map((c) => ({
+              value: c.value,
+              label: c.label,
+            }))}
+          />
+
+          <div className="lg:col-span-2">
+            <FormInput
+              name="observations"
+              control={form.control}
+              label="Observaciones"
+              placeholder="Ingrese observaciones adicionales"
+            />
           </div>
         </GroupFormSection>
 
-        {/* Detalles */}
-        <GroupFormSection
-          title="Detalles de la Venta"
-          icon={ListChecks}
-          cols={{ sm: 1 }}
-        >
-          {/* Excel Grid para Detalles */}
-          <ExcelGrid
-            columns={gridColumns}
-            data={details}
-            onAddRow={handleAddRow}
-            onRemoveRow={handleRemoveRow}
-            onCellChange={handleCellChange}
-            productOptions={productOptions}
-            onProductSelect={handleProductSelect}
-            emptyMessage="Seleccione un almacén y cliente para comenzar."
-            disabled={!selectedWarehouseId || !form.watch("customer_id")}
-          />
-
-          {/* Resumen de totales */}
-          {details.length > 0 && (
-            <div className="mt-4 space-y-2 p-4 bg-muted/30 rounded-lg border">
-              <div className="flex justify-between items-center pb-2 border-b">
-                <span className="font-bold text-blue-600">Peso Total:</span>
-                <span className="text-lg font-bold text-blue-600">
-                  {formatDecimalTrunc(calculateTotalWeight(), 2)} kg
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Subtotal:</span>
-                <span className="font-bold">
-                  {getCurrencySymbol()}{" "}
-                  {formatNumber(calculateDetailsSubtotal())}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold text-orange-600">
-                  IGV (18%):
-                </span>
-                <span className="font-bold text-orange-600">
-                  {getCurrencySymbol()} {formatNumber(calculateDetailsIGV())}
-                </span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t">
-                <span className="text-lg font-bold">Total:</span>
-                <span className="text-xl font-bold text-primary">
-                  {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())}
-                </span>
-              </div>
-            </div>
-          )}
-        </GroupFormSection>
-
-
-        {/* Cuotas - Solo mostrar si es a crédito */}
-        {selectedPaymentType === "CREDITO" && (
-          <GroupFormSection
-            title="Cuotas de Pago"
-            icon={ListChecks}
-            cols={{ sm: 1 }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
-              <FormField
-                control={installmentTempForm.control}
-                name="temp_installment_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Número de Cuota</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="1" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
+        {/* Detalles, Cuotas y Resumen */}
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6">
+          {/* Columna Izquierda: Detalles y Cuotas */}
+          <div className="space-y-6">
+            {/* Detalles */}
+            <GroupFormSection
+              title="Detalles de la Venta"
+              icon={ListChecks}
+              cols={{ sm: 1 }}
+            >
+              <ExcelGrid
+                columns={gridColumns}
+                data={details}
+                onAddRow={handleAddRow}
+                onRemoveRow={handleRemoveRow}
+                onCellChange={handleCellChange}
+                productOptions={productOptions}
+                onProductSelect={handleProductSelect}
+                emptyMessage="Seleccione un almacén y cliente para comenzar."
+                disabled={!selectedWarehouseId || !form.watch("customer_id")}
               />
+            </GroupFormSection>
 
-              <FormField
-                control={installmentTempForm.control}
-                name="temp_due_days"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Días de Vencimiento</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="30" {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+            {/* Cuotas - Solo mostrar si es a crédito */}
+            {selectedPaymentType === "CREDITO" && (
+              <GroupFormSection
+                title="Cuotas de Pago"
+                icon={CreditCard}
+                cols={{ sm: 1 }}
+              >
+                <ExcelGrid
+                  columns={installmentColumns}
+                  data={installments}
+                  onAddRow={handleAddInstallmentRow}
+                  onRemoveRow={handleRemoveInstallment}
+                  onCellChange={handleInstallmentCellChange}
+                  emptyMessage="Agregue las cuotas de pago."
+                  disabled={details.length === 0}
+                />
 
-              <FormField
-                control={installmentTempForm.control}
-                name="temp_amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monto</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.0001"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex items-end justify-end">
-                <Button
-                  type="button"
-                  variant="default"
-                  size={"sm"}
-                  onClick={handleAddInstallment}
-                  disabled={
-                    !currentInstallment.installment_number ||
-                    !currentInstallment.due_days ||
-                    !currentInstallment.amount
-                  }
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  {editingInstallmentIndex !== null ? "Actualizar" : "Agregar"}
-                </Button>
-              </div>
-            </div>
-
-            {installments.length > 0 ? (
-              <>
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Cuota #</TableHead>
-                        <TableHead className="text-right">
-                          Días Vencimiento
-                        </TableHead>
-                        <TableHead className="text-right">Monto</TableHead>
-                        <TableHead className="text-center">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {installments.map((inst, index) => (
-                        <TableRow key={index}>
-                          <TableCell>Cuota {inst.installment_number}</TableCell>
-                          <TableCell className="text-right">
-                            {inst.due_days} días
-                          </TableCell>
-                          <TableCell className="text-right font-semibold">
-                            {formatDecimalTrunc(parseFloat(inst.amount), 6)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex justify-center gap-2">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditInstallment(index)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveInstallment(index)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow>
-                        <TableCell colSpan={2} className="text-right font-bold">
-                          TOTAL CUOTAS:
-                        </TableCell>
-                        <TableCell className="text-right font-bold text-lg text-blue-600">
-                          {getCurrencySymbol()}{" "}
-                          {formatDecimalTrunc(calculateInstallmentsTotal(), 6)}
-                        </TableCell>
-                        <TableCell></TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-                {!installmentsMatchTotal() && (
-                  <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-                    <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                      ⚠️ El total de cuotas ({getCurrencySymbol()}{" "}
-                      {formatNumber(calculateInstallmentsTotal())}) debe ser
-                      igual al total de la venta ({getCurrencySymbol()}{" "}
-                      {formatNumber(calculateDetailsTotal())})
-                    </p>
+                {installments.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <div className="flex justify-between items-center p-4 bg-muted/30 rounded-lg border">
+                      <span className="font-bold">TOTAL CUOTAS:</span>
+                      <span className="text-xl font-bold text-blue-600">
+                        {getCurrencySymbol()}{" "}
+                        {formatNumber(calculateInstallmentsTotal())}
+                      </span>
+                    </div>
+                    {!installmentsMatchTotal() && (
+                      <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+                        <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
+                          ⚠️ El total de cuotas ({getCurrencySymbol()}{" "}
+                          {formatNumber(calculateInstallmentsTotal())}) debe ser
+                          igual al total de la venta ({getCurrencySymbol()}{" "}
+                          {formatNumber(calculateDetailsTotal())})
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
-              </>
-            ) : (
-              <Empty className="border border-dashed">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <CreditCard />
-                  </EmptyMedia>
-                  <EmptyTitle>No hay cuotas agregadas</EmptyTitle>
-                  <EmptyDescription>
-                    Agregue las cuotas de pago utilizando el formulario
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+              </GroupFormSection>
             )}
-          </GroupFormSection>
-        )}
+          </div>
+
+          {/* Columna Derecha: Resumen Sticky */}
+          <div className="xl:sticky xl:top-4 xl:self-start">
+            <GroupFormSection
+              title="Resumen"
+              icon={FileText}
+              cols={{ sm: 1 }}
+              headerExtra={
+                mode === "create" &&
+                autoSerie &&
+                autoNumero && (
+                  <Badge variant="default" className="px-3 py-1" size="default">
+                    {autoSerie} - {autoNumero}
+                  </Badge>
+                )
+              }
+            >
+              <div className="space-y-6">
+                {/* Peso Total */}
+                <div className="space-y-1">
+                  <div className="text-[10px] uppercase tracking-wider text-blue-600/70 dark:text-blue-400/70 font-medium">
+                    Peso Total
+                  </div>
+                  <div className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
+                    {formatDecimalTrunc(calculateTotalWeight(), 2)} kg
+                  </div>
+                </div>
+
+                <div className="border-t" />
+
+                {/* Desglose */}
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="font-medium text-foreground">
+                      {getCurrencySymbol()}{" "}
+                      {formatNumber(calculateDetailsSubtotal())}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">IGV (18%)</span>
+                    <span className="font-medium text-orange-600 dark:text-orange-400">
+                      {getCurrencySymbol()}{" "}
+                      {formatNumber(calculateDetailsIGV())}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t" />
+
+                {/* Total a Pagar */}
+                <div className="space-y-1">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                    Total a Pagar
+                  </div>
+                  <div className="text-3xl font-semibold text-primary">
+                    {getCurrencySymbol()}{" "}
+                    {formatNumber(calculateDetailsTotal())}
+                  </div>
+                </div>
+
+                {/* Resumen de Cuotas si es a crédito */}
+                {selectedPaymentType === "CREDITO" &&
+                  installments.length > 0 && (
+                    <>
+                      <div className="border-t" />
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                            Cuotas ({installments.length})
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-sm text-muted-foreground">
+                            Total en cuotas
+                          </span>
+                          <span
+                            className={`text-lg font-semibold ${
+                              installmentsMatchTotal()
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-orange-600 dark:text-orange-400"
+                            }`}
+                          >
+                            {getCurrencySymbol()}{" "}
+                            {formatNumber(calculateInstallmentsTotal())}
+                          </span>
+                        </div>
+                        {!installmentsMatchTotal() && (
+                          <div className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
+                            <span>⚠</span>
+                            <span>No coincide con el total</span>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+              </div>
+            </GroupFormSection>
+          </div>
+        </div>
+
+        {/* <pre>
+          <code>{JSON.stringify(products, null, 2)}</code>
+          <code>{JSON.stringify(filteredProducts, null, 2)}</code>
+        </pre> */}
 
         {/* <pre>
           <code>{JSON.stringify(form.getValues(), null, 2)}</code>
@@ -1210,11 +1163,12 @@ export const SaleForm = ({
         </pre> */}
         {/* Botones */}
         <div className="flex gap-4 w-full justify-end">
-          <Button type="button" variant="neutral" onClick={onCancel}>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             Cancelar
           </Button>
 
           <Button
+            size="sm"
             type="submit"
             disabled={
               isSubmitting ||

@@ -12,9 +12,9 @@ import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { SALE, type SaleResource } from "../lib/sale.interface";
-import FormWrapper from "@/components/FormWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
 import { errorToast } from "@/lib/core.function";
+import PageWrapper from "@/components/PageWrapper";
 
 export const SaleEditPage = () => {
   const { ICON } = SALE;
@@ -80,7 +80,7 @@ export const SaleEditPage = () => {
     details:
       data.details?.map((detail) => ({
         product_id: detail.product_id.toString(),
-        quantity_sacks: detail.quantity.toString(), // Por ahora usar quantity como quantity_sacks
+        quantity_sacks: detail.quantity_sacks.toString(), // Por ahora usar quantity como quantity_sacks
         quantity_kg: "0", // Por defecto 0 si no viene del backend
         unit_price: detail.unit_price.toString(),
       })) ?? [],
@@ -111,32 +111,32 @@ export const SaleEditPage = () => {
 
   if (isLoading) {
     return (
-      <FormWrapper>
+      <PageWrapper size="3xl">
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
             <TitleFormComponent title="Venta" mode="edit" icon={ICON} />
           </div>
         </div>
         <FormSkeleton />
-      </FormWrapper>
+      </PageWrapper>
     );
   }
 
   if (!sale) {
     return (
-      <FormWrapper>
+      <PageWrapper size="3xl">
         <div className="flex items-center gap-4 mb-6">
           <TitleFormComponent title="Venta" mode="edit" icon={ICON} />
         </div>
         <div className="text-center py-8">
           <p className="text-muted-foreground">Venta no encontrada</p>
         </div>
-      </FormWrapper>
+      </PageWrapper>
     );
   }
 
   return (
-    <FormWrapper>
+    <PageWrapper size="3xl">
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <TitleFormComponent title="Venta" mode="edit" icon={ICON} />
@@ -170,6 +170,6 @@ export const SaleEditPage = () => {
             />
           )}
       </div>
-    </FormWrapper>
+    </PageWrapper>
   );
 };

@@ -10,6 +10,7 @@ import { useAllClients } from "@/pages/client/lib/client.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import FormWrapper from "@/components/FormWrapper";
+import { useAllDrivers } from "@/pages/driver/lib/driver.hook";
 
 export default function DeliverySheetAddPage() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ export default function DeliverySheetAddPage() {
   const { data: allBranches = [] } = useAllBranches();
   const { data: customers = [] } = useAllClients();
   const { data: zones = [] } = useAllZones();
-
+  const drivers = useAllDrivers();
   const handleSubmit = async (data: DeliverySheetSchema) => {
     try {
       await createDeliverySheet(data);
@@ -74,6 +75,7 @@ export default function DeliverySheetAddPage() {
         mode="create"
         branches={allBranches || []}
         zones={zones || []}
+        drivers={drivers || []}
         customers={customers || []}
         availableSales={availableSales || []}
         onSearchSales={handleSearchSales}

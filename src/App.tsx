@@ -12,6 +12,7 @@ import BranchPage from "./pages/branch/components/BranchPage";
 import WarehousePage from "./pages/warehouse/components/WarehousePage";
 import BrandPage from "./pages/brand/components/BrandPage";
 import BoxPage from "./pages/box/components/BoxPage";
+import VehiclePage from "./pages/vehicle/components/VehiclePage";
 import UnitPage from "./pages/unit/components/UnitPage";
 import CategoryPage from "./pages/category/components/CategoryPage";
 import ProductPage from "./pages/product/components/ProductPage";
@@ -46,6 +47,7 @@ import { BRANCH } from "./pages/branch/lib/branch.interface";
 import { WAREHOUSE } from "./pages/warehouse/lib/warehouse.interface";
 import { BRAND } from "./pages/brand/lib/brand.interface";
 import { BOX } from "./pages/box/lib/box.interface";
+import { VEHICLE } from "./pages/vehicle/lib/vehicle.interface";
 import { UNIT } from "./pages/unit/lib/unit.interface";
 import { CATEGORY } from "./pages/category/lib/category.interface";
 import { PRODUCT } from "./pages/product/lib/product.interface";
@@ -72,6 +74,9 @@ import PurchaseEditPage from "./pages/purchase/components/PurchaseEditPage";
 import { SaleRoute } from "./pages/sale/lib/sale.interface";
 import { SaleAddPage, SaleEditPage, SalePage } from "./pages/sale/components";
 import SaleManagePage from "./pages/sale/components/SaleManagePage";
+import { CREDIT_NOTE } from "./pages/credit-note/lib/credit-note.interface";
+import CreditNotePage from "./pages/credit-note/components/CreditNotePage";
+import CreditNoteAddPage from "./pages/credit-note/components/CreditNoteAddPage";
 import GuidePage from "./pages/guide/components/GuidePage";
 import GuideAddPage from "./pages/guide/components/GuideAddPage";
 import GuideEditPage from "./pages/guide/components/GuideEditPage";
@@ -95,6 +100,12 @@ import WarehouseDocumentDetailPage from "./pages/warehouse-document/components/W
 import DeliverySheetPage from "./pages/deliverysheet/components/DeliverySheetPage";
 import { DELIVERY_SHEET } from "./pages/deliverysheet/lib/deliverysheet.interface";
 import { DeliverySheetAddPage } from "./pages/deliverysheet";
+import { DRIVER } from "./pages/driver/lib/driver.interface";
+import DriverPage from "./pages/driver/components/DriverPage";
+import DriverAddPage from "./pages/driver/components/DriverAddPage";
+import DriverEditPage from "./pages/driver/components/DriverEditPage";
+import { CustomerAccountStatementPage } from "./pages/reports/components";
+import { CUSTOMER_ACCOUNT_STATEMENT_ROUTE } from "./pages/reports/lib/reports.interface";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -103,6 +114,7 @@ const { ROUTE: BranchRoute } = BRANCH;
 const { ROUTE: WarehouseRoute } = WAREHOUSE;
 const { ROUTE: BrandRoute } = BRAND;
 const { ROUTE: BoxRoute } = BOX;
+const { ROUTE: VehicleRoute } = VEHICLE;
 const { ROUTE: UnitRoute } = UNIT;
 const { ROUTE: CategoryRoute } = CATEGORY;
 const { ROUTE: ProductRoute } = PRODUCT;
@@ -124,11 +136,16 @@ const { ROUTE: GuideRoute } = GUIDE;
 const { ROUTE: BoxShiftRoute } = BOX_SHIFT;
 const { ROUTE: AccountsPayableRoute } = ACCOUNTS_PAYABLE;
 const { ROUTE: WarehouseDocumentRoute } = WAREHOUSE_DOCUMENT;
+const { ROUTE: DriverRoute } = DRIVER;
 const {
   ROUTE: DeliverySheetRoute,
   ROUTE_ADD: DeliverySheetRouteAdd,
   ROUTE_UPDATE: DeliverySheetRouteUpdate,
 } = DELIVERY_SHEET;
+const {
+  ROUTE: CreditNoteRoute,
+  ROUTE_ADD: CreditNoteRouteAdd,
+} = CREDIT_NOTE;
 
 export const hasAccessToRoute = (access: Access[], route: string): boolean => {
   const transformRoute = route.split("/").pop();
@@ -250,6 +267,15 @@ export default function App() {
             element={
               <ProtectedRoute path={BrandRoute}>
                 <BrandPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={VehicleRoute}
+            element={
+              <ProtectedRoute path={VehicleRoute}>
+                <VehiclePage />
               </ProtectedRoute>
             }
           />
@@ -470,6 +496,33 @@ export default function App() {
           />
 
           <Route
+            path={DriverRoute}
+            element={
+              <ProtectedRoute path={DriverRoute}>
+                <DriverPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/conductores/agregar"
+            element={
+              <ProtectedRoute path={DriverRoute}>
+                <DriverAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/conductores/editar/:id"
+            element={
+              <ProtectedRoute path={DriverRoute}>
+                <DriverEditPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path={PaymentConceptRoute}
             element={
               <ProtectedRoute path={PaymentConceptRoute}>
@@ -632,6 +685,24 @@ export default function App() {
           />
 
           <Route
+            path={CreditNoteRoute}
+            element={
+              <ProtectedRoute path={CreditNoteRoute}>
+                <CreditNotePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={CreditNoteRouteAdd}
+            element={
+              <ProtectedRoute path={CreditNoteRoute}>
+                <CreditNoteAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path={GuideRoute}
             element={
               <ProtectedRoute path={GuideRoute}>
@@ -729,6 +800,16 @@ export default function App() {
             element={
               <ProtectedRoute path={DeliverySheetRouteUpdate}>
                 <DeliverySheetAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rutas de Reportes */}
+          <Route
+            path={CUSTOMER_ACCOUNT_STATEMENT_ROUTE}
+            element={
+              <ProtectedRoute path={CUSTOMER_ACCOUNT_STATEMENT_ROUTE}>
+                <CustomerAccountStatementPage />
               </ProtectedRoute>
             }
           />

@@ -48,6 +48,7 @@ interface DeliverySheetFormProps {
   mode?: "create" | "update";
   branches: BranchResource[];
   zones: ZoneResource[];
+  drivers: PersonResource[];
   customers: PersonResource[];
   availableSales: AvailableSale[];
   onSearchSales: (params: {
@@ -68,6 +69,7 @@ export const DeliverySheetForm = ({
   mode = "create",
   branches,
   zones,
+  drivers,
   customers,
   availableSales,
   onSearchSales,
@@ -89,6 +91,7 @@ export const DeliverySheetForm = ({
     defaultValues: {
       branch_id: defaultValues.branch_id || "",
       zone_id: defaultValues.zone_id || "",
+      driver_id: defaultValues.driver_id || "",
       customer_id: defaultValues.customer_id || "",
       type: defaultValues.type || "",
       issue_date: defaultValues.issue_date,
@@ -207,6 +210,17 @@ export const DeliverySheetForm = ({
               })) || []
             }
             disabled={mode === "update"}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="driver_id"
+            label="Conductor"
+            placeholder="Seleccione un conductor"
+            options={drivers.map((driver) => ({
+              value: driver.id.toString(),
+              label: driver.names ?? driver.business_name,
+            }))}
           />
 
           <FormSelect
@@ -409,10 +423,6 @@ export const DeliverySheetForm = ({
           </GroupFormSection>
         )}
 
-        <pre>
-          <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-        </pre>
-
         <div className="flex justify-end gap-4">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>
@@ -420,6 +430,7 @@ export const DeliverySheetForm = ({
             </Button>
           )}
           <Button
+            size="sm"
             type="submit"
             disabled={isSubmitting || selectedSaleIds.length === 0}
           >

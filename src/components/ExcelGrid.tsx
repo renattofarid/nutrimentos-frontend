@@ -10,19 +10,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
 import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface ExcelGridColumn<T> {
   id: string;
   header: string;
-  type: "product-search" | "product-code" | "text" | "number" | "readonly";
+  type: "product-search" | "product-code" | "text" | "number" | "readonly" | "switch";
   width?: string;
   accessor?: keyof T;
   render?: (row: T, index: number) => React.ReactNode;
   onCellChange?: (index: number, value: string) => void;
+  onSwitchChange?: (index: number, checked: boolean) => void; // Callback para switches
   hidden?: (row: T) => boolean; // Función para determinar si la columna debe ocultarse para una fila específica
   disabled?: (row: T) => boolean; // Función para determinar si el campo debe estar deshabilitado
+  getLabel?: (row: T) => string; // Para el label del switch
 }
 
 export interface ProductOption {
@@ -121,10 +124,60 @@ export function ExcelGrid<T extends Record<string, any>>({
   const handleKeyDown = (
     e: React.KeyboardEvent,
     rowIndex: number,
-    colIndex: number
+    colIndex: number,
+    column: ExcelGridColumn<T>
   ) => {
     if (e.key === "Tab") {
       e.preventDefault();
+
+      // Si es un campo de código de producto, validar antes de avanzar
+      if (column.type === "product-code") {
+        const currentValue = data[rowIndex][column.accessor as string];
+
+        if (currentValue && currentValue.trim() !== "") {
+          const searchValue = currentValue.toString().toLowerCase();
+
+          // Buscar coincidencias: exactas o parciales
+          const exactMatch = productOptions.find(p =>
+            p.codigo.toLowerCase() === searchValue
+          );
+
+          const partialMatches = productOptions.filter(p =>
+            p.codigo.toLowerCase().includes(searchValue)
+          );
+
+          if (exactMatch) {
+            // Si hay coincidencia exacta, seleccionarla
+            if (onProductSelect) {
+              onProductSelect(rowIndex, exactMatch);
+            }
+          } else if (partialMatches.length === 1) {
+            // Si hay solo UNA coincidencia parcial, seleccionarla automáticamente
+            if (onProductSelect) {
+              onProductSelect(rowIndex, partialMatches[0]);
+            }
+          } else if (partialMatches.length > 1) {
+            // Si hay múltiples coincidencias, mostrar error indicando que hay varias opciones
+            const input = e.target as HTMLInputElement;
+            input.setCustomValidity(`Se encontraron ${partialMatches.length} productos con ese código. Sea más específico.`);
+            input.reportValidity();
+            setTimeout(() => {
+              input.setCustomValidity("");
+            }, 3000);
+            return; // No avanzar a la siguiente celda
+          } else {
+            // Si no hay ninguna coincidencia, mostrar error
+            const input = e.target as HTMLInputElement;
+            input.setCustomValidity("Código de producto no encontrado");
+            input.reportValidity();
+            setTimeout(() => {
+              input.setCustomValidity("");
+            }, 2000);
+            return; // No avanzar a la siguiente celda
+          }
+        }
+      }
+
       const nextCell = e.shiftKey
         ? getPreviousEditableCell(rowIndex, colIndex)
         : getNextEditableCell(rowIndex, colIndex);
@@ -133,7 +186,11 @@ export function ExcelGrid<T extends Record<string, any>>({
         setFocusedCell(nextCell);
         setTimeout(() => {
           const key = `${nextCell.row}-${nextCell.col}`;
-          inputRefs.current[key]?.focus();
+          const input = inputRefs.current[key];
+          if (input) {
+            input.focus();
+            input.select(); // Seleccionar todo el texto
+          }
         }, 0);
       } else if (!e.shiftKey) {
         // Si no hay siguiente celda y estamos en la última fila, agregar nueva fila
@@ -144,7 +201,11 @@ export function ExcelGrid<T extends Record<string, any>>({
             const firstEditableCol = columns.findIndex(col => col.type !== "readonly");
             if (firstEditableCol !== -1) {
               const key = `${data.length}-${firstEditableCol}`;
-              inputRefs.current[key]?.focus();
+              const input = inputRefs.current[key];
+              if (input) {
+                input.focus();
+                input.select(); // Seleccionar todo el texto
+              }
               setFocusedCell({ row: data.length, col: firstEditableCol });
             }
           }, 50);
@@ -161,7 +222,11 @@ export function ExcelGrid<T extends Record<string, any>>({
           const firstEditableCol = columns.findIndex(col => col.type !== "readonly");
           if (firstEditableCol !== -1) {
             const key = `${data.length}-${firstEditableCol}`;
-            inputRefs.current[key]?.focus();
+            const input = inputRefs.current[key];
+            if (input) {
+              input.focus();
+              input.select(); // Seleccionar todo el texto
+            }
             setFocusedCell({ row: data.length, col: firstEditableCol });
           }
         }, 50);
@@ -171,8 +236,33 @@ export function ExcelGrid<T extends Record<string, any>>({
         setFocusedCell({ row: nextRow, col: colIndex });
         setTimeout(() => {
           const key = `${nextRow}-${colIndex}`;
-          inputRefs.current[key]?.focus();
+          const input = inputRefs.current[key];
+          if (input) {
+            input.focus();
+            input.select(); // Seleccionar todo el texto
+          }
         }, 0);
+      }
+    } else if (e.key === "Delete" && !disabled) {
+      // Si presiona Delete/Suprimir en una celda vacía, eliminar la fila
+      const currentValue = data[rowIndex][column.accessor as string];
+      const isEmpty = !currentValue || currentValue.toString().trim() === "";
+
+      if (isEmpty && data.length > 1) {
+        e.preventDefault();
+        onRemoveRow(rowIndex);
+
+        // Enfocar la misma celda en la fila anterior o siguiente
+        setTimeout(() => {
+          const targetRow = rowIndex > 0 ? rowIndex - 1 : 0;
+          const key = `${targetRow}-${colIndex}`;
+          const input = inputRefs.current[key];
+          if (input) {
+            input.focus();
+            input.select();
+          }
+          setFocusedCell({ row: targetRow, col: colIndex });
+        }, 50);
       }
     }
   };
@@ -187,25 +277,64 @@ export function ExcelGrid<T extends Record<string, any>>({
 
     switch (column.type) {
       case "product-code":
-      case "product-search":
-        const currentValue = row[column.accessor as string] || "";
-        const searchByCode = column.type === "product-code";
-        const datalistId = `products-${searchByCode ? 'code' : 'name'}-${rowIndex}`;
+        // Campo de código de producto - busca coincidencias parciales y muestra sugerencias
+        const codeValue = row[column.accessor as string] || "";
+        const codeDatalistId = `products-code-${rowIndex}`;
+
+        // Filtrar productos que coincidan con el valor actual
+        const matchingProducts = codeValue
+          ? productOptions.filter(p =>
+              p.codigo.toLowerCase().includes(codeValue.toString().toLowerCase())
+            )
+          : [];
 
         return (
           <>
             <input
               ref={(el) => { inputRefs.current[cellKey] = el; }}
               type="text"
-              value={currentValue}
+              value={codeValue}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Solo actualizar el valor del campo, NO buscar automáticamente
+                onCellChange(rowIndex, column.accessor as string, value);
+              }}
+              onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
+              onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex, column)}
+              placeholder="Código..."
+              className="w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent"
+              list={matchingProducts.length > 1 ? codeDatalistId : undefined}
+              autoComplete="off"
+            />
+            {matchingProducts.length > 1 && (
+              <datalist id={codeDatalistId}>
+                {matchingProducts.map((product) => (
+                  <option key={product.id} value={product.codigo}>
+                    {product.name}
+                  </option>
+                ))}
+              </datalist>
+            )}
+          </>
+        );
+
+      case "product-search":
+        // Campo de búsqueda de producto - con datalist
+        const searchValue = row[column.accessor as string] || "";
+        const datalistId = `products-name-${rowIndex}`;
+
+        return (
+          <>
+            <input
+              ref={(el) => { inputRefs.current[cellKey] = el; }}
+              type="text"
+              value={searchValue}
               onChange={(e) => {
                 const value = e.target.value;
 
-                // Buscar el producto por el valor ingresado
+                // Buscar el producto por nombre
                 const product = productOptions.find(p =>
-                  searchByCode
-                    ? p.codigo.toLowerCase() === value.toLowerCase()
-                    : p.name.toLowerCase() === value.toLowerCase()
+                  p.name.toLowerCase() === value.toLowerCase()
                 );
 
                 // Si se encontró el producto, seleccionarlo
@@ -217,16 +346,16 @@ export function ExcelGrid<T extends Record<string, any>>({
                 }
               }}
               onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
-              onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
-              placeholder={searchByCode ? "Código..." : "Producto..."}
+              onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex, column)}
+              placeholder="Producto..."
               className="w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent"
               list={datalistId}
               autoComplete="off"
             />
             <datalist id={datalistId}>
               {productOptions.map((product) => (
-                <option key={product.id} value={searchByCode ? product.codigo : product.name}>
-                  {searchByCode ? product.name : product.codigo}
+                <option key={product.id} value={product.name}>
+                  {product.codigo}
                 </option>
               ))}
             </datalist>
@@ -250,7 +379,7 @@ export function ExcelGrid<T extends Record<string, any>>({
               }
             }}
             onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
-            onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
+            onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex, column)}
             className={cn(
               "w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent text-right",
               isDisabled && "opacity-50 cursor-not-allowed"
@@ -270,9 +399,43 @@ export function ExcelGrid<T extends Record<string, any>>({
             onChange={(e) => column.onCellChange?.(rowIndex, e.target.value) ||
                            onCellChange(rowIndex, column.accessor as string, e.target.value)}
             onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
-            onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
+            onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex, column)}
             className="w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent"
           />
+        );
+
+      case "switch":
+        const switchValue = row[column.accessor as string] as boolean;
+        const switchLabel = column.getLabel ? column.getLabel(row) : "";
+        return (
+          <div className="h-full flex items-center justify-center px-2 py-1 gap-2">
+            <Switch
+              ref={(el) => {
+                if (el) {
+                  // Crear un wrapper que tenga focus/select para compatibilidad con inputRefs
+                  const wrapper = {
+                    focus: () => el.focus(),
+                    select: () => el.focus(),
+                  } as HTMLInputElement;
+                  inputRefs.current[cellKey] = wrapper;
+                }
+              }}
+              checked={switchValue}
+              onCheckedChange={(checked) => {
+                if (column.onSwitchChange) {
+                  column.onSwitchChange(rowIndex, checked);
+                }
+              }}
+              onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
+              onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex, column)}
+              className="data-[state=checked]:bg-blue-600"
+            />
+            {switchLabel && (
+              <span className="text-xs font-medium min-w-[25px]">
+                {switchLabel}
+              </span>
+            )}
+          </div>
         );
 
       case "readonly":

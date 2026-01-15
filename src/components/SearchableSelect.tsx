@@ -154,7 +154,7 @@ export function SearchableSelect({
     <Button
       variant="outline"
       type="button"
-      size={buttonSize}
+      size={buttonSize ? buttonSize : "sm"}
       disabled={disabled}
       className={cn(
         "flex md:w-fit w-full items-center justify-between rounded-md border px-3 text-xs md:text-sm",
@@ -207,7 +207,7 @@ export function SearchableSelect({
         >
           <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
           <PopoverContent
-            className="p-0 w-(--radix-popover-trigger-width)!"
+            className="p-0 min-w-(--radix-popover-trigger-width)! w-auto"
             onWheel={(e) => e.stopPropagation()}
             onWheelCapture={(e) => e.stopPropagation()}
             onTouchMove={(e) => e.stopPropagation()}

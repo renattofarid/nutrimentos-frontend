@@ -13,9 +13,13 @@
       "Bash(npm run dev:*)",
       "Bash(find:*)",
       "Bash(git checkout:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "c:\\Users\\david\\Documents\\data\\front\\nutrimentos-frontend\\src\\pages\\reports"
+    ]
   }
 }

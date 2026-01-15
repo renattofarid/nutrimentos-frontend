@@ -38,7 +38,9 @@ export const BOX_SHIFT: ModelComplete<BoxShiftResource> = {
     box_id: 0,
     user_id: 0,
     open_date: "",
-    close_date: null,
+    close_date: "",
+    box: {} as Box,
+    user: {} as User,
     started_amount: 0,
     closed_amount: 0,
     status: "ABIERTO",
@@ -57,13 +59,15 @@ export const BOX_SHIFT: ModelComplete<BoxShiftResource> = {
 export interface BoxShiftResource {
   id: number;
   box_id: number;
+  box: Box;
   user_id: number;
+  user: User;
   open_date: string;
-  close_date: string | null;
+  close_date?: string;
   started_amount: number;
   closed_amount: number;
   status: string;
-  observation: string;
+  observation?: string;
   total_income: number;
   total_outcome: number;
   expected_balance: number;
@@ -72,6 +76,50 @@ export interface BoxShiftResource {
   is_closed: boolean;
   created_at: string;
   updated_at: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  username: string;
+  company_id: number;
+  company: string;
+  person_id: number;
+  person: Person;
+  rol_id: number;
+  rol_name: string;
+}
+
+interface Person {
+  id: number;
+  number_document: string;
+  type_person: string;
+  names: string;
+  father_surname: string;
+  mother_surname: string;
+  gender?: string;
+  birth_date?: string;
+  phone: string;
+  email: string;
+  address: string;
+  business_name: string;
+  commercial_name: string;
+  occupation: string;
+  job_position_id?: number;
+  business_type_id?: number;
+  zone_id?: number;
+  created_at: string;
+  document_type_id?: number;
+}
+
+interface Box {
+  id: number;
+  name: string;
+  status: string;
+  serie: string;
+  branch_id: number;
+  branch_name: string;
+  created_at: string;
 }
 
 export interface BoxShiftResponse {

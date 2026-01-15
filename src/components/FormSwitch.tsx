@@ -13,12 +13,13 @@ interface FormSwitchProps<T extends FieldValues> {
   control: Control<T>;
   name: Path<T>;
   label?: string;
-  text: string;
+  text?: string;
   description?: string;
   textDescription?: string;
   className?: string;
   disabled?: boolean;
   size?: "sm" | "md" | "lg";
+  autoHeight?: boolean;
 }
 
 export function FormSwitch<T extends FieldValues>({
@@ -30,12 +31,13 @@ export function FormSwitch<T extends FieldValues>({
   textDescription,
   className,
   disabled,
-  size = "md",
+  size = "sm",
+  autoHeight = false,
 }: FormSwitchProps<T>) {
   const sizeClasses = {
-    sm: "h-8 p-2 gap-2",
-    md: "h-9 p-3 gap-3",
-    lg: "h-11 p-4 gap-4",
+    sm: "h-8 md:h-9 p-2 gap-2",
+    md: "h-9 md:h-10 p-3 gap-3",
+    lg: "h-11 md:h-12 p-4 gap-4",
   };
 
   return (
@@ -48,12 +50,14 @@ export function FormSwitch<T extends FieldValues>({
           <FormLabel
             className={cn(
               "flex flex-row items-center justify-between rounded-lg border shadow-xs bg-background hover:bg-muted hover:cursor-pointer",
-              sizeClasses[size],
-              className
+              className,
+              autoHeight ? "h-auto" : sizeClasses[size]
             )}
           >
             <div className="flex flex-col gap-1 flex-1 min-w-0">
-              <p className="text-sm font-medium leading-tight">{text}</p>
+              {text && (
+                <p className="text-sm font-medium leading-tight">{text}</p>
+              )}
               {textDescription && (
                 <p className="text-xs text-muted-foreground font-normal leading-tight">
                   {textDescription}

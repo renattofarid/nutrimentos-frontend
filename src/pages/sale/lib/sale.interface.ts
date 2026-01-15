@@ -83,7 +83,8 @@ export interface Detail {
   id: number;
   sale_id: number;
   product_id: number;
-  quantity: number;
+  quantity_sacks: number;
+  quantity_kg: number;
   unit_price: number;
   purchase_price: number;
   discount: number;
@@ -97,12 +98,13 @@ export interface Detail {
   created_at: string;
 }
 
-export interface Product {
+interface Product {
   id: number;
   codigo: string;
   name: string;
   brand: string;
   category: string;
+  weight: number;
   unit: string;
 }
 

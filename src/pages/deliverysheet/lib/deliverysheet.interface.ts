@@ -98,7 +98,7 @@ export interface DeliverySheetResource {
   id: number;
   sheet_number: string;
   type: "CONTADO" | "CREDITO";
-  status: "PENDIENTE" | "EN_REPARTO" | "COMPLETADO" | "CANCELADO";
+  status: "PENDIENTE" | "EN_REPARTO" | "COMPLETADO" | "CANCELADO" | "RENDIDA";
   issue_date: string;
   delivery_date: string;
   total_amount: string;
@@ -107,8 +107,8 @@ export interface DeliverySheetResource {
   collected_amount_raw: string;
   pending_amount: string;
   pending_amount_raw: string;
-  zone: Zone;
-  driver: Driver;
+  zone?: Zone;
+  driver?: Driver;
   customer: Customer;
   user: User;
   sales: DeliverySheetSale[];
@@ -153,6 +153,7 @@ export interface DeliverySheetResourceById {
 export interface CreateDeliverySheetRequest {
   branch_id: number;
   zone_id?: number;
+  driver_id: number;
   customer_id?: number;
   type: "CONTADO" | "CREDITO";
   issue_date: string;

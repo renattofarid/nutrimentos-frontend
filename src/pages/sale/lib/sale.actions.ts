@@ -28,6 +28,47 @@ import {
 } from "./sale.interface";
 
 // ============================================
+// SALE BY RANGE - Search Sales by Range
+// ============================================
+
+export interface GetSalesByRangeParams {
+  document_type: string;
+  serie: string;
+  numero_inicio: string;
+  numero_fin: string;
+}
+
+export interface SalesByRangeResponse {
+  message: string;
+  data: SaleResource[];
+  meta: {
+    total: number;
+    rango_solicitado: {
+      document_type: string;
+      serie: string;
+      numero_inicio: string;
+      numero_fin: string;
+      cantidad_total?: number;
+      numero_inicio_formateado?: string;
+      numero_fin_formateado?: string;
+    };
+    numeros_encontrados?: number[];
+    numeros_faltantes?: number[];
+    tiene_faltantes?: boolean;
+  };
+}
+
+export const getSalesByRange = async (
+  params: GetSalesByRangeParams
+): Promise<SalesByRangeResponse> => {
+  const response = await api.post<SalesByRangeResponse>(
+    `${SALE_ENDPOINT}/by-range`,
+    params
+  );
+  return response.data;
+};
+
+// ============================================
 // SALE - Main CRUD Actions
 // ============================================
 

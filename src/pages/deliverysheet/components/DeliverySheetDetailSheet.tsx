@@ -11,7 +11,11 @@ import {
   Wallet,
   Package,
 } from "lucide-react";
-import type { DeliverySheetResource, DeliverySheetSale, DeliverySheetPayment } from "../lib/deliverysheet.interface";
+import type {
+  DeliverySheetResource,
+  DeliverySheetSale,
+  DeliverySheetPayment,
+} from "../lib/deliverysheet.interface";
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -324,8 +328,10 @@ export default function DeliverySheetDetailSheet({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1 text-sm">
-              <p className="font-semibold">{deliverySheet.zone.name}</p>
-              <p className="text-muted-foreground">{deliverySheet.zone.code}</p>
+              <p className="font-semibold">{deliverySheet?.zone?.name}</p>
+              <p className="text-muted-foreground">
+                {deliverySheet?.zone?.code}
+              </p>
             </CardContent>
           </Card>
 
@@ -337,10 +343,12 @@ export default function DeliverySheetDetailSheet({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1 text-sm">
-              <p className="font-semibold">{deliverySheet.driver.full_name}</p>
-              {deliverySheet.driver.document_number && (
+              <p className="font-semibold">
+                {deliverySheet?.driver?.full_name}
+              </p>
+              {deliverySheet?.driver?.document_number && (
                 <p className="text-muted-foreground">
-                  {deliverySheet.driver.document_number}
+                  {deliverySheet?.driver?.document_number}
                 </p>
               )}
             </CardContent>
@@ -354,10 +362,12 @@ export default function DeliverySheetDetailSheet({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1 text-sm">
-              <p className="font-semibold">{deliverySheet.customer.full_name}</p>
-              {deliverySheet.customer.document_number && (
+              <p className="font-semibold">
+                {deliverySheet.customer?.full_name}
+              </p>
+              {deliverySheet.customer?.document_number && (
                 <p className="text-muted-foreground">
-                  {deliverySheet.customer.document_number}
+                  {deliverySheet.customer?.document_number}
                 </p>
               )}
             </CardContent>

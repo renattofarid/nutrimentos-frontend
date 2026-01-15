@@ -16,16 +16,18 @@ import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
 import { useAllNationalities } from "@/pages/nationality/lib/nationality.hook";
 import { CLIENT_ROLE_CODE } from "@/pages/client/lib/client.interface";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
-import FormWrapper from "@/components/FormWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { useGuideStore } from "../lib/guide.store";
 import { GUIDE, type GuideResource } from "../lib/guide.interface";
 import type { GuideSchema } from "../lib/guide.schema";
+import PageWrapper from "@/components/PageWrapper";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export default function GuideEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { setOpen, setOpenMobile } = useSidebar();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { MODEL, ROUTE, ICON } = GUIDE;
   const { data: branches, isLoading: branchesLoading } = useAllBranches();
@@ -43,6 +45,10 @@ export default function GuideEditPage() {
   const { data: nationalities } = useAllNationalities();
 
   const { updateGuide, fetchGuide, guide, isFinding } = useGuideStore();
+  useEffect(() => {
+    setOpen(false);
+    setOpenMobile(false);
+  }, []);
 
   const isLoading =
     branchesLoading ||
@@ -70,7 +76,7 @@ export default function GuideEditPage() {
     return {
       branch_id: data.branch_id?.toString(),
       warehouse_id: data.warehouse_id?.toString(),
-      sale_id: data.sale_id?.toString() || "",
+      sale_ids: data.sales?.map((sale) => Number(sale.id)) || [],
       customer_id: data.customer_id?.toString(),
       issue_date: data.issue_date?.split("T")[0],
       transfer_date: data.transfer_date?.split("T")[0],
@@ -95,13 +101,6 @@ export default function GuideEditPage() {
       total_weight: data.total_weight,
       total_packages: data.total_packages,
       observations: data.observations || "",
-      details:
-        data.details?.map((detail) => ({
-          product_id: detail.product_id.toString(),
-          quantity: detail.quantity.toString(),
-          unit_code: detail.unit_code,
-          description: detail.description,
-        })) || [],
     };
   };
 
@@ -122,19 +121,19 @@ export default function GuideEditPage() {
 
   if (isLoading) {
     return (
-      <FormWrapper>
+      <PageWrapper size="3xl">
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
             <TitleFormComponent title={MODEL.name} mode="edit" icon={ICON} />
           </div>
         </div>
         <FormSkeleton />
-      </FormWrapper>
+      </PageWrapper>
     );
   }
 
   return (
-    <FormWrapper>
+    <PageWrapper size="3xl">
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <TitleFormComponent title={MODEL.name} mode="edit" icon={ICON} />
@@ -178,6 +177,6 @@ export default function GuideEditPage() {
             guide={guide}
           />
         )}
-    </FormWrapper>
+    </PageWrapper>
   );
 }

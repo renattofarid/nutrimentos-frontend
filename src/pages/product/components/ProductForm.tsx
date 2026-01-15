@@ -18,7 +18,7 @@ import {
   productSchemaUpdate,
   type ProductSchema,
 } from "../lib/product.schema";
-import { Loader, Info, Weight, MessageSquare } from "lucide-react";
+import { Loader, Info, Weight } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSwitch } from "@/components/FormSwitch";
 import { GroupFormSection } from "@/components/GroupFormSection";
@@ -78,7 +78,8 @@ export const ProductForm = ({
         <GroupFormSection
           title="Información Básica"
           icon={Info}
-          cols={{ sm: 1, md: 2 }}
+          gap="gap-3"
+          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
           <FormField
             control={form.control}
@@ -127,7 +128,9 @@ export const ProductForm = ({
             options={companies.map((company) => ({
               value: company.id.toString(),
               label: company.social_reason,
+              description: company.trade_name,
             }))}
+            withValue
           />
 
           <FormSelect
@@ -206,6 +209,25 @@ export const ProductForm = ({
             label="Impuestos"
             text="¿Está Gravado?"
           />
+
+          <div className="col-span-full">
+            <FormField
+              control={form.control}
+              name="comment"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Este es un producto de prueba"
+                      rows={4}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </GroupFormSection>
 
         {/* Peso y Precio por Kg */}
@@ -225,6 +247,7 @@ export const ProductForm = ({
                     variant="default"
                     type="number"
                     step="0.01"
+                    min={0}
                     placeholder="0.00"
                     {...field}
                   />
@@ -252,6 +275,7 @@ export const ProductForm = ({
                     variant="default"
                     type="number"
                     step="0.01"
+                    min={0}
                     placeholder="0.00"
                     {...field}
                   />
@@ -262,36 +286,13 @@ export const ProductForm = ({
           />
         </GroupFormSection>
 
-        {/* Comentarios */}
-        <GroupFormSection
-          title="Comentarios (Opcional)"
-          icon={MessageSquare}
-          cols={{ sm: 1 }}
-        >
-          <FormField
-            control={form.control}
-            name="comment"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Textarea
-                    placeholder="Este es un producto de prueba"
-                    rows={4}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </GroupFormSection>
-
         <div className="flex gap-4 w-full justify-end">
-          <Button type="button" variant="neutral" onClick={onCancel}>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             Cancelar
           </Button>
 
           <Button
+            size="sm"
             type="submit"
             disabled={isSubmitting || !form.formState.isValid}
           >

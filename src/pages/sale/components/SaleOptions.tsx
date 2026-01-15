@@ -114,7 +114,7 @@ export default function SaleOptions({
         options={branchOptions}
         value={branch_id}
         onChange={setBranchId}
-        placeholder="Sucursal"
+        placeholder="Tienda"
       />
 
       {/* Warehouse Filter */}

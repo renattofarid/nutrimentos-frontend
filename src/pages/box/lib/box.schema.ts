@@ -17,9 +17,6 @@ export const boxSchemaCreate = z.object({
     })
     .min(3, {
       message: "La serie debe tener al menos 3 caracteres",
-    })
-    .regex(/^[0-9]+$/, {
-      message: "La serie solo debe contener números",
     }),
   branch_id: requiredStringId("La tienda es requerida"),
   status: z.enum(["Activo", "Inactivo"]).default("Activo"),

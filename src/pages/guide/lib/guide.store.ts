@@ -120,7 +120,7 @@ export const useGuideStore = create<GuideStore>((set) => ({
       const request: CreateGuideRequest = {
         branch_id: Number(data.branch_id),
         warehouse_id: Number(data.warehouse_id),
-        sale_id: data.sale_id ? Number(data.sale_id) : null,
+        sale_ids: data.sale_ids || [],
         customer_id: Number(data.customer_id),
         issue_date: data.issue_date,
         transfer_date: data.transfer_date,
@@ -149,12 +149,6 @@ export const useGuideStore = create<GuideStore>((set) => ({
         total_weight: Number(data.total_weight),
         total_packages: Number(data.total_packages),
         observations: data.observations || "",
-        details: data.details.map((detail) => ({
-          product_id: Number(detail.product_id),
-          quantity: Number(detail.quantity),
-          unit_code: detail.unit_code,
-          description: detail.description,
-        })),
       };
 
       await storeGuide(request);
@@ -172,9 +166,7 @@ export const useGuideStore = create<GuideStore>((set) => ({
       const request: UpdateGuideRequest = {
         ...(data.branch_id && { branch_id: Number(data.branch_id) }),
         ...(data.warehouse_id && { warehouse_id: Number(data.warehouse_id) }),
-        ...(data.sale_id !== undefined && {
-          sale_id: data.sale_id ? Number(data.sale_id) : null,
-        }),
+        ...(data.sale_ids !== undefined && { sale_ids: data.sale_ids }),
         ...(data.customer_id && { customer_id: Number(data.customer_id) }),
         ...(data.issue_date && { issue_date: data.issue_date }),
         ...(data.transfer_date && { transfer_date: data.transfer_date }),
@@ -228,14 +220,6 @@ export const useGuideStore = create<GuideStore>((set) => ({
         }),
         ...(data.observations !== undefined && {
           observations: data.observations,
-        }),
-        ...(data.details && {
-          details: data.details.map((detail) => ({
-            product_id: Number(detail.product_id),
-            quantity: Number(detail.quantity),
-            unit_code: detail.unit_code,
-            description: detail.description,
-          })),
         }),
       };
 

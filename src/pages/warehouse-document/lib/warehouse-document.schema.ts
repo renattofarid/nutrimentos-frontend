@@ -5,9 +5,13 @@ import { requiredStringId } from "@/lib/core.schema";
 export const warehouseDocumentDetailSchema = z.object({
   id: z.number().optional(),
   product_id: requiredStringId("Debe seleccionar un producto"),
-  quantity: z
-    .number({ message: "La cantidad es requerida" })
+  quantity_sacks: z
+    .number({ message: "La cantidad en sacos es requerida" })
     .positive("La cantidad debe ser mayor a 0"),
+  quantity_kg: z
+    .number({ message: "La cantidad en kg debe ser un número" })
+    .nonnegative("La cantidad en kg no puede ser negativa")
+    .optional(),
   unit_price: z
     .number({ message: "El precio unitario es requerido" })
     .nonnegative("El precio unitario no puede ser negativo"),
@@ -26,7 +30,7 @@ export const warehouseDocumentSchemaCreate = z
       .min(1, { message: "Debe seleccionar un tipo de documento" }),
     motive: z.string().min(1, { message: "Debe seleccionar un motivo" }),
     warehouse_dest_id: z.string().optional(),
-    responsible_origin_id: z.string(),
+    responsible_origin_id: requiredStringId("Debe seleccionar un responsable de origen"),
     responsible_dest_id: z.string().optional(),
     movement_date: z
       .string()

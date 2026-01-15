@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { GuideForm } from "./GuideForm";
@@ -16,7 +16,6 @@ import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
 import { useAllNationalities } from "@/pages/nationality/lib/nationality.hook";
 import { CLIENT_ROLE_CODE } from "@/pages/client/lib/client.interface";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
-import FormWrapper from "@/components/FormWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
 import {
   ERROR_MESSAGE,
@@ -28,11 +27,14 @@ import { useGuideStore } from "../lib/guide.store";
 import type { GuideSchema } from "../lib/guide.schema";
 import { GUIDE } from "../lib/guide.interface";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
+import PageWrapper from "@/components/PageWrapper";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export default function GuideAddPage() {
   const { ROUTE, MODEL, ICON } = GUIDE;
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { setOpen, setOpenMobile } = useSidebar();
   const { user } = useAuthStore();
 
   const { data: branches, isLoading: branchesLoading } = useAllBranches({
@@ -53,6 +55,11 @@ export default function GuideAddPage() {
 
   const { createGuide } = useGuideStore();
 
+  useEffect(() => {
+    setOpen(false);
+    setOpenMobile(false);
+  }, []);
+
   const isLoading =
     branchesLoading ||
     warehousesLoading ||
@@ -69,7 +76,7 @@ export default function GuideAddPage() {
   const getDefaultValues = (): Partial<GuideSchema> => ({
     branch_id: "",
     warehouse_id: "",
-    sale_id: "",
+    sale_ids: [],
     customer_id: "",
     issue_date: "",
     transfer_date: "",
@@ -94,7 +101,6 @@ export default function GuideAddPage() {
     total_weight: 0,
     total_packages: 0,
     observations: "",
-    details: [],
   });
 
   const handleSubmit = async (data: any) => {
@@ -112,19 +118,19 @@ export default function GuideAddPage() {
 
   if (isLoading) {
     return (
-      <FormWrapper>
+      <PageWrapper size="3xl">
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-4">
             <TitleFormComponent title={MODEL.name} mode="create" icon={ICON} />
           </div>
         </div>
         <FormSkeleton />
-      </FormWrapper>
+      </PageWrapper>
     );
   }
 
   return (
-    <FormWrapper>
+    <PageWrapper size="3xl">
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <TitleFormComponent title={MODEL.name} mode="create" icon={ICON} />
@@ -166,6 +172,6 @@ export default function GuideAddPage() {
             motives={motives}
           />
         )}
-    </FormWrapper>
+    </PageWrapper>
   );
 }

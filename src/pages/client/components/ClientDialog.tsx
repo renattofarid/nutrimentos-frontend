@@ -99,7 +99,7 @@ export function ClientDialog({
       onClose={() => onOpenChange(false)}
       title="Agregar Cliente"
       subtitle="Complete los campos para crear un nuevo cliente"
-      maxWidth="max-w-(--breakpoint-lg)!"
+      size="4xl"
     >
       <PersonForm
         onSubmit={handleSubmit}

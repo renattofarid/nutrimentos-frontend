@@ -122,14 +122,10 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
           unit_price: Number(detail.unit_price),
           tax: Number(detail.tax),
         })),
-        ...(data.installments.length > 0 && data.installments !== undefined
-          ? {
-              installments: data.installments.map((installment) => ({
-                due_days: Number(installment.due_days),
-                amount: Number(installment.amount),
-              })),
-            }
-          : undefined),
+        installments: data.installments.map((installment) => ({
+          due_days: Number(installment.due_days),
+          amount: Number(installment.amount),
+        })),
       };
 
       await storePurchase(request);

@@ -1,11 +1,9 @@
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { SelectActions } from "@/components/SelectActions";
 import type { ProductResource } from "../lib/product.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, Eye, Pencil, XCircle } from "lucide-react";
+import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 export const ProductColumns = ({
   onEdit,
@@ -20,7 +18,7 @@ export const ProductColumns = ({
     accessorKey: "codigo",
     header: "Código",
     cell: ({ getValue }) => (
-      <span className="font-semibold text-primary">{getValue() as string}</span>
+      <Badge className="font-semibold">{getValue() as string}</Badge>
     ),
   },
   {
@@ -99,10 +97,10 @@ export const ProductColumns = ({
     header: "Gravado",
     cell: ({ getValue }) => {
       const isTaxed = getValue() as number;
-      return (
-        <Badge variant={isTaxed ? "default" : "outline"}>
-          {isTaxed ? "Sí" : "No"}
-        </Badge>
+      return isTaxed ? (
+        <CheckCircle className="text-primary size-6" />
+      ) : (
+        <XCircle className="text-muted-foreground size-6" />
       );
     },
   },
@@ -111,10 +109,10 @@ export const ProductColumns = ({
     header: "Venta por Kg",
     cell: ({ getValue }) => {
       const isKg = getValue() as number;
-      return (
-        <Badge variant={isKg ? "default" : "outline"}>
-          {isKg ? "Sí" : "No"}
-        </Badge>
+      return isKg ? (
+        <CheckCircle className="text-primary size-6" />
+      ) : (
+        <XCircle className="text-muted-foreground size-6" />
       );
     },
   },
@@ -137,19 +135,20 @@ export const ProductColumns = ({
       const id = row.original.id;
 
       return (
-        <SelectActions>
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => onView(id)}>
-              Ver Detalles
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEdit(id)}>
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onDelete(id)}>
-              Eliminar
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </SelectActions>
+        <div className="flex gap-1">
+          <Button size="icon-xs" onClick={() => onView(id)} variant="outline">
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            color="primary"
+            size="icon-xs"
+            onClick={() => onEdit(id)}
+            variant="outline"
+          >
+            <Pencil />
+          </Button>
+          <DeleteButton onClick={() => onDelete(id)} />
+        </div>
       );
     },
   },

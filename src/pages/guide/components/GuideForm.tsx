@@ -12,7 +12,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -22,20 +21,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Loader, Plus, Trash2, Pencil, Truck, MapPin, Search } from "lucide-react";
+import { Loader, Truck, MapPin, Search, Plus, Info } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Link } from "react-router-dom";
+import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import { FormSelect } from "@/components/FormSelect";
 import { SelectSearchForm } from "@/components/SelectSearchForm";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { GroupFormSection } from "@/components/GroupFormSection";
+import { SearchableSelect } from "@/components/SearchableSelect";
+import { FormInput } from "@/components/FormInput";
+import { Checkbox } from "@/components/ui/checkbox";
 import { guideSchema, type GuideSchema } from "../lib/guide.schema";
 import { searchUbigeos } from "../lib/ubigeo.actions";
 import type { UbigeoResource } from "../lib/ubigeo.interface";
-import { searchRUC, searchDNI, isValidData } from "@/lib/document-search.service";
+import {
+  searchRUC,
+  searchDNI,
+  isValidData,
+} from "@/lib/document-search.service";
 import {
   MODALITIES,
   CARRIER_DOCUMENT_TYPES,
-  DRIVER_DOCUMENT_TYPES,
   UNIT_MEASUREMENTS,
   type GuideResource,
   type GuideMotiveResource,
@@ -46,6 +53,12 @@ import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { getSalesByRange } from "@/pages/sale/lib/sale.actions";
+import type { SaleResource } from "@/pages/sale/lib/sale.interface";
+import { toast } from "sonner";
+import { useAllDrivers } from "@/pages/driver/lib/driver.hook";
+import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
+import { successToast } from "@/lib/core.function";
 
 interface GuideFormProps {
   defaultValues: Partial<GuideSchema>;
@@ -61,48 +74,50 @@ interface GuideFormProps {
   guide?: GuideResource;
 }
 
-interface DetailRow {
-  product_id: string;
-  product_name?: string;
-  quantity: string;
-  unit_code: string;
-  description: string;
-}
-
 export const GuideForm = ({
   onCancel,
   defaultValues,
   onSubmit,
   isSubmitting = false,
-  mode = "create",
   branches,
   warehouses,
-  products,
   customers,
   motives,
 }: GuideFormProps) => {
   const [filteredWarehouses, setFilteredWarehouses] = useState<
     WarehouseResource[]
   >([]);
-  const [details, setDetails] = useState<DetailRow[]>([]);
-  const [editingDetailIndex, setEditingDetailIndex] = useState<number | null>(
-    null
-  );
-  const [currentDetail, setCurrentDetail] = useState<DetailRow>({
-    product_id: "",
-    quantity: "",
-    unit_code: "",
-    description: "",
-  });
-  const [localProducts] = useState<ProductResource[]>(products);
 
   // Estado local para ubigeos de origen
   const [originUbigeos, setOriginUbigeos] = useState<UbigeoResource[]>([]);
   const [isSearchingOrigin, setIsSearchingOrigin] = useState(false);
 
   // Estado local para ubigeos de destino
-  const [destinationUbigeos, setDestinationUbigeos] = useState<UbigeoResource[]>([]);
+  const [destinationUbigeos, setDestinationUbigeos] = useState<
+    UbigeoResource[]
+  >([]);
   const [isSearchingDestination, setIsSearchingDestination] = useState(false);
+
+  // Estados para búsqueda de ventas por rango
+  const [salesByRange, setSalesByRange] = useState<SaleResource[]>([]);
+  const [selectedSales, setSelectedSales] = useState<number[]>([]);
+  const [isSearchingSales, setIsSearchingSales] = useState(false);
+  const [searchParams, setSearchParams] = useState({
+    document_type: "BOLETA",
+    serie: "",
+    numero_inicio: "",
+    numero_fin: "",
+  });
+
+  // Cargar conductores y transportistas
+  const drivers = useAllDrivers();
+  const carriers = useAllCarriers();
+
+  // Estado para búsqueda de transportista
+  const [isSearchingCarrier, setIsSearchingCarrier] = useState(false);
+
+  // Estado para conductor seleccionado
+  const [selectedDriverId, setSelectedDriverId] = useState<string>("");
 
   const formatUbigeoLabel = (ubigeo: UbigeoResource): string => {
     const parts = ubigeo.cadena.split("-");
@@ -127,27 +142,21 @@ export const GuideForm = ({
   }, []);
 
   // Función para buscar ubigeos de destino
-  const handleSearchDestinationUbigeos = useCallback(async (cadena?: string) => {
-    setIsSearchingDestination(true);
-    try {
-      const response = await searchUbigeos(cadena, 15);
-      setDestinationUbigeos(response.data);
-    } catch (error) {
-      console.error("Error searching destination ubigeos:", error);
-      setDestinationUbigeos([]);
-    } finally {
-      setIsSearchingDestination(false);
-    }
-  }, []);
-
-  const detailTempForm = useForm({
-    defaultValues: {
-      temp_product_id: currentDetail.product_id,
-      temp_quantity: currentDetail.quantity,
-      temp_unit_code: currentDetail.unit_code,
-      temp_description: currentDetail.description,
+  const handleSearchDestinationUbigeos = useCallback(
+    async (cadena?: string) => {
+      setIsSearchingDestination(true);
+      try {
+        const response = await searchUbigeos(cadena, 15);
+        setDestinationUbigeos(response.data);
+      } catch (error) {
+        console.error("Error searching destination ubigeos:", error);
+        setDestinationUbigeos([]);
+      } finally {
+        setIsSearchingDestination(false);
+      }
     },
-  });
+    []
+  );
 
   const form = useForm({
     resolver: zodResolver(guideSchema) as any,
@@ -157,39 +166,10 @@ export const GuideForm = ({
     mode: "onChange",
   });
 
-  // Watchers para detalles
-  const selectedProductId = detailTempForm.watch("temp_product_id");
-  const selectedQuantity = detailTempForm.watch("temp_quantity");
-  const selectedUnitCode = detailTempForm.watch("temp_unit_code");
-  const selectedDescription = detailTempForm.watch("temp_description");
-
   const selectedBranchId = form.watch("branch_id");
-  const carrierRuc = form.watch("carrier_ruc");
   const carrierDocumentType = form.watch("carrier_document_type");
 
-  // Sincronizar carrier_ruc con carrier_document_number cuando el tipo es RUC
-  useEffect(() => {
-    if (carrierDocumentType === "RUC" && carrierRuc) {
-      form.setValue("carrier_document_number", carrierRuc);
-    }
-  }, [carrierRuc, carrierDocumentType, form]);
-
-  // Inicializar detalles y cuotas desde defaultValues (para modo edición)
-  useEffect(() => {
-    if (mode === "update" && defaultValues) {
-      if (defaultValues.branch_id) {
-        const filtered = warehouses.filter(
-          (warehouse) =>
-            warehouse.branch_id.toString() === defaultValues.branch_id
-        );
-        setFilteredWarehouses(filtered);
-      }
-      // Disparar validación después de setear valores en modo edición
-      form.trigger();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+  // Filtrar warehouses por branch
   useEffect(() => {
     if (selectedBranchId) {
       const filtered = warehouses.filter(
@@ -214,57 +194,126 @@ export const GuideForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBranchId, warehouses]);
 
-  // Observers para detalles
-  useEffect(() => {
-    setCurrentDetail((prev) => ({
-      ...prev,
-      product_id: selectedProductId || "",
-      quantity: selectedQuantity || "",
-      unit_code: selectedUnitCode || "",
-      description: selectedDescription || "",
-    }));
-  }, [
-    selectedProductId,
-    selectedQuantity,
-    selectedUnitCode,
-    selectedDescription,
-  ]);
+  // Función para buscar transportista por número de documento
+  const handleSearchCarrierDocument = async () => {
+    const documentNumber = form.getValues("carrier_document_number");
+    const documentType = form.getValues("carrier_document_type");
 
-  // Función para buscar RUC del transportista
-  const handleSearchCarrierRUC = async () => {
-    const ruc = form.getValues("carrier_ruc");
-    if (!ruc || ruc.length !== 11) {
+    if (!documentNumber || !documentType) {
       return;
     }
 
+    setIsSearchingCarrier(true);
+
     try {
-      const result = await searchRUC({ search: ruc });
-      if (result && isValidData(result.message) && result.data) {
-        form.setValue("carrier_name", result.data.business_name || "");
-        form.setValue("carrier_document_number", result.data.number_document || "");
-        form.setValue("carrier_document_type", "RUC");
+      // Primero buscar en la lista de transportistas existentes
+      const existingCarrier = carriers?.find(
+        (c) => c.number_document === documentNumber
+      );
+
+      if (existingCarrier) {
+        form.setValue(
+          "carrier_name",
+          existingCarrier.business_name ||
+            `${existingCarrier.names} ${existingCarrier.father_surname}`.trim()
+        );
+        form.setValue("carrier_ruc", existingCarrier.number_document || "");
+        toast.success("Transportista encontrado en el sistema");
+        return;
+      }
+
+      // Si no existe, buscar en APIs externas
+      if (documentType === "RUC" && documentNumber.length === 11) {
+        const result = await searchRUC({ search: documentNumber });
+        if (result && isValidData(result.message) && result.data) {
+          form.setValue("carrier_name", result.data.business_name || "");
+          form.setValue("carrier_ruc", result.data.number_document || "");
+          toast.success("Datos obtenidos de SUNAT");
+        } else {
+          toast.warning("No se encontró información del RUC");
+        }
+      } else if (documentType === "DNI" && documentNumber.length === 8) {
+        const result = await searchDNI({ search: documentNumber });
+        if (result && isValidData(result.message) && result.data) {
+          const fullName = `${result.data.names} ${result.data.father_surname} ${result.data.mother_surname}`;
+          form.setValue("carrier_name", fullName.trim());
+          toast.success("Datos obtenidos de RENIEC");
+        } else {
+          toast.warning("No se encontró información del DNI");
+        }
       }
     } catch (error) {
-      console.error("Error searching RUC:", error);
+      console.error("Error searching carrier document:", error);
+      toast.error("Error al buscar el documento");
+    } finally {
+      setIsSearchingCarrier(false);
     }
   };
 
-  // Función para buscar DNI del conductor
-  const handleSearchDriverDNI = async () => {
-    const dni = form.getValues("driver_document_number");
-    if (!dni || dni.length !== 8) {
+  // Función para buscar ventas por rango
+  const handleSearchSalesByRange = async () => {
+    if (
+      !searchParams.serie ||
+      !searchParams.numero_inicio ||
+      !searchParams.numero_fin
+    ) {
+      toast.error("Complete todos los campos de búsqueda");
       return;
     }
 
+    setIsSearchingSales(true);
     try {
-      const result = await searchDNI({ search: dni });
-      if (result && isValidData(result.message) && result.data) {
-        const fullName = `${result.data.names} ${result.data.father_surname} ${result.data.mother_surname}`;
-        form.setValue("driver_name", fullName.trim());
-        form.setValue("driver_document_type", "DNI");
+      const response = await getSalesByRange(searchParams);
+
+      if (response.data.length === 0) {
+        toast.warning("No se encontraron ventas en el rango especificado");
+        setSalesByRange([]);
+        return;
       }
+
+      setSalesByRange(response.data);
+      successToast(
+        `Se encontraron ${response.data.length} ventas`,
+        response?.meta?.numeros_encontrados &&
+          response?.meta?.numeros_encontrados?.length > 0
+          ? `Números encontrados: ${response.meta.numeros_encontrados.join(
+              ", "
+            )}`
+          : undefined
+      );
+
+      // if (response.meta.tiene_faltantes) {
+      //   toast.warning(
+      //     `Hay números faltantes en el rango: ${response.meta.numeros_faltantes?.join(
+      //       ", "
+      //     )}`
+      //   );
+      // }
     } catch (error) {
-      console.error("Error searching DNI:", error);
+      console.error("Error searching sales by range:", error);
+      toast.error("Error al buscar ventas");
+      setSalesByRange([]);
+    } finally {
+      setIsSearchingSales(false);
+    }
+  };
+
+  // Función para seleccionar/deseleccionar venta
+  const handleToggleSale = (saleId: number) => {
+    setSelectedSales((prev) => {
+      if (prev.includes(saleId)) {
+        return prev.filter((id) => id !== saleId);
+      }
+      return [...prev, saleId];
+    });
+  };
+
+  // Función para seleccionar todas las ventas
+  const handleSelectAllSales = () => {
+    if (selectedSales.length === salesByRange.length) {
+      setSelectedSales([]);
+    } else {
+      setSelectedSales(salesByRange.map((sale) => sale.id));
     }
   };
 
@@ -276,101 +325,39 @@ export const GuideForm = ({
     form.setValue("transfer_date", formattedDate);
   }, [form]);
 
-  // Cargar detalles existentes en modo edición
+  // Calcular peso total automáticamente cuando cambian las ventas seleccionadas
   useEffect(() => {
-    if (defaultValues.details && defaultValues.details.length > 0) {
-      const mappedDetails = defaultValues.details.map((detail: any) => {
-        const product = localProducts.find(
-          (p) => p.id.toString() === detail.product_id
-        );
-        return {
-          product_id: detail.product_id,
-          product_name: product?.name,
-          quantity: detail.quantity,
-          unit_code: detail.unit_code,
-          description: detail.description,
-        };
-      });
-      setDetails(mappedDetails);
-      form.setValue("details", mappedDetails);
-    }
-  }, [defaultValues.details, localProducts, form]);
+    if (selectedSales.length > 0 && salesByRange.length > 0) {
+      const totalWeight = salesByRange
+        .filter((sale) => selectedSales.includes(sale.id))
+        .reduce((sum, sale) => {
+          const weight = typeof sale.total_weight === 'string'
+            ? parseFloat(sale.total_weight)
+            : sale.total_weight;
+          return sum + (weight || 0);
+        }, 0);
 
-  const handleAddDetail = () => {
-    if (
-      !currentDetail.product_id ||
-      !currentDetail.quantity ||
-      !currentDetail.unit_code ||
-      !currentDetail.description
-    ) {
+      form.setValue("total_weight", totalWeight as any);
+    } else if (selectedSales.length === 0) {
+      form.setValue("total_weight", 0 as any);
+    }
+  }, [selectedSales, salesByRange, form]);
+
+  const handleFormSubmit = (data: any) => {
+    // Validar que se hayan seleccionado ventas
+    if (selectedSales.length === 0) {
+      toast.error("Debe seleccionar al menos una venta");
       return;
     }
 
-    const product = localProducts.find(
-      (p) => p.id.toString() === currentDetail.product_id
-    );
-
-    const newDetail: DetailRow = {
-      ...currentDetail,
-      product_name: product?.name,
-    };
-
-    if (editingDetailIndex !== null) {
-      const updatedDetails = [...details];
-      updatedDetails[editingDetailIndex] = newDetail;
-      setDetails(updatedDetails);
-      form.setValue("details", updatedDetails);
-      setEditingDetailIndex(null);
-    } else {
-      const updatedDetails = [...details, newDetail];
-      setDetails(updatedDetails);
-      form.setValue("details", updatedDetails);
-    }
-
-    const emptyDetail = {
-      product_id: "",
-      quantity: "",
-      unit_code: "",
-      description: "",
-    };
-    setCurrentDetail(emptyDetail);
-    detailTempForm.reset({
-      temp_product_id: "",
-      temp_quantity: "",
-      temp_unit_code: "",
-      temp_description: "",
-    });
-  };
-
-  const handleEditDetail = (index: number) => {
-    const detail = details[index];
-    setCurrentDetail(detail);
-    detailTempForm.setValue("temp_product_id", detail.product_id);
-    detailTempForm.setValue("temp_quantity", detail.quantity);
-    detailTempForm.setValue("temp_unit_code", detail.unit_code);
-    detailTempForm.setValue("temp_description", detail.description);
-    setEditingDetailIndex(index);
-  };
-
-  const handleRemoveDetail = (index: number) => {
-    const updatedDetails = details.filter((_, i) => i !== index);
-    setDetails(updatedDetails);
-    form.setValue("details", updatedDetails);
-  };
-
-  const handleFormSubmit = (data: any) => {
-    const formattedDetails = details.map((d) => ({
-      product_id: parseInt(d.product_id),
-      quantity: parseFloat(d.quantity),
-      unit_code: d.unit_code,
-      description: d.description,
-    }));
-
     // Crear payload con los campos parseados correctamente
+    // NOTA: carrier_id y driver_id NO se envían al backend, solo se usan
+    // para llenar automáticamente los campos del formulario cuando se
+    // encuentra un transportista o conductor registrado en el sistema
     const payload = {
       branch_id: parseInt(data.branch_id),
       warehouse_id: parseInt(data.warehouse_id),
-      sale_id: data.sale_id ? parseInt(data.sale_id) : null,
+      sale_ids: selectedSales,
       customer_id: parseInt(data.customer_id),
       issue_date: data.issue_date,
       transfer_date: data.transfer_date,
@@ -395,14 +382,11 @@ export const GuideForm = ({
       total_weight: data.total_weight,
       total_packages: data.total_packages,
       observations: data.observations || "",
-      details: formattedDetails,
     };
 
     console.log("✅ Payload final siendo enviado:", payload);
     onSubmit(payload);
   };
-
-  const selectedWarehouseId = form.watch("warehouse_id");
 
   return (
     <Form {...form}>
@@ -414,7 +398,7 @@ export const GuideForm = ({
         <GroupFormSection
           title="Información General"
           icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 3 }}
+          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
           <FormSelect
             control={form.control}
@@ -508,16 +492,192 @@ export const GuideForm = ({
           />
         </GroupFormSection>
 
-        {/* Información del Transportista */}
+        {/* Búsqueda de Ventas por Rango */}
         <GroupFormSection
-          title="Información del Transportista"
+          title="Búsqueda de Ventas por Rango"
+          icon={Search}
+          cols={{ sm: 1 }}
+        >
+          <div className="space-y-4">
+            {/* Filtros de búsqueda */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
+              <SearchableSelect
+                label="Tipo de Documento"
+                options={[
+                  { value: "FACTURA", label: "FACTURA" },
+                  { value: "BOLETA", label: "BOLETA" },
+                ]}
+                value={searchParams.document_type}
+                onChange={(value) =>
+                  setSearchParams({ ...searchParams, document_type: value })
+                }
+                placeholder="Seleccione tipo"
+                className="md:w-full"
+              />
+
+              <FormInput
+                name="serie"
+                label="Serie"
+                placeholder="Ej: F001"
+                value={searchParams.serie}
+                onChange={(e) =>
+                  setSearchParams({ ...searchParams, serie: e.target.value })
+                }
+              />
+
+              <FormInput
+                name="numero_inicio"
+                label="Número Inicio"
+                type="number"
+                placeholder="Ej: 1"
+                value={searchParams.numero_inicio}
+                onChange={(e) =>
+                  setSearchParams({
+                    ...searchParams,
+                    numero_inicio: e.target.value,
+                  })
+                }
+              />
+
+              <FormInput
+                name="numero_fin"
+                label="Número Fin"
+                placeholder="Ej: 100"
+                type="number"
+                value={searchParams.numero_fin}
+                onChange={(e) =>
+                  setSearchParams({
+                    ...searchParams,
+                    numero_fin: e.target.value,
+                  })
+                }
+              />
+
+              <div className="md:col-span-4 flex justify-end">
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={handleSearchSalesByRange}
+                  disabled={isSearchingSales}
+                >
+                  {isSearchingSales ? (
+                    <>
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-4 w-4" />
+                      Buscar Ventas
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Lista de ventas encontradas */}
+            {salesByRange.length > 0 && (
+              <div className="border rounded-lg overflow-hidden">
+                <div className="p-4 bg-sidebar border-b flex justify-between items-center">
+                  <h3 className="font-semibold">
+                    Ventas encontradas ({salesByRange.length})
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAllSales}
+                  >
+                    {selectedSales.length === salesByRange.length
+                      ? "Deseleccionar Todas"
+                      : "Seleccionar Todas"}
+                  </Button>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={
+                            salesByRange.length > 0 &&
+                            selectedSales.length === salesByRange.length
+                          }
+                          onCheckedChange={handleSelectAllSales}
+                          className="cursor-pointer"
+                        />
+                      </TableHead>
+                      <TableHead>Documento</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="text-right">Peso (kg)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salesByRange.map((sale) => (
+                      <TableRow
+                        key={sale.id}
+                        className={`cursor-pointer hover:bg-muted/30 ${
+                          selectedSales.includes(sale.id) ? "bg-muted/50" : ""
+                        }`}
+                        onClick={() => handleToggleSale(sale.id)}
+                      >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedSales.includes(sale.id)}
+                            onCheckedChange={() => handleToggleSale(sale.id)}
+                            className="cursor-pointer"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">
+                              {sale.full_document_number}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {sale.document_type}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {sale.customer.business_name ||
+                            `${sale.customer.names} ${sale.customer.father_surname}`}
+                        </TableCell>
+                        <TableCell>{sale.issue_date}</TableCell>
+                        <TableCell className="text-right">
+                          {sale.currency} {sale.total_amount.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {sale.total_weight}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* Resumen de ventas seleccionadas */}
+            {selectedSales.length > 0 && (
+              <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                  {selectedSales.length} venta(s) seleccionada(s) para la guía
+                </p>
+              </div>
+            )}
+          </div>
+        </GroupFormSection>
+
+        {/* Información del Transportista y Conductor */}
+        <GroupFormSection
+          title="Información del Transportista y Conductor"
           icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 3 }}
+          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
           <FormSelect
             control={form.control}
             name="carrier_document_type"
-            label="Tipo de Documento"
+            label="Tipo de Documento (Transportista)"
             placeholder="Seleccione"
             options={CARRIER_DOCUMENT_TYPES.map((dt) => ({
               value: dt.value,
@@ -530,20 +690,62 @@ export const GuideForm = ({
             name="carrier_document_number"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Número de Documento</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: 20123456789"
-                    {...field}
-                    disabled={carrierDocumentType === "RUC"}
-                  />
-                </FormControl>
-                {carrierDocumentType === "RUC" && (
-                  <p className="text-xs text-muted-foreground">
-                    Se sincroniza automáticamente con el RUC
-                  </p>
-                )}
+                <FormLabel>Número de Documento (Transportista)</FormLabel>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <Input
+                      variant="default"
+                      placeholder={
+                        carrierDocumentType === "RUC"
+                          ? "Ingrese 11 dígitos"
+                          : carrierDocumentType === "DNI"
+                          ? "Ingrese 8 dígitos"
+                          : "Ingrese el número"
+                      }
+                      {...field}
+                      maxLength={
+                        carrierDocumentType === "RUC"
+                          ? 11
+                          : carrierDocumentType === "DNI"
+                          ? 8
+                          : 11
+                      }
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "");
+                        field.onChange(value);
+
+                        // Auto-search cuando se completa
+                        if (
+                          (carrierDocumentType === "RUC" &&
+                            value.length === 11) ||
+                          (carrierDocumentType === "DNI" && value.length === 8)
+                        ) {
+                          setTimeout(() => handleSearchCarrierDocument(), 100);
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleSearchCarrierDocument}
+                    disabled={
+                      isSearchingCarrier ||
+                      !field.value ||
+                      (carrierDocumentType === "RUC" &&
+                        field.value.length !== 11) ||
+                      (carrierDocumentType === "DNI" &&
+                        field.value.length !== 8)
+                    }
+                  >
+                    {isSearchingCarrier ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Search className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -573,24 +775,13 @@ export const GuideForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>RUC del Transportista</FormLabel>
-                <div className="flex gap-2">
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder="Ej: 20123456789"
-                      {...field}
-                    />
-                  </FormControl>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleSearchCarrierRUC}
-                    disabled={!field.value || field.value.length !== 11}
-                  >
-                    <Search className="h-4 w-4" />
-                  </Button>
-                </div>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Ej: 20123456789"
+                    {...field}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -632,99 +823,115 @@ export const GuideForm = ({
               </FormItem>
             )}
           />
+
+          {/* Selector de Conductor */}
+          <FormItem>
+            <FormLabel>Conductor</FormLabel>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <SearchableSelect
+                  className="md:w-full"
+                  buttonSize="default"
+                  options={
+                    drivers?.map((driver) => ({
+                      value: driver.id.toString(),
+                      label:
+                        driver.business_name ||
+                        `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
+                      description: driver.number_document || "",
+                    })) || []
+                  }
+                  value={selectedDriverId}
+                  onChange={(value) => {
+                    setSelectedDriverId(value);
+                    const selectedDriver = drivers?.find(
+                      (d) => d.id.toString() === value
+                    );
+                    if (selectedDriver) {
+                      const docType =
+                        selectedDriver.document_type_name ||
+                        (selectedDriver.number_document?.length === 8
+                          ? "DNI"
+                          : "CE");
+                      form.setValue("driver_document_type", docType);
+                      form.setValue(
+                        "driver_document_number",
+                        selectedDriver.number_document || ""
+                      );
+                      const fullName =
+                        selectedDriver.business_name ||
+                        `${selectedDriver.names} ${selectedDriver.father_surname} ${selectedDriver.mother_surname}`.trim();
+                      form.setValue("driver_name", fullName);
+                    }
+                  }}
+                  placeholder="Buscar conductor..."
+                />
+              </div>
+              <Button type="button" variant="outline" size="icon" asChild>
+                <Link to={DRIVER.ROUTE_ADD} target="_blank">
+                  <Plus className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </FormItem>
+
+          {/* Alert con datos del conductor seleccionado */}
+          {selectedDriverId &&
+            (() => {
+              const driver = drivers?.find(
+                (d) => d.id.toString() === selectedDriverId
+              );
+              if (!driver) return null;
+              const fullName =
+                driver.business_name ||
+                `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
+              const docType =
+                driver.document_type_name ||
+                (driver.number_document?.length === 8 ? "DNI" : "CE");
+              return (
+                <Alert className="md:col-span-4">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Datos del Conductor</AlertTitle>
+                  <AlertDescription>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                      <div>
+                        <span className="text-muted-foreground text-xs">
+                          Nombre:
+                        </span>
+                        <p className="font-medium">{fullName}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">
+                          Tipo Doc:
+                        </span>
+                        <p className="font-medium">{docType}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">
+                          Nro. Documento:
+                        </span>
+                        <p className="font-medium">
+                          {driver.number_document || "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">
+                          Teléfono:
+                        </span>
+                        <p className="font-medium">{driver.phone || "-"}</p>
+                      </div>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              );
+            })()}
         </GroupFormSection>
 
-        {/* Información del Conductor */}
+        {/* Direcciones, Carga y Observaciones */}
         <GroupFormSection
-          title="Información del Conductor (Opcional)"
-          icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 3 }}
-        >
-          <FormSelect
-            control={form.control}
-            name="driver_document_type"
-            label="Tipo de Documento"
-            placeholder="Seleccione"
-            options={DRIVER_DOCUMENT_TYPES.map((dt) => ({
-              value: dt.value,
-              label: dt.label,
-            }))}
-          />
-
-          <FormField
-            control={form.control}
-            name="driver_document_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Número de Documento</FormLabel>
-                <div className="flex gap-2">
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder="Ej: 12345678"
-                      {...field}
-                      value={field.value ?? ""}
-                    />
-                  </FormControl>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleSearchDriverDNI}
-                    disabled={!field.value || field.value.length !== 8}
-                  >
-                    <Search className="h-4 w-4" />
-                  </Button>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="driver_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nombre del Conductor</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Juan Pérez"
-                    {...field}
-                    value={field.value ?? ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="driver_license"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Licencia de Conducir</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Q12345678"
-                    {...field}
-                    value={field.value ?? ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </GroupFormSection>
-
-        {/* Direcciones */}
-        <GroupFormSection
-          title="Direcciones de Origen y Destino"
+          title="Direcciones, Carga y Observaciones"
           icon={MapPin}
-          cols={{ sm: 1, md: 2 }}
+          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
           <FormField
             control={form.control}
@@ -733,7 +940,12 @@ export const GuideForm = ({
               <FormItem>
                 <FormLabel>Dirección de Origen</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Ej: Av. Principal 123" {...field} />
+                  <Input
+                    variant="default"
+                    placeholder="Ej: Av. Principal 123"
+                    className="w-full"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -764,7 +976,12 @@ export const GuideForm = ({
               <FormItem>
                 <FormLabel>Dirección de Destino</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Ej: Av. Secundaria 456" {...field} />
+                  <Input
+                    variant="default"
+                    placeholder="Ej: Av. Secundaria 456"
+                    className="w-full"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -787,14 +1004,7 @@ export const GuideForm = ({
             formatLabel={formatUbigeoLabel}
             formatDescription={(ubigeo) => ubigeo.ubigeo_code}
           />
-        </GroupFormSection>
 
-        {/* Información de Carga */}
-        <GroupFormSection
-          title="Información de Carga"
-          icon={Truck}
-          cols={{ sm: 1, md: 3 }}
-        >
           <FormSelect
             control={form.control}
             name="unit_measurement"
@@ -846,173 +1056,18 @@ export const GuideForm = ({
               </FormItem>
             )}
           />
-        </GroupFormSection>
 
-        {/* Detalles de Productos */}
-        <GroupFormSection
-          title="Detalles de la Guía"
-          icon={Truck}
-          cols={{ sm: 1 }}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
-            <div className="md:col-span-2">
-              <Form {...detailTempForm}>
-                <FormSelect
-                  control={detailTempForm.control}
-                  name="temp_product_id"
-                  label="Producto"
-                  placeholder="Seleccione un producto"
-                  options={products.map((product) => {
-                    const stockInWarehouse = product.stock_warehouse?.find(
-                      (stock) =>
-                        stock.warehouse_id.toString() === selectedWarehouseId
-                    );
-                    return {
-                      value: product.id.toString(),
-                      label: product.name,
-                      description: `${product.codigo} | Stock: ${
-                        stockInWarehouse?.stock ?? 0
-                      }`,
-                    };
-                  })}
-                />
-              </Form>
-            </div>
-
-            <FormField
-              control={detailTempForm.control}
-              name="temp_quantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cantidad</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      variant="default"
-                      placeholder="0"
-                      {...field}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={detailTempForm.control}
-              name="temp_unit_code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Código de Unidad</FormLabel>
-                  <FormControl>
-                    <Input variant="default" placeholder="Ej: NIU" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <div className="md:col-span-4">
-              <FormField
-                control={detailTempForm.control}
-                name="temp_description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descripción</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Descripción del producto"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="md:col-span-4 flex justify-end">
-              <Button
-                type="button"
-                variant="default"
-                onClick={handleAddDetail}
-                disabled={
-                  !currentDetail.product_id ||
-                  !currentDetail.quantity ||
-                  !currentDetail.unit_code ||
-                  !currentDetail.description
-                }
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {editingDetailIndex !== null ? "Actualizar" : "Agregar"}
-              </Button>
-            </div>
-          </div>
-
-          {details.length > 0 ? (
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Producto</TableHead>
-                    <TableHead className="text-right">Cantidad</TableHead>
-                    <TableHead>Unidad</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead className="text-center">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {details.map((detail, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{detail.product_name}</TableCell>
-                      <TableCell className="text-right">
-                        {detail.quantity}
-                      </TableCell>
-                      <TableCell>{detail.unit_code}</TableCell>
-                      <TableCell>{detail.description}</TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center gap-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditDetail(index)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveDetail(index)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Badge variant="outline" className="text-lg p-3">
-                No hay detalles agregados
-              </Badge>
-            </div>
-          )}
-        </GroupFormSection>
-
-        {/* Observaciones */}
-        <div className="bg-sidebar p-4 rounded-lg space-y-4">
-          <h3 className="text-lg font-semibold">Observaciones (Opcional)</h3>
           <FormField
             control={form.control}
             name="observations"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="md:col-span-2">
+                <FormLabel>Observaciones (Opcional)</FormLabel>
                 <FormControl>
-                  <Textarea
+                  <Input
+                    variant="default"
                     placeholder="Observaciones adicionales"
-                    rows={4}
+                    className="w-full"
                     {...field}
                   />
                 </FormControl>
@@ -1020,19 +1075,18 @@ export const GuideForm = ({
               </FormItem>
             )}
           />
-        </div>
+        </GroupFormSection>
 
         {/* Botones */}
         <div className="flex gap-4 w-full justify-end">
-          <Button type="button" variant="neutral" onClick={onCancel}>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             Cancelar
           </Button>
 
           <Button
+            size="sm"
             type="submit"
-            disabled={
-              isSubmitting || (mode === "create" && details.length === 0)
-            }
+            disabled={isSubmitting || selectedSales.length === 0}
           >
             <Loader
               className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`}

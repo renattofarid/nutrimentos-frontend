@@ -392,7 +392,7 @@ export default function SaleDetailSheet({
                               Cantidad:
                             </span>
                             <span className="ml-1 font-medium">
-                              {detail.quantity.toFixed(2)}
+                              {detail.quantity_sacks?.toFixed(2)}
                             </span>
                           </div>
                           <div>

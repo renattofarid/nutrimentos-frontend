@@ -180,9 +180,7 @@ export const getDeliverySheetColumns = ({
         row.original.status === "PENDIENTE" ||
         row.original.status === "EN_REPARTO";
       const canSettlement = row.original.status === "EN_REPARTO";
-      const canPayment =
-        row.original.status === "EN_REPARTO" ||
-        row.original.status === "COMPLETADO";
+      const canPayment = row.original.status === "RENDIDA";
 
       return (
         <DropdownMenu>

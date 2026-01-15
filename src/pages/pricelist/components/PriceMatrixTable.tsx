@@ -3,11 +3,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2, DollarSign, Weight } from "lucide-react";
+import { Trash2, DollarSign, Weight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import { AddWeightRangeModal } from "./AddWeightRangeModal";
-import { AddProductToMatrixModal } from "./AddProductToMatrixModal";
 import {
   Select,
   SelectContent,
@@ -15,6 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Command,
+  CommandInput,
+  CommandEmpty,
+  CommandList,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 
 interface WeightRangeData {
   name: string;
@@ -54,7 +65,8 @@ export const PriceMatrixTable = ({
   onPriceMatrixChange,
 }: PriceMatrixTableProps) => {
   const [showWeightRangeModal, setShowWeightRangeModal] = useState(false);
-  const [showProductModal, setShowProductModal] = useState(false);
+  const [openProductCombobox, setOpenProductCombobox] = useState(false);
+  const [searchProduct, setSearchProduct] = useState("");
 
   const handleAddWeightRange = (data: {
     name: string;
@@ -84,13 +96,35 @@ export const PriceMatrixTable = ({
     const product = products.find((p) => p.id === productId);
     if (!product) return;
 
+    // Verificar si el producto ya está agregado
+    if (selectedProducts.some((p) => p.product_id === productId)) {
+      return;
+    }
+
     const newProduct: ProductInMatrix = {
       product_id: product.id,
       product_name: product.name,
       product_code: product.codigo,
     };
     onSelectedProductsChange([...selectedProducts, newProduct]);
+    setSearchProduct("");
+    setOpenProductCombobox(false);
   };
+
+  // Filtrar productos disponibles (que no estén ya seleccionados)
+  const availableProducts = products.filter(
+    (p) => !selectedProducts.some((sp) => sp.product_id === p.id)
+  );
+
+  // Filtrar productos por búsqueda (código o nombre)
+  const filteredProducts = availableProducts.filter((product) => {
+    if (!searchProduct) return true;
+    const searchLower = searchProduct.toLowerCase();
+    return (
+      product.codigo.toLowerCase().includes(searchLower) ||
+      product.name.toLowerCase().includes(searchLower)
+    );
+  });
 
   const handleRemoveProduct = (productId: number) => {
     const newProducts = selectedProducts.filter(
@@ -174,16 +208,60 @@ export const PriceMatrixTable = ({
             <Weight className="h-4 w-4 mr-2" />
             Agregar Rango
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowProductModal(true)}
-            disabled={!products || products.length === 0}
-          >
-            <Plus className="h-4 w-4 mr-2" />
+        </div>
+      </div>
+
+      {/* Input de búsqueda de productos */}
+      <div className="flex gap-2 items-end">
+        <div className="flex-1">
+          <label className="text-sm font-medium mb-1.5 block">
             Agregar Producto
-          </Button>
+          </label>
+          <Popover open={openProductCombobox} onOpenChange={setOpenProductCombobox}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                role="combobox"
+                className="w-full justify-start text-left font-normal"
+                disabled={!products || products.length === 0}
+              >
+                <span className="text-muted-foreground">
+                  Buscar por código o nombre del producto...
+                </span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start">
+              <Command shouldFilter={false}>
+                <CommandInput
+                  placeholder="Escribe el código o nombre..."
+                  value={searchProduct}
+                  onValueChange={setSearchProduct}
+                />
+                <CommandList className="max-h-60 overflow-y-auto">
+                  <CommandEmpty>
+                    {availableProducts.length === 0
+                      ? "Todos los productos ya fueron agregados"
+                      : "No se encontraron productos"}
+                  </CommandEmpty>
+                  {filteredProducts.slice(0, 50).map((product) => (
+                    <CommandItem
+                      key={product.id}
+                      onSelect={() => handleAddProduct(product.id)}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">{product.name}</span>
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {product.codigo}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
@@ -331,14 +409,6 @@ export const PriceMatrixTable = ({
         open={showWeightRangeModal}
         onClose={() => setShowWeightRangeModal(false)}
         onSubmit={handleAddWeightRange}
-      />
-
-      <AddProductToMatrixModal
-        open={showProductModal}
-        onClose={() => setShowProductModal(false)}
-        onSubmit={handleAddProduct}
-        products={products || []}
-        selectedProductIds={selectedProducts.map((p) => p.product_id)}
       />
     </div>
   );

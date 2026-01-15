@@ -2,6 +2,7 @@ import type { ModelComplete } from "@/lib/core.interface";
 import type { Links, Meta } from "@/lib/pagination.interface";
 import { FileText } from "lucide-react";
 import type { WarehouseDocumentSchema } from "./warehouse-document.schema";
+import { format } from "date-fns";
 
 const ROUTE = "/documentos-almacen";
 const NAME = "Documento de Almacén";
@@ -41,7 +42,7 @@ export const WAREHOUSE_DOCUMENT: ModelComplete<WarehouseDocumentSchema> = {
     warehouse_dest_id: "",
     responsible_origin_id: "",
     responsible_dest_id: "",
-    movement_date: "",
+    movement_date: format(new Date(), "yyyy-MM-dd"),
     purchase_id: "",
     observations: "",
     details: [],
@@ -73,7 +74,11 @@ export type DocumentMotive =
   | "DONACION"
   | "USO_INTERNO";
 
-export type DocumentStatus = "BORRADOR" | "CONFIRMADO" | "CANCELADO";
+export type DocumentStatus =
+  | "BORRADOR"
+  | "CONFIRMADO"
+  | "CANCELADO"
+  | "PROCESADO";
 
 // Warehouse Document Detail
 export interface WarehouseDocumentDetail {
@@ -99,19 +104,20 @@ export interface WarehouseDocumentResource {
   warehouse_destination?: Warehouse;
   responsible_origin: Company;
   responsible_destination?: Company;
-  purchase: Purchase;
+  purchase?: Purchase;
   status: DocumentStatus;
-  observations: string;
-  details: Detail[];
+  observations?: string;
+  details?: WarehouseDocumentResourceDetail[];
   user: User;
   created_at: string;
   updated_at: string;
 }
 
-interface Detail {
+export interface WarehouseDocumentResourceDetail {
   id: number;
   product: Product;
-  quantity: number;
+  quantity_sacks: number;
+  quantity_kg: number;
   unit_price: number;
   subtotal: number;
   tax: number;
@@ -168,7 +174,8 @@ export interface CreateWarehouseDocumentRequest {
   observations?: string;
   details: {
     product_id: number;
-    quantity: number;
+    quantity_sacks: number;
+    quantity_kg?: number;
     unit_price: number;
     observations?: string;
   }[];

@@ -2,15 +2,37 @@ import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProductStore } from "../lib/product.store";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 import { ProductImageGallery } from "./ProductImageGallery";
 import FormSkeleton from "@/components/FormSkeleton";
 import FormWrapper from "@/components/FormWrapper";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { PRODUCT } from "../lib/product.interface";
+import { GroupFormSection } from "@/components/GroupFormSection";
+
+interface DetailFieldProps {
+  label: string;
+  value: string | React.ReactNode;
+  className?: string;
+  mono?: boolean;
+}
+
+function DetailField({
+  label,
+  value,
+  className = "",
+  mono = false,
+}: DetailFieldProps) {
+  return (
+    <div className={`space-y-2 ${className}`}>
+      <label className="text-sm font-medium text-muted-foreground">
+        {label}
+      </label>
+      <p className={`font-medium ${mono ? "font-mono" : ""}`}>{value}</p>
+    </div>
+  );
+}
 
 export default function ProductDetail() {
   const { ICON } = PRODUCT;
@@ -55,59 +77,33 @@ export default function ProductDetail() {
   return (
     <FormWrapper>
       <TitleFormComponent title="Detalle del Producto" icon={ICON} />
-      <Card>
-        <CardContent className="space-y-8">
-          {/* Basic Information */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Información General</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Código
-                </label>
-                <p className="text-lg font-semibold font-mono">
-                  {product.codigo}
-                </p>
-              </div>
+      <GroupFormSection
+        title="Información General"
+        icon={Info}
+        gap="gap-3"
+        cols={{ sm: 1, md: 2, lg: 3 }}
+      >
+        <DetailField label="Código" value={product.codigo} />
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Nombre
-                </label>
-                <p className="text-lg font-semibold">{product.name}</p>
-              </div>
+        <DetailField label="Nombre" value={product.name} />
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Tipo
-                </label>
-                <div>
-                  <Badge variant="outline" className="text-sm">
-                    {product.product_type_name}
-                  </Badge>
-                </div>
-              </div>
+        <DetailField label="Tipo" value={product.product_type_name} />
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Categoría
-                </label>
-                <p className="font-medium">{product.category_name}</p>
-              </div>
+        <DetailField label="Categoría" value={product.category_name} />
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Marca
-                </label>
-                <p className="font-medium">{product.brand_name}</p>
-              </div>
+        <DetailField label="Marca" value={product.brand_name} />
 
-              <div className="space-y-2 md:col-span-2 lg:col-span-3">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Stock por Almacén
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {product.stock_warehouse.map((warehouse) => (
+        <DetailField label="Peso (Kg)" value={product.weight} />
+
+        <DetailField label="Precio por Kg" value={product.price_per_kg} />
+
+        <DetailField
+          label="Stock por Almacén"
+          className="md:col-span-2 lg:col-span-3"
+          value={
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {product.stock_warehouse.length > 0
+                ? product.stock_warehouse?.map((warehouse) => (
                     <div
                       key={warehouse.warehouse_id}
                       className="flex items-center justify-between p-3 border rounded-lg"
@@ -122,24 +118,13 @@ export default function ProductDetail() {
                         {warehouse.stock}
                       </Badge>
                     </div>
-                  ))}
-                </div>
-              </div>
+                  ))
+                : "Sin stock asignado"}
             </div>
-          </div>
-
-          <Separator />
-
-          {/* Images */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <ImageIcon className="h-5 w-5" />
-              <h3 className="text-lg font-semibold">Galería de Imágenes</h3>
-            </div>
-            <ProductImageGallery productId={parseInt(id!)} />
-          </div>
-        </CardContent>
-      </Card>
+          }
+        />
+      </GroupFormSection>
+      {/* Images */} <ProductImageGallery productId={parseInt(id!)} />
     </FormWrapper>
   );
 }

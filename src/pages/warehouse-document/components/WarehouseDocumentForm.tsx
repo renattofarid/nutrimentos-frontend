@@ -132,6 +132,7 @@ export default function WarehouseDocumentForm({
       product_id: field.product_id,
       product_name: getProductName(field.product_id),
       quantity_sacks: field.quantity_sacks,
+      quantity_kg: field.quantity_kg,
       unit_price: field.unit_price,
       total: field.quantity_sacks * field.unit_price,
     }));

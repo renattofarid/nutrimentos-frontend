@@ -106,16 +106,17 @@ export interface WarehouseDocumentResource {
   purchase?: Purchase;
   status: DocumentStatus;
   observations?: string;
-  details: Detail[];
+  details?: WarehouseDocumentResourceDetail[];
   user: User;
   created_at: string;
   updated_at: string;
 }
 
-interface Detail {
+export interface WarehouseDocumentResourceDetail {
   id: number;
   product: Product;
-  quantity: number;
+  quantity_sacks: number;
+  quantity_kg: number;
   unit_price: number;
   subtotal: number;
   tax: number;

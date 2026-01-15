@@ -20,7 +20,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Pencil, CheckCircle, XCircle, FileText, Package } from "lucide-react";
 import { WAREHOUSE_DOCUMENT } from "../lib/warehouse-document.interface";
-import type { WarehouseDocumentResource } from "../lib/warehouse-document.interface";
+import type {
+  WarehouseDocumentResource,
+  WarehouseDocumentResourceDetail,
+} from "../lib/warehouse-document.interface";
 import {
   findWarehouseDocumentById,
   confirmWarehouseDocument,
@@ -36,15 +39,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 const { ROUTE } = WAREHOUSE_DOCUMENT;
 
-type DocumentDetail = {
-  id?: number;
-  product: {
-    name: string;
-  };
-  quantity: number;
-  unit_price: number;
-};
-
 export default function WarehouseDocumentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -55,7 +49,7 @@ export default function WarehouseDocumentDetailPage() {
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [cancelId, setCancelId] = useState<number | null>(null);
 
-  const columns: ColumnDef<DocumentDetail>[] = [
+  const columns: ColumnDef<WarehouseDocumentResourceDetail>[] = [
     {
       id: "index",
       header: "#",
@@ -67,15 +61,22 @@ export default function WarehouseDocumentDetailPage() {
       cell: ({ row }) => <span>{row.original.product.name}</span>,
     },
     {
-      accessorKey: "quantity",
-      header: "Cantidad",
+      accessorKey: "quantity_sacks",
+      header: "Cantidad (Sacos)",
       cell: ({ row }) => (
-        <span className="text-right block">{row.original.quantity}</span>
+        <span className="text-right block">{row.original.quantity_sacks}</span>
+      ),
+    },
+    {
+      accessorKey: "quantity_kg",
+      header: "Cantidad (Kg)",
+      cell: ({ row }) => (
+        <span className="text-right block">{row.original.quantity_kg}</span>
       ),
     },
     {
       accessorKey: "unit_price",
-      header: "Costo Unitario",
+      header: "Precio Unitario",
       cell: ({ row }) => (
         <span className="text-right block">
           S/. {Number(row.original.unit_price).toFixed(2)}
@@ -87,7 +88,8 @@ export default function WarehouseDocumentDetailPage() {
       header: "Subtotal",
       cell: ({ row }) => (
         <span className="text-right block font-semibold">
-          S/. {(row.original.quantity * row.original.unit_price).toFixed(2)}
+          S/.{" "}
+          {(row.original.quantity_sacks * row.original.unit_price).toFixed(2)}
         </span>
       ),
     },
@@ -349,7 +351,9 @@ export default function WarehouseDocumentDetailPage() {
         </GroupFormSection>
 
         <GroupFormSection
-          title={`Detalles del Documento (${document.details?.length || 0} productos)`}
+          title={`Detalles del Documento (${
+            document.details?.length || 0
+          } productos)`}
           icon={Package}
           cols={{ sm: 1 }}
         >
@@ -369,7 +373,7 @@ export default function WarehouseDocumentDetailPage() {
                       {document.details
                         .reduce(
                           (sum, detail) =>
-                            sum + detail.quantity * detail.unit_price,
+                            sum + detail.quantity_kg * detail.unit_price,
                           0
                         )
                         .toFixed(2)}

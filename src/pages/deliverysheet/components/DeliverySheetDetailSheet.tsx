@@ -363,11 +363,11 @@ export default function DeliverySheetDetailSheet({
             </CardHeader>
             <CardContent className="space-y-1 text-sm">
               <p className="font-semibold">
-                {deliverySheet.customer.full_name}
+                {deliverySheet.customer?.full_name}
               </p>
-              {deliverySheet.customer.document_number && (
+              {deliverySheet.customer?.document_number && (
                 <p className="text-muted-foreground">
-                  {deliverySheet.customer.document_number}
+                  {deliverySheet.customer?.document_number}
                 </p>
               )}
             </CardContent>

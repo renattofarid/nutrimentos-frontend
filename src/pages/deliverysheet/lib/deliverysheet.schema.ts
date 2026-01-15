@@ -7,6 +7,7 @@ export const deliverySheetSchemaCreate = z
   .object({
     branch_id: requiredStringId("Debe seleccionar una tienda"),
     zone_id: z.string().optional(),
+    driver_id: requiredStringId("Debe seleccionar un conductor"),
     customer_id: z.string().optional(),
     type: z.string().min(1, { message: "Debe seleccionar un tipo" }),
     issue_date: z

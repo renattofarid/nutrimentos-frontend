@@ -419,7 +419,8 @@ export const DeliverySheetForm = ({
               Cancelar
             </Button>
           )}
-          <Button
+         <Button
+            size="sm"
             type="submit"
             disabled={isSubmitting || selectedSaleIds.length === 0}
           >

@@ -12,7 +12,6 @@ import {
   successToast,
 } from "@/lib/core.function";
 import { PRODUCT, type ProductResource } from "../lib/product.interface";
-import FormWrapper from "@/components/FormWrapper";
 import { useProductStore } from "../lib/product.store";
 import { useAllCategories } from "@/pages/category/lib/category.hook";
 import { useAllBrands } from "@/pages/brand/lib/brand.hook";
@@ -23,6 +22,7 @@ import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import { useSidebar } from "@/components/ui/sidebar";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL, ROUTE } = PRODUCT;
 
@@ -130,7 +130,7 @@ export default function ProductEditPage() {
     !product;
 
   return (
-    <FormWrapper>
+    <PageWrapper fluid>
       <TitleFormComponent title={MODEL.name} mode="edit" />
 
       {isLoading ? (
@@ -151,6 +151,6 @@ export default function ProductEditPage() {
           onCancel={() => navigate(ROUTE)}
         />
       )}
-    </FormWrapper>
+    </PageWrapper>
   );
 }

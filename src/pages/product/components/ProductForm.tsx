@@ -18,7 +18,7 @@ import {
   productSchemaUpdate,
   type ProductSchema,
 } from "../lib/product.schema";
-import { Loader, Info, Weight, MessageSquare } from "lucide-react";
+import { Loader, Info, Weight } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSwitch } from "@/components/FormSwitch";
 import { GroupFormSection } from "@/components/GroupFormSection";
@@ -209,6 +209,25 @@ export const ProductForm = ({
             label="Impuestos"
             text="¿Está Gravado?"
           />
+
+          <div className="col-span-full">
+            <FormField
+              control={form.control}
+              name="comment"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Este es un producto de prueba"
+                      rows={4}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </GroupFormSection>
 
         {/* Peso y Precio por Kg */}
@@ -267,36 +286,13 @@ export const ProductForm = ({
           />
         </GroupFormSection>
 
-        {/* Comentarios */}
-        <GroupFormSection
-          title="Comentarios (Opcional)"
-          icon={MessageSquare}
-          cols={{ sm: 1 }}
-        >
-          <FormField
-            control={form.control}
-            name="comment"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Textarea
-                    placeholder="Este es un producto de prueba"
-                    rows={4}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </GroupFormSection>
-
         <div className="flex gap-4 w-full justify-end">
-          <Button type="button" variant="neutral" onClick={onCancel}>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             Cancelar
           </Button>
 
           <Button
+            size="sm"
             type="submit"
             disabled={isSubmitting || !form.formState.isValid}
           >

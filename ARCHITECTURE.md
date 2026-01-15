@@ -896,7 +896,7 @@ export const BrandForm = ({
         </div>
 
         <div className="flex gap-4 w-full justify-end">
-          <Button type="button" variant="neutral" onClick={onCancel}>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             Cancelar
           </Button>
           <Button type="submit" disabled={isSubmitting || !form.formState.isValid}>

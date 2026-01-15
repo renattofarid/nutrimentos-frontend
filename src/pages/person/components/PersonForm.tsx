@@ -943,7 +943,8 @@ export const PersonForm = ({
               Cancelar
             </Button>
           )}
-          <Button
+         <Button
+            size="sm"
             type="submit"
             disabled={isSubmitting}
             className={`gap-2 ${!isValid ? "opacity-50" : ""}`}

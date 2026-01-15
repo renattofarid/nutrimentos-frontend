@@ -274,25 +274,29 @@ export const PurchaseForm = ({
           (p) => p.id.toString() === detail.product_id
         );
         const productWeight = product?.weight ? parseFloat(product.weight) : 0;
-        const quantityKg = parseFloat(detail.quantity_kg);
+        const quantityKg = parseFloat(detail.quantity_kg) || 0;
+        const quantitySacks = parseFloat(detail.quantity_sacks) || 0;
         const unitPrice = parseFloat(detail.unit_price);
         const tax = parseFloat(detail.tax);
-        const subtotal = quantityKg * unitPrice;
-        const total = subtotal + tax;
-        const quantitySacks = parseFloat(detail.quantity_sacks);
 
         // Determinar si está en modo saco o kg
-        // Si quantity_sacks > 0 y quantity_kg == quantity_sacks * product_weight, entonces está en modo saco
-        const isBySack = quantitySacks > 0 && productWeight > 0 &&
-                         Math.abs(quantityKg - (quantitySacks * productWeight)) < 0.01;
+        // Si quantity_sacks > 0, entonces está en modo saco
+        const isBySack = quantitySacks > 0;
+
+        // La cantidad a mostrar depende del modo
+        const quantity = isBySack ? quantitySacks : quantityKg;
+
+        // El subtotal se calcula con la cantidad mostrada (sacos o kg)
+        const subtotal = quantity * unitPrice;
+        const total = subtotal + tax;
 
         return {
           product_id: detail.product_id,
           product_code: product?.codigo,
           product_name: product?.name,
           product_weight: productWeight,
-          quantity: isBySack ? detail.quantity_sacks : detail.quantity_kg,
-          quantity_kg: detail.quantity_kg,
+          quantity: quantity > 0 ? quantity.toString() : "",
+          quantity_kg: quantityKg > 0 ? quantityKg.toString() : "",
           unit_price: detail.unit_price,
           tax: detail.tax,
           subtotal,
@@ -360,21 +364,22 @@ export const PurchaseForm = ({
 
     // Recalcular totales cuando cambian quantity o precio
     if (field === "quantity" || field === "unit_price") {
-      const quantityKg = parseFloat(updatedDetails[index].quantity_kg) || 0;
+      const quantity = parseFloat(updatedDetails[index].quantity) || 0;
       const unitPrice = parseFloat(updatedDetails[index].unit_price) || 0;
       let subtotal = 0;
       let tax = 0;
       let total = 0;
 
-      if (quantityKg > 0 && unitPrice > 0) {
+      // El precio siempre se multiplica por la cantidad ingresada (sacos o kg según el modo)
+      if (quantity > 0 && unitPrice > 0) {
         if (includeIgv) {
           // includeIgv=true: El precio NO incluye IGV, se lo agregamos
-          subtotal = quantityKg * unitPrice;
+          subtotal = quantity * unitPrice;
           tax = subtotal * IGV_RATE;
           total = subtotal + tax;
         } else {
           // includeIgv=false: El precio YA incluye IGV, lo descomponemos
-          const totalIncl = quantityKg * unitPrice;
+          const totalIncl = quantity * unitPrice;
           subtotal = totalIncl / (1 + IGV_RATE);
           tax = totalIncl - subtotal;
           total = totalIncl;
@@ -478,7 +483,8 @@ export const PurchaseForm = ({
     if (!details || details.length === 0) return;
 
     const recalculated = details.map((d) => {
-      const q = parseFloat(d.quantity_kg || "0");
+      // Usar la cantidad según el modo (sacos o kg)
+      const q = parseFloat(d.quantity || "0");
       const up = parseFloat(d.unit_price || "0");
       let subtotal = 0;
       let tax = 0;

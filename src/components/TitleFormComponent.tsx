@@ -3,7 +3,7 @@ import { BackButton } from "./BackButton";
 
 interface Props {
   title: string;
-  mode?: "create" | "edit";
+  mode?: "create" | "edit" | "view";
   className?: string;
   icon?: keyof typeof LucideReact;
   handleBack?: () => void;
@@ -32,7 +32,11 @@ export default function TitleFormComponent({
         <h1 className="md:text-xl font-bold text-primary">{title}</h1>
 
         <p className="text-muted-foreground text-xs md:text-sm">{`${
-          mode === "create" ? "Agregar" : "Actualizar"
+          mode === "create"
+            ? "Agregar"
+            : mode === "edit"
+            ? "Actualizar"
+            : "Ver detalles de"
         } ${title}`}</p>
       </div>
     </div>

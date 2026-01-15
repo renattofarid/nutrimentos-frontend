@@ -59,8 +59,8 @@ export function PurchaseDetailTable({
             <TableRow>
               <TableHead>Producto</TableHead>
               <TableHead>Código</TableHead>
-              <TableHead className="text-right">Kg</TableHead>
               <TableHead className="text-right">Sacos</TableHead>
+              <TableHead className="text-right">Kg</TableHead>
               <TableHead className="text-right">P. Unit.</TableHead>
               <TableHead className="text-right">Subtotal</TableHead>
               <TableHead className="text-right">Impuesto</TableHead>
@@ -78,10 +78,10 @@ export function PurchaseDetailTable({
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  {detail.quantity_kg.toFixed(2)}
+                  {detail.quantity_sacks.toFixed(2)}
                 </TableCell>
                 <TableCell className="text-right">
-                  {detail.quantity_sacks.toFixed(2)}
+                  {detail.quantity_kg.toFixed(2)}
                 </TableCell>
                 <TableCell className="text-right">
                   {detail.unit_price.toFixed(2)}
@@ -95,73 +95,6 @@ export function PurchaseDetailTable({
                 <TableCell className="text-right font-bold text-primary">
                   {detail.total.toFixed(2)}
                 </TableCell>
-                {/* <TableCell className="text-center">
-                  <div className="flex justify-center gap-2">
-                    {isPurchasePaid ? (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                disabled
-                                className="cursor-not-allowed"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              No se puede editar un detalle de compra pagada
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEdit(detail.id)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    )}
-
-                    {isPurchasePaid ? (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                disabled
-                                className="cursor-not-allowed"
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              No se puede eliminar un detalle de compra pagada
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeleteId(detail.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    )}
-                  </div>
-                </TableCell> */}
               </TableRow>
             ))}
             <TableRow className="bg-sidebar">

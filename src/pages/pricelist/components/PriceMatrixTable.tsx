@@ -26,7 +26,6 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 
 interface WeightRangeData {
   name: string;

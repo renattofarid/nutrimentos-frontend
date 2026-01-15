@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGuideById } from "../lib/guide.hook";
-import { GUIDE, type GuideDetailResource } from "../lib/guide.interface";
+import { GUIDE } from "../lib/guide.interface";
 import FormWrapper from "@/components/FormWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
 import { BackButton } from "@/components/BackButton";
@@ -443,7 +443,7 @@ export default function GuideDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {guide.details.map((detail: GuideDetailResource, index) => (
+                {guide.details.map((detail, index) => (
                   <div
                     key={detail.id}
                     className="p-3 bg-muted/30 rounded-lg border hover:bg-muted/50 transition-colors"
@@ -469,7 +469,7 @@ export default function GuideDetailPage() {
                       </div>
                       <div className="text-right shrink-0">
                         <p className="font-bold text-2xl text-primary">
-                          {detail.quantity}
+                          {detail.quantity_sacks || detail.quantity_kg}
                         </p>
                         <Badge variant="secondary" className="mt-1">
                           {detail.unit_code}

@@ -32,10 +32,7 @@ export const vehicleSchemaCreate = z.object({
       return isNaN(parsed) ? val : parsed;
     },
     z
-      .number({
-        required_error: "El año es requerido",
-        invalid_type_error: "El año debe ser un número",
-      })
+      .number()
       .min(1900, {
         message: "El año debe ser mayor a 1900",
       })
@@ -65,10 +62,7 @@ export const vehicleSchemaCreate = z.object({
       return isNaN(parsed) ? val : parsed;
     },
     z
-      .number({
-        required_error: "El peso máximo es requerido",
-        invalid_type_error: "El peso máximo debe ser un número",
-      })
+      .number()
       .min(0, {
         message: "El peso máximo debe ser mayor o igual a 0",
       })

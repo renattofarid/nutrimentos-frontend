@@ -77,7 +77,7 @@ export const VehicleForm = ({
             placeholder="Ej: ABC-123"
             className="font-mono uppercase"
             maxLength={20}
-            onChange={(value) => form.setValue("plate", value.toUpperCase())}
+            onChange={(e) => form.setValue("plate", e.target.value.toUpperCase())}
           />
 
           <FormInput

@@ -54,6 +54,7 @@ export default function WarehouseDocumentEditPage() {
         details: data.details.map((detail) => ({
           id: detail.id,
           product_id: parseInt(detail.product_id),
+          quantity: detail.quantity_sacks,
           quantity_sacks: detail.quantity_sacks,
           quantity_kg: detail.quantity_kg,
           unit_price: detail.unit_price,
@@ -107,11 +108,11 @@ export default function WarehouseDocumentEditPage() {
     purchase_id: document.purchase ? document.purchase.id.toString() : "",
     movement_date: document.movement_date,
     observations: document.observations || "",
-    details: document.details.map((detail) => ({
+    details: document.details?.map((detail) => ({
       id: detail.id,
       product_id: detail.product.id.toString(),
-      quantity_sacks: detail.quantity,
-      quantity_kg: undefined,
+      quantity_sacks: detail.quantity_sacks,
+      quantity_kg: detail.quantity_kg,
       unit_price: detail.unit_price,
       observations: "",
     })),

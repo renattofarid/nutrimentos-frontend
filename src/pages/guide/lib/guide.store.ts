@@ -149,12 +149,6 @@ export const useGuideStore = create<GuideStore>((set) => ({
         total_weight: Number(data.total_weight),
         total_packages: Number(data.total_packages),
         observations: data.observations || "",
-        details: data.details?.map((detail) => ({
-          product_id: Number(detail.product_id),
-          quantity: Number(detail.quantity),
-          unit_code: detail.unit_code,
-          description: detail.description,
-        })),
       };
 
       await storeGuide(request);
@@ -226,14 +220,6 @@ export const useGuideStore = create<GuideStore>((set) => ({
         }),
         ...(data.observations !== undefined && {
           observations: data.observations,
-        }),
-        ...(data.details && {
-          details: data.details.map((detail) => ({
-            product_id: Number(detail.product_id),
-            quantity: Number(detail.quantity),
-            unit_code: detail.unit_code,
-            description: detail.description,
-          })),
         }),
       };
 

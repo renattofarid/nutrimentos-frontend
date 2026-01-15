@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { requiredNumberId, dateStringSchema } from "@/lib/core.schema";
+import { requiredNumberId } from "@/lib/core.schema";
 
 export const creditNoteSchemaCreate = z.object({
   sale_id: requiredNumberId("La venta es requerida"),

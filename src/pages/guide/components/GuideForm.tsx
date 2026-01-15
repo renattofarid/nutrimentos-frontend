@@ -56,7 +56,6 @@ import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import { toast } from "sonner";
 import { useAllDrivers } from "@/pages/driver/lib/driver.hook";
 import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
-import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
 
 interface GuideFormProps {
   defaultValues: Partial<GuideSchema>;
@@ -110,14 +109,6 @@ export const GuideForm = ({
   // Cargar conductores y transportistas
   const drivers = useAllDrivers();
   const carriers = useAllCarriers();
-
-  // Estados para conductor y transportista seleccionados
-  const [selectedDriver, setSelectedDriver] = useState<PersonResource | null>(
-    null
-  );
-  const [selectedCarrier, setSelectedCarrier] = useState<PersonResource | null>(
-    null
-  );
 
   // Estados para búsqueda de documentos
   const [isSearchingCarrier, setIsSearchingCarrier] = useState(false);
@@ -217,7 +208,6 @@ export const GuideForm = ({
       );
 
       if (existingCarrier) {
-        setSelectedCarrier(existingCarrier);
         form.setValue(
           "carrier_name",
           existingCarrier.business_name ||
@@ -274,7 +264,6 @@ export const GuideForm = ({
       );
 
       if (existingDriver) {
-        setSelectedDriver(existingDriver);
         const fullName = existingDriver.business_name ||
           `${existingDriver.names} ${existingDriver.father_surname} ${existingDriver.mother_surname}`.trim();
         form.setValue("driver_name", fullName);

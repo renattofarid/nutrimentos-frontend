@@ -4,12 +4,13 @@ import { useProductStore } from "../lib/product.store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Info, Warehouse } from "lucide-react";
+import { ArrowLeft, Info, Package, Warehouse } from "lucide-react";
 import { ProductImageGallery } from "./ProductImageGallery";
 import FormSkeleton from "@/components/FormSkeleton";
 import FormWrapper from "@/components/FormWrapper";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { PRODUCT } from "../lib/product.interface";
+import { GroupFormSection } from "@/components/GroupFormSection";
 
 export default function ProductDetail() {
   const { ICON } = PRODUCT;
@@ -54,78 +55,74 @@ export default function ProductDetail() {
   return (
     <FormWrapper>
       <TitleFormComponent title="Detalle del Producto" icon={ICON} />
+      <GroupFormSection
+        title="Información General"
+        icon={Info}
+        gap="gap-3"
+        cols={{ sm: 1, md: 2, lg: 3 }}
+      >
+        {/* Basic Information */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">
+            Código
+          </label>
+          <p className="text-lg font-semibold font-mono">{product.codigo}</p>
+        </div>
 
-      <div className="space-y-4">
-        {/* Información General */}
-        <Card className="!gap-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Info className="h-5 w-5" />
-              Información General
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Código</p>
-                <p className="text-lg font-semibold font-mono">{product.codigo}</p>
-              </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">
+            Nombre
+          </label>
+          <p className="text-lg font-semibold">{product.name}</p>
+        </div>
 
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Nombre</p>
-                <p className="text-lg font-semibold">{product.name}</p>
-              </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">
+            Tipo
+          </label>
+          <div>
+            <Badge variant="outline" className="text-sm">
+              {product.product_type_name}
+            </Badge>
+          </div>
+        </div>
 
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Tipo</p>
-                <Badge variant="outline" className="text-sm">
-                  {product.product_type_name}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">
+            Categoría
+          </label>
+          <p className="font-medium">{product.category_name}</p>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">
+            Marca
+          </label>
+          <p className="font-medium">{product.brand_name}</p>
+        </div>
+
+        <div className="space-y-2 md:col-span-2 lg:col-span-3">
+          <label className="text-sm font-medium text-muted-foreground">
+            Stock por Almacén
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {product.stock_warehouse.map((warehouse) => (
+              <div
+                key={warehouse.warehouse_id}
+                className="flex items-center justify-between p-3 border rounded-lg"
+              >
+                <span className="font-medium text-sm">
+                  {warehouse.warehouse_name}
+                </span>
+                <Badge variant="secondary" className="text-sm font-semibold">
+                  {warehouse.stock}
                 </Badge>
               </div>
-
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Categoría</p>
-                <p className="font-semibold">{product.category_name}</p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Marca</p>
-                <p className="font-semibold">{product.brand_name}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Stock por Almacén */}
-        <Card className="!gap-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Warehouse className="h-5 w-5" />
-              Stock por Almacén
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {product.stock_warehouse.map((warehouse) => (
-                <div
-                  key={warehouse.warehouse_id}
-                  className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border hover:bg-muted/50 transition-colors"
-                >
-                  <span className="font-semibold text-sm">
-                    {warehouse.warehouse_name}
-                  </span>
-                  <Badge variant="secondary" className="text-sm font-bold">
-                    {warehouse.stock}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Images */}
-        <ProductImageGallery productId={parseInt(id!)} />
-      </div>
+            ))}
+          </div>
+        </div>
+      </GroupFormSection>
+      {/* Images */} <ProductImageGallery productId={parseInt(id!)} />
     </FormWrapper>
   );
 }

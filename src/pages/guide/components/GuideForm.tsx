@@ -103,7 +103,7 @@ export const GuideForm = ({
   const [selectedSales, setSelectedSales] = useState<number[]>([]);
   const [isSearchingSales, setIsSearchingSales] = useState(false);
   const [searchParams, setSearchParams] = useState({
-    document_type: "FACTURA",
+    document_type: "BOLETA",
     serie: "",
     numero_inicio: "",
     numero_fin: "",
@@ -324,6 +324,24 @@ export const GuideForm = ({
     form.setValue("issue_date", formattedDate);
     form.setValue("transfer_date", formattedDate);
   }, [form]);
+
+  // Calcular peso total automáticamente cuando cambian las ventas seleccionadas
+  useEffect(() => {
+    if (selectedSales.length > 0 && salesByRange.length > 0) {
+      const totalWeight = salesByRange
+        .filter((sale) => selectedSales.includes(sale.id))
+        .reduce((sum, sale) => {
+          const weight = typeof sale.total_weight === 'string'
+            ? parseFloat(sale.total_weight)
+            : sale.total_weight;
+          return sum + (weight || 0);
+        }, 0);
+
+      form.setValue("total_weight", totalWeight as any);
+    } else if (selectedSales.length === 0) {
+      form.setValue("total_weight", 0 as any);
+    }
+  }, [selectedSales, salesByRange, form]);
 
   const handleFormSubmit = (data: any) => {
     // Validar que se hayan seleccionado ventas

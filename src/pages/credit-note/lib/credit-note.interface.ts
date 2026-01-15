@@ -97,12 +97,21 @@ export interface CreditNoteResponse {
 
 // ===== CREATE/UPDATE REQUESTS =====
 
+export interface CreateCreditNoteDetailRequest {
+  sale_detail_id: number;
+  product_id: number;
+  quantity_sacks: number;
+  quantity_kg: number;
+  unit_price: number;
+}
+
 export interface CreateCreditNoteRequest {
   sale_id: number;
   issue_date: string;
   credit_note_motive_id: number;
   affects_stock: boolean;
   observations: string;
+  details: CreateCreditNoteDetailRequest[];
 }
 
 export interface UpdateCreditNoteRequest {
@@ -111,6 +120,7 @@ export interface UpdateCreditNoteRequest {
   credit_note_motive_id?: number;
   affects_stock?: boolean;
   observations?: string;
+  details?: CreateCreditNoteDetailRequest[];
 }
 
 // ===== QUERY PROPS =====

@@ -74,6 +74,13 @@ export default function CreditNoteAddPage() {
         credit_note_motive_id: Number(data.credit_note_motive_id),
         affects_stock: data.affects_stock,
         observations: data.observations || "",
+        details: data.details.map((detail) => ({
+          sale_detail_id: detail.sale_detail_id,
+          product_id: detail.product_id,
+          quantity_sacks: detail.quantity_sacks,
+          quantity_kg: detail.quantity_kg,
+          unit_price: detail.unit_price,
+        })),
       });
       successToast(SUCCESS_MESSAGE(MODEL, "create"));
       navigate(ROUTE);

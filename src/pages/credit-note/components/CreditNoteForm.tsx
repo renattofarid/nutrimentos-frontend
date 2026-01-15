@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { format } from "date-fns";
 
 interface CreditNoteFormProps {
   defaultValues: Partial<CreditNoteSchema>;
@@ -49,9 +50,9 @@ export const CreditNoteForm = ({
   const form = useForm<CreditNoteSchema>({
     resolver: zodResolver(creditNoteSchemaCreate),
     defaultValues: {
-      sale_id: undefined,
-      issue_date: "",
-      credit_note_motive_id: undefined,
+      sale_id: "0",
+      issue_date: format(new Date(), "yyyy-MM-dd"),
+      credit_note_motive_id: "0",
       affects_stock: true,
       observations: "",
       details: [],
@@ -84,8 +85,8 @@ export const CreditNoteForm = ({
         (detail) => ({
           sale_detail_id: detail.id,
           product_id: detail.product_id,
-          quantity_sacks: detail.quantity,
-          quantity_kg: 0,
+          quantity_sacks: detail.quantity_sacks || 0,
+          quantity_kg: detail.quantity_kg || 0,
           unit_price: detail.unit_price,
           selected: false,
         })
@@ -96,9 +97,26 @@ export const CreditNoteForm = ({
     }
   }, [selectedSale, replace]);
 
+  // Handler para transformar los datos antes de enviar
+  const handleSubmit = (data: CreditNoteSchema) => {
+    // Filtrar solo los detalles seleccionados y remover el campo 'selected'
+    const filteredDetails = data.details
+      .filter((detail) => detail.selected)
+      .map(({ selected, ...rest }) => rest);
+
+    // Enviar los datos transformados
+    onSubmit({
+      ...data,
+      details: filteredDetails as any,
+    });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 w-full">
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-4 w-full"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sidebar p-4 rounded-lg">
           <FormSelect
             control={form.control}
@@ -223,42 +241,183 @@ export const CreditNoteForm = ({
                   <Badge variant="outline">{selectedSale.payment_type}</Badge>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        )}
 
-              {/* Detalles de productos */}
-              {selectedSale.details && selectedSale.details.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-sm font-semibold mb-2">
-                    Productos ({selectedSale.details.length})
-                  </p>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {selectedSale.details.map((detail, index) => (
-                      <div
-                        key={detail.id || index}
-                        className="flex justify-between items-center p-2 bg-background rounded border"
-                      >
+        {/* Detalles seleccionables para la nota de crédito */}
+        {fields.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">
+                Detalles de la Nota de Crédito
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Seleccione los productos y ajuste las cantidades/precios para
+                incluir en la nota de crédito
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {fields.map((field, index) => {
+                  const detail = selectedSale?.details[index];
+                  if (!detail) return null;
+
+                  return (
+                    <div
+                      key={field.id}
+                      className="border rounded-lg p-4 space-y-3"
+                    >
+                      <div className="flex items-start gap-3">
+                        <FormField
+                          control={form.control}
+                          name={`details.${index}.selected`}
+                          render={({ field: checkboxField }) => (
+                            <FormItem className="flex items-center space-y-0 pt-2">
+                              <FormControl>
+                                <Checkbox
+                                  checked={checkboxField.value}
+                                  onCheckedChange={checkboxField.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+
                         <div className="flex-1">
-                          <p className="font-medium text-sm">
-                            {detail.product.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {detail.product.codigo} | {detail.quantity}{" "}
-                            {detail.product.unit} x{" "}
-                            {selectedSale.currency === "USD" ? "$" : "S/."}{" "}
-                            {parseFloat(detail.unit_price.toString()).toFixed(
-                              2
-                            )}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold">
-                            {selectedSale.currency === "USD" ? "$" : "S/."}{" "}
-                            {parseFloat(detail.total.toString()).toFixed(2)}
-                          </p>
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <p className="font-semibold">
+                                {detail.product.name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Código: {detail.product.codigo} | Unidad:{" "}
+                                {detail.product.unit}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm text-muted-foreground">
+                                Total Original
+                              </p>
+                              <p className="font-bold">
+                                {selectedSale.currency === "USD" ? "$" : "S/."}{" "}
+                                {parseFloat(detail.total.toString()).toFixed(2)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <FormField
+                              control={form.control}
+                              name={`details.${index}.quantity_sacks`}
+                              render={({ field: qtySacksField }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">
+                                    Cantidad Sacos
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      placeholder="0"
+                                      {...qtySacksField}
+                                      onChange={(e) =>
+                                        qtySacksField.onChange(
+                                          parseFloat(e.target.value) || 0
+                                        )
+                                      }
+                                      disabled={
+                                        !form.watch(`details.${index}.selected`)
+                                      }
+                                    />
+                                  </FormControl>
+                                  <p className="text-xs text-muted-foreground">
+                                    Máx: {detail.quantity_sacks}
+                                  </p>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name={`details.${index}.quantity_kg`}
+                              render={({ field: qtyKgField }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">
+                                    Cantidad Kg
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      placeholder="0"
+                                      {...qtyKgField}
+                                      onChange={(e) =>
+                                        qtyKgField.onChange(
+                                          parseFloat(e.target.value) || 0
+                                        )
+                                      }
+                                      disabled={
+                                        !form.watch(`details.${index}.selected`)
+                                      }
+                                    />
+                                  </FormControl>
+                                  <p>
+                                    <span className="text-xs text-muted-foreground">
+                                      Máx: {detail.quantity_kg}
+                                    </span>
+                                  </p>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name={`details.${index}.unit_price`}
+                              render={({ field: priceField }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">
+                                    Precio Unitario
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      placeholder="0.00"
+                                      {...priceField}
+                                      onChange={(e) =>
+                                        priceField.onChange(
+                                          parseFloat(e.target.value) || 0
+                                        )
+                                      }
+                                      disabled={
+                                        !form.watch(`details.${index}.selected`)
+                                      }
+                                    />
+                                  </FormControl>
+                                  <p className="text-xs text-muted-foreground">
+                                    Original:{" "}
+                                    {parseFloat(
+                                      detail.unit_price.toString()
+                                    ).toFixed(2)}
+                                  </p>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {form.formState.errors.details?.root && (
+                <p className="text-sm text-destructive mt-2">
+                  {form.formState.errors.details.root.message}
+                </p>
               )}
             </CardContent>
           </Card>
@@ -268,7 +427,7 @@ export const CreditNoteForm = ({
           <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             Cancelar
           </Button>
-         <Button
+          <Button
             size="sm"
             type="submit"
             disabled={isSubmitting || !form.formState.isValid}

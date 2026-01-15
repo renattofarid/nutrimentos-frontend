@@ -18,6 +18,8 @@ export const guideSchema = z.object({
   sale_document_number: z
     .string()
     .min(1, { message: "El número de documento de venta es requerido" }),
+  // Campos del transportista
+  carrier_id: z.string().optional(), // ID interno, no se envía al backend
   carrier_document_type: z
     .string()
     .min(1, { message: "El tipo de documento del transportista es requerido" }),
@@ -37,10 +39,13 @@ export const guideSchema = z.object({
     .string()
     .min(1, { message: "El número MTC es requerido" }),
   vehicle_plate: z.string().optional(),
+  // Campos del conductor
+  driver_id: z.string().optional(), // ID interno, no se envía al backend
   driver_document_type: z.string().optional(),
   driver_document_number: z.string().optional(),
   driver_name: z.string().optional(),
   driver_license: z.string().optional(),
+  // Direcciones
   origin_address: z
     .string()
     .min(1, { message: "La dirección de origen es requerida" }),
@@ -51,6 +56,7 @@ export const guideSchema = z.object({
   ubigeo_destination_id: requiredStringId(
     "Debe seleccionar un ubigeo de destino"
   ),
+  // Información de carga
   unit_measurement: z
     .string()
     .min(1, { message: "La unidad de medida es requerida" }),

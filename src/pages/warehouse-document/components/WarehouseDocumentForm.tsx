@@ -21,14 +21,17 @@ import {
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
-import { Plus, Package, FileText } from "lucide-react";
-import { useFieldArray } from "react-hook-form";
+import { Package, FileText, AlertCircle } from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
-import { useState, useMemo } from "react";
-import WarehouseDocumentDetailSheet from "./WarehouseDocumentDetailSheet";
-import { EmptyState } from "@/components/EmptyState";
-import { DataTable } from "@/components/DataTable";
-import { createWarehouseDocumentDetailsColumns } from "./WarehouseDocumentDetailsColumns";
+import { useState, useEffect } from "react";
+import {
+  ExcelGrid,
+  type ExcelGridColumn,
+  type ProductOption,
+} from "@/components/ExcelGrid";
+import { formatNumber } from "@/lib/formatCurrency";
+import type { PurchaseResource } from "@/pages/purchase/lib/purchase.interface";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface WarehouseDocumentFormProps {
   onSubmit: (data: WarehouseDocumentSchema) => void;
@@ -38,7 +41,19 @@ interface WarehouseDocumentFormProps {
   warehouses: WarehouseResource[];
   persons: PersonResource[];
   products: ProductResource[];
+  purchases?: PurchaseResource[];
   onCancel?: () => void;
+}
+
+interface DetailRow {
+  product_id: string;
+  product_code?: string;
+  product_name?: string;
+  quantity_sacks: string;
+  quantity_kg: string;
+  unit_price: string;
+  observations: string;
+  total: number;
 }
 
 export default function WarehouseDocumentForm({
@@ -49,10 +64,10 @@ export default function WarehouseDocumentForm({
   warehouses,
   persons,
   products,
+  purchases = [],
   onCancel,
 }: WarehouseDocumentFormProps) {
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [details, setDetails] = useState<DetailRow[]>([]);
 
   const form = useForm({
     resolver: zodResolver(warehouseDocumentSchemaCreate) as any,
@@ -70,92 +85,326 @@ export default function WarehouseDocumentForm({
     },
   });
 
-  const { fields, append, remove, update } = useFieldArray({
-    control: form.control,
-    name: "details",
-  });
-
   const documentType = form.watch("document_type");
   const isTraslado = documentType === "TRASLADO";
+  const selectedPurchaseId = form.watch("purchase_id");
 
-  const [initialDetailData, setInitialDetailData] = useState<
-    | {
-        product_id: string;
-        quantity_sacks: number;
-        quantity_kg?: number;
-        unit_price: number;
-        observations: string;
-      }
-    | undefined
-  >(undefined);
+  // Inicializar detalles desde defaultValues (para modo edición)
+  useEffect(() => {
+    if (
+      mode === "update" &&
+      defaultValues?.details &&
+      defaultValues.details.length > 0
+    ) {
+      const mappedDetails = defaultValues.details.map((detail: any) => {
+        const product = products.find(
+          (p) => p.id.toString() === detail.product_id
+        );
+        const quantityKg = parseFloat(detail.quantity_kg || "0");
+        const unitPrice = parseFloat(detail.unit_price || "0");
+        const total = quantityKg * unitPrice;
 
-  const openSheet = (index?: number) => {
-    if (index !== undefined) {
-      setEditingIndex(index);
-      const detail = fields[index];
-      setInitialDetailData({
-        product_id: detail.product_id,
-        quantity_sacks: detail.quantity_sacks,
-        quantity_kg: detail.quantity_kg,
-        unit_price: detail.unit_price,
-        observations: detail.observations || "",
+        return {
+          product_id: detail.product_id,
+          product_code: product?.codigo,
+          product_name: product?.name,
+          quantity_sacks: detail.quantity_sacks?.toString() || "",
+          quantity_kg: detail.quantity_kg?.toString() || "",
+          unit_price: detail.unit_price?.toString() || "",
+          observations: detail.observations || "",
+          total,
+        };
       });
-    } else {
-      setEditingIndex(null);
-      setInitialDetailData(undefined);
+      setDetails(mappedDetails);
+      form.clearErrors("details");
     }
-    setIsSheetOpen(true);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleSaveDetail = (data: {
-    product_id: string;
-    quantity_sacks: number;
-    quantity_kg?: number;
-    unit_price: number;
-    observations: string;
-  }) => {
-    if (editingIndex !== null) {
-      update(editingIndex, data);
-    } else {
-      append(data);
+  // Cargar detalles cuando se selecciona una compra
+  useEffect(() => {
+    if (selectedPurchaseId && selectedPurchaseId !== "") {
+      const selectedPurchase = purchases.find(
+        (p) => p.id.toString() === selectedPurchaseId
+      );
+
+      if (selectedPurchase) {
+        // Llenar automáticamente el almacén, tipo de documento y motivo
+        form.setValue(
+          "warehouse_origin_id",
+          selectedPurchase.warehouse_id.toString()
+        );
+        form.setValue("document_type", "INGRESO");
+        form.setValue("motive", "COMPRA");
+
+        // Llenar los detalles si existen
+        if (selectedPurchase.details) {
+          const mappedDetails: DetailRow[] = selectedPurchase.details.map(
+            (detail) => {
+              const product = products.find((p) => p.id === detail.product.id);
+              const quantityKg = detail.quantity_kg;
+              const unitPrice = detail.unit_price;
+              const total = quantityKg * unitPrice;
+
+              return {
+                product_id: detail.product.id.toString(),
+                product_code: product?.codigo || detail.product.codigo,
+                product_name: product?.name || detail.product.name,
+                quantity_sacks: detail.quantity_sacks.toString(),
+                quantity_kg: detail.quantity_kg.toString(),
+                unit_price: detail.unit_price.toString(),
+                observations: "",
+                total,
+              };
+            }
+          );
+
+          setDetails(mappedDetails);
+          // Actualizar el campo details del formulario
+          form.setValue(
+            "details",
+            convertDetailsToSchema(mappedDetails) as any
+          );
+          form.clearErrors("details");
+        }
+      }
+    } else if (selectedPurchaseId === "" && mode === "create") {
+      // Si se deselecciona la compra, limpiar los detalles y los campos relacionados
+      setDetails([]);
+      form.setValue("details", []);
+      form.setValue("warehouse_origin_id", "");
+      form.setValue("document_type", "");
+      form.setValue("motive", "");
     }
-    setIsSheetOpen(false);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPurchaseId]);
 
-  const getProductName = (productId: string) => {
-    return products.find((p) => p.id.toString() === productId)?.name || "";
-  };
-
-  const tableData = useMemo(() => {
-    return fields.map((field) => ({
-      id: field.id,
-      product_id: field.product_id,
-      product_name: getProductName(field.product_id),
-      quantity_sacks: field.quantity_sacks,
-      quantity_kg: field.quantity_kg,
-      unit_price: field.unit_price,
-      total: field.quantity_sacks * field.unit_price,
+  // Función para convertir DetailRow[] a formato del schema
+  const convertDetailsToSchema = (details: DetailRow[]) => {
+    return details.map((detail) => ({
+      product_id: detail.product_id,
+      quantity_sacks: parseFloat(detail.quantity_sacks) || 0,
+      quantity_kg: parseFloat(detail.quantity_kg) || undefined,
+      unit_price: parseFloat(detail.unit_price) || 0,
+      observations: detail.observations || "",
     }));
-  }, [fields, products]);
-
-  const getFieldIndex = (id: string) => {
-    return fields.findIndex((field) => field.id === id);
   };
 
-  const columns = useMemo(
-    () =>
-      createWarehouseDocumentDetailsColumns(openSheet, remove, getFieldIndex),
-    [fields]
-  );
+  // Funciones para ExcelGrid
+  const handleAddRow = () => {
+    const newDetail: DetailRow = {
+      product_id: "",
+      product_code: "",
+      product_name: "",
+      quantity_sacks: "",
+      quantity_kg: "",
+      unit_price: "",
+      observations: "",
+      total: 0,
+    };
+    const updatedDetails = [...details, newDetail];
+    setDetails(updatedDetails);
+    // Actualizar el campo details del formulario para que la validación funcione
+    form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
+    if (updatedDetails.length > 0) {
+      form.clearErrors("details");
+    }
+  };
+
+  const handleRemoveRow = (index: number) => {
+    const updatedDetails = details.filter((_, i) => i !== index);
+    setDetails(updatedDetails);
+    // Actualizar el campo details del formulario
+    form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
+    if (updatedDetails.length === 0) {
+      form.setError("details", { message: "Debe agregar al menos un detalle" });
+    }
+  };
+
+  const handleCellChange = (index: number, field: string, value: string) => {
+    const updatedDetails = [...details];
+    updatedDetails[index] = { ...updatedDetails[index], [field]: value };
+
+    // Recalcular totales cuando cambian cantidad o precio
+    if (field === "quantity_kg" || field === "unit_price") {
+      const detail = updatedDetails[index];
+      const quantityKg = parseFloat(detail.quantity_kg) || 0;
+      const unitPrice = parseFloat(detail.unit_price) || 0;
+      const total = quantityKg * unitPrice;
+
+      updatedDetails[index] = {
+        ...updatedDetails[index],
+        total,
+      };
+    }
+
+    setDetails(updatedDetails);
+    // Actualizar el campo details del formulario
+    form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
+    form.clearErrors("details");
+  };
+
+  const handleProductSelect = (index: number, product: ProductOption) => {
+    const selectedProduct = products.find(
+      (p) => p.id.toString() === product.id
+    );
+    if (!selectedProduct) return;
+
+    const updatedDetails = [...details];
+    updatedDetails[index] = {
+      ...updatedDetails[index],
+      product_id: product.id,
+      product_code: product.codigo,
+      product_name: product.name,
+    };
+
+    setDetails(updatedDetails);
+    // Actualizar el campo details del formulario
+    form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
+    form.clearErrors("details");
+  };
+
+  const calculateDetailsTotal = () => {
+    return details.reduce((sum, detail) => sum + (detail.total || 0), 0);
+  };
+
+  // Configuración de columnas para ExcelGrid
+  const gridColumns: ExcelGridColumn<DetailRow>[] = [
+    {
+      id: "product_code",
+      header: "Código",
+      type: "product-code",
+      width: "120px",
+      accessor: "product_code",
+    },
+    {
+      id: "product",
+      header: "Producto",
+      type: "product-search",
+      width: "300px",
+      accessor: "product_name",
+    },
+    {
+      id: "quantity_sacks",
+      header: "Sacos",
+      type: "number",
+      width: "100px",
+      accessor: "quantity_sacks",
+    },
+    {
+      id: "quantity_kg",
+      header: "Cantidad (KG)",
+      type: "number",
+      width: "120px",
+      accessor: "quantity_kg",
+    },
+    {
+      id: "unit_price",
+      header: "Precio Unitario",
+      type: "number",
+      width: "120px",
+      accessor: "unit_price",
+    },
+    {
+      id: "total",
+      header: "Total",
+      type: "readonly",
+      width: "120px",
+      render: (row) => (
+        <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold">
+          {row.total ? `S/. ${formatNumber(row.total)}` : "-"}
+        </div>
+      ),
+    },
+    {
+      id: "observations",
+      header: "Observaciones",
+      type: "text",
+      width: "200px",
+      accessor: "observations",
+    },
+  ];
+
+  // Preparar opciones de productos para el grid
+  const productOptions: ProductOption[] = products.map((product) => ({
+    id: product.id.toString(),
+    codigo: product.codigo,
+    name: product.name,
+  }));
+
+  // Validar detalles antes del submit
+  const validateDetails = () => {
+    if (details.length === 0) {
+      form.setError("details", {
+        message: "Debe agregar al menos un detalle",
+      });
+      return false;
+    }
+
+    // Validar que cada detalle tenga los campos requeridos
+    for (let i = 0; i < details.length; i++) {
+      const detail = details[i];
+      if (!detail.product_id) {
+        form.setError("details", {
+          message: `Fila ${i + 1}: Debe seleccionar un producto`,
+        });
+        return false;
+      }
+      if (!detail.quantity_sacks || parseFloat(detail.quantity_sacks) <= 0) {
+        form.setError("details", {
+          message: `Fila ${i + 1}: La cantidad en sacos debe ser mayor a 0`,
+        });
+        return false;
+      }
+      if (!detail.unit_price || parseFloat(detail.unit_price) < 0) {
+        form.setError("details", {
+          message: `Fila ${i + 1}: El precio unitario es requerido`,
+        });
+        return false;
+      }
+    }
+
+    return true;
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit((data) => {
+          // Validar detalles
+          if (!validateDetails()) {
+            return;
+          }
+
+          // Convertir los detalles antes de enviar
+          const formattedData = {
+            ...data,
+            details: convertDetailsToSchema(details),
+          };
+          onSubmit(formattedData as any);
+        })}
+        className="space-y-6"
+      >
         <GroupFormSection
           title="Información General"
           icon={FileText}
           cols={{ sm: 1, md: 2, lg: 3 }}
         >
+          <FormSelect
+            control={form.control}
+            name="purchase_id"
+            label="Compra (Opcional)"
+            placeholder="Seleccione una compra"
+            options={[
+              { value: "", label: "Ninguna" },
+              ...purchases.map((purchase) => ({
+                value: purchase.id.toString(),
+                label: `${purchase.document_number} - ${purchase.supplier_fullname}`,
+                description: `Total: S/. ${purchase.total_amount}`,
+              })),
+            ]}
+          />
+
           <FormSelect
             control={form.control}
             name="document_type"
@@ -178,12 +427,6 @@ export default function WarehouseDocumentForm({
             }))}
           />
 
-          <DatePickerFormField
-            control={form.control}
-            name="movement_date"
-            label="Fecha del Movimiento"
-          />
-
           <FormSelect
             control={form.control}
             name="warehouse_origin_id"
@@ -193,6 +436,12 @@ export default function WarehouseDocumentForm({
               value: w.id.toString(),
               label: w.name,
             }))}
+          />
+
+          <DatePickerFormField
+            control={form.control}
+            name="movement_date"
+            label="Fecha del Movimiento"
           />
 
           <FormSelect
@@ -236,14 +485,6 @@ export default function WarehouseDocumentForm({
             </>
           )}
 
-          <FormSelect
-            control={form.control}
-            name="purchase_id"
-            label="Compra (Opcional)"
-            placeholder="Seleccione una compra"
-            options={[{ value: "", label: "Ninguna" }]}
-          />
-
           <div className="md:col-span-3">
             <FormField
               control={form.control}
@@ -270,49 +511,45 @@ export default function WarehouseDocumentForm({
           icon={Package}
           cols={{ sm: 1 }}
         >
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <p className="text-sm text-muted-foreground">
-                {fields.length} producto(s) agregado(s)
-              </p>
-              <Button
-                type="button"
-                onClick={() => openSheet()}
-                size="sm"
-                variant="outline"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Agregar Producto
-              </Button>
-            </div>
+          <ExcelGrid
+            columns={gridColumns}
+            data={details}
+            onAddRow={handleAddRow}
+            onRemoveRow={handleRemoveRow}
+            onCellChange={handleCellChange}
+            productOptions={productOptions}
+            onProductSelect={handleProductSelect}
+            emptyMessage="Agregue productos al documento"
+          />
 
-            {fields.length > 0 ? (
-              <DataTable
-                columns={columns}
-                data={tableData}
-                isVisibleColumnFilter={false}
-              />
-            ) : (
-              <EmptyState
-                icon={Package}
-                title="No hay productos agregados"
-                description="Agrega productos para completar el documento de almacén"
-                action={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openSheet()}
-                    className="gap-2 w-full sm:w-auto"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Agregar primer producto</span>
-                  </Button>
-                }
-              />
-            )}
-          </div>
+          {details.length > 0 && (
+            <div className="mt-4 p-4 bg-muted/30 rounded-lg border">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-bold">Total:</span>
+                <span className="text-xl font-bold text-primary">
+                  S/. {formatNumber(calculateDetailsTotal())}
+                </span>
+              </div>
+            </div>
+          )}
         </GroupFormSection>
+
+        {Object.keys(form.formState.errors).length > 0 && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Errores en el formulario</AlertTitle>
+            <AlertDescription>
+              <ul className="list-disc list-inside space-y-1">
+                {Object.entries(form.formState.errors).map(([field, error]) => (
+                  <li key={field}>
+                    <strong>{getFieldLabel(field)}:</strong>{" "}
+                    {error?.message?.toString() || "Campo inválido"}
+                  </li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="flex justify-end gap-2">
           {onCancel && (
@@ -329,15 +566,23 @@ export default function WarehouseDocumentForm({
           </Button>
         </div>
       </form>
-
-      <WarehouseDocumentDetailSheet
-        open={isSheetOpen}
-        onClose={() => setIsSheetOpen(false)}
-        onSave={handleSaveDetail}
-        products={products}
-        initialData={initialDetailData}
-        isEditing={editingIndex !== null}
-      />
     </Form>
   );
+}
+
+// Función auxiliar para obtener el label de un campo
+function getFieldLabel(field: string): string {
+  const labels: Record<string, string> = {
+    warehouse_origin_id: "Almacén de Origen",
+    warehouse_dest_id: "Almacén de Destino",
+    document_type: "Tipo de Documento",
+    motive: "Motivo",
+    responsible_origin_id: "Responsable de Origen",
+    responsible_dest_id: "Responsable de Destino",
+    movement_date: "Fecha del Movimiento",
+    purchase_id: "Compra",
+    observations: "Observaciones",
+    details: "Detalles del Documento",
+  };
+  return labels[field] || field;
 }

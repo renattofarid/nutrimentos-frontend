@@ -12,7 +12,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -55,6 +54,9 @@ import { format } from "date-fns";
 import { getSalesByRange } from "@/pages/sale/lib/sale.actions";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import { toast } from "sonner";
+import { useAllDrivers } from "@/pages/driver/lib/driver.hook";
+import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
+import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
 
 interface GuideFormProps {
   defaultValues: Partial<GuideSchema>;
@@ -105,6 +107,22 @@ export const GuideForm = ({
     numero_fin: "",
   });
 
+  // Cargar conductores y transportistas
+  const drivers = useAllDrivers();
+  const carriers = useAllCarriers();
+
+  // Estados para conductor y transportista seleccionados
+  const [selectedDriver, setSelectedDriver] = useState<PersonResource | null>(
+    null
+  );
+  const [selectedCarrier, setSelectedCarrier] = useState<PersonResource | null>(
+    null
+  );
+
+  // Estados para búsqueda de documentos
+  const [isSearchingCarrier, setIsSearchingCarrier] = useState(false);
+  const [isSearchingDriver, setIsSearchingDriver] = useState(false);
+
   const formatUbigeoLabel = (ubigeo: UbigeoResource): string => {
     const parts = ubigeo.cadena.split("-");
     if (parts.length >= 4) {
@@ -153,15 +171,8 @@ export const GuideForm = ({
   });
 
   const selectedBranchId = form.watch("branch_id");
-  const carrierRuc = form.watch("carrier_ruc");
   const carrierDocumentType = form.watch("carrier_document_type");
-
-  // Sincronizar carrier_ruc con carrier_document_number cuando el tipo es RUC
-  useEffect(() => {
-    if (carrierDocumentType === "RUC" && carrierRuc) {
-      form.setValue("carrier_document_number", carrierRuc);
-    }
-  }, [carrierRuc, carrierDocumentType, form]);
+  const driverDocumentType = form.watch("driver_document_type");
 
   // Filtrar warehouses por branch
   useEffect(() => {
@@ -188,44 +199,105 @@ export const GuideForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBranchId, warehouses]);
 
-  // Función para buscar RUC del transportista
-  const handleSearchCarrierRUC = async () => {
-    const ruc = form.getValues("carrier_ruc");
-    if (!ruc || ruc.length !== 11) {
+  // Función para buscar transportista por número de documento
+  const handleSearchCarrierDocument = async () => {
+    const documentNumber = form.getValues("carrier_document_number");
+    const documentType = form.getValues("carrier_document_type");
+
+    if (!documentNumber || !documentType) {
       return;
     }
 
+    setIsSearchingCarrier(true);
+
     try {
-      const result = await searchRUC({ search: ruc });
-      if (result && isValidData(result.message) && result.data) {
-        form.setValue("carrier_name", result.data.business_name || "");
+      // Primero buscar en la lista de transportistas existentes
+      const existingCarrier = carriers?.find(
+        (c) => c.number_document === documentNumber
+      );
+
+      if (existingCarrier) {
+        setSelectedCarrier(existingCarrier);
         form.setValue(
-          "carrier_document_number",
-          result.data.number_document || ""
+          "carrier_name",
+          existingCarrier.business_name ||
+            `${existingCarrier.names} ${existingCarrier.father_surname}`.trim()
         );
-        form.setValue("carrier_document_type", "RUC");
+        form.setValue("carrier_ruc", existingCarrier.number_document || "");
+        toast.success("Transportista encontrado en el sistema");
+        return;
+      }
+
+      // Si no existe, buscar en APIs externas
+      if (documentType === "RUC" && documentNumber.length === 11) {
+        const result = await searchRUC({ search: documentNumber });
+        if (result && isValidData(result.message) && result.data) {
+          form.setValue("carrier_name", result.data.business_name || "");
+          form.setValue("carrier_ruc", result.data.number_document || "");
+          toast.success("Datos obtenidos de SUNAT");
+        } else {
+          toast.warning("No se encontró información del RUC");
+        }
+      } else if (documentType === "DNI" && documentNumber.length === 8) {
+        const result = await searchDNI({ search: documentNumber });
+        if (result && isValidData(result.message) && result.data) {
+          const fullName = `${result.data.names} ${result.data.father_surname} ${result.data.mother_surname}`;
+          form.setValue("carrier_name", fullName.trim());
+          toast.success("Datos obtenidos de RENIEC");
+        } else {
+          toast.warning("No se encontró información del DNI");
+        }
       }
     } catch (error) {
-      console.error("Error searching RUC:", error);
+      console.error("Error searching carrier document:", error);
+      toast.error("Error al buscar el documento");
+    } finally {
+      setIsSearchingCarrier(false);
     }
   };
 
-  // Función para buscar DNI del conductor
-  const handleSearchDriverDNI = async () => {
-    const dni = form.getValues("driver_document_number");
-    if (!dni || dni.length !== 8) {
+  // Función para buscar conductor por número de documento
+  const handleSearchDriverDocument = async () => {
+    const documentNumber = form.getValues("driver_document_number");
+    const documentType = form.getValues("driver_document_type");
+
+    if (!documentNumber || !documentType) {
       return;
     }
 
+    setIsSearchingDriver(true);
+
     try {
-      const result = await searchDNI({ search: dni });
-      if (result && isValidData(result.message) && result.data) {
-        const fullName = `${result.data.names} ${result.data.father_surname} ${result.data.mother_surname}`;
-        form.setValue("driver_name", fullName.trim());
-        form.setValue("driver_document_type", "DNI");
+      // Primero buscar en la lista de conductores existentes
+      const existingDriver = drivers?.find(
+        (d) => d.number_document === documentNumber
+      );
+
+      if (existingDriver) {
+        setSelectedDriver(existingDriver);
+        const fullName = existingDriver.business_name ||
+          `${existingDriver.names} ${existingDriver.father_surname} ${existingDriver.mother_surname}`.trim();
+        form.setValue("driver_name", fullName);
+        toast.success("Conductor encontrado en el sistema");
+        return;
+      }
+
+      // Si no existe, buscar en API externa (solo DNI para conductores)
+      if (documentType === "DNI" && documentNumber.length === 8) {
+        const result = await searchDNI({ search: documentNumber });
+        if (result && isValidData(result.message) && result.data) {
+          const fullName = `${result.data.names} ${result.data.father_surname} ${result.data.mother_surname}`;
+          form.setValue("driver_name", fullName.trim());
+          toast.success("Datos obtenidos de RENIEC");
+        } else {
+          toast.warning("No se encontró información del DNI");
+        }
       }
     } catch (error) {
-      console.error("Error searching DNI:", error);
+      console.error("Error searching driver document:", error);
+      toast.error("Error al buscar el documento");
+    } finally {
+      setIsSearchingDriver(false);
     }
   };
 
@@ -304,6 +376,9 @@ export const GuideForm = ({
     }
 
     // Crear payload con los campos parseados correctamente
+    // NOTA: carrier_id y driver_id NO se envían al backend, solo se usan
+    // para llenar automáticamente los campos del formulario cuando se
+    // encuentra un transportista o conductor registrado en el sistema
     const payload = {
       branch_id: parseInt(data.branch_id),
       warehouse_id: parseInt(data.warehouse_id),
@@ -618,16 +693,16 @@ export const GuideForm = ({
           </div>
         </GroupFormSection>
 
-        {/* Información del Transportista */}
+        {/* Información del Transportista y Conductor */}
         <GroupFormSection
-          title="Información del Transportista"
+          title="Información del Transportista y Conductor"
           icon={Truck}
           cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
           <FormSelect
             control={form.control}
             name="carrier_document_type"
-            label="Tipo de Documento"
+            label="Tipo de Documento (Transportista)"
             placeholder="Seleccione"
             options={CARRIER_DOCUMENT_TYPES.map((dt) => ({
               value: dt.value,
@@ -640,20 +715,62 @@ export const GuideForm = ({
             name="carrier_document_number"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Número de Documento</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: 20123456789"
-                    {...field}
-                    disabled={carrierDocumentType === "RUC"}
-                  />
-                </FormControl>
-                {carrierDocumentType === "RUC" && (
-                  <p className="text-xs text-muted-foreground">
-                    Se sincroniza automáticamente con el RUC
-                  </p>
-                )}
+                <FormLabel>Número de Documento (Transportista)</FormLabel>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <Input
+                      variant="default"
+                      placeholder={
+                        carrierDocumentType === "RUC"
+                          ? "Ingrese 11 dígitos"
+                          : carrierDocumentType === "DNI"
+                          ? "Ingrese 8 dígitos"
+                          : "Ingrese el número"
+                      }
+                      {...field}
+                      maxLength={
+                        carrierDocumentType === "RUC"
+                          ? 11
+                          : carrierDocumentType === "DNI"
+                          ? 8
+                          : 11
+                      }
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "");
+                        field.onChange(value);
+
+                        // Auto-search cuando se completa
+                        if (
+                          (carrierDocumentType === "RUC" &&
+                            value.length === 11) ||
+                          (carrierDocumentType === "DNI" && value.length === 8)
+                        ) {
+                          setTimeout(() => handleSearchCarrierDocument(), 100);
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleSearchCarrierDocument}
+                    disabled={
+                      isSearchingCarrier ||
+                      !field.value ||
+                      ((carrierDocumentType === "RUC" &&
+                        field.value.length !== 11) ||
+                        (carrierDocumentType === "DNI" &&
+                          field.value.length !== 8))
+                    }
+                  >
+                    {isSearchingCarrier ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Search className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -683,24 +800,13 @@ export const GuideForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>RUC del Transportista</FormLabel>
-                <div className="flex gap-2">
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder="Ej: 20123456789"
-                      {...field}
-                    />
-                  </FormControl>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleSearchCarrierRUC}
-                    disabled={!field.value || field.value.length !== 11}
-                  >
-                    <Search className="h-4 w-4" />
-                  </Button>
-                </div>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Ej: 20123456789"
+                    {...field}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -742,18 +848,11 @@ export const GuideForm = ({
               </FormItem>
             )}
           />
-        </GroupFormSection>
 
-        {/* Información del Conductor */}
-        <GroupFormSection
-          title="Información del Conductor (Opcional)"
-          icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
-        >
           <FormSelect
             control={form.control}
             name="driver_document_type"
-            label="Tipo de Documento"
+            label="Tipo de Documento (Conductor)"
             placeholder="Seleccione"
             options={DRIVER_DOCUMENT_TYPES.map((dt) => ({
               value: dt.value,
@@ -766,24 +865,50 @@ export const GuideForm = ({
             name="driver_document_number"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Número de Documento</FormLabel>
+                <FormLabel>Número de Documento (Conductor)</FormLabel>
                 <div className="flex gap-2">
                   <FormControl>
                     <Input
                       variant="default"
-                      placeholder="Ej: 12345678"
+                      placeholder={
+                        driverDocumentType === "DNI"
+                          ? "Ingrese 8 dígitos"
+                          : "Ingrese el número"
+                      }
                       {...field}
                       value={field.value ?? ""}
+                      maxLength={driverDocumentType === "DNI" ? 8 : 11}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "");
+                        field.onChange(value);
+
+                        // Auto-search cuando se completa DNI
+                        if (
+                          driverDocumentType === "DNI" &&
+                          value.length === 8
+                        ) {
+                          setTimeout(() => handleSearchDriverDocument(), 100);
+                        }
+                      }}
                     />
                   </FormControl>
                   <Button
                     type="button"
                     variant="outline"
                     size="icon"
-                    onClick={handleSearchDriverDNI}
-                    disabled={!field.value || field.value.length !== 8}
+                    onClick={handleSearchDriverDocument}
+                    disabled={
+                      isSearchingDriver ||
+                      !field.value ||
+                      (driverDocumentType === "DNI" &&
+                        field.value.length !== 8)
+                    }
                   >
-                    <Search className="h-4 w-4" />
+                    {isSearchingDriver ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Search className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 <FormMessage />
@@ -796,7 +921,7 @@ export const GuideForm = ({
             name="driver_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nombre del Conductor</FormLabel>
+                <FormLabel>Nombre del Conductor (Opcional)</FormLabel>
                 <FormControl>
                   <Input
                     variant="default"
@@ -815,7 +940,7 @@ export const GuideForm = ({
             name="driver_license"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Licencia de Conducir</FormLabel>
+                <FormLabel>Licencia de Conducir (Opcional)</FormLabel>
                 <FormControl>
                   <Input
                     variant="default"
@@ -830,9 +955,9 @@ export const GuideForm = ({
           />
         </GroupFormSection>
 
-        {/* Direcciones */}
+        {/* Direcciones, Carga y Observaciones */}
         <GroupFormSection
-          title="Direcciones de Origen y Destino"
+          title="Direcciones, Carga y Observaciones"
           icon={MapPin}
           cols={{ sm: 1, md: 2 }}
         >
@@ -843,7 +968,12 @@ export const GuideForm = ({
               <FormItem>
                 <FormLabel>Dirección de Origen</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Ej: Av. Principal 123" {...field} />
+                  <Input
+                    variant="default"
+                    placeholder="Ej: Av. Principal 123"
+                    className="w-full"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -874,7 +1004,12 @@ export const GuideForm = ({
               <FormItem>
                 <FormLabel>Dirección de Destino</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Ej: Av. Secundaria 456" {...field} />
+                  <Input
+                    variant="default"
+                    placeholder="Ej: Av. Secundaria 456"
+                    className="w-full"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -897,14 +1032,7 @@ export const GuideForm = ({
             formatLabel={formatUbigeoLabel}
             formatDescription={(ubigeo) => ubigeo.ubigeo_code}
           />
-        </GroupFormSection>
 
-        {/* Información de Carga */}
-        <GroupFormSection
-          title="Información de Carga"
-          icon={Truck}
-          cols={{ sm: 1, md: 3 }}
-        >
           <FormSelect
             control={form.control}
             name="unit_measurement"
@@ -956,20 +1084,18 @@ export const GuideForm = ({
               </FormItem>
             )}
           />
-        </GroupFormSection>
 
-        {/* Observaciones */}
-        <div className="bg-sidebar p-4 rounded-lg space-y-4">
-          <h3 className="text-lg font-semibold">Observaciones (Opcional)</h3>
           <FormField
             control={form.control}
             name="observations"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="md:col-span-2">
+                <FormLabel>Observaciones (Opcional)</FormLabel>
                 <FormControl>
-                  <Textarea
+                  <Input
+                    variant="default"
                     placeholder="Observaciones adicionales"
-                    rows={4}
+                    className="w-full"
                     {...field}
                   />
                 </FormControl>
@@ -977,7 +1103,7 @@ export const GuideForm = ({
               </FormItem>
             )}
           />
-        </div>
+        </GroupFormSection>
 
         {/* Botones */}
         <div className="flex gap-4 w-full justify-end">

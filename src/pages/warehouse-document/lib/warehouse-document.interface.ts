@@ -2,6 +2,7 @@ import type { ModelComplete } from "@/lib/core.interface";
 import type { Links, Meta } from "@/lib/pagination.interface";
 import { FileText } from "lucide-react";
 import type { WarehouseDocumentSchema } from "./warehouse-document.schema";
+import { format } from "date-fns";
 
 const ROUTE = "/documentos-almacen";
 const NAME = "Documento de Almacén";
@@ -41,7 +42,7 @@ export const WAREHOUSE_DOCUMENT: ModelComplete<WarehouseDocumentSchema> = {
     warehouse_dest_id: "",
     responsible_origin_id: "",
     responsible_dest_id: "",
-    movement_date: "",
+    movement_date: format(new Date(), "yyyy-MM-dd"),
     purchase_id: "",
     observations: "",
     details: [],

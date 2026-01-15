@@ -13,6 +13,7 @@ import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { successToast, errorToast } from "@/lib/core.function";
 import PageSkeleton from "@/components/PageSkeleton";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
+import { useAllPurchases } from "@/pages/purchase/lib/purchase.hook";
 
 const { ICON, TITLES } = WAREHOUSE_DOCUMENT;
 
@@ -24,6 +25,7 @@ export default function WarehouseDocumentEditPage() {
   const { data: warehouses } = useAllWarehouses();
   const { data: persons = [] } = useAllWorkers();
   const { data: products } = useAllProducts();
+  const { data: purchases = [] } = useAllPurchases();
 
   const { data: document, isFinding } = useWarehouseDocumentById(parseInt(id!));
   const { updateDocument } = useWarehouseDocumentStore();
@@ -136,6 +138,7 @@ export default function WarehouseDocumentEditPage() {
             warehouses={warehouses}
             persons={persons}
             products={products}
+            purchases={purchases || []}
           />
         )}
       </div>

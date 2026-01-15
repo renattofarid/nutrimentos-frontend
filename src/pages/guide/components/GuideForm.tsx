@@ -21,7 +21,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader, Truck, MapPin, Search } from "lucide-react";
+import { Loader, Truck, MapPin, Search, Plus, Info } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Link } from "react-router-dom";
+import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import { FormSelect } from "@/components/FormSelect";
 import { SelectSearchForm } from "@/components/SelectSearchForm";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
@@ -40,7 +43,6 @@ import {
 import {
   MODALITIES,
   CARRIER_DOCUMENT_TYPES,
-  DRIVER_DOCUMENT_TYPES,
   UNIT_MEASUREMENTS,
   type GuideResource,
   type GuideMotiveResource,
@@ -111,9 +113,11 @@ export const GuideForm = ({
   const drivers = useAllDrivers();
   const carriers = useAllCarriers();
 
-  // Estados para búsqueda de documentos
+  // Estado para búsqueda de transportista
   const [isSearchingCarrier, setIsSearchingCarrier] = useState(false);
-  const [isSearchingDriver, setIsSearchingDriver] = useState(false);
+
+  // Estado para conductor seleccionado
+  const [selectedDriverId, setSelectedDriverId] = useState<string>("");
 
   const formatUbigeoLabel = (ubigeo: UbigeoResource): string => {
     const parts = ubigeo.cadena.split("-");
@@ -164,7 +168,6 @@ export const GuideForm = ({
 
   const selectedBranchId = form.watch("branch_id");
   const carrierDocumentType = form.watch("carrier_document_type");
-  const driverDocumentType = form.watch("driver_document_type");
 
   // Filtrar warehouses por branch
   useEffect(() => {
@@ -244,51 +247,6 @@ export const GuideForm = ({
       toast.error("Error al buscar el documento");
     } finally {
       setIsSearchingCarrier(false);
-    }
-  };
-
-  // Función para buscar conductor por número de documento
-  const handleSearchDriverDocument = async () => {
-    const documentNumber = form.getValues("driver_document_number");
-    const documentType = form.getValues("driver_document_type");
-
-    if (!documentNumber || !documentType) {
-      return;
-    }
-
-    setIsSearchingDriver(true);
-
-    try {
-      // Primero buscar en la lista de conductores existentes
-      const existingDriver = drivers?.find(
-        (d) => d.number_document === documentNumber
-      );
-
-      if (existingDriver) {
-        const fullName =
-          existingDriver.business_name ||
-          `${existingDriver.names} ${existingDriver.father_surname} ${existingDriver.mother_surname}`.trim();
-        form.setValue("driver_name", fullName);
-        toast.success("Conductor encontrado en el sistema");
-        return;
-      }
-
-      // Si no existe, buscar en API externa (solo DNI para conductores)
-      if (documentType === "DNI" && documentNumber.length === 8) {
-        const result = await searchDNI({ search: documentNumber });
-        if (result && isValidData(result.message) && result.data) {
-          const fullName = `${result.data.names} ${result.data.father_surname} ${result.data.mother_surname}`;
-          form.setValue("driver_name", fullName.trim());
-          toast.success("Datos obtenidos de RENIEC");
-        } else {
-          toast.warning("No se encontró información del DNI");
-        }
-      }
-    } catch (error) {
-      console.error("Error searching driver document:", error);
-      toast.error("Error al buscar el documento");
-    } finally {
-      setIsSearchingDriver(false);
     }
   };
 
@@ -848,116 +806,114 @@ export const GuideForm = ({
             )}
           />
 
-          <FormSelect
-            control={form.control}
-            name="driver_document_type"
-            label="Tipo de Documento (Conductor)"
-            placeholder="Seleccione"
-            options={DRIVER_DOCUMENT_TYPES.map((dt) => ({
-              value: dt.value,
-              label: dt.label,
-            }))}
-          />
-
-          <FormField
-            control={form.control}
-            name="driver_document_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Número de Documento (Conductor)</FormLabel>
-                <div className="flex gap-2">
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder={
-                        driverDocumentType === "DNI"
-                          ? "Ingrese 8 dígitos"
-                          : "Ingrese el número"
-                      }
-                      {...field}
-                      value={field.value ?? ""}
-                      maxLength={driverDocumentType === "DNI" ? 8 : 11}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, "");
-                        field.onChange(value);
-
-                        // Auto-search cuando se completa DNI
-                        if (
-                          driverDocumentType === "DNI" &&
-                          value.length === 8
-                        ) {
-                          setTimeout(() => handleSearchDriverDocument(), 100);
-                        }
-                      }}
-                    />
-                  </FormControl>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleSearchDriverDocument}
-                    disabled={
-                      isSearchingDriver ||
-                      !field.value ||
-                      (driverDocumentType === "DNI" && field.value.length !== 8)
+          {/* Selector de Conductor */}
+          <FormItem>
+            <FormLabel>Conductor</FormLabel>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <SearchableSelect
+                  className="md:w-full"
+                  buttonSize="default"
+                  options={
+                    drivers?.map((driver) => ({
+                      value: driver.id.toString(),
+                      label:
+                        driver.business_name ||
+                        `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
+                      description: driver.number_document || "",
+                    })) || []
+                  }
+                  value={selectedDriverId}
+                  onChange={(value) => {
+                    setSelectedDriverId(value);
+                    const selectedDriver = drivers?.find(
+                      (d) => d.id.toString() === value
+                    );
+                    if (selectedDriver) {
+                      const docType =
+                        selectedDriver.document_type_name ||
+                        (selectedDriver.number_document?.length === 8
+                          ? "DNI"
+                          : "CE");
+                      form.setValue("driver_document_type", docType);
+                      form.setValue(
+                        "driver_document_number",
+                        selectedDriver.number_document || ""
+                      );
+                      const fullName =
+                        selectedDriver.business_name ||
+                        `${selectedDriver.names} ${selectedDriver.father_surname} ${selectedDriver.mother_surname}`.trim();
+                      form.setValue("driver_name", fullName);
                     }
-                  >
-                    {isSearchingDriver ? (
-                      <Loader className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Search className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  }}
+                  placeholder="Buscar conductor..."
+                />
+              </div>
+              <Button type="button" variant="outline" size="icon" asChild>
+                <Link to={DRIVER.ROUTE_ADD} target="_blank">
+                  <Plus className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </FormItem>
 
-          <FormField
-            control={form.control}
-            name="driver_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nombre del Conductor (Opcional)</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Juan Pérez"
-                    {...field}
-                    value={field.value ?? ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="driver_license"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Licencia de Conducir (Opcional)</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Q12345678"
-                    {...field}
-                    value={field.value ?? ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Alert con datos del conductor seleccionado */}
+          {selectedDriverId &&
+            (() => {
+              const driver = drivers?.find(
+                (d) => d.id.toString() === selectedDriverId
+              );
+              if (!driver) return null;
+              const fullName =
+                driver.business_name ||
+                `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
+              const docType =
+                driver.document_type_name ||
+                (driver.number_document?.length === 8 ? "DNI" : "CE");
+              return (
+                <Alert className="md:col-span-4">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Datos del Conductor</AlertTitle>
+                  <AlertDescription>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                      <div>
+                        <span className="text-muted-foreground text-xs">
+                          Nombre:
+                        </span>
+                        <p className="font-medium">{fullName}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">
+                          Tipo Doc:
+                        </span>
+                        <p className="font-medium">{docType}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">
+                          Nro. Documento:
+                        </span>
+                        <p className="font-medium">
+                          {driver.number_document || "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">
+                          Teléfono:
+                        </span>
+                        <p className="font-medium">{driver.phone || "-"}</p>
+                      </div>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              );
+            })()}
         </GroupFormSection>
 
         {/* Direcciones, Carga y Observaciones */}
         <GroupFormSection
           title="Direcciones, Carga y Observaciones"
           icon={MapPin}
-          cols={{ sm: 1, md: 2 }}
+          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
           <FormField
             control={form.control}

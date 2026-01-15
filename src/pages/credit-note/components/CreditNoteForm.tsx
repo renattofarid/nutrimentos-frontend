@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import {
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import {
   creditNoteSchemaCreate,
   type CreditNoteSchema,
+  type CreditNoteDetailSchema,
 } from "../lib/credit-note.schema";
 import { Textarea } from "@/components/ui/textarea";
 import { FormSelect } from "@/components/FormSelect";
@@ -21,6 +22,8 @@ import { FormSwitch } from "@/components/FormSwitch";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 
 interface CreditNoteFormProps {
   defaultValues: Partial<CreditNoteSchema>;
@@ -43,7 +46,7 @@ export const CreditNoteForm = ({
   selectedSale,
   onSaleChange,
 }: CreditNoteFormProps) => {
-  const form = useForm({
+  const form = useForm<CreditNoteSchema>({
     resolver: zodResolver(creditNoteSchemaCreate),
     defaultValues: {
       sale_id: undefined,
@@ -51,9 +54,15 @@ export const CreditNoteForm = ({
       credit_note_motive_id: undefined,
       affects_stock: true,
       observations: "",
+      details: [],
       ...defaultValues,
     },
     mode: "onChange",
+  });
+
+  const { fields, replace } = useFieldArray({
+    control: form.control,
+    name: "details",
   });
 
   // Observar cambios en el campo sale_id
@@ -67,6 +76,25 @@ export const CreditNoteForm = ({
       onSaleChange?.(null);
     }
   }, [watchSaleId, onSaleChange]);
+
+  // Cuando cambia la venta seleccionada, cargar sus detalles
+  useEffect(() => {
+    if (selectedSale?.details) {
+      const mappedDetails: CreditNoteDetailSchema[] = selectedSale.details.map(
+        (detail) => ({
+          sale_detail_id: detail.id,
+          product_id: detail.product_id,
+          quantity_sacks: detail.quantity,
+          quantity_kg: 0,
+          unit_price: detail.unit_price,
+          selected: false,
+        })
+      );
+      replace(mappedDetails);
+    } else {
+      replace([]);
+    }
+  }, [selectedSale, replace]);
 
   return (
     <Form {...form}>

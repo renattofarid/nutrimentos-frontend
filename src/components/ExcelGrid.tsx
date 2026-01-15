@@ -10,19 +10,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
 import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface ExcelGridColumn<T> {
   id: string;
   header: string;
-  type: "product-search" | "product-code" | "text" | "number" | "readonly";
+  type: "product-search" | "product-code" | "text" | "number" | "readonly" | "switch";
   width?: string;
   accessor?: keyof T;
   render?: (row: T, index: number) => React.ReactNode;
   onCellChange?: (index: number, value: string) => void;
+  onSwitchChange?: (index: number, checked: boolean) => void; // Callback para switches
   hidden?: (row: T) => boolean; // Función para determinar si la columna debe ocultarse para una fila específica
   disabled?: (row: T) => boolean; // Función para determinar si el campo debe estar deshabilitado
+  getLabel?: (row: T) => string; // Para el label del switch
 }
 
 export interface ProductOption {
@@ -399,6 +402,40 @@ export function ExcelGrid<T extends Record<string, any>>({
             onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex, column)}
             className="w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent"
           />
+        );
+
+      case "switch":
+        const switchValue = row[column.accessor as string] as boolean;
+        const switchLabel = column.getLabel ? column.getLabel(row) : "";
+        return (
+          <div className="h-full flex items-center justify-center px-2 py-1 gap-2">
+            <Switch
+              ref={(el) => {
+                if (el) {
+                  // Crear un wrapper que tenga focus/select para compatibilidad con inputRefs
+                  const wrapper = {
+                    focus: () => el.focus(),
+                    select: () => el.focus(),
+                  } as HTMLInputElement;
+                  inputRefs.current[cellKey] = wrapper;
+                }
+              }}
+              checked={switchValue}
+              onCheckedChange={(checked) => {
+                if (column.onSwitchChange) {
+                  column.onSwitchChange(rowIndex, checked);
+                }
+              }}
+              onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
+              onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex, column)}
+              className="data-[state=checked]:bg-blue-600"
+            />
+            {switchLabel && (
+              <span className="text-xs font-medium min-w-[25px]">
+                {switchLabel}
+              </span>
+            )}
+          </div>
         );
 
       case "readonly":

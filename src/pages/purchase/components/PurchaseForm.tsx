@@ -16,7 +16,6 @@ import { Loader, Plus, Trash2, Pencil, Users2, UserPlus } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
-import { Switch } from "@/components/ui/switch";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
@@ -530,20 +529,11 @@ export const PurchaseForm = ({
     {
       id: "purchase_mode",
       header: "Modo",
-      type: "readonly",
+      type: "switch",
       width: "120px",
-      render: (row, index) => (
-        <div className="h-full flex items-center justify-center px-2 py-1 gap-2">
-          <Switch
-            checked={row.is_by_sack}
-            onCheckedChange={(checked) => handleTogglePurchaseMode(index, checked)}
-            className="data-[state=checked]:bg-blue-600"
-          />
-          <span className="text-xs font-medium min-w-[25px]">
-            {row.is_by_sack ? "SAC" : "KG"}
-          </span>
-        </div>
-      ),
+      accessor: "is_by_sack",
+      onSwitchChange: handleTogglePurchaseMode,
+      getLabel: (row) => row.is_by_sack ? "SAC" : "KG",
     },
     {
       id: "quantity",
@@ -719,7 +709,7 @@ export const PurchaseForm = ({
     // Formatear detalles para el backend
     const formattedDetails = details.map((d) => ({
       product_id: parseInt(d.product_id),
-      quantity_kg: parseFloat(d.quantity_kg),
+      quantity_kg: d.is_by_sack ? 0 : parseFloat(d.quantity_kg),
       quantity_sacks: d.is_by_sack ? (d.quantity === "" ? 0 : parseFloat(d.quantity)) : 0,
       unit_price: parseFloat(d.unit_price),
       tax: parseFloat(d.tax),

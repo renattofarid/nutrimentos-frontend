@@ -7,10 +7,10 @@ export const purchaseDetailSchema = z.object({
   product_id: requiredStringId("Debe seleccionar un producto"),
   quantity_kg: z
     .string()
-    .min(1, { message: "La cantidad en kg es requerida" })
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "La cantidad debe ser un número mayor a 0",
-    }),
+    .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {
+      message: "La cantidad en kg debe ser un número válido",
+    })
+    .default("0"),
   quantity_sacks: z
     .string()
     .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {
@@ -118,10 +118,10 @@ export const purchaseDetailSchemaCreate = z.object({
   product_id: requiredStringId("Debe seleccionar un producto"),
   quantity_kg: z
     .string()
-    .min(1, { message: "La cantidad en kg es requerida" })
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "La cantidad debe ser un número mayor a 0",
-    }),
+    .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {
+      message: "La cantidad en kg debe ser un número válido",
+    })
+    .default("0"),
   quantity_sacks: z
     .string()
     .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {

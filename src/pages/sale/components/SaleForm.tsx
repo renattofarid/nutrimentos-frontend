@@ -243,17 +243,21 @@ export const SaleForm = ({
 
       // Si el warehouse seleccionado no está en la nueva lista filtrada, limpiar
       const currentWarehouseId = form.getValues("warehouse_id");
+      let warehouseCleared = false;
+
       if (currentWarehouseId) {
         const isValid = filtered.some(
           (warehouse) => warehouse.id.toString() === currentWarehouseId
         );
         if (!isValid) {
           form.setValue("warehouse_id", "");
+          warehouseCleared = true;
         }
       }
 
       // Si solo hay un almacén, seleccionarlo automáticamente
-      if (filtered.length === 1 && !currentWarehouseId && mode === "create") {
+      // Esto se ejecuta si: no hay almacén seleccionado, o el almacén fue limpiado
+      if (filtered.length === 1 && mode === "create" && (!currentWarehouseId || warehouseCleared)) {
         form.setValue("warehouse_id", filtered[0].id.toString());
       }
     } else {

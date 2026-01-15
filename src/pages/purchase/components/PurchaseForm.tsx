@@ -47,7 +47,11 @@ import {
 } from "../lib/purchase.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
-import { ExcelGrid, type ExcelGridColumn, type ProductOption } from "@/components/ExcelGrid";
+import {
+  ExcelGrid,
+  type ExcelGridColumn,
+  type ProductOption,
+} from "@/components/ExcelGrid";
 import { formatNumber } from "@/lib/formatCurrency";
 
 interface PurchaseFormProps {
@@ -336,7 +340,9 @@ export const PurchaseForm = ({
   };
 
   const handleProductSelect = (index: number, product: ProductOption) => {
-    const selectedProduct = products.find(p => p.id.toString() === product.id);
+    const selectedProduct = products.find(
+      (p) => p.id.toString() === product.id
+    );
     if (!selectedProduct) return;
 
     const updatedDetails = [...details];
@@ -647,7 +653,7 @@ export const PurchaseForm = ({
         <GroupFormSection
           title="Información General"
           icon={Users2}
-          cols={{ sm: 1, md: 2, lg: 3 }}
+          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
           <FormSelect
             control={form.control}
@@ -883,7 +889,7 @@ export const PurchaseForm = ({
           <FormSwitch
             control={form.control}
             name="include_igv"
-            text="Incluir IGV (18%)"
+            label="Incluir IGV (18%)"
             textDescription="Los precios ingresados NO incluyen IGV"
             className="h-auto"
           />
@@ -891,7 +897,7 @@ export const PurchaseForm = ({
           <FormSwitch
             control={form.control}
             name="include_cost_account"
-            text="Incluir Cuenta de Costos"
+            label="Incluir Cuenta de Costos"
             textDescription="Activar para incluir en contabilidad"
             className="h-auto"
           />
@@ -1123,7 +1129,7 @@ export const PurchaseForm = ({
             Cancelar
           </Button>
 
-         <Button
+          <Button
             size="sm"
             type="submit"
             disabled={

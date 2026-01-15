@@ -13,7 +13,7 @@ interface FormSwitchProps<T extends FieldValues> {
   control: Control<T>;
   name: Path<T>;
   label?: string;
-  text: string;
+  text?: string;
   description?: string;
   textDescription?: string;
   className?: string;
@@ -55,7 +55,9 @@ export function FormSwitch<T extends FieldValues>({
             )}
           >
             <div className="flex flex-col gap-1 flex-1 min-w-0">
-              <p className="text-sm font-medium leading-tight">{text}</p>
+              {text && (
+                <p className="text-sm font-medium leading-tight">{text}</p>
+              )}
               {textDescription && (
                 <p className="text-xs text-muted-foreground font-normal leading-tight">
                   {textDescription}

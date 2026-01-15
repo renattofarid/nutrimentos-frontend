@@ -199,13 +199,22 @@ export const PurchaseForm = ({
 
       // Si el warehouse seleccionado no está en la nueva lista filtrada, limpiar
       const currentWarehouseId = form.getValues("warehouse_id");
+      let warehouseCleared = false;
+
       if (currentWarehouseId) {
         const isValid = filtered.some(
           (warehouse) => warehouse.id.toString() === currentWarehouseId
         );
         if (!isValid) {
           form.setValue("warehouse_id", "");
+          warehouseCleared = true;
         }
+      }
+
+      // Si solo hay un almacén, seleccionarlo automáticamente
+      // Esto se ejecuta si: no hay almacén seleccionado, o el almacén fue limpiado
+      if (filtered.length === 1 && mode === "create" && (!currentWarehouseId || warehouseCleared)) {
+        form.setValue("warehouse_id", filtered[0].id.toString());
       }
     } else {
       setFilteredWarehouses([]);
@@ -213,6 +222,22 @@ export const PurchaseForm = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBranchId, warehouses]);
+
+  // Efecto para hacer focus en el primer campo cuando se monta el formulario
+  useEffect(() => {
+    // Esperar un tick para asegurar que el DOM esté completamente renderizado
+    const timer = setTimeout(() => {
+      // Buscar el primer botón del formulario (que es el trigger del FormSelect)
+      const firstButton = document.querySelector(
+        'form button[role="combobox"]'
+      ) as HTMLButtonElement;
+      if (firstButton) {
+        firstButton.focus();
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Watch para el tipo de pago y el switch de IGV
   const selectedPaymentType = form.watch("payment_type");
@@ -653,23 +678,9 @@ export const PurchaseForm = ({
         <GroupFormSection
           title="Información General"
           icon={Users2}
+          gap="gap-2"
           cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
-          <FormSelect
-            control={form.control}
-            label="Tienda"
-            name="branch_id"
-            placeholder="Seleccione una tienda"
-            options={
-              branches?.map((branch) => ({
-                value: branch.id.toString(),
-                label: branch.name,
-                description: branch.address,
-              })) || []
-            }
-            withValue={false}
-          />
-
           {/* Proveedor y Almacén */}
           <div className="flex gap-2 items-end">
             <div className="truncate! flex-1">
@@ -704,6 +715,21 @@ export const PurchaseForm = ({
               <UserPlus className="h-4 w-4" />
             </Button>
           </div>
+
+          <FormSelect
+            control={form.control}
+            label="Tienda"
+            name="branch_id"
+            placeholder="Seleccione una tienda"
+            options={
+              branches?.map((branch) => ({
+                value: branch.id.toString(),
+                label: branch.name,
+                description: branch.address,
+              })) || []
+            }
+            withValue={false}
+          />
 
           <FormSelect
             control={form.control}

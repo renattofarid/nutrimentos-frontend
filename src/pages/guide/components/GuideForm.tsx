@@ -348,7 +348,7 @@ export const GuideForm = ({
         <GroupFormSection
           title="Información General"
           icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 3 }}
+          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
           <FormSelect
             control={form.control}
@@ -622,7 +622,7 @@ export const GuideForm = ({
         <GroupFormSection
           title="Información del Transportista"
           icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 3 }}
+          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
           <FormSelect
             control={form.control}
@@ -748,7 +748,7 @@ export const GuideForm = ({
         <GroupFormSection
           title="Información del Conductor (Opcional)"
           icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 3 }}
+          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
           <FormSelect
             control={form.control}
@@ -985,7 +985,7 @@ export const GuideForm = ({
             Cancelar
           </Button>
 
-         <Button
+          <Button
             size="sm"
             type="submit"
             disabled={isSubmitting || selectedSales.length === 0}

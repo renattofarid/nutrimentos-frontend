@@ -939,11 +939,11 @@ export const PersonForm = ({
         {/* Form Actions */}
         <div className="flex justify-end gap-3">
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" size="sm" onClick={onCancel}>
               Cancelar
             </Button>
           )}
-         <Button
+          <Button
             size="sm"
             type="submit"
             disabled={isSubmitting}

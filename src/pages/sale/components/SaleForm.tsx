@@ -182,8 +182,11 @@ export const SaleForm = ({
             subtotal = roundTo6Decimals(qtyKg * unitPrice);
           }
 
-          const igv = roundTo6Decimals(subtotal * 0.18);
-          const total = roundTo6Decimals(subtotal + igv);
+          // El subtotal es la multiplicación simple (precio ya incluye IGV)
+          // El IGV se extrae en el resumen total, no por fila
+          const total = subtotal;
+          const igv = 0;
+          // subtotal ya está calculado arriba
 
           return {
             product_id: detail.product_id,
@@ -441,9 +444,10 @@ export const SaleForm = ({
 
             if (result) {
               const unitPrice = parseFloat(result.pricing.unit_price);
+              // El subtotal es la multiplicación simple (precio ya incluye IGV)
               const subtotal = parseFloat(result.pricing.subtotal);
-              const igv = roundTo6Decimals(subtotal * 0.18);
-              const total = roundTo6Decimals(subtotal + igv);
+              const total = subtotal;
+              const igv = 0;
 
               const finalDetails = [...updatedDetails];
               finalDetails[index] = {
@@ -474,11 +478,11 @@ export const SaleForm = ({
         }
         // Modo de venta por KG
         else if (detail.sale_mode === "kg" && qtyKg > 0) {
-          // Usar el precio por kg del producto
+          // El subtotal es la multiplicación simple (precio ya incluye IGV)
           const unitPrice = pricePerKg;
           const subtotal = roundTo6Decimals(qtyKg * unitPrice);
-          const igv = roundTo6Decimals(subtotal * 0.18);
-          const total = roundTo6Decimals(subtotal + igv);
+          const total = subtotal;
+          const igv = 0;
 
           const finalDetails = [...updatedDetails];
           finalDetails[index] = {
@@ -516,10 +520,10 @@ export const SaleForm = ({
         const productWeight = parseFloat(product?.weight || "0");
         const totalWeightKg = roundTo6Decimals(productWeight * qtySacks);
 
-        // Multiplicación simple: cantidad de sacos × precio editado
+        // El subtotal es la multiplicación simple (precio ya incluye IGV)
         const subtotal = roundTo6Decimals(qtySacks * unitPrice);
-        const igv = roundTo6Decimals(subtotal * 0.18);
-        const total = roundTo6Decimals(subtotal + igv);
+        const total = subtotal;
+        const igv = 0;
 
         updatedDetails[index] = {
           ...updatedDetails[index],
@@ -532,10 +536,10 @@ export const SaleForm = ({
       } else if (detail.sale_mode === "kg") {
         const qtyKg = parseFloat(detail.quantity_kg) || 0;
 
-        // Multiplicación simple: cantidad de kg × precio editado
+        // El subtotal es la multiplicación simple (precio ya incluye IGV)
         const subtotal = roundTo6Decimals(qtyKg * unitPrice);
-        const igv = roundTo6Decimals(subtotal * 0.18);
-        const total = roundTo6Decimals(subtotal + igv);
+        const total = subtotal;
+        const igv = 0;
 
         updatedDetails[index] = {
           ...updatedDetails[index],
@@ -644,7 +648,8 @@ export const SaleForm = ({
     name: product.name,
   }));
 
-  const calculateDetailsSubtotal = () => {
+  // El total es la suma de los subtotales (precio ya incluye IGV)
+  const calculateDetailsTotal = () => {
     const sum = details.reduce(
       (sum, detail) => sum + (detail.subtotal || 0),
       0
@@ -652,14 +657,17 @@ export const SaleForm = ({
     return roundTo6Decimals(sum);
   };
 
+  // El IGV se extrae del total (IGV incluido en precio)
   const calculateDetailsIGV = () => {
-    const sum = details.reduce((sum, detail) => sum + (detail.igv || 0), 0);
-    return roundTo6Decimals(sum);
+    const total = calculateDetailsTotal();
+    return roundTo6Decimals(total / 1.18 * 0.18);
   };
 
-  const calculateDetailsTotal = () => {
-    const sum = details.reduce((sum, detail) => sum + (detail.total || 0), 0);
-    return roundTo6Decimals(sum);
+  // El subtotal base es el total menos el IGV
+  const calculateDetailsSubtotal = () => {
+    const total = calculateDetailsTotal();
+    const igv = calculateDetailsIGV();
+    return roundTo6Decimals(total - igv);
   };
 
   const calculateTotalWeight = () => {

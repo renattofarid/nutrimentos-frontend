@@ -8,14 +8,9 @@ export default function PersonActions() {
   const { MODEL } = PERSON;
   return (
     <ActionsWrapper>
-      <Button
-        size="sm"
-        className="ml-auto"
-        onClick={() => console.log("TODO: Create person modal")}
-      >
+      <Button size="sm" className="ml-auto">
         <Plus className="size-4 mr-2" /> Agregar {MODEL.name}
       </Button>
-      {/* TODO: PersonModal component */}
     </ActionsWrapper>
   );
 }

@@ -118,11 +118,6 @@ export const SaleProductSheet = ({
   useEffect(() => {
     const fetchPrice = async () => {
       if (!selectedProductId || !selectedQuantity || !customerId) {
-        console.log("Falta información:", {
-          selectedProductId,
-          selectedQuantity,
-          customerId,
-        });
         setPriceData(null);
         return;
       }
@@ -131,7 +126,7 @@ export const SaleProductSheet = ({
       const additionalKg = parseFloat(selectedAdditionalKg || "0");
 
       if (quantity === 0 && additionalKg === 0) {
-        console.log("Cantidad es 0");
+        ("Cantidad es 0");
         setPriceData(null);
         return;
       }
@@ -149,15 +144,6 @@ export const SaleProductSheet = ({
         quantitySacksDecimal = quantity + additionalSacks;
       }
 
-      console.log("Obteniendo precio dinámico...", {
-        product_id: selectedProductId,
-        person_id: customerId,
-        quantity_sacks: quantitySacksDecimal,
-        quantity_kg: 0, // Ahora enviamos 0 porque ya incluimos los kg en quantity_sacks
-        peso_del_saco: productWeight,
-        calculo: `${quantity} sacos + (${additionalKg} kg / ${productWeight} kg) = ${quantitySacksDecimal}`,
-      });
-
       const result = await fetchDynamicPrice({
         product_id: selectedProductId,
         person_id: customerId,
@@ -166,10 +152,7 @@ export const SaleProductSheet = ({
       });
 
       if (result) {
-        console.log("Precio obtenido:", result);
         setPriceData(result);
-      } else {
-        console.log("No se obtuvo precio");
       }
     };
 

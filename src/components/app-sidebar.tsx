@@ -282,6 +282,11 @@ const data = {
           url: DeliverySheetRoute,
           icon: DeliverySheetIcon,
         },
+        {
+          title: GuideTitle,
+          url: GuideRoute,
+          icon: GuideIcon,
+        },
       ],
     },
     {
@@ -411,11 +416,6 @@ const data = {
           title: BoxShiftTitle,
           url: BoxShiftRoute,
           icon: BoxShiftIcon,
-        },
-        {
-          title: GuideTitle,
-          url: GuideRoute,
-          icon: GuideIcon,
         },
         {
           title: VehicleTitle,

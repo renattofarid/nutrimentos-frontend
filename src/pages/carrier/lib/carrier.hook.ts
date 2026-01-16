@@ -39,5 +39,8 @@ export function useAllCarriers(params?: Record<string, unknown>) {
       fetchAllCarriers(params);
     }
   }, [allCarriers, fetchAllCarriers, params]);
-  return allCarriers;
+  return {
+    data: allCarriers,
+    refetch: () => fetchAllCarriers(params),
+  };
 }

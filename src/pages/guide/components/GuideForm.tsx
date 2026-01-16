@@ -110,8 +110,13 @@ export const GuideForm = ({
   });
 
   // Cargar conductores y transportistas
-  const drivers = useAllDrivers();
-  const carriers = useAllCarriers();
+  const { data: drivers, refetch: refetchDrivers } = useAllDrivers();
+  const { data: carriers, refetch: refetchCarriers } = useAllCarriers();
+
+  useEffect(() => {
+    refetchDrivers();
+    refetchCarriers();
+  }, []);
 
   // Estado para búsqueda de transportista
   const [isSearchingCarrier, setIsSearchingCarrier] = useState(false);
@@ -331,9 +336,10 @@ export const GuideForm = ({
       const totalWeight = salesByRange
         .filter((sale) => selectedSales.includes(sale.id))
         .reduce((sum, sale) => {
-          const weight = typeof sale.total_weight === 'string'
-            ? parseFloat(sale.total_weight)
-            : sale.total_weight;
+          const weight =
+            typeof sale.total_weight === "string"
+              ? parseFloat(sale.total_weight)
+              : sale.total_weight;
           return sum + (weight || 0);
         }, 0);
 

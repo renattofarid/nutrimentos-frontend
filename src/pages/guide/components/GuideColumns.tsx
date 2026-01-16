@@ -65,7 +65,11 @@ export const GuideColumns = ({
     header: "Cliente",
     cell: ({ row }) => {
       const customer = row.original.customer;
-      return <span className="text-sm">{customer?.full_name || "-"}</span>;
+      return (
+        <span className="text-sm">
+          {customer?.business_name || customer.full_name}
+        </span>
+      );
     },
   },
   {

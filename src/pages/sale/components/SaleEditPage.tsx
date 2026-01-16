@@ -29,8 +29,16 @@ export const SaleEditPage = () => {
     isLoading: customersLoading,
     refetch: onRefreshClients,
   } = useClients();
-  const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
-  const { data: products, isLoading: productsLoading } = useAllProducts();
+  const {
+    data: warehouses,
+    isLoading: warehousesLoading,
+    refetch: onRefreshWarehouses,
+  } = useAllWarehouses();
+  const {
+    data: products,
+    isLoading: productsLoading,
+    refetch: onRefreshProducts,
+  } = useAllProducts();
 
   const { updateSale, fetchSale, sale, isFinding } = useSaleStore();
 
@@ -41,6 +49,12 @@ export const SaleEditPage = () => {
     warehousesLoading ||
     productsLoading ||
     isFinding;
+
+  useEffect(() => {
+    onRefreshClients();
+    onRefreshWarehouses();
+    onRefreshProducts();
+  }, []);
 
   useEffect(() => {
     if (!id) {

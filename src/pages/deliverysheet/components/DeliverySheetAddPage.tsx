@@ -11,6 +11,8 @@ import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import FormWrapper from "@/components/FormWrapper";
 import { useAllDrivers } from "@/pages/driver/lib/driver.hook";
+import { useEffect } from "react";
+import { format } from "date-fns";
 
 export default function DeliverySheetAddPage() {
   const navigate = useNavigate();
@@ -22,10 +24,18 @@ export default function DeliverySheetAddPage() {
     isLoadingAvailableSales,
   } = useDeliverySheetStore();
 
-  const { data: allBranches = [] } = useAllBranches();
-  const { data: customers = [] } = useAllClients();
-  const { data: zones = [] } = useAllZones();
-  const drivers = useAllDrivers();
+  const { data: allBranches = [], refetch: refetchBranches } = useAllBranches();
+  const { data: customers = [], refetch: refetchCustomers } = useAllClients();
+  const { data: zones = [], refetch: refetchZones } = useAllZones();
+  const { data: drivers = [], refetch: refetchDrivers } = useAllDrivers();
+
+  useEffect(() => {
+    refetchBranches();
+    refetchCustomers();
+    refetchZones();
+    refetchDrivers();
+  }, []);
+
   const handleSubmit = async (data: DeliverySheetSchema) => {
     try {
       await createDeliverySheet(data);
@@ -68,7 +78,10 @@ export default function DeliverySheetAddPage() {
       </div>
 
       <DeliverySheetForm
-        defaultValues={{}}
+        defaultValues={{
+          issue_date: format(new Date(), "yyyy-MM-dd"),
+          delivery_date: format(new Date(), "yyyy-MM-dd"),
+        }}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isSubmitting={isSubmitting}

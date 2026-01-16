@@ -115,7 +115,7 @@ export default function ProductDetail() {
                         variant="secondary"
                         className="text-sm font-semibold"
                       >
-                        {warehouse.stock}
+                        {warehouse.stock} Kg
                       </Badge>
                     </div>
                   ))

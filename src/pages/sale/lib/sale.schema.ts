@@ -58,7 +58,7 @@ export const saleSchemaCreate = z.object({
   branch_id: requiredStringId("Debe seleccionar una tienda"),
   customer_id: requiredStringId("Debe seleccionar un cliente"),
   warehouse_id: requiredStringId("Debe seleccionar un almacén"),
-  vendedor_id: z.union([z.string(), z.number()]).optional().nullable(),
+  vendedor_id: requiredStringId("Debe seleccionar un vendedor"),
   document_type: z
     .string()
     .min(1, { message: "Debe seleccionar un tipo de documento" }),
@@ -71,7 +71,11 @@ export const saleSchemaCreate = z.object({
   payment_type: z
     .string()
     .min(1, { message: "Debe seleccionar un tipo de pago" }),
-  total_weight: z.number().nonnegative("El peso total debe ser mayor o igual a 0").optional().default(0),
+  total_weight: z
+    .number()
+    .nonnegative("El peso total debe ser mayor o igual a 0")
+    .optional()
+    .default(0),
   currency: z.string().min(1, { message: "Debe seleccionar una moneda" }),
   observations: z.string().max(500).optional(),
   details: z

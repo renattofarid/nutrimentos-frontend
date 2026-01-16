@@ -66,13 +66,13 @@ interface DetailRow {
   product_name?: string;
   quantity: string; // Cantidad total en decimal (ej: 1.02) - SE ENVÍA AL BACKEND
   quantity_sacks: string; // Cantidad de sacos ingresada por el usuario (ej: 1)
-  quantity_kg: string; // Kg adicionales ingresados por el usuario (ej: 1)
-  unit_price: string; // Precio unitario
+  quantity_kg: string; // Kg sueltos ingresados por el usuario (ej: 25)
+  unit_price: string; // Precio unitario (por saco o por kg según el modo)
   subtotal: number;
   igv: number;
   total: number;
   total_kg?: number; // Peso total en kg (ej: 51)
-  price_from_api?: boolean; // Indica si el precio viene de la API (bloquea edición)
+  sale_mode?: "sacks" | "kg"; // Modo de venta: por sacos o por kg
 }
 
 interface InstallmentRow {
@@ -161,34 +161,46 @@ export const SaleForm = ({
           const product = products.find(
             (p) => p.id.toString() === detail.product_id
           );
-          const quantity = parseFloat(detail.quantity);
-          const unitPrice = parseFloat(detail.unit_price);
-          const subtotal = roundTo6Decimals(quantity * unitPrice);
-          const igv = roundTo6Decimals(subtotal * 0.18);
-          const total = roundTo6Decimals(subtotal + igv);
 
-          // Calcular peso total en kg
-          const productWeight = product?.weight
-            ? parseFloat(product.weight)
-            : 0;
-          const additionalKg = parseFloat(detail.quantity_kg || "0");
-          const totalKg = roundTo6Decimals(
-            productWeight * quantity + additionalKg
-          );
+          // Determinar el modo de venta basado en los valores recibidos
+          const qtySacks = parseFloat(detail.quantity_sacks || "0");
+          const qtyKg = parseFloat(detail.quantity_kg || "0");
+          const sale_mode: "sacks" | "kg" | undefined = qtySacks > 0 ? "sacks" : qtyKg > 0 ? "kg" : undefined;
+
+          const unitPrice = parseFloat(detail.unit_price);
+          const productWeight = product?.weight ? parseFloat(product.weight) : 0;
+
+          // Calcular totales según el modo de venta
+          let subtotal = 0;
+          let totalKg = 0;
+
+          if (sale_mode === "sacks") {
+            totalKg = roundTo6Decimals(productWeight * qtySacks);
+            subtotal = roundTo6Decimals(totalKg * unitPrice);
+          } else if (sale_mode === "kg") {
+            totalKg = qtyKg;
+            subtotal = roundTo6Decimals(qtyKg * unitPrice);
+          }
+
+          // El subtotal es la multiplicación simple (precio ya incluye IGV)
+          // El IGV se extrae en el resumen total, no por fila
+          const total = subtotal;
+          const igv = 0;
+          // subtotal ya está calculado arriba
 
           return {
             product_id: detail.product_id,
             product_code: product?.codigo,
             product_name: product?.name,
-            quantity: detail.quantity, // Cantidad total en decimal
-            quantity_sacks: detail.quantity_sacks || detail.quantity, // Sacos (si no existe, usar quantity)
-            quantity_kg: detail.quantity_kg || "0", // Kg adicionales
+            quantity: detail.quantity,
+            quantity_sacks: detail.quantity_sacks || "",
+            quantity_kg: detail.quantity_kg || "",
             unit_price: detail.unit_price,
             subtotal,
             igv,
             total,
             total_kg: totalKg,
-            price_from_api: false, // En modo edición, permitir editar precios
+            sale_mode,
           };
         });
         setDetails(initialDetails);
@@ -257,7 +269,11 @@ export const SaleForm = ({
 
       // Si solo hay un almacén, seleccionarlo automáticamente
       // Esto se ejecuta si: no hay almacén seleccionado, o el almacén fue limpiado
-      if (filtered.length === 1 && mode === "create" && (!currentWarehouseId || warehouseCleared)) {
+      if (
+        filtered.length === 1 &&
+        mode === "create" &&
+        (!currentWarehouseId || warehouseCleared)
+      ) {
         form.setValue("warehouse_id", filtered[0].id.toString());
       }
     } else {
@@ -338,13 +354,13 @@ export const SaleForm = ({
       product_name: "",
       quantity: "",
       quantity_sacks: "",
-      quantity_kg: "0",
+      quantity_kg: "",
       unit_price: "",
       subtotal: 0,
       igv: 0,
       total: 0,
       total_kg: 0,
-      price_from_api: false,
+      sale_mode: undefined,
     };
     const updatedDetails = [...details, newDetail];
     setDetails(updatedDetails);
@@ -363,115 +379,128 @@ export const SaleForm = ({
     value: string
   ) => {
     const updatedDetails = [...details];
-    updatedDetails[index] = { ...updatedDetails[index], [field]: value };
+    const detail = { ...updatedDetails[index] };
 
-    // Recalcular totales cuando cambian cantidad o kg adicionales
+    // Determinar el modo de venta cuando se ingresa una cantidad
+    if (field === "quantity_sacks") {
+      detail.quantity_sacks = value;
+      if (value && parseFloat(value) > 0) {
+        detail.sale_mode = "sacks";
+        detail.quantity_kg = "0"; // Setear en 0 cuando se usa sacos
+        detail.unit_price = ""; // Limpiar precio para que se recalcule
+      } else if (!value || parseFloat(value) === 0) {
+        // Si se borra o se pone 0, resetear modo
+        detail.sale_mode = undefined;
+        detail.unit_price = "";
+      }
+    } else if (field === "quantity_kg") {
+      detail.quantity_kg = value;
+      if (value && parseFloat(value) > 0) {
+        detail.sale_mode = "kg";
+        detail.quantity_sacks = "0"; // Setear en 0 cuando se usa kg
+        detail.unit_price = ""; // Limpiar precio para que se recalcule
+      } else if (!value || parseFloat(value) === 0) {
+        // Si se borra o se pone 0, resetear modo
+        detail.sale_mode = undefined;
+        detail.unit_price = "";
+      }
+    } else {
+      (detail as any)[field] = value;
+    }
+
+    updatedDetails[index] = detail;
+
+    // Procesar cuando cambian las cantidades
     if (field === "quantity_sacks" || field === "quantity_kg") {
-      const detail = updatedDetails[index];
       const product = filteredProducts.find(
         (p) => p.id.toString() === detail.product_id
       );
 
       if (product && detail.product_id) {
-        const qty = parseFloat(detail.quantity_sacks) || 0;
-        const addKg = parseFloat(detail.quantity_kg) || 0;
+        const qtySacks = parseFloat(detail.quantity_sacks) || 0;
+        const qtyKg = parseFloat(detail.quantity_kg) || 0;
         const productWeight = parseFloat(product.weight || "0");
+        const pricePerKg = parseFloat(product.price_per_kg || "0");
 
-        // Calcular peso total en kg (sacos × peso_por_saco + kg_adicionales)
-        const totalWeightKg =
-          productWeight > 0
-            ? roundTo6Decimals(productWeight * qty + addKg)
-            : addKg;
+        // Modo de venta por SACOS
+        if (detail.sale_mode === "sacks" && qtySacks > 0) {
+          // Calcular peso total en kg
+          const totalWeightKg = roundTo6Decimals(productWeight * qtySacks);
 
-        // El campo quantity representa solo la cantidad de sacos
-        // Los kg adicionales se manejan por separado en quantity_kg
-        const quantitySacksDecimal = qty;
+          // Actualizar estado inmediatamente
+          setDetails(updatedDetails);
+          form.setValue("details", updatedDetails);
 
-        // Actualizar estado inmediatamente
-        setDetails(updatedDetails);
-        form.setValue("details", updatedDetails);
-
-        // Verificar si hay cantidad para procesar
-        if (qty > 0 || addKg > 0) {
-          // SIEMPRE llamar a la API cuando cambian las cantidades
+          // Llamar a la API para obtener precio por sacos
           const customerId = form.watch("customer_id");
 
           try {
             const result = await fetchDynamicPrice({
               product_id: detail.product_id,
               person_id: customerId || "",
-              quantity_sacks: qty,
-              quantity_kg: addKg,
+              quantity_sacks: qtySacks,
+              quantity_kg: 0,
             });
 
             if (result) {
               const unitPrice = parseFloat(result.pricing.unit_price);
+              // El subtotal es la multiplicación simple (precio ya incluye IGV)
               const subtotal = parseFloat(result.pricing.subtotal);
-              const igv = roundTo6Decimals(subtotal * 0.18);
-              const total = roundTo6Decimals(subtotal + igv);
+              const total = subtotal;
+              const igv = 0;
 
               const finalDetails = [...updatedDetails];
               finalDetails[index] = {
                 ...finalDetails[index],
-                quantity: quantitySacksDecimal.toString(),
+                quantity: qtySacks.toString(),
                 unit_price: unitPrice.toString(),
                 subtotal,
                 igv,
                 total,
                 total_kg: totalWeightKg,
-                price_from_api: true,
               };
 
               setDetails(finalDetails);
               form.setValue("details", finalDetails);
             } else {
-              // Si la API no retorna resultado, resetear quantity_sacks a 0 y mantener quantity_kg
-              const clearedDetails = [...updatedDetails];
-              clearedDetails[index] = {
-                ...clearedDetails[index],
-                quantity: "0", // Resetear quantity_sacks a 0
-                quantity_sacks: "0", // Resetear quantity_sacks a 0
-                unit_price: "",
-                subtotal: 0,
-                igv: 0,
-                total: 0,
-                total_kg: addKg, // Solo los kg adicionales
-                price_from_api: false,
-              };
-
-              setDetails(clearedDetails);
-              form.setValue("details", clearedDetails);
-
               errorToast(
-                "Error al obtener el precio dinámico. Por favor, ingrese el precio manualmente."
+                "Error al obtener el precio. Por favor, ingrese el precio manualmente."
               );
             }
           } catch (error: any) {
             console.error("Error fetching dynamic price:", error);
-
-            // Si la API falla, resetear quantity_sacks a 0 y mantener quantity_kg
-            const clearedDetails = [...updatedDetails];
-            clearedDetails[index] = {
-              ...clearedDetails[index],
-              quantity: "0", // Resetear quantity_sacks a 0
-              quantity_sacks: "0", // Resetear quantity_sacks a 0
-              unit_price: "",
-              subtotal: 0,
-              igv: 0,
-              total: 0,
-              total_kg: addKg, // Solo los kg adicionales
-              price_from_api: false,
-            };
-
-            setDetails(clearedDetails);
-            form.setValue("details", clearedDetails);
-
             const errorMessage =
               error?.response?.data?.message ||
               error?.response?.data?.error ||
-              "Error al obtener el precio dinámico. Por favor, ingrese el precio manualmente.";
+              "Error al obtener el precio. Por favor, ingrese el precio manualmente.";
             errorToast(errorMessage);
           }
+        }
+        // Modo de venta por KG
+        else if (detail.sale_mode === "kg" && qtyKg > 0) {
+          // El subtotal es la multiplicación simple (precio ya incluye IGV)
+          const unitPrice = pricePerKg;
+          const subtotal = roundTo6Decimals(qtyKg * unitPrice);
+          const total = subtotal;
+          const igv = 0;
+
+          const finalDetails = [...updatedDetails];
+          finalDetails[index] = {
+            ...finalDetails[index],
+            quantity: qtyKg.toString(),
+            unit_price: unitPrice.toString(),
+            subtotal,
+            igv,
+            total,
+            total_kg: qtyKg,
+          };
+
+          setDetails(finalDetails);
+          form.setValue("details", finalDetails);
+        } else {
+          // Si no hay cantidad válida, limpiar
+          setDetails(updatedDetails);
+          form.setValue("details", updatedDetails);
         }
       } else {
         // Si no hay producto, solo actualizar el estado
@@ -479,47 +508,48 @@ export const SaleForm = ({
         form.setValue("details", updatedDetails);
       }
     } else if (field === "unit_price") {
-      // Cuando cambia el precio unitario manualmente, recalcular totales
-      // El precio ingresado es por KILOGRAMO
-      // Si estoy editando precio = la API falló, solo permito editar quantity_kg y unit_price
-      const detail = updatedDetails[index];
+      // Cuando se edita el precio manualmente, es una multiplicación simple
+      // cantidad × precio = subtotal (sin importar si es por sacos o kg)
       const unitPrice = parseFloat(value) || 0;
-      const qtySacks = parseFloat(detail.quantity_sacks) || 0;
-      const addKg = parseFloat(detail.quantity_kg) || 0;
-
-      // Obtener el peso del producto
       const product = filteredProducts.find(
         (p) => p.id.toString() === detail.product_id
       );
-      const productWeight = product?.weight ? parseFloat(product.weight) : 0;
 
-      // Calcular peso total en kg (sacos × peso_por_saco + kg_adicionales)
-      const totalWeightKg =
-        productWeight > 0
-          ? roundTo6Decimals(productWeight * qtySacks + addKg)
-          : addKg;
+      if (detail.sale_mode === "sacks") {
+        const qtySacks = parseFloat(detail.quantity_sacks) || 0;
+        const productWeight = parseFloat(product?.weight || "0");
+        const totalWeightKg = roundTo6Decimals(productWeight * qtySacks);
 
-      // El campo quantity representa solo la cantidad de sacos
-      const quantityDecimal = qtySacks;
+        // El subtotal es la multiplicación simple (precio ya incluye IGV)
+        const subtotal = roundTo6Decimals(qtySacks * unitPrice);
+        const total = subtotal;
+        const igv = 0;
 
-      // Calcular totales basados en peso_total_kg × precio_por_kg
-      const subtotal =
-        totalWeightKg > 0 && unitPrice > 0
-          ? roundTo6Decimals(totalWeightKg * unitPrice)
-          : 0;
-      const igv = subtotal > 0 ? roundTo6Decimals(subtotal * 0.18) : 0;
-      const total = subtotal > 0 ? roundTo6Decimals(subtotal + igv) : 0;
+        updatedDetails[index] = {
+          ...updatedDetails[index],
+          quantity: qtySacks.toString(),
+          subtotal,
+          igv,
+          total,
+          total_kg: totalWeightKg,
+        };
+      } else if (detail.sale_mode === "kg") {
+        const qtyKg = parseFloat(detail.quantity_kg) || 0;
 
-      updatedDetails[index] = {
-        ...updatedDetails[index],
-        quantity: quantityDecimal.toString(),
-        // NO resetear quantity_kg - mantener el valor actual
-        subtotal,
-        igv,
-        total,
-        total_kg: totalWeightKg,
-        price_from_api: false, // El precio fue ingresado manualmente
-      };
+        // El subtotal es la multiplicación simple (precio ya incluye IGV)
+        const subtotal = roundTo6Decimals(qtyKg * unitPrice);
+        const total = subtotal;
+        const igv = 0;
+
+        updatedDetails[index] = {
+          ...updatedDetails[index],
+          quantity: qtyKg.toString(),
+          subtotal,
+          igv,
+          total,
+          total_kg: qtyKg,
+        };
+      }
 
       setDetails(updatedDetails);
       form.setValue("details", updatedDetails);
@@ -543,13 +573,13 @@ export const SaleForm = ({
       product_code: product.codigo,
       product_name: product.name,
       quantity_sacks: "",
-      quantity_kg: "0",
+      quantity_kg: "",
       unit_price: "",
       subtotal: 0,
       igv: 0,
       total: 0,
       total_kg: 0,
-      price_from_api: false,
+      sale_mode: undefined,
     };
 
     setDetails(updatedDetails);
@@ -574,25 +604,27 @@ export const SaleForm = ({
     },
     {
       id: "quantity_sacks",
-      header: "Cantidad",
+      header: "Cant. Sacos",
       type: "number",
-      width: "100px",
+      width: "110px",
       accessor: "quantity_sacks",
+      // Siempre habilitado para permitir navegación con Tab
     },
     {
       id: "quantity_kg",
-      header: "Kg Adic.",
+      header: "Cant. Kg",
       type: "number",
       width: "100px",
       accessor: "quantity_kg",
+      // Siempre habilitado para permitir navegación con Tab
     },
     {
       id: "unit_price",
-      header: "Precio",
+      header: "Precio Unit.",
       type: "number",
       width: "120px",
       accessor: "unit_price",
-      disabled: (row) => row.price_from_api === true, // Deshabilitar si viene de la API
+      // Siempre editable - el precio de la API/producto es solo referencial
     },
     {
       id: "subtotal",
@@ -616,7 +648,8 @@ export const SaleForm = ({
     name: product.name,
   }));
 
-  const calculateDetailsSubtotal = () => {
+  // El total es la suma de los subtotales (precio ya incluye IGV)
+  const calculateDetailsTotal = () => {
     const sum = details.reduce(
       (sum, detail) => sum + (detail.subtotal || 0),
       0
@@ -624,14 +657,17 @@ export const SaleForm = ({
     return roundTo6Decimals(sum);
   };
 
+  // El IGV se extrae del total (IGV incluido en precio)
   const calculateDetailsIGV = () => {
-    const sum = details.reduce((sum, detail) => sum + (detail.igv || 0), 0);
-    return roundTo6Decimals(sum);
+    const total = calculateDetailsTotal();
+    return roundTo6Decimals(total / 1.18 * 0.18);
   };
 
-  const calculateDetailsTotal = () => {
-    const sum = details.reduce((sum, detail) => sum + (detail.total || 0), 0);
-    return roundTo6Decimals(sum);
+  // El subtotal base es el total menos el IGV
+  const calculateDetailsSubtotal = () => {
+    const total = calculateDetailsTotal();
+    const igv = calculateDetailsIGV();
+    return roundTo6Decimals(total - igv);
   };
 
   const calculateTotalWeight = () => {
@@ -814,11 +850,11 @@ export const SaleForm = ({
 
     const totalWeight = calculateTotalWeight();
 
-    // Preparar detalles para enviar al backend con quantity_sacks y quantity_kg
+    // Preparar detalles para enviar al backend
     const validDetails = details.map((detail) => ({
       product_id: detail.product_id,
-      quantity_sacks: detail.quantity_sacks, // Cantidad de sacos
-      quantity_kg: detail.quantity_kg, // Kg adicionales
+      quantity_sacks: detail.quantity_sacks || "", // Cantidad de sacos (vacío si se vende por kg)
+      quantity_kg: detail.quantity_kg || "", // Cantidad de kg (vacío si se vende por sacos)
       unit_price: detail.unit_price,
     }));
 
@@ -928,9 +964,8 @@ export const SaleForm = ({
             control={form.control}
             name="vendedor_id"
             label="Vendedor"
-            placeholder="Seleccionar vendedor (opcional)"
+            placeholder="Seleccionar vendedor"
             options={[
-              { value: "", label: "Sin vendedor" },
               ...(workers?.map((worker) => ({
                 value: worker.id.toString(),
                 label: `${worker.names} ${worker.father_surname}`,

@@ -39,5 +39,8 @@ export function useAllDrivers(params?: Record<string, unknown>) {
       fetchAllDrivers(params);
     }
   }, [allDrivers, fetchAllDrivers, params]);
-  return allDrivers;
+  return {
+    data: allDrivers,
+    refetch: () => fetchAllDrivers(params),
+  };
 }

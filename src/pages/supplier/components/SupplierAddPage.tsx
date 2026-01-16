@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BackButton } from "@/components/BackButton";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import { type PersonSchema } from "@/pages/person/lib/person.schema";
@@ -17,7 +16,7 @@ import { SUPPLIER, SUPPLIER_ROLE_ID } from "../lib/supplier.interface";
 import FormWrapper from "@/components/FormWrapper";
 import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
 
-const { MODEL } = SUPPLIER;
+const { MODEL, ICON } = SUPPLIER;
 
 export default function SupplierAddPage() {
   const navigate = useNavigate();
@@ -27,8 +26,8 @@ export default function SupplierAddPage() {
     setIsSubmitting(true);
     try {
       // Transform PersonSchema to CreatePersonRequest
-  // For names field: send only the 'names' field as entered by the user
-  const namesOnly = data.names || "";
+      // For names field: send only the 'names' field as entered by the user
+      const namesOnly = data.names || "";
 
       // Build payload with only the fields present in the form
       const createPersonData: any = {
@@ -43,7 +42,10 @@ export default function SupplierAddPage() {
       };
 
       // Only include names when NATURAL or when the document type is DNI
-      if (data.type_person === "NATURAL" || data.document_type_id === TYPE_DOCUMENT.DNI.id) {
+      if (
+        data.type_person === "NATURAL" ||
+        data.document_type_id === TYPE_DOCUMENT.DNI.id
+      ) {
         createPersonData.names = namesOnly;
       }
 
@@ -102,8 +104,12 @@ export default function SupplierAddPage() {
     <FormWrapper>
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
-          <BackButton to="/proveedores" />
-          <TitleFormComponent title={MODEL.name} mode="create" />
+          <TitleFormComponent
+            title={MODEL.name}
+            mode="create"
+            handleBack={() => navigate("/proveedores")}
+            icon={ICON}
+          />
         </div>
       </div>
 

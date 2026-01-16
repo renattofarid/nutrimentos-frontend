@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { BackButton } from "@/components/BackButton";
 import { type PersonSchema } from "@/pages/person/lib/person.schema";
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import {
@@ -20,8 +19,9 @@ import type { PersonResource } from "@/pages/person/lib/person.interface";
 import FormWrapper from "@/components/FormWrapper";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
+import FormSkeleton from "@/components/FormSkeleton";
 
-const { MODEL } = SUPPLIER;
+const { MODEL, ICON } = SUPPLIER;
 
 export default function SupplierEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -69,7 +69,10 @@ export default function SupplierEditPage() {
       };
 
       // Only include names when NATURAL or when the document type is DNI
-      if (data.type_person === "NATURAL" || data.document_type_id === TYPE_DOCUMENT.DNI.id) {
+      if (
+        data.type_person === "NATURAL" ||
+        data.document_type_id === TYPE_DOCUMENT.DNI.id
+      ) {
         updatePersonData.names = data.names || "";
       }
 
@@ -124,19 +127,30 @@ export default function SupplierEditPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-6">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <FormWrapper>
+        <div className="flex items-center gap-4 mb-6">
+          <TitleFormComponent
+            title={MODEL.name}
+            mode="edit"
+            icon={ICON}
+            handleBack={() => navigate("/proveedores")}
+          />
         </div>
-      </div>
+
+        <FormSkeleton />
+      </FormWrapper>
     );
   }
 
   return (
     <FormWrapper>
       <div className="flex items-center gap-4 mb-6">
-        <BackButton to="/proveedores" />
-        <TitleFormComponent title={MODEL.name} mode="edit" />
+        <TitleFormComponent
+          title={MODEL.name}
+          mode="edit"
+          icon={ICON}
+          handleBack={() => navigate("/proveedores")}
+        />
       </div>
 
       <PersonForm

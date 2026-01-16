@@ -27,12 +27,31 @@ export default function PurchaseAddPage() {
   const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({
     role_names: [SUPPLIER_ROLE_CODE],
   });
-  const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
-  const { data: branches, isLoading: branchesLoading } = useAllBranches({
+  const {
+    data: warehouses,
+    isLoading: warehousesLoading,
+    refetch: refetchWarehouses,
+  } = useAllWarehouses();
+  const {
+    data: branches,
+    isLoading: branchesLoading,
+    refetch: refetchBranches,
+  } = useAllBranches({
     company_id: user?.company_id.toString(),
   });
-  const { data: products, isLoading: productsLoading } = useAllProducts();
+  const {
+    data: products,
+    isLoading: productsLoading,
+    refetch: refetchProducts,
+  } = useAllProducts();
   const { createPurchase } = usePurchaseStore();
+
+  useEffect(() => {
+    refetchSuppliers();
+    refetchWarehouses();
+    refetchBranches();
+    refetchProducts();
+  }, []);
 
   useEffect(() => {
     setOpen(false);

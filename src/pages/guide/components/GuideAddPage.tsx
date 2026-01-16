@@ -37,23 +37,69 @@ export default function GuideAddPage() {
   const { setOpen, setOpenMobile } = useSidebar();
   const { user } = useAuthStore();
 
-  const { data: branches, isLoading: branchesLoading } = useAllBranches({
+  const {
+    data: branches,
+    isLoading: branchesLoading,
+    refetch: refetchBranches,
+  } = useAllBranches({
     company_id: user?.company_id,
   });
-  const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
-  const { data: products, isLoading: productsLoading } = useAllProducts();
-  const { data: customers } = useAllPersons({ role_names: [CLIENT_ROLE_CODE] });
-  const { data: suppliers } = useAllPersons({
+  const {
+    data: warehouses,
+    isLoading: warehousesLoading,
+    refetch: refetchWarehouses,
+  } = useAllWarehouses();
+  const {
+    data: products,
+    isLoading: productsLoading,
+    refetch: refetchProducts,
+  } = useAllProducts();
+  const { data: customers, refetch: refetchCustomers } = useAllPersons({
+    role_names: [CLIENT_ROLE_CODE],
+  });
+  const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({
     role_names: [SUPPLIER_ROLE_CODE],
   });
-  const { data: motives, isLoading: motivesLoading } = useGuideMotives();
-  const { data: categories, isLoading: categoriesLoading } = useAllCategories();
-  const { data: brands, isLoading: brandsLoading } = useAllBrands();
-  const { data: units, isLoading: unitsLoading } = useAllUnits();
-  const { data: productTypes } = useAllProductTypes();
-  const { data: nationalities } = useAllNationalities();
+  const {
+    data: motives,
+    isLoading: motivesLoading,
+    refetch: refetchMotives,
+  } = useGuideMotives();
+  const {
+    data: categories,
+    isLoading: categoriesLoading,
+    refetch: refetchCategories,
+  } = useAllCategories();
+  const {
+    data: brands,
+    isLoading: brandsLoading,
+    refetch: refetchBrands,
+  } = useAllBrands();
+  const {
+    data: units,
+    isLoading: unitsLoading,
+    refetch: refetchUnits,
+  } = useAllUnits();
+  const { data: productTypes, refetch: refetchProductTypes } =
+    useAllProductTypes();
+  const { data: nationalities, refetch: refetchNationalities } =
+    useAllNationalities();
 
   const { createGuide } = useGuideStore();
+
+  useEffect(() => {
+    refetchBranches();
+    refetchWarehouses();
+    refetchProducts();
+    refetchCustomers();
+    refetchSuppliers();
+    refetchMotives();
+    refetchCategories();
+    refetchBrands();
+    refetchUnits();
+    refetchProductTypes();
+    refetchNationalities();
+  }, []);
 
   useEffect(() => {
     setOpen(false);

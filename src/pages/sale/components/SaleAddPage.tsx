@@ -34,8 +34,22 @@ export const SaleAddPage = () => {
     isLoading: customersLoading,
     refetch: onRefreshClients,
   } = useClients();
-  const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
-  const { data: products, isLoading: productsLoading } = useAllProducts();
+  const {
+    data: warehouses,
+    isLoading: warehousesLoading,
+    refetch: onRefreshWarehouses,
+  } = useAllWarehouses();
+  const {
+    data: products,
+    isLoading: productsLoading,
+    refetch: onRefreshProducts,
+  } = useAllProducts();
+
+  useEffect(() => {
+    onRefreshClients();
+    onRefreshWarehouses();
+    onRefreshProducts();
+  }, []);
 
   useEffect(() => {
     setOpen(false);

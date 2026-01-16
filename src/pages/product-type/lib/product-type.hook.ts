@@ -29,6 +29,7 @@ export function useAllProductTypes() {
 
   return {
     data: allProductTypes,
+    refetch: fetchAllProductTypes,
   };
 }
 

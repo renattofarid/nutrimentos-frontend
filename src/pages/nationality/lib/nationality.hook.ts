@@ -29,6 +29,7 @@ export function useAllNationalities() {
 
   return {
     data: allNationalities,
+    refetch: fetchAllNationalities,
   };
 }
 

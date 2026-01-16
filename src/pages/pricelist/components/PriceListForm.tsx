@@ -65,7 +65,11 @@ export default function PriceListForm({
   isSubmitting = false,
   mode,
 }: PriceListFormProps) {
-  const { data: products } = useAllProducts();
+  const { data: products, refetch: refetchProducts } = useAllProducts();
+
+  useEffect(() => {
+    refetchProducts();
+  }, []);
 
   // Estados para la matriz de precios
   const [weightRanges, setWeightRanges] = useState<WeightRangeData[]>([]);

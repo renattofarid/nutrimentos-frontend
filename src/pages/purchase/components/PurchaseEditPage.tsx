@@ -24,17 +24,37 @@ export default function PurchaseEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({
     role_names: [SUPPLIER_ROLE_CODE],
   });
-  const { data: warehouses, isLoading: warehousesLoading } = useAllWarehouses();
-  const { data: products, isLoading: productsLoading } = useAllProducts();
-  const { data: branches, isLoading: branchesLoading } = useAllBranches({
+  const {
+    data: warehouses,
+    isLoading: warehousesLoading,
+    refetch: refetchWarehouses,
+  } = useAllWarehouses();
+  const {
+    data: products,
+    isLoading: productsLoading,
+    refetch: refetchProducts,
+  } = useAllProducts();
+  const {
+    data: branches,
+    isLoading: branchesLoading,
+    refetch: refetchBranches,
+  } = useAllBranches({
     company_id: user?.company_id.toString(),
   });
   const { updatePurchase, fetchPurchase, purchase, isFinding } =
     usePurchaseStore();
   const { setOpen, setOpenMobile } = useSidebar();
+
+  useEffect(() => {
+    refetchSuppliers();
+    refetchWarehouses();
+    refetchBranches();
+    refetchProducts();
+  }, []);
 
   useEffect(() => {
     setOpen(false);

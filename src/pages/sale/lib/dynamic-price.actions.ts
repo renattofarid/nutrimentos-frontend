@@ -42,11 +42,9 @@ export interface DynamicPriceResponse {
 export async function getDynamicPrice(
   request: DynamicPriceRequest
 ): Promise<DynamicPriceResponse> {
-  console.log("Enviando request a API:", JSON.stringify(request, null, 2));
   const { data } = await api.post<DynamicPriceResponse>(
     "/price-lists/dynamic-price",
     request
   );
-  console.log("Respuesta de API:", JSON.stringify(data, null, 2));
   return data;
 }

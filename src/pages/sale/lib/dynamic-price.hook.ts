@@ -15,10 +15,6 @@ export const useDynamicPrice = () => {
       const response = await getDynamicPrice(request);
       return response;
     } catch (err: any) {
-      console.error("Error completo:", err);
-      console.error("Response data:", err.response?.data);
-      console.error("Response status:", err.response?.status);
-      console.error("Response headers:", err.response?.headers);
       setError(err.response?.data?.message || err.message || "Error al obtener el precio dinámico");
       return null;
     } finally {

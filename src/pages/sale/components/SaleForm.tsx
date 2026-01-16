@@ -257,7 +257,11 @@ export const SaleForm = ({
 
       // Si solo hay un almacén, seleccionarlo automáticamente
       // Esto se ejecuta si: no hay almacén seleccionado, o el almacén fue limpiado
-      if (filtered.length === 1 && mode === "create" && (!currentWarehouseId || warehouseCleared)) {
+      if (
+        filtered.length === 1 &&
+        mode === "create" &&
+        (!currentWarehouseId || warehouseCleared)
+      ) {
         form.setValue("warehouse_id", filtered[0].id.toString());
       }
     } else {
@@ -928,9 +932,8 @@ export const SaleForm = ({
             control={form.control}
             name="vendedor_id"
             label="Vendedor"
-            placeholder="Seleccionar vendedor (opcional)"
+            placeholder="Seleccionar vendedor"
             options={[
-              { value: "", label: "Sin vendedor" },
               ...(workers?.map((worker) => ({
                 value: worker.id.toString(),
                 label: `${worker.names} ${worker.father_surname}`,

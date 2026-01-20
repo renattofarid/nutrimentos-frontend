@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+interface CreditNote {
+  id: number;
+  full_document_number: string;
+  total_amount: string;
+}
+
 export interface SaleWithIndex {
   index: number;
   id: number;
@@ -16,8 +22,12 @@ export interface SaleWithIndex {
   delivery_status: "ANULADO" | "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO" | "PENDIENTE";
   delivery_notes: string | null;
   has_credit_notes: boolean;
-  credit_note_ids?: number[];
-  total_credit_notes_amount?: number;
+  credit_notes: CreditNote[];
+  credit_notes_count: number;
+  credit_notes_total: string;
+  credit_notes_total_raw: number;
+  real_pending_amount: string;
+  real_pending_amount_raw: number;
 }
 
 export const saleSettlementSchema = z.object({

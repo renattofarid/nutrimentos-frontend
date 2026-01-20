@@ -1,12 +1,19 @@
 import { User, MapPin, Calendar, FileText } from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import type { DeliverySheetResource } from "../../lib/deliverysheet.interface";
+import { DatePickerFormField } from "@/components/DatePickerFormField";
+import type { UseFormReturn } from "react-hook-form";
+import { FormInput } from "@/components/FormInput";
 
 interface DeliverySheetInfoProps {
+  form: UseFormReturn;
   deliverySheet: DeliverySheetResource;
 }
 
-export function DeliverySheetInfo({ deliverySheet }: DeliverySheetInfoProps) {
+export function DeliverySheetInfo({
+  form,
+  deliverySheet,
+}: DeliverySheetInfoProps) {
   return (
     <GroupFormSection
       title="Información de la Planilla"
@@ -38,10 +45,23 @@ export function DeliverySheetInfo({ deliverySheet }: DeliverySheetInfoProps) {
           <Calendar className="h-4 w-4" />
           <span>Fecha de Entrega</span>
         </div>
-        <p className="font-medium text-base">
-          {deliverySheet.delivery_date}
-        </p>
+        <p className="font-medium text-base">{deliverySheet.delivery_date}</p>
       </div>
+
+      <DatePickerFormField
+        control={form.control}
+        name="payment_date"
+        label="Fecha de Pago"
+        placeholder="Selecciona la fecha de pago"
+        dateFormat="dd/MM/yyyy"
+        captionLayout="dropdown"
+      />
+
+      <FormInput
+        name="observations"
+        label="Observaciones de la Planilla"
+        placeholder="Ingresa las observaciones de la planilla"
+      />
     </GroupFormSection>
   );
 }

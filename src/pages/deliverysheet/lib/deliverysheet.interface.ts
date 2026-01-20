@@ -47,8 +47,33 @@ export interface DeliverySheetSale {
   original_amount: string;
   current_amount: string;
   collected_amount: string;
-  delivery_status: "ANULADO" | "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO" | "PENDIENTE";
+  delivery_status:
+    | "ANULADO"
+    | "ENTREGADO"
+    | "NO_ENTREGADO"
+    | "DEVUELTO"
+    | "PENDIENTE";
   delivery_notes: string | null;
+  credit_notes: CreditNote[];
+  credit_notes_count: number;
+  credit_notes_total: string;
+  credit_notes_total_raw: number;
+  has_credit_notes: boolean;
+  real_pending_amount: string;
+  real_pending_amount_raw: number;
+}
+
+interface CreditNote {
+  id: number;
+  document_type: null;
+  serie: null;
+  numero: null;
+  full_document_number: string;
+  issue_date: string;
+  total_amount: string;
+  total_amount_raw: string;
+  reason: string;
+  status: string;
 }
 
 export interface DeliverySheetPayment {
@@ -384,4 +409,3 @@ export const DELIVERY_SHEET: ModelComplete<DeliverySheetSchema> = {
   },
   EMPTY: {} as any,
 };
-

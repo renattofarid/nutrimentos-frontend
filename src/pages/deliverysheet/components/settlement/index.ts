@@ -6,3 +6,4 @@ export { getSaleTableColumns } from "./SaleTableColumns";
 export { SaleMobileCard } from "./SaleMobileCard";
 export { SettlementSummary } from "./SettlementSummary";
 export { SettlementFormFields } from "./SettlementFormFields";
+export { SaleTableWithNotes } from "./SaleTableWithNotes";

@@ -24,7 +24,7 @@ import {
   getSaleTableColumns,
   SaleMobileCard,
   SettlementSummary,
-  SettlementFormFields,
+  SaleTableWithNotes,
 } from "./settlement";
 
 export default function SettlementPage() {
@@ -36,6 +36,7 @@ export default function SettlementPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const { submitSettlement } = useDeliverySheetStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expandedNotes, setExpandedNotes] = useState<Set<number>>(new Set());
 
   const form = useForm<SettlementFormSchema>({
     resolver: zodResolver(settlementFormSchema) as any,
@@ -151,6 +152,18 @@ export default function SettlementPage() {
     }
   };
 
+  const toggleNote = (index: number) => {
+    setExpandedNotes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
   const salesWithIndex: SaleWithIndex[] = useMemo(() => {
     if (!deliverySheet?.sales) return [];
     return deliverySheet.sales.map((sale, index) => ({
@@ -159,7 +172,10 @@ export default function SettlementPage() {
     }));
   }, [deliverySheet]);
 
-  const columns = useMemo(() => getSaleTableColumns(form as any), [form]);
+  const columns = useMemo(
+    () => getSaleTableColumns(form as any, expandedNotes, toggleNote),
+    [form, expandedNotes],
+  );
 
   const mobileCardRender = (sale: SaleWithIndex) => (
     <SaleMobileCard sale={sale} form={form as any} />
@@ -218,23 +234,30 @@ export default function SettlementPage() {
           </Alert>
         )}
 
-        <DeliverySheetInfo deliverySheet={deliverySheet} />
-
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
           >
-            <DataTable
-              columns={columns}
-              data={salesWithIndex}
-              isLoading={isLoading}
-              mobileCardRender={mobileCardRender}
-              variant="outline"
-              isVisibleColumnFilter={false}
+            <DeliverySheetInfo
+              form={form as any}
+              deliverySheet={deliverySheet}
             />
 
-            <SettlementFormFields form={form as any} />
+            <SaleTableWithNotes
+              sales={salesWithIndex}
+              form={form as any}
+              expandedNotes={expandedNotes}
+            >
+              <DataTable
+                columns={columns}
+                data={salesWithIndex}
+                isLoading={isLoading}
+                mobileCardRender={mobileCardRender}
+                variant="outline"
+                isVisibleColumnFilter={false}
+              />
+            </SaleTableWithNotes>
 
             <SettlementSummary deliverySheet={deliverySheet} />
 

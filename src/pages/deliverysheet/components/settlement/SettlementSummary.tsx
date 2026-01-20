@@ -12,7 +12,12 @@ export function SettlementSummary({ deliverySheet }: SettlementSummaryProps) {
     .reduce((sum, sale) => sum + parseFormattedNumber(sale.total_amount), 0)
     .toFixed(2);
   const totalPendiente = deliverySheet.sales
-    .reduce((sum, sale) => sum + parseFormattedNumber(sale.current_amount), 0)
+    .reduce((sum, sale) => {
+      const pendingAmount = sale.has_credit_notes
+        ? parseFormattedNumber(sale.real_pending_amount)
+        : parseFormattedNumber(sale.current_amount);
+      return sum + pendingAmount;
+    }, 0)
     .toFixed(2);
 
   return (

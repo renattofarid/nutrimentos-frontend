@@ -1,6 +1,7 @@
 import type { UseFormReturn } from "react-hook-form";
-import { User, DollarSign, Clock, FileText, AlertCircle } from "lucide-react";
+import { User, DollarSign, Clock, FileText, AlertCircle, MessageSquarePlus, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +16,7 @@ import {
 import { DELIVERY_STATUS_OPTIONS } from "./constants";
 import type { SaleWithIndex, SettlementFormSchema } from "./types";
 import { parseFormattedNumber } from "@/lib/utils";
+import { useState } from "react";
 
 interface SaleMobileCardProps {
   sale: SaleWithIndex;
@@ -29,6 +31,11 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
     (opt) => opt.value === formValues?.delivery_status,
   );
   const StatusIcon = statusOption?.icon || Clock;
+  const [showNotes, setShowNotes] = useState(false);
+  const hasNote = formValues?.delivery_notes && formValues.delivery_notes.length > 0;
+  const pendingAmount = sale.has_credit_notes
+    ? parseFloat(sale.real_pending_amount)
+    : parseFloat(sale.current_amount);
 
   return (
     <Card className="overflow-hidden py-0">
@@ -71,14 +78,14 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
             <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
             <div className="space-y-1 text-xs">
               <p className="font-semibold text-orange-900">Tiene Nota de Crédito</p>
-              {sale.total_credit_notes_amount && (
+              {sale.credit_notes_total && parseFloat(sale.credit_notes_total) > 0 && (
                 <p className="text-orange-700">
-                  Monto N/C: S/. {parseFloat(sale.total_credit_notes_amount.toString()).toFixed(2)}
+                  Monto N/C: S/. {parseFloat(sale.credit_notes_total).toFixed(2)}
                 </p>
               )}
-              {sale.credit_note_ids && sale.credit_note_ids.length > 0 && (
+              {sale.credit_notes && sale.credit_notes.length > 0 && (
                 <p className="text-orange-700">
-                  IDs: {sale.credit_note_ids.join(", ")}
+                  N/C: {sale.credit_notes.map(cn => cn.full_document_number).join(", ")}
                 </p>
               )}
             </div>
@@ -89,7 +96,7 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
         <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
           <span className="text-sm text-muted-foreground">Monto Pendiente</span>
           <Badge variant="secondary">
-            S/. {parseFloat(sale.current_amount).toFixed(2)}
+            S/. {pendingAmount.toFixed(2)}
           </Badge>
         </div>
 
@@ -143,12 +150,12 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
             <div className="flex items-center gap-2">
               <Checkbox
                 id={`auto-fill-mobile-${index}`}
-                checked={parseFloat(formValues?.payment_amount || "0") === parseFloat(sale.current_amount)}
+                checked={parseFloat(formValues?.payment_amount || "0") === pendingAmount}
                 onCheckedChange={(checked) => {
                   if (checked) {
                     form.setValue(
                       `sales.${index}.payment_amount`,
-                      parseFloat(sale.current_amount).toFixed(2),
+                      pendingAmount.toFixed(2),
                       { shouldValidate: true }
                     );
                   } else {
@@ -174,7 +181,7 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
               type="number"
               step="0.01"
               min="0"
-              max={parseFloat(sale.current_amount)}
+              max={pendingAmount}
               placeholder="0.00"
               className={`text-right ${
                 formErrors?.payment_amount ? "border-red-500" : ""
@@ -194,33 +201,62 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
           )}
         </div>
 
-        {/* Notas */}
+        {/* Botón de Notas */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Notas de Entrega</label>
-          <Textarea
-            placeholder="Observaciones sobre la entrega..."
-            className={`resize-none ${
-              formErrors?.delivery_notes ? "border-red-500" : ""
-            }`}
-            rows={3}
-            maxLength={500}
-            value={formValues?.delivery_notes || ""}
-            onChange={(e) =>
-              form.setValue(`sales.${index}.delivery_notes`, e.target.value, {
-                shouldValidate: true,
-              })
-            }
-          />
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-muted-foreground">
-              {(formValues?.delivery_notes || "").length}/500 caracteres
-            </p>
-            {formErrors?.delivery_notes && (
-              <p className="text-xs text-red-500">
-                {formErrors.delivery_notes.message}
-              </p>
+          <Button
+            type="button"
+            variant={showNotes ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowNotes(!showNotes)}
+            className="w-full gap-2"
+          >
+            {showNotes ? (
+              <>
+                <ChevronUp className="h-4 w-4" />
+                Ocultar Notas
+              </>
+            ) : (
+              <>
+                <MessageSquarePlus className="h-4 w-4" />
+                Agregar Nota
+                {hasNote && (
+                  <Badge variant="secondary" className="ml-1">
+                    <MessageSquare className="h-3 w-3" />
+                  </Badge>
+                )}
+              </>
             )}
-          </div>
+          </Button>
+
+          {showNotes && (
+            <div className="space-y-2 pt-2">
+              <label className="text-sm font-medium">Notas de Entrega</label>
+              <Textarea
+                placeholder="Observaciones sobre la entrega..."
+                className={`resize-none ${
+                  formErrors?.delivery_notes ? "border-red-500" : ""
+                }`}
+                rows={3}
+                maxLength={500}
+                value={formValues?.delivery_notes || ""}
+                onChange={(e) =>
+                  form.setValue(`sales.${index}.delivery_notes`, e.target.value, {
+                    shouldValidate: true,
+                  })
+                }
+              />
+              <div className="flex justify-between items-center">
+                <p className="text-xs text-muted-foreground">
+                  {(formValues?.delivery_notes || "").length}/500 caracteres
+                </p>
+                {formErrors?.delivery_notes && (
+                  <p className="text-xs text-red-500">
+                    {formErrors.delivery_notes.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -13,6 +13,7 @@ import {
 } from "./person.interface";
 import type { AxiosRequestConfig } from "axios";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import { assignClientToPriceList } from "@/pages/pricelist/lib/pricelist.actions";
 
 const { ENDPOINT } = PERSON;
 
@@ -73,6 +74,35 @@ export async function createPersonWithRole(
     await updatePersonRoles(personId, {
       roles: [{ role_id: roleId, status: true }],
     });
+  }
+
+  return createResponse;
+}
+
+// Helper function to create person, assign role, and assign price list
+export async function createPersonWithRoleAndPriceList(
+  data: CreatePersonRequest,
+  roleId: number,
+  priceListId?: number
+): Promise<{ message: string }> {
+  // First create the person
+  const createResponse = await createPerson(data);
+
+  // If the person was created successfully and we have the ID
+  if (createResponse.data?.id) {
+    const personId = createResponse.data.id;
+
+    // Assign the specific role
+    await updatePersonRoles(personId, {
+      roles: [{ role_id: roleId, status: true }],
+    });
+
+    // Assign the price list if provided
+    if (priceListId) {
+      await assignClientToPriceList(priceListId, {
+        person_id: personId.toString(),
+      });
+    }
   }
 
   return createResponse;

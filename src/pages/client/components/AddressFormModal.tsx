@@ -58,7 +58,8 @@ export default function AddressFormModal({
     }
   }, [editingAddress, form]);
 
-  const handleSubmit = async (data: PersonZoneSchema) => {
+  const handleSubmit = async (data: PersonZoneSchema, event?: React.BaseSyntheticEvent) => {
+    event?.stopPropagation();
     await onSubmit(data);
     form.reset();
   };
@@ -82,7 +83,13 @@ export default function AddressFormModal({
       size="md"
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            e.stopPropagation();
+            form.handleSubmit(handleSubmit)(e);
+          }}
+          className="space-y-4"
+        >
           <FormSelect
             label="Zona"
             control={form.control}

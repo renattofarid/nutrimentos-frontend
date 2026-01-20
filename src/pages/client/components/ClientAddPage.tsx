@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import { type PersonSchemaClient } from "@/pages/person/lib/person.schema";
-import { createPersonWithRole } from "@/pages/person/lib/person.actions";
+import { createPersonWithRoleAndPriceList } from "@/pages/person/lib/person.actions";
 import {
   ERROR_MESSAGE,
   errorToast,
@@ -69,13 +69,15 @@ export default function ClientAddPage() {
       if (data.zone_id) {
         createPersonData.zone_id = Number(data.zone_id);
       }
-      if (data.client_category_id) {
-        createPersonData.client_category_id = Number(data.client_category_id);
-      }
 
-      await createPersonWithRole(createPersonData, Number(data.role_id));
+      // Create person, assign role, and assign price list (3 separate API calls)
+      await createPersonWithRoleAndPriceList(
+        createPersonData,
+        Number(data.role_id),
+        data.client_category_id ? Number(data.client_category_id) : undefined
+      );
       successToast(
-        SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "create")
+        SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "create"),
       );
       navigate("/clientes");
     } catch (error: unknown) {
@@ -93,7 +95,7 @@ export default function ClientAddPage() {
 
       errorToast(
         errorMessage,
-        ERROR_MESSAGE({ name: "Cliente", gender: false }, "create")
+        ERROR_MESSAGE({ name: "Cliente", gender: false }, "create"),
       );
       // Propagate error so the form container can avoid resetting the form
       throw error;
@@ -115,8 +117,9 @@ export default function ClientAddPage() {
         roleId={CLIENT_ROLE_ID}
         isClient={true}
         showBusinessType={true}
-        showZone={true}
+        showZone={false}
         showPriceList={true}
+        showDirection={false}
       />
     </FormWrapper>
   );

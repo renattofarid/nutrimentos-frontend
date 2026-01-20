@@ -102,7 +102,7 @@ export default function ClientEditPage() {
 
       await updatePerson(personData.id, updatePersonData);
       successToast(
-        SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "update")
+        SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "update"),
       );
       navigate("/clientes");
     } catch (error: unknown) {
@@ -120,7 +120,7 @@ export default function ClientEditPage() {
 
       errorToast(
         errorMessage,
-        ERROR_MESSAGE({ name: "Cliente", gender: false }, "update")
+        ERROR_MESSAGE({ name: "Cliente", gender: false }, "update"),
       );
     } finally {
       setIsSubmitting(false);
@@ -153,8 +153,9 @@ export default function ClientEditPage() {
         roleId={CLIENT_ROLE_ID}
         isClient={true}
         showBusinessType={true}
-        showZone={true}
+        showZone={false}
         showPriceList={true}
+        showDirection={false}
       />
     </FormWrapper>
   );

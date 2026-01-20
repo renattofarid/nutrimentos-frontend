@@ -407,7 +407,7 @@ export default function DeliverySheetDetailSheet({
         </GroupFormSection>
 
         {/* Pagos */}
-        {deliverySheet.payments.length > 0 && (
+        {deliverySheet.payments?.length > 0 && (
           <GroupFormSection
             title={`Pagos Registrados (${deliverySheet.payments.length})`}
             icon={Wallet}
@@ -439,7 +439,7 @@ export default function DeliverySheetDetailSheet({
         <div className="text-xs text-muted-foreground flex flex-wrap gap-4">
           <span>
             Creado: {formatDateTime(deliverySheet.created_at)} por{" "}
-            {deliverySheet.user.name}
+            {deliverySheet.user?.name}
           </span>
           <span>Actualizado: {formatDateTime(deliverySheet.updated_at)}</span>
         </div>

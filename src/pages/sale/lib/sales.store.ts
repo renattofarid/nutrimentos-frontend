@@ -108,7 +108,7 @@ export const useSaleStore = create<SaleStore>((set) => ({
         branch_id: Number(data.branch_id),
         customer_id: Number(data.customer_id),
         warehouse_id: Number(data.warehouse_id),
-        vendedor_id: data.vendedor_id ? Number(data.vendedor_id) : null,
+        vendedor_id: data.vendedor_id ? Number(data.vendedor_id) : undefined,
         person_zone_id: data.person_zone_id ? Number(data.person_zone_id) : 0,
         document_type: data.document_type,
         issue_date: data.issue_date,
@@ -152,7 +152,7 @@ export const useSaleStore = create<SaleStore>((set) => ({
         ...(data.customer_id && { customer_id: Number(data.customer_id) }),
         ...(data.warehouse_id && { warehouse_id: Number(data.warehouse_id) }),
         ...(data.vendedor_id !== undefined && {
-          vendedor_id: data.vendedor_id ? Number(data.vendedor_id) : null,
+          vendedor_id: data.vendedor_id ? Number(data.vendedor_id) : undefined,
         }),
         ...(data.person_zone_id !== undefined && {
           person_zone_id: data.person_zone_id ? Number(data.person_zone_id) : 0,

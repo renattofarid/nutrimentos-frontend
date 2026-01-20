@@ -193,6 +193,11 @@ export const GuideForm = ({
           form.setValue("warehouse_id", "");
         }
       }
+
+      // Si solo hay un almacén, seleccionarlo automáticamente
+      if (filtered.length === 1) {
+        form.setValue("warehouse_id", filtered[0].id.toString());
+      }
     } else {
       setFilteredWarehouses([]);
       form.setValue("warehouse_id", "");

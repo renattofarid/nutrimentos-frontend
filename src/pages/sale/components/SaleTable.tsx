@@ -30,6 +30,7 @@ export default function SaleTable({
         enableRowSelection={enableRowSelection}
         rowSelection={rowSelection}
         onRowSelectionChange={onRowSelectionChange}
+        getRowId={(row) => row.id.toString()}
         initialColumnVisibility={{
           id: false,
         }}

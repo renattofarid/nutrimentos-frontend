@@ -6,8 +6,9 @@ import {
   getCoreRowModel,
   useReactTable,
   type ColumnDef,
-  type RowSelectionState,
+  type SortingState,
   type OnChangeFn,
+  type RowSelectionState,
 } from "@tanstack/react-table";
 
 import {
@@ -19,12 +20,77 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { VisibilityState } from "@tanstack/react-table";
 import DataTableColumnFilter from "./DataTableColumnFilter";
 import FormSkeleton from "./FormSkeleton";
+import { cn } from "@/lib/utils";
+import { cva, type VariantProps } from "class-variance-authority";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-interface DataTableProps<TData, TValue> {
+const dataTableVariants = cva("hidden md:block w-full", {
+  variants: {
+    variant: {
+      default: "overflow-hidden rounded-2xl border shadow-xs",
+      simple: "",
+      outline: "border rounded-lg",
+      ghost: "",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
+
+const headerVariants = cva("sticky top-0 z-10", {
+  variants: {
+    variant: {
+      default: "bg-muted",
+      simple: "",
+      outline: "bg-muted/50",
+      ghost: "",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
+
+const mobileCardVariants = cva("overflow-hidden transition-colors pb-0", {
+  variants: {
+    variant: {
+      default: "border-primary/10 hover:border-primary/30 border shadow-sm",
+      simple: "border-transparent",
+      outline: "border hover:border-primary/30",
+      ghost: "border-transparent hover:bg-muted/50 shadow-none",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
+
+const mobileCardFooterVariants = cva(
+  "border-t px-3 py-1 flex justify-end gap-2 [.border-t]:pt-1",
+  {
+    variants: {
+      variant: {
+        default: "bg-muted/60 border-primary/10",
+        simple: "bg-transparent border-transparent",
+        outline: "bg-muted/30 border-muted",
+        ghost: "bg-muted border-transparent",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
+
+interface DataTableProps<TData, TValue> extends VariantProps<
+  typeof dataTableVariants
+> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   children?: React.ReactNode;
@@ -32,9 +98,14 @@ interface DataTableProps<TData, TValue> {
   initialColumnVisibility?: VisibilityState;
   isVisibleColumnFilter?: boolean;
   mobileCardRender?: (row: TData, index: number) => React.ReactNode;
-  enableRowSelection?: boolean;
+  className?: string;
+  sorting?: SortingState;
+  onSortingChange?: OnChangeFn<SortingState>;
+  manualSorting?: boolean;
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  enableRowSelection?: boolean;
+  getRowId?: (originalRow: TData, index: number) => string;
 }
 
 export function DataTable<TData, TValue>({
@@ -45,36 +116,38 @@ export function DataTable<TData, TValue>({
   initialColumnVisibility,
   isVisibleColumnFilter = true,
   mobileCardRender,
-  enableRowSelection = false,
-  rowSelection: controlledRowSelection,
+  className,
+  variant,
+  sorting,
+  onSortingChange,
+  manualSorting = false,
+  rowSelection,
   onRowSelectionChange,
+  enableRowSelection = false,
+  getRowId,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-    initialColumnVisibility ?? {}
+    initialColumnVisibility ?? {},
   );
-  const [internalRowSelection, setInternalRowSelection] = useState<RowSelectionState>({});
-
-  // Use controlled or internal row selection
-  const rowSelection = controlledRowSelection !== undefined ? controlledRowSelection : internalRowSelection;
-  const setRowSelection = onRowSelectionChange || setInternalRowSelection;
-
-  // Reset selection when data changes (e.g., pagination or filters)
-  useEffect(() => {
-    if (controlledRowSelection === undefined) {
-      setInternalRowSelection({});
-    }
-  }, [data, controlledRowSelection]);
+  const [internalRowSelection, setInternalRowSelection] = useState({});
 
   const table = useReactTable({
     data,
     columns,
     manualPagination: true,
+    manualSorting,
+    enableSorting: true,
+    enableSortingRemoval: true,
+    enableMultiSort: false,
     enableRowSelection,
+    getRowId,
     state: {
       columnFilters,
       columnVisibility,
-      rowSelection,
+      ...(rowSelection !== undefined && { rowSelection }),
+      ...(rowSelection === undefined && { rowSelection: internalRowSelection }),
+      ...(sorting !== undefined && { sorting }),
       pagination: {
         pageIndex: 0,
         pageSize: 10,
@@ -83,34 +156,66 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    getRowId: (row: any) => row.id?.toString() || Math.random().toString(),
+    ...(onRowSelectionChange && { onRowSelectionChange }),
+    ...(onRowSelectionChange === undefined && { onRowSelectionChange: setInternalRowSelection }),
+    ...(onSortingChange && { onSortingChange }),
   });
 
   return (
-    <div className="flex flex-col gap-2 w-full items-end">
+    <div
+      className={cn(
+        "flex flex-col w-full items-end",
+        isVisibleColumnFilter ? "gap-2" : "",
+      )}
+    >
       <div className="grid md:flex md:flex-wrap gap-2 md:justify-between w-full">
         {children}
-        {isVisibleColumnFilter && <DataTableColumnFilter table={table} />}
+        {isVisibleColumnFilter && !mobileCardRender && (
+          <DataTableColumnFilter table={table} />
+        )}
       </div>
 
       {/* Vista de Tabla para pantallas grandes */}
-      <div className="hidden md:block overflow-hidden rounded-2xl border shadow-xs w-full">
+      <div className={cn(dataTableVariants({ variant }), className)}>
         <div className="overflow-x-auto w-full">
           <Table className="text-xs md:text-sm">
-            <TableHeader className="bg-muted sticky top-0 z-10">
+            <TableHeader className={cn(headerVariants({ variant }))}>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="text-nowrap h-10">
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="h-10">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id} className="h-10">
+                        {header.isPlaceholder ? null : header.column.columnDef
+                            .enableSorting ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="-ml-3 h-8 data-[state=open]:bg-accent"
+                            onClick={header.column.getToggleSortingHandler()}
+                          >
+                            <span>
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                            </span>
+                            {header.column.getIsSorted() === "asc" ? (
+                              <ArrowUp className="ml-2 h-4 w-4" />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <ArrowDown className="ml-2 h-4 w-4" />
+                            ) : (
+                              <ArrowUpDown className="ml-2 h-4 w-4" />
+                            )}
+                          </Button>
+                        ) : (
+                          flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  ))}
+                            header.getContext(),
+                          )
+                        )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
               ))}
             </TableHeader>
@@ -131,7 +236,7 @@ export function DataTable<TData, TValue>({
                       <TableCell key={cell.id} className="p-2 truncate">
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     ))}
@@ -152,7 +257,7 @@ export function DataTable<TData, TValue>({
       {/* Vista de Cards para móviles */}
       <div className="md:hidden w-full space-y-3">
         {isLoading ? (
-          <Card className="py-0">
+          <Card>
             <CardContent className="pt-6">
               <FormSkeleton />
             </CardContent>
@@ -172,20 +277,20 @@ export function DataTable<TData, TValue>({
             const actionCell = cells.find(
               (cell) =>
                 cell.column.id.toLowerCase().includes("accion") ||
-                cell.column.id.toLowerCase().includes("action")
+                cell.column.id.toLowerCase().includes("action"),
             );
             const contentCells = cells.filter(
               (cell) =>
                 !cell.column.id.toLowerCase().includes("accion") &&
-                !cell.column.id.toLowerCase().includes("action")
+                !cell.column.id.toLowerCase().includes("action"),
             );
 
             return (
               <Card
                 key={row.id}
-                className={`py-0 gap-0! overflow-hidden border-primary/10 hover:border-primary/30 transition-colors`}
+                className={cn(mobileCardVariants({ variant }))}
               >
-                <CardContent className="py-4 px-2">
+                <CardContent className="px-4">
                   <div className="grid grid-cols-1 gap-2">
                     {contentCells.map((cell) => {
                       const header = cell.column.columnDef.header;
@@ -193,21 +298,21 @@ export function DataTable<TData, TValue>({
                         typeof header === "string"
                           ? header
                           : typeof header === "function"
-                          ? cell.column.id
-                          : cell.column.id;
+                            ? cell.column.id
+                            : cell.column.id;
 
                       return (
                         <div
                           key={cell.id}
-                          className="grid grid-cols-3 items-center gap-1"
+                          className="grid grid-cols-3 items-center gap-1 text-wrap"
                         >
-                          <span className="text-xs font-semibold text-primary uppercase">
+                          <span className="text-xs font-medium text-primary">
                             {headerText}
                           </span>
                           <div className="text-xs text-foreground col-span-2">
                             {flexRender(
                               cell.column.columnDef.cell,
-                              cell.getContext()
+                              cell.getContext(),
                             )}
                           </div>
                         </div>
@@ -216,10 +321,12 @@ export function DataTable<TData, TValue>({
                   </div>
                 </CardContent>
                 {actionCell && (
-                  <CardFooter className="p-1! bg-muted/60 border-t border-primary/10 px-3 flex justify-end gap-2">
+                  <CardFooter
+                    className={cn(mobileCardFooterVariants({ variant }))}
+                  >
                     {flexRender(
                       actionCell.column.columnDef.cell,
-                      actionCell.getContext()
+                      actionCell.getContext(),
                     )}
                   </CardFooter>
                 )}

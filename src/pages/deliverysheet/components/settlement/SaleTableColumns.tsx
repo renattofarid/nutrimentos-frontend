@@ -1,0 +1,283 @@
+import type { ColumnDef } from "@tanstack/react-table";
+import type { UseFormReturn } from "react-hook-form";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  FileText,
+  AlertCircle,
+  MessageSquarePlus,
+  MessageSquare,
+} from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { DELIVERY_STATUS_OPTIONS } from "./constants";
+import type { SaleWithIndex, SettlementFormSchema } from "./types";
+import { parseFormattedNumber } from "@/lib/utils";
+
+export function getSaleTableColumns(
+  form: UseFormReturn<SettlementFormSchema, any, undefined>,
+  expandedNotes: Set<number>,
+  toggleNote: (index: number) => void,
+): ColumnDef<SaleWithIndex>[] {
+  return [
+    {
+      accessorKey: "full_document_number",
+      header: "Documento / Cliente",
+      cell: ({ row }) => (
+        <div className="space-y-2 min-w-[200px]">
+          <div className="flex items-center gap-2">
+            <Badge className="font-mono font-semibold text-sm">
+              {row.original.full_document_number}
+            </Badge>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {row.original.customer.full_name}
+          </div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "total_amount",
+      header: "Montos",
+      cell: ({ row }) => {
+        const hasCreditNotes = row.original.has_credit_notes;
+        const creditNoteAmount = row.original.credit_notes_total;
+        const creditNotes = row.original.credit_notes || [];
+        const pendingAmount = hasCreditNotes
+          ? row.original.real_pending_amount
+          : row.original.current_amount;
+
+        return (
+          <div className="space-y-1.5 min-w-[140px]">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-muted-foreground">Total:</span>
+              <Badge variant="outline" className="text-xs">
+                S/. {parseFormattedNumber(row.original.total_amount).toFixed(2)}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-muted-foreground">Pendiente:</span>
+              <Badge variant="secondary" className="text-xs font-semibold">
+                S/. {parseFloat(pendingAmount).toFixed(2)}
+              </Badge>
+            </div>
+            {hasCreditNotes && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center justify-between gap-2 cursor-help">
+                      <span className="text-xs text-orange-600">
+                        N/C:{" "}
+                        {creditNoteAmount && parseFloat(creditNoteAmount) > 0
+                          ? parseFloat(creditNoteAmount).toFixed(2)
+                          : ""}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3 text-orange-500" />
+                        <FileText className="h-3 w-3 text-orange-500" />
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="space-y-1 text-xs">
+                      <p className="font-semibold">Tiene Nota de Crédito</p>
+                      {creditNoteAmount && parseFloat(creditNoteAmount) > 0 && (
+                        <p>
+                          Monto: S/. {parseFloat(creditNoteAmount).toFixed(2)}
+                        </p>
+                      )}
+                      {creditNotes.length > 0 && (
+                        <p>
+                          N/C:{" "}
+                          {creditNotes
+                            .map((cn) => cn.full_document_number)
+                            .join(", ")}
+                        </p>
+                      )}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "delivery_status",
+      header: "Estado",
+      cell: ({ row }) => {
+        const index = row.original.index;
+        const formValues = form.watch(`sales.${index}`);
+        const formErrors = form.formState.errors.sales?.[index];
+        console.log("formValues", formValues);
+        return (
+          <div className="space-y-1">
+            <Select
+              value={formValues?.delivery_status || "ENTREGADO"}
+              onValueChange={(value) =>
+                form.setValue(`sales.${index}.delivery_status`, value, {
+                  shouldValidate: true,
+                })
+              }
+            >
+              <SelectTrigger
+                className={`w-full md:w-[160px] ${
+                  formErrors?.delivery_status ? "border-red-500" : ""
+                }`}
+              >
+                <SelectValue placeholder="Seleccionar..." />
+              </SelectTrigger>
+              <SelectContent>
+                {DELIVERY_STATUS_OPTIONS.map((option) => {
+                  const Icon = option.icon;
+                  return (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        {option.label}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            {formErrors?.delivery_status && (
+              <p className="text-xs text-red-500">
+                {formErrors.delivery_status.message}
+              </p>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "payment_amount",
+      header: "Monto Cobrado",
+      cell: ({ row }) => {
+        const index = row.original.index;
+        const formValues = form.watch(`sales.${index}`);
+        const formErrors = form.formState.errors.sales?.[index];
+        const hasCreditNotes = row.original.has_credit_notes;
+        const pendingAmount = hasCreditNotes
+          ? parseFloat(row.original.real_pending_amount)
+          : parseFloat(row.original.current_amount);
+
+        const handleAutoFill = (checked: boolean) => {
+          if (checked) {
+            form.setValue(
+              `sales.${index}.payment_amount`,
+              pendingAmount.toFixed(2),
+              { shouldValidate: true },
+            );
+          } else {
+            form.setValue(`sales.${index}.payment_amount`, "0", {
+              shouldValidate: true,
+            });
+          }
+        };
+
+        const isAutoFilled =
+          parseFloat(formValues?.payment_amount || "0") === pendingAmount;
+
+        return (
+          <div className="min-w-[280px] space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">
+                S/.
+              </span>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                max={pendingAmount}
+                placeholder="0.00"
+                className={`w-32 text-right ${
+                  formErrors?.payment_amount ? "border-red-500" : ""
+                }`}
+                value={formValues?.payment_amount || "0"}
+                onChange={(e) =>
+                  form.setValue(
+                    `sales.${index}.payment_amount`,
+                    e.target.value,
+                    {
+                      shouldValidate: true,
+                    },
+                  )
+                }
+              />
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id={`auto-fill-${index}`}
+                  checked={isAutoFilled}
+                  onCheckedChange={handleAutoFill}
+                />
+                <label
+                  htmlFor={`auto-fill-${index}`}
+                  className="text-sm font-medium cursor-pointer select-none whitespace-nowrap"
+                >
+                  Pagar todo
+                </label>
+              </div>
+            </div>
+            {formErrors?.payment_amount && (
+              <p className="text-xs text-red-500">
+                {formErrors.payment_amount.message}
+              </p>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      id: "notes_toggle",
+      header: "",
+      cell: ({ row }) => {
+        const index = row.original.index;
+        const isExpanded = expandedNotes.has(index);
+        const formValues = form.watch(`sales.${index}`);
+        const hasNote =
+          formValues?.delivery_notes && formValues.delivery_notes.length > 0;
+
+        return (
+          <div className="flex justify-center">
+            <Button
+              type="button"
+              variant={isExpanded ? "default" : "outline"}
+              size="sm"
+              onClick={() => toggleNote(index)}
+              className="gap-2"
+            >
+              {isExpanded ? (
+                <MessageSquare className="h-4 w-4" />
+              ) : (
+                <MessageSquarePlus className="h-4 w-4" />
+              )}
+              {hasNote && !isExpanded && (
+                <Badge
+                  variant="secondary"
+                  className="h-4 w-4 p-0 flex items-center justify-center rounded-full"
+                >
+                  !
+                </Badge>
+              )}
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+}

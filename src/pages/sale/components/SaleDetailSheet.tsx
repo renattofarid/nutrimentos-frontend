@@ -180,8 +180,8 @@ export default function SaleDetailSheet({
                     sale.status === "PAGADA"
                       ? "default"
                       : sale.status === "REGISTRADO"
-                      ? "secondary"
-                      : "destructive"
+                        ? "secondary"
+                        : "destructive"
                   }
                   className="text-sm"
                 >
@@ -219,7 +219,9 @@ export default function SaleDetailSheet({
           <CardContent className="space-y-2">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Nombre Completo</p>
-              <p className="font-semibold text-lg">{sale.customer.full_name}</p>
+              <p className="font-semibold text-lg">
+                {sale.customer.business_name ?? sale.customer.names}
+              </p>
             </div>
             {sale.customer.number_document && (
               <div className="space-y-1">
@@ -448,8 +450,8 @@ export default function SaleDetailSheet({
                               installment.status === "PAGADO"
                                 ? "default"
                                 : installment.status === "PENDIENTE"
-                                ? "secondary"
-                                : "destructive"
+                                  ? "secondary"
+                                  : "destructive"
                             }
                           >
                             {installment.status}

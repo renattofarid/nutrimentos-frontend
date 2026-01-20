@@ -98,6 +98,7 @@ export interface GetAvailableSalesParams {
   payment_type: "CONTADO" | "CREDITO";
   zone_id?: number;
   customer_id?: number;
+  person_zone_id?: number;
   date_from?: string;
   date_to?: string;
 }

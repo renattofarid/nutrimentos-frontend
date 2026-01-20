@@ -22,12 +22,13 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { DELIVERY_SHEET_TYPES } from "../lib/deliverysheet.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import type { AvailableSale } from "../lib/deliverysheet.interface";
+import { parseFormattedNumber } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
@@ -55,6 +56,7 @@ interface DeliverySheetFormProps {
     payment_type: string;
     zone_id?: number;
     customer_id?: number;
+    person_zone_id?: number;
     date_from?: string;
     date_to?: string;
   }) => void;
@@ -76,12 +78,13 @@ export const DeliverySheetForm = ({
   isLoadingAvailableSales,
 }: DeliverySheetFormProps) => {
   const [selectedSaleIds, setSelectedSaleIds] = useState<number[]>(
-    defaultValues.sale_ids || []
+    defaultValues.sale_ids || [],
   );
   const [searchParams, setSearchParams] = useState({
     payment_type: "",
     zone_id: "",
     customer_id: "",
+    person_zone_id: "",
     date_from: undefined as Date | undefined,
     date_to: undefined as Date | undefined,
   });
@@ -117,6 +120,9 @@ export const DeliverySheetForm = ({
       zone_id: searchParams.zone_id ? Number(searchParams.zone_id) : undefined,
       customer_id: searchParams.customer_id
         ? Number(searchParams.customer_id)
+        : undefined,
+      person_zone_id: searchParams.person_zone_id
+        ? Number(searchParams.person_zone_id)
         : undefined,
       date_from: searchParams.date_from
         ? format(searchParams.date_from, "yyyy-MM-dd")
@@ -176,7 +182,7 @@ export const DeliverySheetForm = ({
 
   const totalAmount = selectedSaleIds.reduce((sum, saleId) => {
     const sale = availableSales.find((s) => s.id === saleId);
-    return sum + (sale ? parseFloat(sale.total_amount) : 0);
+    return sum + (sale ? parseFormattedNumber(sale.total_amount) : 0);
   }, 0);
 
   const handleFormSubmit = (data: DeliverySheetSchema) => {
@@ -242,16 +248,18 @@ export const DeliverySheetForm = ({
           />
 
           {forSingleCustomer ? (
-            <FormSelect
-              control={form.control}
-              name="customer_id"
-              label="Cliente"
-              placeholder="Seleccione un cliente"
-              options={customers.map((customer) => ({
-                value: customer.id.toString(),
-                label: customer.names ?? customer.business_name,
-              }))}
-            />
+            <>
+              <FormSelect
+                control={form.control}
+                name="customer_id"
+                label="Cliente"
+                placeholder="Seleccione un cliente"
+                options={customers.map((customer) => ({
+                  value: customer.id.toString(),
+                  label: customer.names ?? customer.business_name,
+                }))}
+              />
+            </>
           ) : (
             <FormSelect
               control={form.control}
@@ -355,8 +363,12 @@ export const DeliverySheetForm = ({
                     ? "Deseleccionar Todas"
                     : "Seleccionar Todas"}
                 </Button>
-                <Badge variant="outline" className="text-lg">
-                  Total: S/. {totalAmount.toFixed(2)}
+                <Badge
+                  variant="green"
+                  className="text-lg flex flex-col items-end"
+                >
+                  <span className="text-green-950 text-xs">TOTAL</span>
+                  <span>S/. {totalAmount.toFixed(2)}</span>
                 </Badge>
               </div>
 
@@ -400,19 +412,20 @@ export const DeliverySheetForm = ({
                         </TableCell>
                         <TableCell>
                           <div className="max-w-[200px] truncate">
-                            {sale.customer.names} {sale.customer.father_surname}{" "}
-                            {sale.customer.mother_surname}
+                            {sale.customer.business_name ??
+                              `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`}
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {new Date(sale.issue_date).toLocaleDateString(
-                              "es-ES"
+                            {format(
+                              parse(sale.issue_date.split("T")[0], "yyyy-MM-dd", new Date()),
+                              "dd/MM/yyyy",
                             )}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right font-semibold">
-                          S/. {parseFloat(sale.total_amount).toFixed(2)}
+                          S/. {parseFormattedNumber(sale.total_amount).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     ))}

@@ -89,7 +89,7 @@ export const CreditNoteForm = ({
           quantity_kg: detail.quantity_kg || 0,
           unit_price: detail.unit_price,
           selected: false,
-        })
+        }),
       );
       replace(mappedDetails);
     } else {
@@ -189,7 +189,7 @@ export const CreditNoteForm = ({
                   <p className="text-sm text-muted-foreground">Fecha</p>
                   <p className="font-semibold">
                     {new Date(selectedSale.issue_date).toLocaleDateString(
-                      "es-PE"
+                      "es-PE",
                     )}
                   </p>
                 </div>
@@ -197,7 +197,7 @@ export const CreditNoteForm = ({
                   <p className="text-sm text-muted-foreground">Cliente</p>
                   <p className="font-semibold">
                     {selectedSale.customer.business_name ||
-                      selectedSale.customer.full_name}
+                      selectedSale.customer.names}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {selectedSale.customer.number_document}
@@ -232,7 +232,7 @@ export const CreditNoteForm = ({
                   <p className="font-bold text-lg">
                     {selectedSale.currency === "USD" ? "$" : "S/."}{" "}
                     {parseFloat(selectedSale.total_amount.toString()).toFixed(
-                      2
+                      2,
                     )}
                   </p>
                 </div>
@@ -323,7 +323,7 @@ export const CreditNoteForm = ({
                                       {...qtySacksField}
                                       onChange={(e) =>
                                         qtySacksField.onChange(
-                                          parseFloat(e.target.value) || 0
+                                          parseFloat(e.target.value) || 0,
                                         )
                                       }
                                       disabled={
@@ -355,7 +355,7 @@ export const CreditNoteForm = ({
                                       {...qtyKgField}
                                       onChange={(e) =>
                                         qtyKgField.onChange(
-                                          parseFloat(e.target.value) || 0
+                                          parseFloat(e.target.value) || 0,
                                         )
                                       }
                                       disabled={
@@ -389,7 +389,7 @@ export const CreditNoteForm = ({
                                       {...priceField}
                                       onChange={(e) =>
                                         priceField.onChange(
-                                          parseFloat(e.target.value) || 0
+                                          parseFloat(e.target.value) || 0,
                                         )
                                       }
                                       disabled={
@@ -400,7 +400,7 @@ export const CreditNoteForm = ({
                                   <p className="text-xs text-muted-foreground">
                                     Original:{" "}
                                     {parseFloat(
-                                      detail.unit_price.toString()
+                                      detail.unit_price.toString(),
                                     ).toFixed(2)}
                                   </p>
                                   <FormMessage />

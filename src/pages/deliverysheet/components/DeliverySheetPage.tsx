@@ -11,8 +11,6 @@ import {
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import DeliverySheetDetailSheet from "./DeliverySheetDetailSheet";
 import { StatusUpdateDialog } from "./StatusUpdateDialog";
-import { SettlementDialog } from "./SettlementDialog";
-import { PaymentDialog } from "./PaymentDialog";
 import { findDeliverySheetById } from "../lib/deliverysheet.actions";
 import TitleComponent from "@/components/TitleComponent";
 import PageWrapper from "@/components/PageWrapper";
@@ -22,8 +20,6 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import type {
   DeliverySheetStatusSchema,
-  SettlementSchema,
-  DeliverySheetPaymentSchema,
 } from "../lib/deliverysheet.schema";
 import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
@@ -40,8 +36,6 @@ export default function DeliverySheetPage() {
   const [selectedDeliverySheet, setSelectedDeliverySheet] =
     useState<DeliverySheetResource | null>(null);
   const [openStatusDialog, setOpenStatusDialog] = useState(false);
-  const [openSettlementDialog, setOpenSettlementDialog] = useState(false);
-  const [openPaymentDialog, setOpenPaymentDialog] = useState(false);
 
   const {
     deliverySheets,
@@ -50,8 +44,6 @@ export default function DeliverySheetPage() {
     fetchDeliverySheets,
     removeDeliverySheet,
     updateStatus,
-    submitSettlement,
-    submitPayment,
   } = useDeliverySheetStore();
 
   useEffect(() => {
@@ -78,19 +70,8 @@ export default function DeliverySheetPage() {
     setOpenStatusDialog(true);
   };
 
-  const handleSettlement = async (deliverySheet: DeliverySheetResource) => {
-    try {
-      const response = await findDeliverySheetById(deliverySheet.id);
-      setSelectedDeliverySheet(response.data);
-      setOpenSettlementDialog(true);
-    } catch (error) {
-      console.error("Error al cargar detalles de la planilla", error);
-    }
-  };
-
-  const handleRegisterPayment = (deliverySheet: DeliverySheetResource) => {
-    setSelectedDeliverySheet(deliverySheet);
-    setOpenPaymentDialog(true);
+  const handleSettlement = (deliverySheet: DeliverySheetResource) => {
+    navigate(`/planillas/rendicion/${deliverySheet.id}`);
   };
 
   const confirmDelete = async () => {
@@ -119,32 +100,6 @@ export default function DeliverySheetPage() {
     }
   };
 
-  const handleSettlementSubmit = async (data: SettlementSchema) => {
-    if (selectedDeliverySheet) {
-      try {
-        await submitSettlement(selectedDeliverySheet.id, data);
-        fetchDeliverySheets({ page, per_page: perPage });
-        setOpenSettlementDialog(false);
-        setSelectedDeliverySheet(null);
-      } catch (error) {
-        console.error("Error al registrar rendición", error);
-      }
-    }
-  };
-
-  const handlePaymentSubmit = async (data: DeliverySheetPaymentSchema) => {
-    if (selectedDeliverySheet) {
-      try {
-        await submitPayment(selectedDeliverySheet.id, data);
-        fetchDeliverySheets({ page, per_page: perPage });
-        setOpenPaymentDialog(false);
-        setSelectedDeliverySheet(null);
-      } catch (error) {
-        console.error("Error al registrar pago", error);
-      }
-    }
-  };
-
   const { MODEL, ICON, ROUTE_ADD } = DELIVERY_SHEET;
 
   const columns = getDeliverySheetColumns({
@@ -152,7 +107,6 @@ export default function DeliverySheetPage() {
     onViewDetails: handleViewDetails,
     onUpdateStatus: handleUpdateStatus,
     onSettlement: handleSettlement,
-    onRegisterPayment: handleRegisterPayment,
   });
 
   return (
@@ -200,40 +154,16 @@ export default function DeliverySheetPage() {
       />
 
       {selectedDeliverySheet && (
-        <>
-          <StatusUpdateDialog
-            open={openStatusDialog}
-            onClose={() => {
-              setOpenStatusDialog(false);
-              setSelectedDeliverySheet(null);
-            }}
-            onSubmit={handleStatusSubmit}
-            currentStatus={selectedDeliverySheet.status}
-            currentDeliveryDate={selectedDeliverySheet.delivery_date}
-          />
-
-          {selectedDeliverySheet.sales && (
-            <SettlementDialog
-              open={openSettlementDialog}
-              onClose={() => {
-                setOpenSettlementDialog(false);
-                setSelectedDeliverySheet(null);
-              }}
-              onSubmit={handleSettlementSubmit}
-              sales={selectedDeliverySheet.sales}
-            />
-          )}
-
-          <PaymentDialog
-            open={openPaymentDialog}
-            onClose={() => {
-              setOpenPaymentDialog(false);
-              setSelectedDeliverySheet(null);
-            }}
-            onSubmit={handlePaymentSubmit}
-            pendingAmount={selectedDeliverySheet.pending_amount}
-          />
-        </>
+        <StatusUpdateDialog
+          open={openStatusDialog}
+          onClose={() => {
+            setOpenStatusDialog(false);
+            setSelectedDeliverySheet(null);
+          }}
+          onSubmit={handleStatusSubmit}
+          currentStatus={selectedDeliverySheet.status}
+          currentDeliveryDate={selectedDeliverySheet.delivery_date}
+        />
       )}
     </PageWrapper>
   );

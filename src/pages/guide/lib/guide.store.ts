@@ -103,7 +103,7 @@ export const useGuideStore = create<GuideStore>((set) => ({
     set({ isLoadingMotives: true, error: null });
     try {
       const response = await getGuideMotives();
-      set({ motives: response.data, isLoadingMotives: false });
+      set({ motives: response, isLoadingMotives: false });
     } catch (error) {
       set({
         error: "Error al cargar los motivos de traslado",

@@ -90,6 +90,18 @@ export const settlementSaleSchema = z.object({
       }
     ),
   delivery_notes: z.string().max(500).optional(),
+  payment_amount: z
+    .string()
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "El monto del pago debe ser un número válido mayor o igual a 0",
+    })
+    .refine((val) => {
+      const num = Number(val);
+      return num.toString().split(".")[1]?.length <= 2 || !num.toString().includes(".");
+    }, {
+      message: "El monto debe tener máximo 2 decimales",
+    })
+    .default("0"),
 });
 
 export type SettlementSaleSchema = z.infer<typeof settlementSaleSchema>;
@@ -98,6 +110,13 @@ export const settlementSchema = z.object({
   sales: z
     .array(settlementSaleSchema)
     .min(1, { message: "Debe incluir al menos una venta" }),
+  payment_date: z
+    .string()
+    .min(1, { message: "La fecha de pago es requerida" })
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: "La fecha de pago no es válida",
+    }),
+  observations: z.string().max(500).optional(),
 });
 
 export type SettlementSchema = z.infer<typeof settlementSchema>;

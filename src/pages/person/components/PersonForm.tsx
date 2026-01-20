@@ -11,14 +11,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Loader,
-  Search,
-  Paperclip,
-  IdCard,
-  IdCardLanyard,
-  ListPlus,
-} from "lucide-react";
+import { Loader, Search, Paperclip, IdCard } from "lucide-react";
 import {
   personCreateSchema,
   personCreateSchemaClient,
@@ -40,12 +33,13 @@ import { useAllJobPositions } from "@/pages/jobposition/lib/jobposition.hook";
 import type { JobPositionResource } from "@/pages/jobposition/lib/jobposition.interface";
 import { useAllBusinessTypes } from "@/pages/businesstype/lib/businesstype.hook";
 import type { BusinessTypeResource } from "@/pages/businesstype/lib/businesstype.interface";
-import { useAllZones } from "@/pages/zone/lib/zone.hook";
-import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
 import { usePriceList } from "@/pages/pricelist/lib/pricelist.hook";
 import type { PriceList } from "@/pages/pricelist/lib/pricelist.interface";
 import { TYPE_DOCUMENT } from "../lib/person.constants";
 import { GroupFormSection } from "@/components/GroupFormSection";
+import PersonAddressesList from "@/pages/client/components/PersonAddressesList";
+import { useAllZones } from "@/pages/zone/lib/zone.hook";
+import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
 
 interface PersonFormProps {
   initialData?: PersonResource | null;
@@ -58,6 +52,7 @@ interface PersonFormProps {
   showJobPosition?: boolean; // Show job position field
   showBusinessType?: boolean; // Show business type field
   showZone?: boolean; // Show zone field
+  showDirection?: boolean; // Show address field
   showPriceList?: boolean; // Show price list field for clients
 }
 
@@ -72,6 +67,7 @@ export const PersonForm = ({
   showJobPosition = false,
   showBusinessType = false,
   showZone = false,
+  showDirection = true,
   showPriceList = false,
 }: PersonFormProps) => {
   const isEditing = !!initialData;
@@ -80,8 +76,8 @@ export const PersonForm = ({
   const schema = isClient
     ? personCreateSchemaClient
     : isWorker
-    ? personCreateSchemaWorker
-    : personCreateSchema;
+      ? personCreateSchemaWorker
+      : personCreateSchema;
   type FormSchema = PersonSchema | PersonSchemaClient;
 
   const form = useForm<FormSchema>({
@@ -104,8 +100,8 @@ export const PersonForm = ({
       role_id: roleId.toString(),
       job_position_id: initialData?.job_position_id?.toString() || "",
       business_type_id: initialData?.business_type_id?.toString() || "",
+      client_category_id: initialData?.client_category?.id.toString() || "",
       zone_id: initialData?.zone_id?.toString() || "",
-      client_category_id: initialData?.client_category_id?.toString() || "",
     },
     mode: "onChange", // Validate on change for immediate feedback
   });
@@ -120,20 +116,20 @@ export const PersonForm = ({
   // Get all document types from API
   const { data: documentTypes, isLoading: isLoadingDocumentTypes } =
     useAllDocumentTypes();
+  const { data: zones, isLoading: isLoadingZones } = useAllZones();
 
   // Get optional data from API
   const { data: jobPositions, isLoading: isLoadingJobPositions } =
     useAllJobPositions();
   const { data: businessTypes, isLoading: isLoadingBusinessTypes } =
     useAllBusinessTypes();
-  const { data: zones, isLoading: isLoadingZones } = useAllZones();
   const { data: priceLists, isLoading: isLoadingPriceLists } = usePriceList();
 
   // Update document_type_id when document_type_id changes
   useEffect(() => {
     if (documentTypes) {
       const selectedDocType = documentTypes.find(
-        (dt: DocumentTypeResource) => dt.id.toString() === document_type_id
+        (dt: DocumentTypeResource) => dt.id.toString() === document_type_id,
       );
       if (selectedDocType) {
         form.setValue("document_type_id", selectedDocType.id.toString(), {
@@ -301,19 +297,19 @@ export const PersonForm = ({
               isLoadingDocumentTypes
                 ? []
                 : isWorker
-                ? (documentTypes || [])
-                    .filter(
-                      (dt: DocumentTypeResource) =>
-                        dt.name === TYPE_DOCUMENT.DNI.name
-                    )
-                    .map((dt: DocumentTypeResource) => ({
+                  ? (documentTypes || [])
+                      .filter(
+                        (dt: DocumentTypeResource) =>
+                          dt.name === TYPE_DOCUMENT.DNI.name,
+                      )
+                      .map((dt: DocumentTypeResource) => ({
+                        value: dt.id.toString(),
+                        label: dt.name,
+                      }))
+                  : (documentTypes || []).map((dt: DocumentTypeResource) => ({
                       value: dt.id.toString(),
                       label: dt.name,
                     }))
-                : (documentTypes || []).map((dt: DocumentTypeResource) => ({
-                    value: dt.id.toString(),
-                    label: dt.name,
-                  }))
             }
           />
 
@@ -336,12 +332,12 @@ export const PersonForm = ({
                         document_type_id === TYPE_DOCUMENT.DNI.id
                           ? "Ingrese 8 dígitos"
                           : document_type_id === TYPE_DOCUMENT.RUC.id
-                          ? "Ingrese 11 dígitos"
-                          : document_type_id === "CE"
-                          ? "Ingrese 8-9 dígitos"
-                          : document_type_id === "PASAPORTE"
-                          ? "Ingrese 8-11 caracteres"
-                          : "Ingrese el número"
+                            ? "Ingrese 11 dígitos"
+                            : document_type_id === "CE"
+                              ? "Ingrese 8-9 dígitos"
+                              : document_type_id === "PASAPORTE"
+                                ? "Ingrese 8-11 caracteres"
+                                : "Ingrese el número"
                       }
                       {...field}
                       className={`
@@ -365,12 +361,12 @@ export const PersonForm = ({
                         document_type_id === TYPE_DOCUMENT.DNI.id
                           ? 8
                           : document_type_id === TYPE_DOCUMENT.RUC.id
-                          ? 11
-                          : document_type_id === "CE"
-                          ? 9
-                          : document_type_id === "PASAPORTE"
-                          ? 11
-                          : 11
+                            ? 11
+                            : document_type_id === "CE"
+                              ? 9
+                              : document_type_id === "PASAPORTE"
+                                ? 11
+                                : 11
                       }
                       onChange={(e) => {
                         let value;
@@ -494,28 +490,25 @@ export const PersonForm = ({
                   ]
             }
           />
-        </GroupFormSection>
 
-        {/* Personal Information - Natural Person */}
-        {type_person === "NATURAL" && (
-          <GroupFormSection
-            title="Información de Persona"
-            icon={IdCardLanyard}
-            cols={{ md: 3 }}
-          >
-            <FormField
-              control={form.control}
-              name="names"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className={errors.names ? "text-destructive" : ""}>
-                    Nombres {errors.names && "*"}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ingrese los nombres"
-                      {...field}
-                      className={`
+          {/* Personal Information - Natural Person */}
+          {type_person === "NATURAL" && (
+            <>
+              <FormField
+                control={form.control}
+                name="names"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel
+                      className={errors.names ? "text-destructive" : ""}
+                    >
+                      Nombres {errors.names && "*"}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ingrese los nombres"
+                        {...field}
+                        className={`
                         ${
                           fieldsFromSearch.names
                             ? "bg-blue-50 border-blue-200"
@@ -532,149 +525,106 @@ export const PersonForm = ({
                             : ""
                         }
                       `}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  {/* Fixed height container for feedback */}
-                  {!errors.names && dirtyFields.names && (
-                    <div className="h-4 text-xs">
-                      <p className="text-primary">✓ Nombres válidos</p>
-                    </div>
-                  )}
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="father_surname"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Apellido Paterno</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ingrese apellido paterno"
-                      {...field}
-                      className={
-                        fieldsFromSearch.father_surname ? "bg-blue-50" : ""
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="mother_surname"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Apellido Materno</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ingrese apellido materno"
-                      {...field}
-                      className={
-                        fieldsFromSearch.mother_surname ? "bg-blue-50" : ""
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormSelect
-              control={form.control}
-              name="gender"
-              label="Género"
-              placeholder="Seleccione género"
-              options={[
-                { value: "M", label: "Masculino" },
-                { value: "F", label: "Femenino" },
-                { value: "O", label: "Otro" },
-              ]}
-            />
-
-            <DatePickerFormField
-              control={form.control}
-              name="birth_date"
-              label="Fecha de Nacimiento"
-              placeholder="Seleccione fecha"
-              captionLayout="dropdown"
-              endMonth={
-                new Date(
-                  new Date().getFullYear() - 18,
-                  new Date().getMonth(),
-                  new Date().getDate()
-                )
-              }
-            />
-
-            {/* <FormField
-              control={form.control}
-              name="ocupation"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel
-                    className={errors.ocupation ? "text-destructive" : ""}
-                  >
-                    Ocupación {errors.ocupation && "*"}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ingrese la ocupación"
-                      {...field}
-                      className={`
-                        ${
-                          errors.ocupation
-                            ? "border-destructive focus-visible:ring-destructive"
-                            : ""
-                        }
-                        ${
-                          dirtyFields.ocupation && !errors.ocupation
-                            ? "border-primary"
-                            : ""
-                        }
-                      `}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  
-                  <div className="h-4 text-xs">
-                    {!errors.ocupation && dirtyFields.ocupation && (
-                      <p className="text-primary">✓ Ocupación válida</p>
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    {/* Fixed height container for feedback */}
+                    {!errors.names && dirtyFields.names && (
+                      <div className="h-4 text-xs">
+                        <p className="text-primary">✓ Nombres válidos</p>
+                      </div>
                     )}
-                  </div>
-                </FormItem>
-              )}
-            /> */}
-          </GroupFormSection>
-        )}
+                  </FormItem>
+                )}
+              />
 
-        {/* Business Information - Legal Person */}
-        {type_person === "JURIDICA" && (
-          <GroupFormSection
-            title="Información de Documento y Persona"
-            icon={ListPlus}
-            cols={{ md: 3 }}
-          >
-            <FormField
-              control={form.control}
-              name="business_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel
-                    className={errors.business_name ? "text-destructive" : ""}
-                  >
-                    Razón Social {errors.business_name && "*"}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ingrese la razón social"
-                      {...field}
-                      className={`
+              <FormField
+                control={form.control}
+                name="father_surname"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Apellido Paterno</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ingrese apellido paterno"
+                        {...field}
+                        className={
+                          fieldsFromSearch.father_surname ? "bg-blue-50" : ""
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="mother_surname"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Apellido Materno</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ingrese apellido materno"
+                        {...field}
+                        className={
+                          fieldsFromSearch.mother_surname ? "bg-blue-50" : ""
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormSelect
+                control={form.control}
+                name="gender"
+                label="Género"
+                placeholder="Seleccione género"
+                options={[
+                  { value: "M", label: "Masculino" },
+                  { value: "F", label: "Femenino" },
+                  { value: "O", label: "Otro" },
+                ]}
+              />
+
+              <DatePickerFormField
+                control={form.control}
+                name="birth_date"
+                label="Fecha de Nacimiento"
+                placeholder="Seleccione fecha"
+                captionLayout="dropdown"
+                endMonth={
+                  new Date(
+                    new Date().getFullYear() - 18,
+                    new Date().getMonth(),
+                    new Date().getDate(),
+                  )
+                }
+              />
+            </>
+          )}
+
+          {/* Business Information - Legal Person */}
+          {type_person === "JURIDICA" && (
+            <>
+              <FormField
+                control={form.control}
+                name="business_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel
+                      className={errors.business_name ? "text-destructive" : ""}
+                    >
+                      Razón Social {errors.business_name && "*"}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ingrese la razón social"
+                        {...field}
+                        className={`
                         ${
                           fieldsFromSearch.business_name
                             ? "bg-blue-50 border-blue-200"
@@ -691,34 +641,36 @@ export const PersonForm = ({
                             : ""
                         }
                       `}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  {/* Fixed height container for feedback */}
-                  {!errors.business_name && dirtyFields.business_name && (
-                    <div className="h-4 text-xs">
-                      <p className="text-primary">✓ Razón social válida</p>
-                    </div>
-                  )}
-                </FormItem>
-              )}
-            />
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    {/* Fixed height container for feedback */}
+                    {!errors.business_name && dirtyFields.business_name && (
+                      <div className="h-4 text-xs">
+                        <p className="text-primary">✓ Razón social válida</p>
+                      </div>
+                    )}
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="commercial_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel
-                    className={errors.commercial_name ? "text-destructive" : ""}
-                  >
-                    Nombre Comercial {errors.commercial_name && "*"}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ingrese el nombre comercial"
-                      {...field}
-                      className={`
+              <FormField
+                control={form.control}
+                name="commercial_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel
+                      className={
+                        errors.commercial_name ? "text-destructive" : ""
+                      }
+                    >
+                      Nombre Comercial {errors.commercial_name && "*"}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ingrese el nombre comercial"
+                        {...field}
+                        className={`
                         ${
                           errors.commercial_name
                             ? "border-destructive focus-visible:ring-destructive"
@@ -730,20 +682,23 @@ export const PersonForm = ({
                             : ""
                         }
                       `}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  {/* Fixed height container for feedback */}
-                  {!errors.commercial_name && dirtyFields.commercial_name && (
-                    <div className="h-4 text-xs">
-                      <p className="text-primary">✓ Nombre comercial válido</p>
-                    </div>
-                  )}
-                </FormItem>
-              )}
-            />
-          </GroupFormSection>
-        )}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    {/* Fixed height container for feedback */}
+                    {!errors.commercial_name && dirtyFields.commercial_name && (
+                      <div className="h-4 text-xs">
+                        <p className="text-primary">
+                          ✓ Nombre comercial válido
+                        </p>
+                      </div>
+                    )}
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
+        </GroupFormSection>
 
         {/* Optional Fields - Context specific */}
         {(showJobPosition || showBusinessType || showZone || showPriceList) && (
@@ -842,23 +797,25 @@ export const PersonForm = ({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dirección</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ingrese la dirección"
-                      {...field}
-                      className={fieldsFromSearch.address ? "bg-blue-50" : ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {showDirection && (
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dirección</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ingrese la dirección"
+                        {...field}
+                        className={fieldsFromSearch.address ? "bg-blue-50" : ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {showJobPosition && (
               <FormSelect
@@ -896,24 +853,6 @@ export const PersonForm = ({
               />
             )}
 
-            {showZone && (
-              <FormSelect
-                control={form.control}
-                name="zone_id"
-                label="Zona"
-                placeholder="Seleccione zona"
-                disabled={isLoadingZones}
-                options={
-                  isLoadingZones
-                    ? []
-                    : (zones || []).map((z: ZoneResource) => ({
-                        value: z.id.toString(),
-                        label: z.name,
-                      }))
-                }
-              />
-            )}
-
             {showPriceList && (
               <FormSelect
                 control={form.control}
@@ -933,13 +872,41 @@ export const PersonForm = ({
                 }
               />
             )}
+
+            {showZone && (
+              <FormSelect
+                control={form.control}
+                name="zone_id"
+                label="Zona"
+                placeholder="Seleccione zona"
+                disabled={isLoadingZones}
+                options={
+                  isLoadingZones
+                    ? []
+                    : (zones || []).map((z: ZoneResource) => ({
+                        value: z.id.toString(),
+                        label: z.name,
+                      }))
+                }
+              />
+            )}
           </GroupFormSection>
+        )}
+
+        {/* Addresses Section - Only show when editing a client */}
+        {isEditing && isClient && initialData?.id && (
+          <PersonAddressesList personId={initialData.id} />
         )}
 
         {/* Form Actions */}
         <div className="flex justify-end gap-3">
           {onCancel && (
-            <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onCancel}
+            >
               Cancelar
             </Button>
           )}

@@ -1,15 +1,17 @@
 import GeneralSheet from "@/components/GeneralSheet";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
+import { GroupFormSection } from "@/components/GroupFormSection";
 import {
   FileText,
   User,
   MapPin,
   Calendar,
   Truck,
-  Receipt,
   Wallet,
   Package,
+  Receipt,
 } from "lucide-react";
 import type {
   DeliverySheetResource,
@@ -18,6 +20,7 @@ import type {
 } from "../lib/deliverysheet.interface";
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
+import { parse } from "date-fns";
 
 interface DeliverySheetDetailSheetProps {
   deliverySheet: DeliverySheetResource | null;
@@ -33,7 +36,7 @@ export default function DeliverySheetDetailSheet({
   if (!deliverySheet) return null;
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = parse(dateString, "yyyy-MM-dd", new Date());
     return date.toLocaleDateString("es-ES", {
       day: "2-digit",
       month: "2-digit",
@@ -53,7 +56,7 @@ export default function DeliverySheetDetailSheet({
   };
 
   const getStatusVariant = (
-    status: string
+    status: string,
   ): "default" | "secondary" | "destructive" | "outline" => {
     if (status === "PENDIENTE") return "secondary";
     if (status === "EN_REPARTO") return "default";
@@ -63,7 +66,7 @@ export default function DeliverySheetDetailSheet({
   };
 
   const getDeliveryStatusVariant = (
-    status: string
+    status: string,
   ): "default" | "secondary" | "destructive" | "outline" => {
     if (status === "ENTREGADO") return "default";
     if (status === "PENDIENTE") return "secondary";
@@ -72,7 +75,6 @@ export default function DeliverySheetDetailSheet({
     return "outline";
   };
 
-  // Columnas para la tabla de ventas
   const salesColumns: ColumnDef<DeliverySheetSale>[] = [
     {
       accessorKey: "full_document_number",
@@ -133,7 +135,6 @@ export default function DeliverySheetDetailSheet({
     },
   ];
 
-  // Columnas para la tabla de pagos
   const paymentsColumns: ColumnDef<DeliverySheetPayment>[] = [
     {
       accessorKey: "payment_date",
@@ -185,11 +186,11 @@ export default function DeliverySheetDetailSheet({
       onClose={onClose}
       title={`Planilla #${deliverySheet.sheet_number}`}
       icon="FileText"
-      size="3xl"
+      size="4xl"
       className="overflow-y-auto p-2 !gap-0 w-full"
     >
-      <div className="space-y-4 p-4">
-        {/* Header con totales destacados */}
+      <div className="space-y-6 p-4">
+        {/* Totales */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <Card className="border-none bg-muted-foreground/5 hover:bg-muted-foreground/10 transition-colors !p-0">
             <CardContent className="p-4">
@@ -270,23 +271,21 @@ export default function DeliverySheetDetailSheet({
           </Card>
         </div>
 
-        {/* Información de la Planilla */}
-        <Card className="!gap-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Información de la Planilla
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">N° Planilla:</span>
-              <span className="font-mono font-semibold">
-                {deliverySheet.sheet_number}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Tipo:</span>
+        {/* Información General */}
+        <GroupFormSection
+          title="Información General"
+          icon={FileText}
+          cols={{ sm: 1, md: 2, lg: 3 }}
+        >
+          <div>
+            <span className="text-sm text-muted-foreground">N° Planilla</span>
+            <p className="font-mono font-semibold">
+              {deliverySheet.sheet_number}
+            </p>
+          </div>
+          <div>
+            <span className="text-sm text-muted-foreground">Tipo</span>
+            <div className="mt-1">
               <Badge
                 variant={
                   deliverySheet.type === "CONTADO" ? "default" : "secondary"
@@ -295,150 +294,155 @@ export default function DeliverySheetDetailSheet({
                 {deliverySheet.type}
               </Badge>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">Estado:</span>
+          </div>
+          <div>
+            <span className="text-sm text-muted-foreground">Estado</span>
+            <div className="mt-1">
               <Badge variant={getStatusVariant(deliverySheet.status)}>
                 {deliverySheet.status.replace("_", " ")}
               </Badge>
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">F. Emisión:</span>
-              <span className="font-medium">
-                {formatDate(deliverySheet.issue_date)}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">F. Entrega:</span>
-              <span className="font-medium">
-                {formatDate(deliverySheet.delivery_date)}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div>
+            <span className="text-sm text-muted-foreground flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              Fecha de Emisión
+            </span>
+            <p className="font-semibold">
+              {formatDate(deliverySheet.issue_date)}
+            </p>
+          </div>
+          <div>
+            <span className="text-sm text-muted-foreground flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              Fecha de Entrega
+            </span>
+            <p className="font-semibold">
+              {formatDate(deliverySheet.delivery_date)}
+            </p>
+          </div>
+        </GroupFormSection>
 
-        {/* Información de Zona, Conductor y Cliente */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <Card className="!gap-0">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Zona
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1 text-sm">
-              <p className="font-semibold">{deliverySheet?.zone?.name}</p>
-              <p className="text-muted-foreground">
-                {deliverySheet?.zone?.code}
-              </p>
-            </CardContent>
-          </Card>
+        {/* Zona, Conductor, Cliente */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {deliverySheet?.zone && (
+            <GroupFormSection
+              title="Zona"
+              icon={MapPin}
+              cols={{ sm: 1 }}
+              className="h-full"
+            >
+              <div>
+                <span className="text-sm text-muted-foreground">Nombre</span>
+                <p className="font-semibold">{deliverySheet.zone.name}</p>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Código</span>
+                <p className="font-semibold">{deliverySheet.zone.code}</p>
+              </div>
+            </GroupFormSection>
+          )}
 
-          <Card className="!gap-0">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Truck className="h-4 w-4" />
-                Conductor
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1 text-sm">
+          <GroupFormSection
+            title="Conductor"
+            icon={Truck}
+            cols={{ sm: 1 }}
+            className="h-full"
+          >
+            <div>
+              <span className="text-sm text-muted-foreground">Nombre</span>
               <p className="font-semibold">
                 {deliverySheet?.driver?.full_name}
               </p>
-              {deliverySheet?.driver?.document_number && (
-                <p className="text-muted-foreground">
+            </div>
+            {deliverySheet?.driver?.document_number && (
+              <div>
+                <span className="text-sm text-muted-foreground">Documento</span>
+                <p className="font-semibold">
                   {deliverySheet?.driver?.document_number}
                 </p>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            )}
+          </GroupFormSection>
 
-          <Card className="!gap-0">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Cliente Cobrador
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1 text-sm">
-              <p className="font-semibold">
-                {deliverySheet.customer?.full_name}
-              </p>
-              {deliverySheet.customer?.document_number && (
-                <p className="text-muted-foreground">
-                  {deliverySheet.customer?.document_number}
+          {deliverySheet.customer && (
+            <GroupFormSection
+              title="Cliente Cobrador"
+              icon={User}
+              cols={{ sm: 1 }}
+              className="h-full"
+            >
+              <div>
+                <span className="text-sm text-muted-foreground">Nombre</span>
+                <p className="font-semibold">
+                  {deliverySheet.customer.full_name}
                 </p>
+              </div>
+              {deliverySheet.customer.document_number && (
+                <div>
+                  <span className="text-sm text-muted-foreground">
+                    Documento
+                  </span>
+                  <p className="font-semibold">
+                    {deliverySheet.customer.document_number}
+                  </p>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </GroupFormSection>
+          )}
         </div>
 
-        {/* Ventas Incluidas */}
-        <Card className="!gap-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              Ventas Incluidas ({deliverySheet.sales_count})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Ventas */}
+        <GroupFormSection
+          title={`Ventas Incluidas (${deliverySheet.sales_count})`}
+          icon={Package}
+          cols={{ sm: 1 }}
+        >
+          <DataTable
+            columns={salesColumns}
+            data={deliverySheet.sales}
+            isVisibleColumnFilter={false}
+            variant="simple"
+          />
+        </GroupFormSection>
+
+        {/* Pagos */}
+        {deliverySheet.payments.length > 0 && (
+          <GroupFormSection
+            title={`Pagos Registrados (${deliverySheet.payments.length})`}
+            icon={Wallet}
+            cols={{ sm: 1 }}
+          >
             <DataTable
-              columns={salesColumns}
-              data={deliverySheet.sales}
+              columns={paymentsColumns}
+              data={deliverySheet.payments}
               isVisibleColumnFilter={false}
             />
-          </CardContent>
-        </Card>
-
-        {/* Pagos Registrados */}
-        {deliverySheet.payments.length > 0 && (
-          <Card className="!gap-0">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Wallet className="h-4 w-4" />
-                Pagos Registrados ({deliverySheet.payments.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <DataTable
-                columns={paymentsColumns}
-                data={deliverySheet.payments}
-                isVisibleColumnFilter={false}
-              />
-            </CardContent>
-          </Card>
+          </GroupFormSection>
         )}
 
         {/* Observaciones */}
         {deliverySheet.observations && (
-          <Card className="!gap-0">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Observaciones
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {deliverySheet.observations}
-              </p>
-            </CardContent>
-          </Card>
+          <GroupFormSection
+            title="Observaciones"
+            icon={FileText}
+            cols={{ sm: 1 }}
+          >
+            <p className="text-sm text-muted-foreground">
+              {deliverySheet.observations}
+            </p>
+          </GroupFormSection>
         )}
 
         {/* Metadata */}
-        <Card className="!gap-0 bg-muted/30">
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-muted-foreground">
-              <div>
-                Creado: {formatDateTime(deliverySheet.created_at)} por{" "}
-                {deliverySheet.user.name}
-              </div>
-              <div>Actualizado: {formatDateTime(deliverySheet.updated_at)}</div>
-            </div>
-          </CardContent>
-        </Card>
+        <Separator />
+        <div className="text-xs text-muted-foreground flex flex-wrap gap-4">
+          <span>
+            Creado: {formatDateTime(deliverySheet.created_at)} por{" "}
+            {deliverySheet.user.name}
+          </span>
+          <span>Actualizado: {formatDateTime(deliverySheet.updated_at)}</span>
+        </div>
       </div>
     </GeneralSheet>
   );

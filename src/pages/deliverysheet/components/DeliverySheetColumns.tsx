@@ -1,19 +1,6 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  MoreVertical,
-  Trash2,
-  Eye,
-  RefreshCcw,
-  DollarSign,
-  ClipboardCheck,
-} from "lucide-react";
+import { ButtonAction } from "@/components/ButtonAction";
+import { Trash2, Eye, RefreshCcw, ClipboardCheck } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { DeliverySheetResource } from "../lib/deliverysheet.interface";
 
@@ -22,7 +9,6 @@ interface DeliverySheetColumnsProps {
   onViewDetails: (deliverySheet: DeliverySheetResource) => void;
   onUpdateStatus: (deliverySheet: DeliverySheetResource) => void;
   onSettlement: (deliverySheet: DeliverySheetResource) => void;
-  onRegisterPayment: (deliverySheet: DeliverySheetResource) => void;
 }
 
 export const getDeliverySheetColumns = ({
@@ -30,7 +16,6 @@ export const getDeliverySheetColumns = ({
   onViewDetails,
   onUpdateStatus,
   onSettlement,
-  onRegisterPayment,
 }: DeliverySheetColumnsProps): ColumnDef<DeliverySheetResource>[] => [
   {
     accessorKey: "id",
@@ -173,59 +158,39 @@ export const getDeliverySheetColumns = ({
     id: "actions",
     header: "Acciones",
     cell: ({ row }) => {
-      // const isCompleted = row.original.status === "COMPLETADO";
-      // const isCanceled = row.original.status === "CANCELADO";
       const canDelete = row.original.status === "PENDIENTE";
       const canUpdateStatus =
         row.original.status === "PENDIENTE" ||
         row.original.status === "EN_REPARTO";
       const canSettlement = row.original.status === "EN_REPARTO";
-      const canPayment = row.original.status === "RENDIDA";
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onViewDetails(row.original)}>
-              <Eye className="mr-2 h-4 w-4" />
-              Ver Detalle
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onUpdateStatus(row.original)}
-              disabled={!canUpdateStatus}
-            >
-              <RefreshCcw className="mr-2 h-4 w-4" />
-              Cambiar Estado
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onSettlement(row.original)}
-              disabled={!canSettlement}
-            >
-              <ClipboardCheck className="mr-2 h-4 w-4" />
-              Rendición
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onRegisterPayment(row.original)}
-              disabled={!canPayment}
-            >
-              <DollarSign className="mr-2 h-4 w-4" />
-              Registrar Pago
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => canDelete && onDelete(row.original.id)}
-              disabled={!canDelete}
-              className="text-destructive"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Eliminar
-              {!canDelete && " (No permitido)"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-1">
+          <ButtonAction
+            icon={Eye}
+            onClick={() => onViewDetails(row.original)}
+            tooltip="Ver Detalle"
+          />
+          <ButtonAction
+            icon={RefreshCcw}
+            onClick={() => onUpdateStatus(row.original)}
+            canRender={canUpdateStatus}
+            tooltip="Cambiar Estado"
+          />
+          <ButtonAction
+            icon={ClipboardCheck}
+            onClick={() => onSettlement(row.original)}
+            canRender={canSettlement}
+            tooltip="Rendición"
+          />
+          <ButtonAction
+            icon={Trash2}
+            variant="destructive"
+            onClick={() => onDelete(row.original.id)}
+            canRender={canDelete}
+            tooltip="Eliminar"
+          />
+        </div>
       );
     },
   },

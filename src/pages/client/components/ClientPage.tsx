@@ -22,6 +22,7 @@ import type { PersonResource } from "@/pages/person/lib/person.interface";
 import { CLIENT_ROLE_ID } from "../lib/client.interface";
 import ClientPriceListSheet from "./ClientPriceListSheet";
 import AssignPriceListModal from "./AssignPriceListModal";
+import ClientAddressesSheet from "./ClientAddressesSheet";
 const { MODEL, ICON } = CLIENT;
 
 export default function ClientPage() {
@@ -37,6 +38,9 @@ export default function ClientPage() {
   );
   const [assignPriceListPerson, setAssignPriceListPerson] =
     useState<PersonResource | null>(null);
+  const [addressesPerson, setAddressesPerson] = useState<PersonResource | null>(
+    null
+  );
   const { data, meta, isLoading, refetch } = useClients();
 
   useEffect(() => {
@@ -80,6 +84,14 @@ export default function ClientPage() {
     setAssignPriceListPerson(null);
   };
 
+  const handleViewAddresses = (person: PersonResource) => {
+    setAddressesPerson(person);
+  };
+
+  const handleCloseAddresses = () => {
+    setAddressesPerson(null);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -98,6 +110,7 @@ export default function ClientPage() {
           onDelete: setDeleteId,
           onViewPriceList: handleViewPriceList,
           onAssignPriceList: handleAssignPriceList,
+          onViewAddresses: handleViewAddresses,
           // onManageRoles: handleManageRoles,
         })}
         isClientTable
@@ -160,6 +173,20 @@ export default function ClientPage() {
           onConfirm={handleDelete}
           // title={`Eliminar ${MODEL.name}`}
           // description={`¿Está seguro de que desea eliminar este ${MODEL.name.toLowerCase()}? Esta acción no se puede deshacer.`}
+        />
+      )}
+
+      {addressesPerson && (
+        <ClientAddressesSheet
+          open={!!addressesPerson}
+          onOpenChange={(open) => !open && handleCloseAddresses()}
+          personId={addressesPerson.id}
+          personName={
+            addressesPerson.business_name ||
+            `${addressesPerson.names} ${addressesPerson.father_surname || ""} ${
+              addressesPerson.mother_surname || ""
+            }`.trim()
+          }
         />
       )}
     </div>

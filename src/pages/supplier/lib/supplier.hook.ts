@@ -1,52 +1,41 @@
 import { useEffect } from "react";
-import { usePersonStore } from "@/pages/person/lib/person.store";
-import { SUPPLIER_ROLE_CODE } from "./supplier.interface";
+import { useSupplierStore } from "./supplier.store";
 
 export function useSuppliers(params?: Record<string, unknown>) {
-  const { persons, meta, isLoading, error, fetchPersons } = usePersonStore();
+  const { suppliers, meta, isLoading, error, fetchSuppliers } = useSupplierStore();
 
   useEffect(() => {
-    if (!persons) {
-      // Add role filter for suppliers
-      const supplierParams = {
-        ...params,
-        role_names: [SUPPLIER_ROLE_CODE],
-      };
-      fetchPersons({ params: supplierParams });
+    if (!suppliers) {
+      fetchSuppliers({ params });
     }
-  }, [persons, fetchPersons]);
+  }, [suppliers, fetchSuppliers]);
 
   return {
-    data: persons,
+    data: suppliers,
     meta,
     isLoading,
     error,
     refetch: (refetchParams?: Record<string, unknown>) => {
-      const supplierParams = {
-        ...refetchParams,
-        role_names: [SUPPLIER_ROLE_CODE],
-      };
-      return fetchPersons({ params: supplierParams });
+      return fetchSuppliers({ params: refetchParams });
     },
   };
 }
 
 export function useAllSuppliers() {
-  const { allPersons = [], error, fetchAllPersons } = usePersonStore();
+  const { allSuppliers, isLoadingAll, error, fetchAllSuppliers } = useSupplierStore();
 
   useEffect(() => {
-    if (!allPersons)
-      fetchAllPersons({
-        params: {
-          role_names: [SUPPLIER_ROLE_CODE],
-        },
-      });
-  }, [allPersons, fetchAllPersons]);
+    if (!allSuppliers) {
+      fetchAllSuppliers({ params: {} });
+    }
+  }, [allSuppliers, fetchAllSuppliers]);
 
   return {
-    data: allPersons,
-    isLoading: false,
+    data: allSuppliers,
+    isLoading: isLoadingAll,
     error,
-    refetch: fetchAllPersons,
+    refetch: (refetchParams?: Record<string, unknown>) => {
+      return fetchAllSuppliers({ params: refetchParams });
+    },
   };
 }

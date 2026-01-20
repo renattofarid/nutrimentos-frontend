@@ -98,7 +98,11 @@ import {
 import { WAREHOUSE_DOCUMENT } from "./pages/warehouse-document/lib/warehouse-document.interface";
 import WarehouseDocumentDetailPage from "./pages/warehouse-document/components/WarehouseDocumentDetailPage";
 import DeliverySheetPage from "./pages/deliverysheet/components/DeliverySheetPage";
-import { DELIVERY_SHEET } from "./pages/deliverysheet/lib/deliverysheet.interface";
+import SettlementPage from "./pages/deliverysheet/components/SettlementPage";
+import {
+  DELIVERY_SHEET,
+  DeliverySheetSettlementRoute,
+} from "./pages/deliverysheet/lib/deliverysheet.interface";
 import { DeliverySheetAddPage } from "./pages/deliverysheet";
 import { DRIVER } from "./pages/driver/lib/driver.interface";
 import DriverPage from "./pages/driver/components/DriverPage";
@@ -142,10 +146,7 @@ const {
   ROUTE_ADD: DeliverySheetRouteAdd,
   ROUTE_UPDATE: DeliverySheetRouteUpdate,
 } = DELIVERY_SHEET;
-const {
-  ROUTE: CreditNoteRoute,
-  ROUTE_ADD: CreditNoteRouteAdd,
-} = CREDIT_NOTE;
+const { ROUTE: CreditNoteRoute, ROUTE_ADD: CreditNoteRouteAdd } = CREDIT_NOTE;
 
 export const hasAccessToRoute = (access: Access[], route: string): boolean => {
   const transformRoute = route.split("/").pop();
@@ -800,6 +801,15 @@ export default function App() {
             element={
               <ProtectedRoute path={DeliverySheetRouteUpdate}>
                 <DeliverySheetAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={DeliverySheetSettlementRoute}
+            element={
+              <ProtectedRoute path={DeliverySheetRoute}>
+                <SettlementPage />
               </ProtectedRoute>
             }
           />

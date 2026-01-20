@@ -14,12 +14,7 @@ import {
   type GetSalesParams,
 } from "./sale.actions";
 import type { SaleSchema, SaleUpdateSchema } from "./sale.schema";
-import {
-  ERROR_MESSAGE,
-  SUCCESS_MESSAGE,
-  errorToast,
-  successToast,
-} from "@/lib/core.function";
+import { ERROR_MESSAGE, errorToast } from "@/lib/core.function";
 import { SALE } from "./sale.interface";
 import type { Meta } from "@/lib/pagination.interface";
 
@@ -66,8 +61,11 @@ export const useSaleStore = create<SaleStore>((set) => ({
       const data = await getAllSales();
       set({ allSales: data, isLoadingAll: false });
     } catch (error) {
-      set({ error: "Error al cargar las ventas", isLoadingAll: false });
-      errorToast("Error al cargar las ventas");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error al cargar las ventas";
+      set({ error: errorMsg, isLoadingAll: false });
+      errorToast(errorMsg);
+      throw error;
     }
   },
 
@@ -79,8 +77,11 @@ export const useSaleStore = create<SaleStore>((set) => ({
       const meta = response.meta;
       set({ sales: response.data, meta, isLoading: false });
     } catch (error) {
-      set({ error: "Error al cargar las ventas", isLoading: false });
-      errorToast("Error al cargar las ventas");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error al cargar las ventas";
+      set({ error: errorMsg, isLoading: false });
+      errorToast(errorMsg);
+      throw error;
     }
   },
 
@@ -91,8 +92,11 @@ export const useSaleStore = create<SaleStore>((set) => ({
       const response = await findSaleById(id);
       set({ sale: response.data, isFinding: false });
     } catch (error) {
-      set({ error: "Error al cargar la venta", isFinding: false });
-      errorToast("Error al cargar la venta");
+      const errorMsg =
+        error instanceof Error ? error.message : "Error al cargar la venta";
+      set({ error: errorMsg, isFinding: false });
+      errorToast(errorMsg);
+      throw error;
     }
   },
 
@@ -104,7 +108,8 @@ export const useSaleStore = create<SaleStore>((set) => ({
         branch_id: Number(data.branch_id),
         customer_id: Number(data.customer_id),
         warehouse_id: Number(data.warehouse_id),
-        vendedor_id: data.vendedor_id ? Number(data.vendedor_id) : null,
+        vendedor_id: data.vendedor_id ? Number(data.vendedor_id) : undefined,
+        person_zone_id: data.person_zone_id ? Number(data.person_zone_id) : 0,
         document_type: data.document_type,
         issue_date: data.issue_date,
         payment_type: data.payment_type,
@@ -118,7 +123,7 @@ export const useSaleStore = create<SaleStore>((set) => ({
           unit_price: Number(detail.unit_price),
         })),
         installments:
-          data.installments.length > 0
+          data.installments && data.installments.length > 0
             ? data.installments.map((installment) => ({
                 installment_number: Number(installment.installment_number),
                 due_days: Number(installment.due_days),
@@ -130,7 +135,10 @@ export const useSaleStore = create<SaleStore>((set) => ({
       await storeSale(request);
       set({ isSubmitting: false });
     } catch (error) {
-      set({ error: ERROR_MESSAGE(MODEL, "create"), isSubmitting: false });
+      const errorMsg =
+        error instanceof Error ? error.message : ERROR_MESSAGE(MODEL, "create");
+      set({ error: errorMsg, isSubmitting: false });
+      errorToast(errorMsg);
       throw error;
     }
   },
@@ -144,7 +152,10 @@ export const useSaleStore = create<SaleStore>((set) => ({
         ...(data.customer_id && { customer_id: Number(data.customer_id) }),
         ...(data.warehouse_id && { warehouse_id: Number(data.warehouse_id) }),
         ...(data.vendedor_id !== undefined && {
-          vendedor_id: data.vendedor_id ? Number(data.vendedor_id) : null,
+          vendedor_id: data.vendedor_id ? Number(data.vendedor_id) : undefined,
+        }),
+        ...(data.person_zone_id !== undefined && {
+          person_zone_id: data.person_zone_id ? Number(data.person_zone_id) : 0,
         }),
         ...(data.document_type && { document_type: data.document_type }),
         ...(data.issue_date && { issue_date: data.issue_date }),
@@ -177,10 +188,11 @@ export const useSaleStore = create<SaleStore>((set) => ({
 
       await updateSale(id, request);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "update"));
     } catch (error) {
-      set({ error: ERROR_MESSAGE(MODEL, "update"), isSubmitting: false });
-      errorToast(ERROR_MESSAGE(MODEL, "update"));
+      const errorMsg =
+        error instanceof Error ? error.message : ERROR_MESSAGE(MODEL, "update");
+      set({ error: errorMsg, isSubmitting: false });
+      errorToast(errorMsg);
       throw error;
     }
   },
@@ -191,10 +203,11 @@ export const useSaleStore = create<SaleStore>((set) => ({
     try {
       await deleteSale(id);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "delete"));
     } catch (error) {
-      set({ error: ERROR_MESSAGE(MODEL, "delete"), isSubmitting: false });
-      errorToast(ERROR_MESSAGE(MODEL, "delete"));
+      const errorMsg =
+        error instanceof Error ? error.message : ERROR_MESSAGE(MODEL, "delete");
+      set({ error: errorMsg, isSubmitting: false });
+      errorToast(errorMsg);
       throw error;
     }
   },

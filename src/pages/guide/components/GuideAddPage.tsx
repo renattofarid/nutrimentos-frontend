@@ -7,15 +7,12 @@ import { GuideForm } from "./GuideForm";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
-import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { useGuideMotives } from "../lib/guide.hook";
 import { useAllCategories } from "@/pages/category/lib/category.hook";
 import { useAllBrands } from "@/pages/brand/lib/brand.hook";
 import { useAllUnits } from "@/pages/unit/lib/unit.hook";
 import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
 import { useAllNationalities } from "@/pages/nationality/lib/nationality.hook";
-import { CLIENT_ROLE_CODE } from "@/pages/client/lib/client.interface";
-import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 import FormSkeleton from "@/components/FormSkeleton";
 import {
   ERROR_MESSAGE,
@@ -29,6 +26,8 @@ import { GUIDE } from "../lib/guide.interface";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
 import { useSidebar } from "@/components/ui/sidebar";
+import { useAllClients } from "@/pages/client/lib/client.hook";
+import { useAllSuppliers } from "@/pages/supplier/lib/supplier.hook";
 
 export default function GuideAddPage() {
   const { ROUTE, MODEL, ICON } = GUIDE;
@@ -54,12 +53,8 @@ export default function GuideAddPage() {
     isLoading: productsLoading,
     refetch: refetchProducts,
   } = useAllProducts();
-  const { data: customers, refetch: refetchCustomers } = useAllPersons({
-    role_names: [CLIENT_ROLE_CODE],
-  });
-  const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({
-    role_names: [SUPPLIER_ROLE_CODE],
-  });
+  const { data: customers, refetch: refetchCustomers } = useAllClients();
+  const { data: suppliers, refetch: refetchSuppliers } = useAllSuppliers();
   const {
     data: motives,
     isLoading: motivesLoading,
@@ -128,7 +123,7 @@ export default function GuideAddPage() {
     transfer_date: "",
     modality: "PUBLICO",
     motive_id: "",
-    sale_document_number: "",
+    sale_document_number: "-",
     carrier_document_type: "RUC",
     carrier_document_number: "",
     carrier_name: "",

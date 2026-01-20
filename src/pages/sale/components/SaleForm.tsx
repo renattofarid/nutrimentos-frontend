@@ -25,7 +25,7 @@ import type { ProductResource } from "@/pages/product/lib/product.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import { useState, useEffect } from "react";
-import { formatDecimalTrunc } from "@/lib/utils";
+import { formatDecimalTrunc, parseFormattedNumber } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatCurrency";
 import {
   DOCUMENT_TYPES,
@@ -98,8 +98,13 @@ export const SaleForm = ({
   >([]);
 
   const [filteredProducts, setFilteredProducts] = useState<ProductResource[]>(
-    []
+    [],
   );
+
+  // Estado para las direcciones del cliente seleccionado
+  const [customerAddresses, setCustomerAddresses] = useState<
+    { id: number; zone_name: string; address: string; is_primary: boolean }[]
+  >([]);
 
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
 
@@ -120,7 +125,7 @@ export const SaleForm = ({
 
   const form = useForm({
     resolver: zodResolver(
-      mode === "create" ? saleSchemaCreate : saleSchemaUpdate
+      mode === "create" ? saleSchemaCreate : saleSchemaUpdate,
     ),
     defaultValues: {
       document_type: "FACTURA", // Por defecto Factura
@@ -139,7 +144,7 @@ export const SaleForm = ({
       if (defaultValues.branch_id) {
         const filtered = warehouses.filter(
           (warehouse) =>
-            warehouse.branch_id.toString() === defaultValues.branch_id
+            warehouse.branch_id.toString() === defaultValues.branch_id,
         );
         setFilteredWarehouses(filtered);
       }
@@ -148,7 +153,7 @@ export const SaleForm = ({
         const filtered = products.filter((product) => {
           const stockInWarehouse = product.stock_warehouse?.find(
             (stock) =>
-              stock.warehouse_id.toString() === defaultValues.warehouse_id
+              stock.warehouse_id.toString() === defaultValues.warehouse_id,
           );
           return stockInWarehouse && stockInWarehouse.stock > 0;
         });
@@ -159,16 +164,19 @@ export const SaleForm = ({
       if (defaultValues.details && defaultValues.details.length > 0) {
         const initialDetails = defaultValues.details.map((detail: any) => {
           const product = products.find(
-            (p) => p.id.toString() === detail.product_id
+            (p) => p.id.toString() === detail.product_id,
           );
 
           // Determinar el modo de venta basado en los valores recibidos
           const qtySacks = parseFloat(detail.quantity_sacks || "0");
           const qtyKg = parseFloat(detail.quantity_kg || "0");
-          const sale_mode: "sacks" | "kg" | undefined = qtySacks > 0 ? "sacks" : qtyKg > 0 ? "kg" : undefined;
+          const sale_mode: "sacks" | "kg" | undefined =
+            qtySacks > 0 ? "sacks" : qtyKg > 0 ? "kg" : undefined;
 
-          const unitPrice = parseFloat(detail.unit_price);
-          const productWeight = product?.weight ? parseFloat(product.weight) : 0;
+          const unitPrice = parseFormattedNumber(detail.unit_price);
+          const productWeight = product?.weight
+            ? parseFloat(product.weight)
+            : 0;
 
           // Calcular totales según el modo de venta
           let subtotal = 0;
@@ -214,7 +222,7 @@ export const SaleForm = ({
             installment_number: inst.installment_number,
             due_days: inst.due_days,
             amount: inst.amount,
-          })
+          }),
         );
         setInstallments(initialInstallments);
         form.setValue("installments", initialInstallments);
@@ -234,6 +242,7 @@ export const SaleForm = ({
   const selectedWarehouseId = form.watch("warehouse_id");
   const selectedDocumentType = form.watch("document_type");
   const selectedCurrency = form.watch("currency");
+  const selectedCustomerId = form.watch("customer_id");
 
   // Función para obtener el símbolo de moneda
   const getCurrencySymbol = () => {
@@ -249,7 +258,7 @@ export const SaleForm = ({
   useEffect(() => {
     if (selectedBranchId) {
       const filtered = warehouses.filter(
-        (warehouse) => warehouse.branch_id.toString() === selectedBranchId
+        (warehouse) => warehouse.branch_id.toString() === selectedBranchId,
       );
       setFilteredWarehouses(filtered);
 
@@ -259,7 +268,7 @@ export const SaleForm = ({
 
       if (currentWarehouseId) {
         const isValid = filtered.some(
-          (warehouse) => warehouse.id.toString() === currentWarehouseId
+          (warehouse) => warehouse.id.toString() === currentWarehouseId,
         );
         if (!isValid) {
           form.setValue("warehouse_id", "");
@@ -289,7 +298,7 @@ export const SaleForm = ({
       const filtered = products.filter((product) => {
         // Buscar si el producto tiene stock en el warehouse seleccionado
         const stockInWarehouse = product.stock_warehouse?.find(
-          (stock) => stock.warehouse_id.toString() === selectedWarehouseId
+          (stock) => stock.warehouse_id.toString() === selectedWarehouseId,
         );
         // Solo incluir productos que tienen stock mayor a 0 en ese warehouse
         return stockInWarehouse && stockInWarehouse.stock > 0;
@@ -301,6 +310,42 @@ export const SaleForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedWarehouseId, products]);
 
+  // Efecto para actualizar direcciones cuando cambia el cliente
+  useEffect(() => {
+    if (selectedCustomerId) {
+      const customer = customers.find(
+        (c) => c.id.toString() === selectedCustomerId,
+      );
+      if (
+        customer &&
+        customer.person_zones &&
+        customer.person_zones.length > 0
+      ) {
+        setCustomerAddresses(customer.person_zones);
+        // Seleccionar automáticamente la dirección primaria
+        const primaryAddress = customer.person_zones.find(
+          (pz) => pz.is_primary,
+        );
+        if (primaryAddress) {
+          form.setValue("person_zone_id", primaryAddress.id.toString());
+        } else {
+          // Si no hay primaria, seleccionar la primera
+          form.setValue(
+            "person_zone_id",
+            customer.person_zones[0].id.toString(),
+          );
+        }
+      } else {
+        setCustomerAddresses([]);
+        form.setValue("person_zone_id", "");
+      }
+    } else {
+      setCustomerAddresses([]);
+      form.setValue("person_zone_id", "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCustomerId, customers]);
+
   // Efecto para obtener serie y número automático
   useEffect(() => {
     const fetchNextSeries = async () => {
@@ -308,7 +353,7 @@ export const SaleForm = ({
         try {
           const response = await getNextSeries(
             Number(selectedBranchId),
-            selectedDocumentType
+            selectedDocumentType,
           );
           setAutoSerie(response.serie);
           setAutoNumero(response.next_formatted);
@@ -331,7 +376,7 @@ export const SaleForm = ({
     const timer = setTimeout(() => {
       // Buscar el primer botón del formulario (que es el trigger del FormSelect)
       const firstButton = document.querySelector(
-        'form button[role="combobox"]'
+        'form button[role="combobox"]',
       ) as HTMLButtonElement;
       if (firstButton) {
         firstButton.focus();
@@ -376,7 +421,7 @@ export const SaleForm = ({
   const handleCellChange = async (
     index: number,
     field: string,
-    value: string
+    value: string,
   ) => {
     const updatedDetails = [...details];
     const detail = { ...updatedDetails[index] };
@@ -413,7 +458,7 @@ export const SaleForm = ({
     // Procesar cuando cambian las cantidades
     if (field === "quantity_sacks" || field === "quantity_kg") {
       const product = filteredProducts.find(
-        (p) => p.id.toString() === detail.product_id
+        (p) => p.id.toString() === detail.product_id,
       );
 
       if (product && detail.product_id) {
@@ -443,9 +488,9 @@ export const SaleForm = ({
             });
 
             if (result) {
-              const unitPrice = parseFloat(result.pricing.unit_price);
+              const unitPrice = parseFormattedNumber(result.pricing.unit_price);
               // El subtotal es la multiplicación simple (precio ya incluye IGV)
-              const subtotal = parseFloat(result.pricing.subtotal);
+              const subtotal = parseFormattedNumber(result.pricing.subtotal);
               const total = subtotal;
               const igv = 0;
 
@@ -464,7 +509,7 @@ export const SaleForm = ({
               form.setValue("details", finalDetails);
             } else {
               errorToast(
-                "Error al obtener el precio. Por favor, ingrese el precio manualmente."
+                "Error al obtener el precio. Por favor, ingrese el precio manualmente.",
               );
             }
           } catch (error: any) {
@@ -512,7 +557,7 @@ export const SaleForm = ({
       // cantidad × precio = subtotal (sin importar si es por sacos o kg)
       const unitPrice = parseFloat(value) || 0;
       const product = filteredProducts.find(
-        (p) => p.id.toString() === detail.product_id
+        (p) => p.id.toString() === detail.product_id,
       );
 
       if (detail.sale_mode === "sacks") {
@@ -562,7 +607,7 @@ export const SaleForm = ({
 
   const handleProductSelect = async (index: number, product: ProductOption) => {
     const selectedProduct = filteredProducts.find(
-      (p) => p.id.toString() === product.id
+      (p) => p.id.toString() === product.id,
     );
     if (!selectedProduct) return;
 
@@ -652,7 +697,7 @@ export const SaleForm = ({
   const calculateDetailsTotal = () => {
     const sum = details.reduce(
       (sum, detail) => sum + (detail.subtotal || 0),
-      0
+      0,
     );
     return roundTo6Decimals(sum);
   };
@@ -660,7 +705,7 @@ export const SaleForm = ({
   // El IGV se extrae del total (IGV incluido en precio)
   const calculateDetailsIGV = () => {
     const total = calculateDetailsTotal();
-    return roundTo6Decimals(total / 1.18 * 0.18);
+    return roundTo6Decimals((total / 1.18) * 0.18);
   };
 
   // El subtotal base es el total menos el IGV
@@ -698,7 +743,7 @@ export const SaleForm = ({
   const handleInstallmentCellChange = (
     index: number,
     field: string,
-    value: string
+    value: string,
   ) => {
     const updatedInstallments = [...installments];
     updatedInstallments[index] = {
@@ -785,7 +830,7 @@ export const SaleForm = ({
   const calculateInstallmentsTotal = () => {
     const sum = installments.reduce(
       (sum, inst) => sum + (parseFloat(inst.amount) || 0),
-      0
+      0,
     );
     return roundTo6Decimals(sum);
   };
@@ -810,10 +855,10 @@ export const SaleForm = ({
     if (installments.length > 0 && !installmentsMatchTotal()) {
       errorToast(
         `El total de cuotas (${currencySymbol} ${formatNumber(
-          calculateInstallmentsTotal()
+          calculateInstallmentsTotal(),
         )}) debe ser igual al total de la venta (${currencySymbol} ${formatNumber(
-          calculateDetailsTotal()
-        )})`
+          calculateDetailsTotal(),
+        )})`,
       );
       return;
     }
@@ -839,7 +884,7 @@ export const SaleForm = ({
       // Para pagos a crédito, usar las cuotas ingresadas
       validInstallments = installments
         .filter(
-          (inst) => inst.installment_number && inst.due_days && inst.amount
+          (inst) => inst.installment_number && inst.due_days && inst.amount,
         )
         .map((inst) => ({
           installment_number: parseInt(inst.installment_number),
@@ -932,6 +977,19 @@ export const SaleForm = ({
               <UserPlus className="h-4 w-4" />
             </Button>
           </div>
+
+          <FormSelect
+            control={form.control}
+            name="person_zone_id"
+            label="Dirección de Entrega"
+            placeholder="Seleccione dirección"
+            options={customerAddresses.map((addr) => ({
+              value: addr.id.toString(),
+              label: addr.zone_name + (addr.is_primary ? " (Principal)" : ""),
+              description: addr.address,
+            }))}
+            disabled={!selectedCustomerId || customerAddresses.length === 0}
+          />
 
           <FormSelect
             control={form.control}

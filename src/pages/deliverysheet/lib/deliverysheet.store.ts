@@ -256,7 +256,10 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
             | "NO_ENTREGADO"
             | "DEVUELTO",
           delivery_notes: sale.delivery_notes,
+          payment_amount: Number(sale.payment_amount) || 0,
         })),
+        payment_date: data.payment_date,
+        observations: data.observations,
       };
 
       await createSettlement(id, request);

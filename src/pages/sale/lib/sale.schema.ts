@@ -59,6 +59,7 @@ export const saleSchemaCreate = z.object({
   customer_id: requiredStringId("Debe seleccionar un cliente"),
   warehouse_id: requiredStringId("Debe seleccionar un almacén"),
   vendedor_id: requiredStringId("Debe seleccionar un vendedor"),
+  person_zone_id: requiredStringId("Debe seleccionar una dirección de entrega"),
   document_type: z
     .string()
     .min(1, { message: "Debe seleccionar un tipo de documento" }),

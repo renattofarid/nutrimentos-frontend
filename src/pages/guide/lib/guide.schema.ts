@@ -15,19 +15,15 @@ export const guideSchema = z.object({
     .min(1, { message: "La fecha de traslado es requerida" }),
   modality: z.string().min(1, { message: "La modalidad es requerida" }),
   motive_id: requiredStringId("Debe seleccionar un motivo de traslado"),
-  sale_document_number: z
-    .string()
-    .min(1, { message: "El número de documento de venta es requerido" }),
+  sale_document_number: z.string(),
   // Campos del transportista
   carrier_id: z.string().optional(), // ID interno, no se envía al backend
   carrier_document_type: z
     .string()
     .min(1, { message: "El tipo de documento del transportista es requerido" }),
-  carrier_document_number: z
-    .string()
-    .min(1, {
-      message: "El número de documento del transportista es requerido",
-    }),
+  carrier_document_number: z.string().min(1, {
+    message: "El número de documento del transportista es requerido",
+  }),
   carrier_name: z
     .string()
     .min(1, { message: "El nombre del transportista es requerido" }),
@@ -54,7 +50,7 @@ export const guideSchema = z.object({
     .string()
     .min(1, { message: "La dirección de destino es requerida" }),
   ubigeo_destination_id: requiredStringId(
-    "Debe seleccionar un ubigeo de destino"
+    "Debe seleccionar un ubigeo de destino",
   ),
   // Información de carga
   unit_measurement: z

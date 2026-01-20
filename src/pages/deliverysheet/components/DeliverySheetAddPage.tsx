@@ -53,6 +53,7 @@ export default function DeliverySheetAddPage() {
     payment_type: string;
     zone_id?: number;
     customer_id?: number;
+    person_zone_id?: number;
     date_from?: string;
     date_to?: string;
   }) => {
@@ -60,6 +61,7 @@ export default function DeliverySheetAddPage() {
       payment_type: params.payment_type as "CONTADO" | "CREDITO",
       zone_id: params.zone_id,
       customer_id: params.customer_id,
+      person_zone_id: params.person_zone_id,
       date_from: params.date_from,
       date_to: params.date_to,
     });

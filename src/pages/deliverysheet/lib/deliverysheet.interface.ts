@@ -47,8 +47,33 @@ export interface DeliverySheetSale {
   original_amount: string;
   current_amount: string;
   collected_amount: string;
-  delivery_status: "PENDIENTE" | "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO";
+  delivery_status:
+    | "ANULADO"
+    | "ENTREGADO"
+    | "NO_ENTREGADO"
+    | "DEVUELTO"
+    | "PENDIENTE";
   delivery_notes: string | null;
+  credit_notes: CreditNote[];
+  credit_notes_count: number;
+  credit_notes_total: string;
+  credit_notes_total_raw: number;
+  has_credit_notes: boolean;
+  real_pending_amount: string;
+  real_pending_amount_raw: number;
+}
+
+interface CreditNote {
+  id: number;
+  document_type: null;
+  serie: null;
+  numero: null;
+  full_document_number: string;
+  issue_date: string;
+  total_amount: string;
+  total_amount_raw: string;
+  reason: string;
+  status: string;
 }
 
 export interface DeliverySheetPayment {
@@ -294,10 +319,13 @@ export interface SettlementSaleRequest {
   sale_id: number;
   delivery_status: "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO";
   delivery_notes?: string;
+  payment_amount: number;
 }
 
 export interface CreateSettlementRequest {
   sales: SettlementSaleRequest[];
+  payment_date: string;
+  observations?: string;
 }
 
 // ===== PAYMENT =====
@@ -324,6 +352,7 @@ export const DELIVERY_SHEET_QUERY_KEY = "delivery-sheets";
 export const DeliverySheetRoute = "/planillas";
 export const DeliverySheetAddRoute = "/planillas/agregar";
 export const DeliverySheetEditRoute = "/planillas/actualizar/:id";
+export const DeliverySheetSettlementRoute = "/planillas/rendicion/:id";
 
 // ===== STATUS & TYPE OPTIONS =====
 

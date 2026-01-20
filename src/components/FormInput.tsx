@@ -18,8 +18,10 @@ import { Badge } from "@/components/ui/badge";
 import RequiredField from "./RequiredField";
 import { cn } from "@/lib/utils";
 
-interface FormInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "name"> {
+interface FormInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "name"
+> {
   name: string;
   description?: string;
   label?: string | React.ReactNode;
@@ -72,9 +74,9 @@ export function FormInput({
     };
 
     return (
-      <div className="flex flex-col justify-between">
+      <div className="flex flex-col justify-start gap-2">
         {label && (
-          <label className="flex justify-start items-center text-xs md:text-sm mb-1 font-medium">
+          <label className="flex justify-start items-center text-xs md:text-sm mb-1 font-medium leading-none">
             {label}
             {required && <RequiredField />}
             {tooltip && (
@@ -105,7 +107,7 @@ export function FormInput({
                 "h-8 md:h-9 text-xs md:text-sm",
                 addonStart && "pl-10",
                 addonEnd && "pr-10",
-                className
+                className,
               )}
               {...inputProps}
               onChange={handleStandaloneChange}
@@ -178,7 +180,7 @@ export function FormInput({
                       "h-8 md:h-9 text-xs md:text-sm",
                       addonStart && "pl-10",
                       addonEnd && "pr-10",
-                      className
+                      className,
                     )}
                     {...field}
                     {...inputProps}

@@ -81,7 +81,7 @@ export function DatePickerFormField<T extends FieldValues>({
   }, [field.value]);
 
   const [visibleMonth, setVisibleMonth] = useState<Date | undefined>(
-    parsedDate
+    parsedDate,
   );
 
   useEffect(() => {
@@ -149,7 +149,7 @@ export function DatePickerFormField<T extends FieldValues>({
                 variant="outline"
                 className={cn(
                   "w-full justify-start text-left font-normal truncate",
-                  !parsedDate && "text-muted-foreground"
+                  !parsedDate && "text-muted-foreground",
                 )}
                 disabled={disabled}
               >

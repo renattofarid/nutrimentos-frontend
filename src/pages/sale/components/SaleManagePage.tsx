@@ -88,7 +88,8 @@ export default function SaleManagePage() {
           <TitleComponent
             title={`Gestionar Venta #${sale.id}`}
             subtitle={`${sale.full_document_number} - ${
-              sale.customer.business_name ?? sale.customer.full_name
+              sale.customer.business_name ??
+              `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`
             }`}
             icon={"CreditCard"}
           />
@@ -98,10 +99,10 @@ export default function SaleManagePage() {
             sale.status === "PAGADA"
               ? "default"
               : sale.status === "REGISTRADO"
-              ? "secondary"
-              : sale.status === "PARCIAL"
-              ? "outline"
-              : "destructive"
+                ? "secondary"
+                : sale.status === "PARCIAL"
+                  ? "outline"
+                  : "destructive"
           }
           className="text-sm px-3"
         >
@@ -248,7 +249,8 @@ export default function SaleManagePage() {
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Nombre Completo</p>
               <p className="font-semibold">
-                {sale.customer.business_name ?? sale.customer.full_name}
+                {sale.customer.business_name ??
+                  `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`}
               </p>
             </div>
           </CardContent>
@@ -334,10 +336,10 @@ export default function SaleManagePage() {
                                 installment.status === "PAGADA"
                                   ? "default"
                                   : installment.status === "REGISTRADO"
-                                  ? "secondary"
-                                  : installment.status === "PARCIAL"
-                                  ? "outline"
-                                  : "destructive"
+                                    ? "secondary"
+                                    : installment.status === "PARCIAL"
+                                      ? "outline"
+                                      : "destructive"
                               }
                             >
                               {installment.status}

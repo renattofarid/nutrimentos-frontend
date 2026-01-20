@@ -38,7 +38,7 @@ export default function SettlementPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<SettlementFormSchema>({
-    resolver: zodResolver(settlementFormSchema),
+    resolver: zodResolver(settlementFormSchema) as any,
     defaultValues: {
       sales: [],
       payment_date: new Date().toISOString().split("T")[0],
@@ -153,10 +153,10 @@ export default function SettlementPage() {
     }));
   }, [deliverySheet]);
 
-  const columns = useMemo(() => getSaleTableColumns(form), [form]);
+  const columns = useMemo(() => getSaleTableColumns(form as any), [form]);
 
   const mobileCardRender = (sale: SaleWithIndex) => (
-    <SaleMobileCard sale={sale} form={form} />
+    <SaleMobileCard sale={sale} form={form as any} />
   );
 
   if (isLoading) {
@@ -228,7 +228,7 @@ export default function SettlementPage() {
               isVisibleColumnFilter={false}
             />
 
-            <SettlementFormFields form={form} />
+            <SettlementFormFields form={form as any} />
 
             <SettlementSummary deliverySheet={deliverySheet} />
 

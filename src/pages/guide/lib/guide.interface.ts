@@ -225,10 +225,6 @@ export interface GuideResponse {
   links: Links;
 }
 
-export interface GuideMotiveResponse {
-  data: GuideMotiveResource[];
-}
-
 // ===== CREATE/UPDATE REQUESTS =====
 
 export interface CreateGuideDetailRequest {

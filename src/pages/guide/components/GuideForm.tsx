@@ -375,7 +375,7 @@ export const GuideForm = ({
       transfer_date: data.transfer_date,
       modality: data.modality,
       motive_id: parseInt(data.motive_id),
-      sale_document_number: data.sale_document_number,
+      sale_document_number: " ",
       carrier_document_type: data.carrier_document_type,
       carrier_document_number: data.carrier_document_number,
       carrier_name: data.carrier_name,
@@ -455,7 +455,9 @@ export const GuideForm = ({
               label:
                 customer.business_name ??
                 `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
+              description: customer.number_document ?? "-",
             }))}
+            withValue
           />
 
           <FormSelect
@@ -466,6 +468,7 @@ export const GuideForm = ({
             options={motives.map((motive) => ({
               value: motive.id.toString(),
               label: motive.name,
+              description: "CÓDIGO: " + motive.code,
             }))}
           />
 
@@ -492,24 +495,6 @@ export const GuideForm = ({
             name="transfer_date"
             label="Fecha de Traslado"
             placeholder="Seleccione fecha"
-          />
-
-          <FormField
-            control={form.control}
-            name="sale_document_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Número de Documento de Venta</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: F001-00123"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
           />
         </GroupFormSection>
 

@@ -44,6 +44,7 @@ import { usePriceList } from "@/pages/pricelist/lib/pricelist.hook";
 import type { PriceList } from "@/pages/pricelist/lib/pricelist.interface";
 import { TYPE_DOCUMENT } from "../lib/person.constants";
 import { GroupFormSection } from "@/components/GroupFormSection";
+import PersonAddressesList from "@/pages/client/components/PersonAddressesList";
 
 interface PersonFormProps {
   initialData?: PersonResource | null;
@@ -912,6 +913,11 @@ export const PersonForm = ({
               />
             )}
           </GroupFormSection>
+        )}
+
+        {/* Addresses Section - Only show when editing a client */}
+        {isEditing && isClient && initialData?.id && (
+          <PersonAddressesList personId={initialData.id} />
         )}
 
         {/* Form Actions */}

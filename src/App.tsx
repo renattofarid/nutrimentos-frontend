@@ -98,6 +98,7 @@ import {
 import { WAREHOUSE_DOCUMENT } from "./pages/warehouse-document/lib/warehouse-document.interface";
 import WarehouseDocumentDetailPage from "./pages/warehouse-document/components/WarehouseDocumentDetailPage";
 import DeliverySheetPage from "./pages/deliverysheet/components/DeliverySheetPage";
+import SettlementPage from "./pages/deliverysheet/components/SettlementPage";
 import { DELIVERY_SHEET } from "./pages/deliverysheet/lib/deliverysheet.interface";
 import { DeliverySheetAddPage } from "./pages/deliverysheet";
 import { DRIVER } from "./pages/driver/lib/driver.interface";
@@ -141,6 +142,7 @@ const {
   ROUTE: DeliverySheetRoute,
   ROUTE_ADD: DeliverySheetRouteAdd,
   ROUTE_UPDATE: DeliverySheetRouteUpdate,
+  ROUTE_SETTLEMENT: DeliverySheetRouteSettlement,
 } = DELIVERY_SHEET;
 const {
   ROUTE: CreditNoteRoute,
@@ -800,6 +802,15 @@ export default function App() {
             element={
               <ProtectedRoute path={DeliverySheetRouteUpdate}>
                 <DeliverySheetAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={DeliverySheetRouteSettlement}
+            element={
+              <ProtectedRoute path={DeliverySheetRoute}>
+                <SettlementPage />
               </ProtectedRoute>
             }
           />

@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { ButtonAction } from "@/components/ButtonAction";
-import { Trash2, Eye, RefreshCcw, DollarSign, ClipboardCheck } from "lucide-react";
+import { Trash2, Eye, RefreshCcw, ClipboardCheck } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { DeliverySheetResource } from "../lib/deliverysheet.interface";
 
@@ -9,7 +9,6 @@ interface DeliverySheetColumnsProps {
   onViewDetails: (deliverySheet: DeliverySheetResource) => void;
   onUpdateStatus: (deliverySheet: DeliverySheetResource) => void;
   onSettlement: (deliverySheet: DeliverySheetResource) => void;
-  onRegisterPayment: (deliverySheet: DeliverySheetResource) => void;
 }
 
 export const getDeliverySheetColumns = ({
@@ -17,7 +16,6 @@ export const getDeliverySheetColumns = ({
   onViewDetails,
   onUpdateStatus,
   onSettlement,
-  onRegisterPayment,
 }: DeliverySheetColumnsProps): ColumnDef<DeliverySheetResource>[] => [
   {
     accessorKey: "id",
@@ -165,39 +163,32 @@ export const getDeliverySheetColumns = ({
         row.original.status === "PENDIENTE" ||
         row.original.status === "EN_REPARTO";
       const canSettlement = row.original.status === "EN_REPARTO";
-      const canPayment = row.original.status === "RENDIDA";
 
       return (
         <div className="flex items-center gap-1">
           <ButtonAction
             icon={Eye}
             onClick={() => onViewDetails(row.original)}
-            title="Ver Detalle"
+            tooltip="Ver Detalle"
           />
           <ButtonAction
             icon={RefreshCcw}
             onClick={() => onUpdateStatus(row.original)}
             canRender={canUpdateStatus}
-            title="Cambiar Estado"
+            tooltip="Cambiar Estado"
           />
           <ButtonAction
             icon={ClipboardCheck}
             onClick={() => onSettlement(row.original)}
             canRender={canSettlement}
-            title="Rendición"
-          />
-          <ButtonAction
-            icon={DollarSign}
-            onClick={() => onRegisterPayment(row.original)}
-            canRender={canPayment}
-            title="Registrar Pago"
+            tooltip="Rendición"
           />
           <ButtonAction
             icon={Trash2}
             variant="destructive"
             onClick={() => onDelete(row.original.id)}
             canRender={canDelete}
-            title="Eliminar"
+            tooltip="Eliminar"
           />
         </div>
       );

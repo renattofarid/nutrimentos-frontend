@@ -56,7 +56,7 @@ const headerVariants = cva("sticky top-0 z-10", {
   },
 });
 
-const mobileCardVariants = cva("overflow-hidden transition-colors", {
+const mobileCardVariants = cva("overflow-hidden transition-colors pb-0", {
   variants: {
     variant: {
       default: "border-primary/10 hover:border-primary/30 border shadow-sm",
@@ -71,7 +71,7 @@ const mobileCardVariants = cva("overflow-hidden transition-colors", {
 });
 
 const mobileCardFooterVariants = cva(
-  "border-t px-3 py-1 flex justify-end gap-2",
+  "border-t px-3 py-1 flex justify-end gap-2 [.border-t]:pt-1",
   {
     variants: {
       variant: {
@@ -274,7 +274,7 @@ export function DataTable<TData, TValue>({
                 key={row.id}
                 className={cn(mobileCardVariants({ variant }))}
               >
-                <CardContent className="p-4">
+                <CardContent className="px-4">
                   <div className="grid grid-cols-1 gap-2">
                     {contentCells.map((cell) => {
                       const header = cell.column.columnDef.header;

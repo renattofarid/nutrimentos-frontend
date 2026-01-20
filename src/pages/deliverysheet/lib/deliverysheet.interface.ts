@@ -294,10 +294,13 @@ export interface SettlementSaleRequest {
   sale_id: number;
   delivery_status: "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO";
   delivery_notes?: string;
+  payment_amount: number;
 }
 
 export interface CreateSettlementRequest {
   sales: SettlementSaleRequest[];
+  payment_date: string;
+  observations?: string;
 }
 
 // ===== PAYMENT =====
@@ -324,6 +327,7 @@ export const DELIVERY_SHEET_QUERY_KEY = "delivery-sheets";
 export const DeliverySheetRoute = "/planillas";
 export const DeliverySheetAddRoute = "/planillas/agregar";
 export const DeliverySheetEditRoute = "/planillas/actualizar/:id";
+export const DeliverySheetSettlementRoute = "/planillas/rendicion/:id";
 
 // ===== STATUS & TYPE OPTIONS =====
 
@@ -364,6 +368,7 @@ export const DELIVERY_SHEET: ModelComplete<DeliverySheetSchema> = {
   ROUTE: DeliverySheetRoute,
   ROUTE_ADD: DeliverySheetAddRoute,
   ROUTE_UPDATE: DeliverySheetEditRoute,
+  ROUTE_SETTLEMENT: DeliverySheetSettlementRoute,
   TITLES: {
     create: {
       title: `Crear ${NAME}`,

@@ -40,10 +40,12 @@ import TitleComponent from "@/components/TitleComponent";
 import PageWrapper from "@/components/PageWrapper";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { DataTable } from "@/components/DataTable";
+import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { findDeliverySheetById } from "../lib/deliverysheet.actions";
 import { useDeliverySheetStore } from "../lib/deliverysheet.store";
 import type { DeliverySheetResource } from "../lib/deliverysheet.interface";
 import { DELIVERY_SHEET } from "../lib/deliverysheet.interface";
+import { cn } from "@/lib/utils";
 
 const DELIVERY_STATUS_OPTIONS = [
   {
@@ -460,7 +462,7 @@ export default function SettlementPage() {
     return (
       <Card className="overflow-hidden py-0">
         <CardHeader className="bg-muted/50 py-3">
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center justify-between gap-2">
             <div className="space-y-1">
               <Badge variant="outline" className="text-xs">
                 {sale.document_type}
@@ -469,12 +471,15 @@ export default function SettlementPage() {
                 {sale.full_document_number}
               </CardTitle>
             </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">Total</p>
+            <Badge
+              variant="blue"
+              className="text-right flex flex-col items-end"
+            >
+              <p className="text-xs text-blue-900">TOTAL</p>
               <p className="font-semibold text-sm">
                 S/. {parseFloat(sale.total_amount).toFixed(2)}
               </p>
-            </div>
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="py-4 space-y-4">
@@ -727,24 +732,14 @@ export default function SettlementPage() {
               icon={FileCheck}
               cols={{ sm: 1, md: 2, lg: 2 }}
             >
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Fecha de Pago
-                </label>
-                <Input
-                  type="date"
-                  {...form.register("payment_date")}
-                  className={
-                    form.formState.errors.payment_date ? "border-red-500" : ""
-                  }
-                />
-                {form.formState.errors.payment_date && (
-                  <p className="text-xs text-red-500">
-                    {form.formState.errors.payment_date.message}
-                  </p>
-                )}
-              </div>
+              <DatePickerFormField
+                control={form.control}
+                name="payment_date"
+                label="Fecha de Pago"
+                placeholder="Selecciona la fecha de pago"
+                dateFormat="dd/MM/yyyy"
+                captionLayout="dropdown"
+              />
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">
@@ -755,9 +750,10 @@ export default function SettlementPage() {
                   rows={3}
                   maxLength={500}
                   {...form.register("observations")}
-                  className={
-                    form.formState.errors.observations ? "border-red-500" : ""
-                  }
+                  className={cn(
+                    "text-xs",
+                    form.formState.errors.observations ? "border-red-500" : "",
+                  )}
                 />
                 <div className="flex justify-between items-center">
                   <p className="text-xs text-muted-foreground">

@@ -328,12 +328,13 @@ export const GuideForm = ({
     }
   };
 
-  // Establecer fechas automáticamente
+  // Establecer fechas y motivo por defecto automáticamente
   useEffect(() => {
     const today = new Date();
     const formattedDate = format(today, "yyyy-MM-dd");
     form.setValue("issue_date", formattedDate);
     form.setValue("transfer_date", formattedDate);
+    form.setValue("motive_id", "1");
   }, [form]);
 
   // Calcular peso total automáticamente cuando cambian las ventas seleccionadas
@@ -375,7 +376,7 @@ export const GuideForm = ({
       transfer_date: data.transfer_date,
       modality: data.modality,
       motive_id: parseInt(data.motive_id),
-      sale_document_number: " ",
+      sale_document_number: "-",
       carrier_document_type: data.carrier_document_type,
       carrier_document_number: data.carrier_document_number,
       carrier_name: data.carrier_name,
@@ -465,11 +466,13 @@ export const GuideForm = ({
             name="motive_id"
             label="Motivo de Traslado"
             placeholder="Seleccione un motivo"
-            options={motives.map((motive) => ({
-              value: motive.id.toString(),
-              label: motive.name,
-              description: "CÓDIGO: " + motive.code,
-            }))}
+            options={motives
+              .sort((a, b) => a.id - b.id)
+              .map((motive) => ({
+                value: motive.id.toString(),
+                label: motive.name,
+                description: "CÓDIGO: " + motive.code,
+              }))}
           />
 
           <FormSelect
@@ -539,7 +542,8 @@ export const GuideForm = ({
                   }}
                   options={selectedCustomerAddresses.map((address) => ({
                     value: address.id.toString(),
-                    label: `${address.zone_name} - ${address.address}${address.is_primary ? " (Principal)" : ""}`,
+                    label: `${address.address}${address.is_primary ? " (Principal)" : ""}`,
+                    description: address.zone_name,
                   }))}
                   withValue={false}
                   className="md:w-full"
@@ -680,11 +684,14 @@ export const GuideForm = ({
                             `${sale.customer.names} ${sale.customer.father_surname}`}
                         </TableCell>
                         <TableCell>
-                          {sale.issue_date.toLocaleDateString("es-PE", {
-                            year: "numeric",
-                            month: "2-digit",
-                            day: "2-digit",
-                          })}
+                          {new Date(sale.issue_date).toLocaleDateString(
+                            "es-PE",
+                            {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                            },
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           {sale.currency} {sale.total_amount.toFixed(2)}

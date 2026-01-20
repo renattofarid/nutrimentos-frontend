@@ -129,7 +129,7 @@ export default function GuideEditPage() {
       transfer_date: data.transfer_date?.split("T")[0],
       modality: data.modality,
       motive_id: data.motive_id?.toString(),
-      sale_document_number: data.sale_document_number,
+      sale_document_number: data.sale_document_number ?? "-",
       carrier_document_type: data.carrier_document_type,
       carrier_document_number: data.carrier_document_number,
       carrier_name: data.carrier_name,

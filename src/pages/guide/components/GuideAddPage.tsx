@@ -123,7 +123,7 @@ export default function GuideAddPage() {
     transfer_date: "",
     modality: "PUBLICO",
     motive_id: "",
-    sale_document_number: "",
+    sale_document_number: "-",
     carrier_document_type: "RUC",
     carrier_document_number: "",
     carrier_name: "",

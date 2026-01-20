@@ -49,7 +49,7 @@ export interface SaleResource {
   serie: string;
   numero: string;
   full_document_number: string;
-  issue_date: Date;
+  issue_date: string;
   payment_type: string;
   total_weight: number;
   subtotal: number;

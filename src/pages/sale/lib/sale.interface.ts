@@ -8,17 +8,31 @@ import type { PersonResource } from "@/pages/person/lib/person.interface";
 
 export interface SaleDetailResource {
   id: number;
-  correlativo: string;
   sale_id: number;
-  sale_correlativo: string;
   product_id: number;
-  product_name: string;
-  quantity: string;
-  unit_price: string;
-  subtotal: string;
-  tax: string;
-  total: string;
+  quantity_sacks: number;
+  quantity_kg: number;
+  unit_price: number;
+  purchase_price: number;
+  discount: number;
+  discount_percentage: number;
+  subtotal: number;
+  tax: number;
+  total: number;
+  profit: number;
+  profit_percentage: number;
+  product: Product;
   created_at: string;
+}
+
+interface Product {
+  id: number;
+  codigo: string;
+  name: string;
+  brand: string;
+  category: string;
+  weight: number;
+  unit: string;
 }
 
 export interface SaleInstallmentResource {
@@ -44,19 +58,18 @@ export interface SaleResource {
   warehouse_id: number;
   customer_id: number;
   user_id: number;
-  vendedor_id: number | null;
   document_type: string;
   serie: string;
   numero: string;
   full_document_number: string;
   issue_date: string;
   payment_type: string;
-  total_weight: number;
   subtotal: number;
   discount_global: number;
   tax_amount: number;
   total_amount: number;
   current_amount: number;
+  total_weight?: number;
   total_paid: number;
   amount_cash: number;
   amount_card: number;
@@ -69,14 +82,32 @@ export interface SaleResource {
   status: string;
   is_electronic: number;
   observations?: string;
+  vendedor?: PersonResource;
+  has_credit_notes: boolean;
+  credit_note_ids?: number[];
+  total_credit_notes_amount?: number;
+  company: Company;
+  branch: Branch;
   warehouse: Warehouse;
   customer: Customer;
   user: User;
-  vendedor?: PersonResource;
-  details: Detail[];
-  installments: SaleInstallmentResource[];
+  details: SaleDetailResource[];
+  installments?: SaleInstallmentResource[];
+  electronic_invoice?: string;
   created_at: string;
   updated_at: string;
+}
+
+interface Branch {
+  id: number;
+  name: string;
+  address: string;
+}
+
+interface Company {
+  id: number;
+  social_reason: string;
+  trade_name: string;
 }
 
 export interface Detail {
@@ -116,15 +147,40 @@ export interface User {
 
 export interface Customer {
   id: number;
-  names?: string;
-  father_surname?: string;
-  mother_surname?: string;
-  full_name: string;
+  type_person: string;
   number_document: string;
+  names: null;
+  father_surname: null;
+  mother_surname: null;
+  gender: null;
+  birth_date: null;
+  phone: string;
+  email: string;
+  address: null;
+  nationality_id: null;
   business_name: string;
+  commercial_name: string;
+  occupation: null;
+  document_type_id: number;
+  document_type_name: string;
+  job_position_id: null;
+  job_position_name: null;
+  business_type_id: number;
+  business_type_name: string;
+  user_id: null;
+  created_at: string;
+  roles: Warehouse[];
+  client_category: ClientCategory;
 }
 
-export interface Warehouse {
+interface ClientCategory {
+  id: number;
+  name: string;
+  code: string;
+  description: string;
+}
+
+interface Warehouse {
   id: number;
   name: string;
 }

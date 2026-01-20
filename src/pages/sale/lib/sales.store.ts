@@ -14,12 +14,7 @@ import {
   type GetSalesParams,
 } from "./sale.actions";
 import type { SaleSchema, SaleUpdateSchema } from "./sale.schema";
-import {
-  ERROR_MESSAGE,
-  SUCCESS_MESSAGE,
-  errorToast,
-  successToast,
-} from "@/lib/core.function";
+import { ERROR_MESSAGE, errorToast } from "@/lib/core.function";
 import { SALE } from "./sale.interface";
 import type { Meta } from "@/lib/pagination.interface";
 
@@ -66,7 +61,8 @@ export const useSaleStore = create<SaleStore>((set) => ({
       const data = await getAllSales();
       set({ allSales: data, isLoadingAll: false });
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Error al cargar las ventas";
+      const errorMsg =
+        error instanceof Error ? error.message : "Error al cargar las ventas";
       set({ error: errorMsg, isLoadingAll: false });
       errorToast(errorMsg);
       throw error;
@@ -81,7 +77,8 @@ export const useSaleStore = create<SaleStore>((set) => ({
       const meta = response.meta;
       set({ sales: response.data, meta, isLoading: false });
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Error al cargar las ventas";
+      const errorMsg =
+        error instanceof Error ? error.message : "Error al cargar las ventas";
       set({ error: errorMsg, isLoading: false });
       errorToast(errorMsg);
       throw error;
@@ -95,7 +92,8 @@ export const useSaleStore = create<SaleStore>((set) => ({
       const response = await findSaleById(id);
       set({ sale: response.data, isFinding: false });
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Error al cargar la venta";
+      const errorMsg =
+        error instanceof Error ? error.message : "Error al cargar la venta";
       set({ error: errorMsg, isFinding: false });
       errorToast(errorMsg);
       throw error;
@@ -136,9 +134,9 @@ export const useSaleStore = create<SaleStore>((set) => ({
 
       await storeSale(request);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "create"));
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : ERROR_MESSAGE(MODEL, "create");
+      const errorMsg =
+        error instanceof Error ? error.message : ERROR_MESSAGE(MODEL, "create");
       set({ error: errorMsg, isSubmitting: false });
       errorToast(errorMsg);
       throw error;
@@ -190,9 +188,9 @@ export const useSaleStore = create<SaleStore>((set) => ({
 
       await updateSale(id, request);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "update"));
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : ERROR_MESSAGE(MODEL, "update");
+      const errorMsg =
+        error instanceof Error ? error.message : ERROR_MESSAGE(MODEL, "update");
       set({ error: errorMsg, isSubmitting: false });
       errorToast(errorMsg);
       throw error;
@@ -205,9 +203,9 @@ export const useSaleStore = create<SaleStore>((set) => ({
     try {
       await deleteSale(id);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "delete"));
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : ERROR_MESSAGE(MODEL, "delete");
+      const errorMsg =
+        error instanceof Error ? error.message : ERROR_MESSAGE(MODEL, "delete");
       set({ error: errorMsg, isSubmitting: false });
       errorToast(errorMsg);
       throw error;

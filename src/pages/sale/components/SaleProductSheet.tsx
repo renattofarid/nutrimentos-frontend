@@ -91,7 +91,7 @@ export const SaleProductSheet = ({
   const manualKg = form.watch("manual_kg");
 
   const selectedProduct = products.find(
-    (p) => p.id.toString() === selectedProductId
+    (p) => p.id.toString() === selectedProductId,
   );
 
   // Resetear el formulario cuando cambian los defaultValues (modo edición)
@@ -281,7 +281,7 @@ export const SaleProductSheet = ({
               }
               options={products.map((product) => {
                 const stockInWarehouse = product.stock_warehouse?.find(
-                  (stock) => stock.warehouse_id.toString() === warehouseId
+                  (stock) => stock.warehouse_id.toString() === warehouseId,
                 );
                 return {
                   value: product.id.toString(),
@@ -306,7 +306,7 @@ export const SaleProductSheet = ({
               }
               options={products.map((product) => {
                 const stockInWarehouse = product.stock_warehouse?.find(
-                  (stock) => stock.warehouse_id.toString() === warehouseId
+                  (stock) => stock.warehouse_id.toString() === warehouseId,
                 );
                 return {
                   value: product.id.toString(),

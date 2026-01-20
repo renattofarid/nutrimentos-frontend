@@ -47,7 +47,7 @@ export interface DeliverySheetSale {
   original_amount: string;
   current_amount: string;
   collected_amount: string;
-  delivery_status: "PENDIENTE" | "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO";
+  delivery_status: "ANULADO" | "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO" | "PENDIENTE";
   delivery_notes: string | null;
 }
 
@@ -368,7 +368,6 @@ export const DELIVERY_SHEET: ModelComplete<DeliverySheetSchema> = {
   ROUTE: DeliverySheetRoute,
   ROUTE_ADD: DeliverySheetAddRoute,
   ROUTE_UPDATE: DeliverySheetEditRoute,
-  ROUTE_SETTLEMENT: DeliverySheetSettlementRoute,
   TITLES: {
     create: {
       title: `Crear ${NAME}`,
@@ -385,3 +384,4 @@ export const DELIVERY_SHEET: ModelComplete<DeliverySheetSchema> = {
   },
   EMPTY: {} as any,
 };
+

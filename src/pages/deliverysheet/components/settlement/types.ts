@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { Clock, CheckCircle2, XCircle, ArrowLeft } from "lucide-react";
 
 export interface SaleWithIndex {
   index: number;
@@ -14,7 +13,7 @@ export interface SaleWithIndex {
   original_amount: string;
   current_amount: string;
   collected_amount: string;
-  delivery_status: "PENDIENTE" | "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO";
+  delivery_status: "ANULADO" | "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO" | "PENDIENTE";
   delivery_notes: string | null;
 }
 

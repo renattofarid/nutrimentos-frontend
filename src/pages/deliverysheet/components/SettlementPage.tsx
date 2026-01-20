@@ -70,7 +70,10 @@ export default function SettlementPage() {
           form.reset({
             sales: response.data.sales.map((sale) => ({
               sale_id: sale.id,
-              delivery_status: sale.delivery_status || "PENDIENTE",
+              delivery_status:
+                sale.delivery_status === "PENDIENTE"
+                  ? "ENTREGADO"
+                  : sale.delivery_status,
               delivery_notes: sale.delivery_notes || "",
               payment_amount: "0",
             })),
@@ -107,7 +110,7 @@ export default function SettlementPage() {
       setErrors([]);
 
       const invalidSales = data.sales.filter(
-        (sale) => !sale.delivery_status || sale.delivery_status === ""
+        (sale) => !sale.delivery_status || sale.delivery_status === "",
       );
 
       if (invalidSales.length > 0) {
@@ -121,7 +124,10 @@ export default function SettlementPage() {
       const settlementData = {
         sales: data.sales.map((sale) => ({
           sale_id: sale.sale_id,
-          delivery_status: sale.delivery_status,
+          delivery_status:
+            sale.delivery_status === "PENDIENTE"
+              ? "ENTREGADO"
+              : sale.delivery_status,
           delivery_notes: sale.delivery_notes || "",
           payment_amount: sale.payment_amount,
         })),

@@ -2,19 +2,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  MoreVertical,
   Trash2,
   Eye,
   Settings,
@@ -22,6 +15,7 @@ import {
   AlertTriangle,
   Pencil,
 } from "lucide-react";
+import { ButtonAction } from "@/components/ButtonAction";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { SaleResource } from "../lib/sale.interface";
 
@@ -90,7 +84,8 @@ export const getSaleColumns = ({
     header: "Cliente",
     cell: ({ row }) => (
       <div className="max-w-[200px] text-nowrap!">
-        {row.original.customer.business_name || row.original.customer.full_name}
+        {row.original.customer.business_name ||
+          `${row.original.customer.names} ${row.original.customer.father_surname}`}
       </div>
     ),
   },
@@ -104,9 +99,7 @@ export const getSaleColumns = ({
     header: "Vendedor",
     cell: ({ row }) => {
       const vendedor = row.original.vendedor;
-      return vendedor
-        ? `${vendedor.names} ${vendedor.father_surname}`
-        : "-";
+      return vendedor ? `${vendedor.names} ${vendedor.father_surname}` : "-";
     },
   },
   {
@@ -146,10 +139,10 @@ export const getSaleColumns = ({
         row.original.currency === "PEN"
           ? "S/."
           : row.original.currency === "USD"
-          ? "$"
-          : row.original.currency === "EUR"
-          ? "€"
-          : row.original.currency;
+            ? "$"
+            : row.original.currency === "EUR"
+              ? "€"
+              : row.original.currency;
       return (
         <span className="font-semibold">
           {currency} {row.original.total_amount.toFixed(2)}
@@ -165,8 +158,8 @@ export const getSaleColumns = ({
         row.original.currency === "PEN"
           ? "S/."
           : row.original.currency === "USD"
-          ? "$"
-          : "€";
+            ? "$"
+            : "€";
       const currentAmount = row.original.current_amount;
       const isPaid = currentAmount === 0;
 
@@ -227,7 +220,7 @@ export const getSaleColumns = ({
       }
 
       const hasPendingPayments = row.original.installments?.some(
-        (inst) => inst.pending_amount > 0
+        (inst) => inst.pending_amount > 0,
       );
 
       // Validar que la suma de cuotas sea igual al total de la venta
@@ -235,7 +228,7 @@ export const getSaleColumns = ({
       const sumOfInstallments =
         row.original.installments?.reduce(
           (sum, inst) => sum + inst.amount,
-          0
+          0,
         ) || 0;
       const isValid = Math.abs(totalAmount - sumOfInstallments) < 0.01;
 
@@ -313,42 +306,31 @@ export const getSaleColumns = ({
       // (si pending_amount es menor que amount, significa que tiene pagos)
       const hasPayments =
         row.original.installments?.some(
-          (inst) => inst.pending_amount < inst.amount
+          (inst) => inst.pending_amount < inst.amount,
         ) ?? false;
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onViewDetails(row.original)}>
-              <Eye className="mr-2 h-4 w-4" />
-              Ver Detalle
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onManage(row.original)}>
-              <Settings className="mr-2 h-4 w-4" />
-              Gestionar
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => !hasPayments && onEdit(row.original)}
-              disabled={hasPayments}
-            >
-              <Pencil className="mr-2 h-4 w-4" />
-              Editar {hasPayments && "(Tiene pagos)"}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => !isPaid && onDelete(row.original.id)}
-              disabled={isPaid || hasPayments}
-              className="text-destructive"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Eliminar {isPaid && "(Pagada)"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-1">
+          <ButtonAction
+            icon={Eye}
+            onClick={() => onViewDetails(row.original)}
+          />
+          <ButtonAction
+            icon={Settings}
+            onClick={() => onManage(row.original)}
+          />
+          <ButtonAction
+            icon={Pencil}
+            onClick={() => !hasPayments && onEdit(row.original)}
+            disabled={hasPayments}
+          />
+          <ButtonAction
+            icon={Trash2}
+            onClick={() => !isPaid && onDelete(row.original.id)}
+            disabled={isPaid || hasPayments}
+            variant="destructive"
+          />
+        </div>
       );
     },
   },

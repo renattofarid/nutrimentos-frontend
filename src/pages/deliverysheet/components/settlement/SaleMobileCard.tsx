@@ -24,7 +24,7 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
   const formValues = form.watch(`sales.${index}`);
   const formErrors = form.formState.errors.sales?.[index];
   const statusOption = DELIVERY_STATUS_OPTIONS.find(
-    (opt) => opt.value === formValues?.delivery_status
+    (opt) => opt.value === formValues?.delivery_status,
   );
   const StatusIcon = statusOption?.icon || Clock;
 
@@ -40,10 +40,7 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
               {sale.full_document_number}
             </CardTitle>
           </div>
-          <Badge
-            variant="blue"
-            className="text-right flex flex-col items-end"
-          >
+          <Badge variant="blue" className="text-right flex flex-col items-end">
             <p className="text-xs text-blue-900">TOTAL</p>
             <p className="font-semibold text-sm">
               S/. {parseFloat(sale.total_amount).toFixed(2)}
@@ -60,9 +57,7 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
 
         {/* Monto Pendiente */}
         <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-          <span className="text-sm text-muted-foreground">
-            Monto Pendiente
-          </span>
+          <span className="text-sm text-muted-foreground">Monto Pendiente</span>
           <Badge variant="secondary">
             S/. {parseFloat(sale.current_amount).toFixed(2)}
           </Badge>
@@ -75,7 +70,7 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
             Estado de Entrega
           </label>
           <Select
-            value={formValues?.delivery_status || "PENDIENTE"}
+            value={formValues?.delivery_status || "ENTREGADO"}
             onValueChange={(value) =>
               form.setValue(`sales.${index}.delivery_status`, value, {
                 shouldValidate: true,

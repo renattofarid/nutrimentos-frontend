@@ -14,7 +14,7 @@ import { DELIVERY_STATUS_OPTIONS } from "./constants";
 import type { SaleWithIndex, SettlementFormSchema } from "./types";
 
 export function getSaleTableColumns(
-  form: UseFormReturn<SettlementFormSchema, any, undefined>
+  form: UseFormReturn<SettlementFormSchema, any, undefined>,
 ): ColumnDef<SaleWithIndex>[] {
   return [
     {
@@ -67,11 +67,11 @@ export function getSaleTableColumns(
         const index = row.original.index;
         const formValues = form.watch(`sales.${index}`);
         const formErrors = form.formState.errors.sales?.[index];
-
+        console.log("formValues", formValues);
         return (
           <div className="space-y-1">
             <Select
-              value={formValues?.delivery_status || "PENDIENTE"}
+              value={formValues?.delivery_status || "ENTREGADO"}
               onValueChange={(value) =>
                 form.setValue(`sales.${index}.delivery_status`, value, {
                   shouldValidate: true,
@@ -136,7 +136,7 @@ export function getSaleTableColumns(
                     e.target.value,
                     {
                       shouldValidate: true,
-                    }
+                    },
                   )
                 }
               />

@@ -55,6 +55,7 @@ interface DeliverySheetFormProps {
     payment_type: string;
     zone_id?: number;
     customer_id?: number;
+    person_zone_id?: number;
     date_from?: string;
     date_to?: string;
   }) => void;
@@ -76,12 +77,13 @@ export const DeliverySheetForm = ({
   isLoadingAvailableSales,
 }: DeliverySheetFormProps) => {
   const [selectedSaleIds, setSelectedSaleIds] = useState<number[]>(
-    defaultValues.sale_ids || []
+    defaultValues.sale_ids || [],
   );
   const [searchParams, setSearchParams] = useState({
     payment_type: "",
     zone_id: "",
     customer_id: "",
+    person_zone_id: "",
     date_from: undefined as Date | undefined,
     date_to: undefined as Date | undefined,
   });
@@ -117,6 +119,9 @@ export const DeliverySheetForm = ({
       zone_id: searchParams.zone_id ? Number(searchParams.zone_id) : undefined,
       customer_id: searchParams.customer_id
         ? Number(searchParams.customer_id)
+        : undefined,
+      person_zone_id: searchParams.person_zone_id
+        ? Number(searchParams.person_zone_id)
         : undefined,
       date_from: searchParams.date_from
         ? format(searchParams.date_from, "yyyy-MM-dd")
@@ -242,16 +247,18 @@ export const DeliverySheetForm = ({
           />
 
           {forSingleCustomer ? (
-            <FormSelect
-              control={form.control}
-              name="customer_id"
-              label="Cliente"
-              placeholder="Seleccione un cliente"
-              options={customers.map((customer) => ({
-                value: customer.id.toString(),
-                label: customer.names ?? customer.business_name,
-              }))}
-            />
+            <>
+              <FormSelect
+                control={form.control}
+                name="customer_id"
+                label="Cliente"
+                placeholder="Seleccione un cliente"
+                options={customers.map((customer) => ({
+                  value: customer.id.toString(),
+                  label: customer.names ?? customer.business_name,
+                }))}
+              />
+            </>
           ) : (
             <FormSelect
               control={form.control}
@@ -407,7 +414,7 @@ export const DeliverySheetForm = ({
                         <TableCell>
                           <Badge variant="outline">
                             {new Date(sale.issue_date).toLocaleDateString(
-                              "es-ES"
+                              "es-ES",
                             )}
                           </Badge>
                         </TableCell>

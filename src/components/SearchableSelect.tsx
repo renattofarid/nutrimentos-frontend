@@ -36,6 +36,7 @@ interface SearchableSelectProps {
   className?: string;
   classNameOption?: string;
   classNameDiv?: string;
+  classNameLabel?: string;
   withValue?: boolean;
   label?: string;
   disabled?: boolean;
@@ -51,6 +52,7 @@ export function SearchableSelect({
   className,
   classNameOption,
   classNameDiv,
+  classNameLabel,
   withValue = true,
   label,
   disabled = false,
@@ -129,7 +131,7 @@ export function SearchableSelect({
             <Check
               className={cn(
                 "mr-2 h-4 w-4 shrink-0",
-                value === option.value ? "opacity-100" : "opacity-0"
+                value === option.value ? "opacity-100" : "opacity-0",
               )}
             />
             <div className="flex flex-col min-w-0 flex-1">
@@ -159,7 +161,7 @@ export function SearchableSelect({
       className={cn(
         "flex md:w-fit w-full items-center justify-between rounded-md border px-3 text-xs md:text-sm",
         selected && "bg-muted text-muted-foreground",
-        className
+        className,
       )}
     >
       <span className="text-nowrap! line-clamp-1">
@@ -175,7 +177,11 @@ export function SearchableSelect({
 
   return (
     <div className={cn("flex flex-col gap-2", classNameDiv)}>
-      {label && <label className="text-sm font-medium">{label}</label>}
+      {label && (
+        <label className={cn("text-sm font-medium", classNameLabel)}>
+          {label}
+        </label>
+      )}
       {isMobile ? (
         <Drawer
           open={open}

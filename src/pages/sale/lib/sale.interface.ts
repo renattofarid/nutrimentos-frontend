@@ -49,7 +49,7 @@ export interface SaleResource {
   serie: string;
   numero: string;
   full_document_number: string;
-  issue_date: string;
+  issue_date: Date;
   payment_type: string;
   total_weight: number;
   subtotal: number;
@@ -161,6 +161,7 @@ export interface CreateSaleRequest {
   customer_id: number;
   warehouse_id: number;
   vendedor_id: number | null;
+  person_zone_id: number;
   document_type: string;
   issue_date: string;
   payment_type: string;
@@ -175,6 +176,7 @@ export interface UpdateSaleRequest {
   customer_id?: number;
   warehouse_id?: number;
   vendedor_id?: number | null;
+  person_zone_id?: number;
   document_type?: string;
   issue_date?: string;
   payment_type?: string;

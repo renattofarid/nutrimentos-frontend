@@ -101,6 +101,11 @@ export const SaleForm = ({
     []
   );
 
+  // Estado para las direcciones del cliente seleccionado
+  const [customerAddresses, setCustomerAddresses] = useState<
+    { id: number; zone_name: string; address: string; is_primary: boolean }[]
+  >([]);
+
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
 
   const { fetchDynamicPrice } = useDynamicPrice();
@@ -234,6 +239,7 @@ export const SaleForm = ({
   const selectedWarehouseId = form.watch("warehouse_id");
   const selectedDocumentType = form.watch("document_type");
   const selectedCurrency = form.watch("currency");
+  const selectedCustomerId = form.watch("customer_id");
 
   // Función para obtener el símbolo de moneda
   const getCurrencySymbol = () => {
@@ -300,6 +306,33 @@ export const SaleForm = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedWarehouseId, products]);
+
+  // Efecto para actualizar direcciones cuando cambia el cliente
+  useEffect(() => {
+    if (selectedCustomerId) {
+      const customer = customers.find(
+        (c) => c.id.toString() === selectedCustomerId
+      );
+      if (customer && customer.person_zones && customer.person_zones.length > 0) {
+        setCustomerAddresses(customer.person_zones);
+        // Seleccionar automáticamente la dirección primaria
+        const primaryAddress = customer.person_zones.find((pz) => pz.is_primary);
+        if (primaryAddress) {
+          form.setValue("person_zone_id", primaryAddress.id.toString());
+        } else {
+          // Si no hay primaria, seleccionar la primera
+          form.setValue("person_zone_id", customer.person_zones[0].id.toString());
+        }
+      } else {
+        setCustomerAddresses([]);
+        form.setValue("person_zone_id", "");
+      }
+    } else {
+      setCustomerAddresses([]);
+      form.setValue("person_zone_id", "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCustomerId, customers]);
 
   // Efecto para obtener serie y número automático
   useEffect(() => {
@@ -932,6 +965,19 @@ export const SaleForm = ({
               <UserPlus className="h-4 w-4" />
             </Button>
           </div>
+
+          <FormSelect
+            control={form.control}
+            name="person_zone_id"
+            label="Dirección de Entrega"
+            placeholder="Seleccione dirección"
+            options={customerAddresses.map((addr) => ({
+              value: addr.id.toString(),
+              label: addr.zone_name + (addr.is_primary ? " (Principal)" : ""),
+              description: addr.address,
+            }))}
+            disabled={!selectedCustomerId || customerAddresses.length === 0}
+          />
 
           <FormSelect
             control={form.control}

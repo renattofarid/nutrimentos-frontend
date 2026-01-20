@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import {
   Form,
   FormField,
@@ -104,6 +104,7 @@ export const GuideForm = ({
   const [isSearchingSales, setIsSearchingSales] = useState(false);
   const [searchParams, setSearchParams] = useState({
     document_type: "BOLETA",
+    person_zone_id: "",
     serie: "",
     numero_inicio: "",
     numero_fin: "",
@@ -160,7 +161,7 @@ export const GuideForm = ({
         setIsSearchingDestination(false);
       }
     },
-    []
+    [],
   );
 
   const form = useForm({
@@ -178,7 +179,7 @@ export const GuideForm = ({
   useEffect(() => {
     if (selectedBranchId) {
       const filtered = warehouses.filter(
-        (warehouse) => warehouse.branch_id.toString() === selectedBranchId
+        (warehouse) => warehouse.branch_id.toString() === selectedBranchId,
       );
       setFilteredWarehouses(filtered);
 
@@ -186,7 +187,7 @@ export const GuideForm = ({
       const currentWarehouseId = form.getValues("warehouse_id");
       if (currentWarehouseId) {
         const isValid = filtered.some(
-          (warehouse) => warehouse.id.toString() === currentWarehouseId
+          (warehouse) => warehouse.id.toString() === currentWarehouseId,
         );
         if (!isValid) {
           form.setValue("warehouse_id", "");
@@ -213,14 +214,14 @@ export const GuideForm = ({
     try {
       // Primero buscar en la lista de transportistas existentes
       const existingCarrier = carriers?.find(
-        (c) => c.number_document === documentNumber
+        (c) => c.number_document === documentNumber,
       );
 
       if (existingCarrier) {
         form.setValue(
           "carrier_name",
           existingCarrier.business_name ||
-            `${existingCarrier.names} ${existingCarrier.father_surname}`.trim()
+            `${existingCarrier.names} ${existingCarrier.father_surname}`.trim(),
         );
         form.setValue("carrier_ruc", existingCarrier.number_document || "");
         toast.success("Transportista encontrado en el sistema");
@@ -282,9 +283,9 @@ export const GuideForm = ({
         response?.meta?.numeros_encontrados &&
           response?.meta?.numeros_encontrados?.length > 0
           ? `Números encontrados: ${response.meta.numeros_encontrados.join(
-              ", "
+              ", ",
             )}`
-          : undefined
+          : undefined,
       );
 
       // if (response.meta.tiene_faltantes) {
@@ -393,6 +394,15 @@ export const GuideForm = ({
     console.log("✅ Payload final siendo enviado:", payload);
     onSubmit(payload);
   };
+
+  const customerValue = form.watch("customer_id");
+
+  // Obtener las direcciones del cliente seleccionado
+  const selectedCustomerAddresses = useMemo(() => {
+    if (!customerValue) return [];
+    const customer = customers.find((c) => c.id.toString() === customerValue);
+    return customer?.person_zones || [];
+  }, [customerValue, customers]);
 
   return (
     <Form {...form}>
@@ -506,8 +516,9 @@ export const GuideForm = ({
         >
           <div className="space-y-4">
             {/* Filtros de búsqueda */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-sidebar rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-sidebar rounded-lg">
               <SearchableSelect
+                buttonSize="default"
                 label="Tipo de Documento"
                 options={[
                   { value: "FACTURA", label: "FACTURA" },
@@ -520,6 +531,35 @@ export const GuideForm = ({
                 placeholder="Seleccione tipo"
                 className="md:w-full"
               />
+
+              <div className="space-y-2">
+                <SearchableSelect
+                  buttonSize="default"
+                  label="Dirección del Cliente"
+                  placeholder="Seleccione una dirección"
+                  disabled={
+                    !customerValue || selectedCustomerAddresses.length === 0
+                  }
+                  value={searchParams.person_zone_id}
+                  onChange={(value) => {
+                    setSearchParams((prev) => ({
+                      ...prev,
+                      person_zone_id: value,
+                    }));
+                  }}
+                  options={selectedCustomerAddresses.map((address) => ({
+                    value: address.id.toString(),
+                    label: `${address.zone_name} - ${address.address}${address.is_primary ? " (Principal)" : ""}`,
+                  }))}
+                  withValue={false}
+                  className="md:w-full"
+                />
+                {customerValue && selectedCustomerAddresses.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    El cliente no tiene direcciones registradas
+                  </p>
+                )}
+              </div>
 
               <FormInput
                 name="serie"
@@ -559,7 +599,7 @@ export const GuideForm = ({
                 }
               />
 
-              <div className="md:col-span-4 flex justify-end">
+              <div className="md:col-span-full flex justify-end">
                 <Button
                   type="button"
                   variant="default"
@@ -649,7 +689,13 @@ export const GuideForm = ({
                           {sale.customer.business_name ||
                             `${sale.customer.names} ${sale.customer.father_surname}`}
                         </TableCell>
-                        <TableCell>{sale.issue_date}</TableCell>
+                        <TableCell>
+                          {sale.issue_date.toLocaleDateString("es-PE", {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                          })}
+                        </TableCell>
                         <TableCell className="text-right">
                           {sale.currency} {sale.total_amount.toFixed(2)}
                         </TableCell>
@@ -705,16 +751,16 @@ export const GuideForm = ({
                         carrierDocumentType === "RUC"
                           ? "Ingrese 11 dígitos"
                           : carrierDocumentType === "DNI"
-                          ? "Ingrese 8 dígitos"
-                          : "Ingrese el número"
+                            ? "Ingrese 8 dígitos"
+                            : "Ingrese el número"
                       }
                       {...field}
                       maxLength={
                         carrierDocumentType === "RUC"
                           ? 11
                           : carrierDocumentType === "DNI"
-                          ? 8
-                          : 11
+                            ? 8
+                            : 11
                       }
                       onChange={(e) => {
                         const value = e.target.value.replace(/\D/g, "");
@@ -851,7 +897,7 @@ export const GuideForm = ({
                   onChange={(value) => {
                     setSelectedDriverId(value);
                     const selectedDriver = drivers?.find(
-                      (d) => d.id.toString() === value
+                      (d) => d.id.toString() === value,
                     );
                     if (selectedDriver) {
                       const docType =
@@ -862,7 +908,7 @@ export const GuideForm = ({
                       form.setValue("driver_document_type", docType);
                       form.setValue(
                         "driver_document_number",
-                        selectedDriver.number_document || ""
+                        selectedDriver.number_document || "",
                       );
                       const fullName =
                         selectedDriver.business_name ||
@@ -885,7 +931,7 @@ export const GuideForm = ({
           {selectedDriverId &&
             (() => {
               const driver = drivers?.find(
-                (d) => d.id.toString() === selectedDriverId
+                (d) => d.id.toString() === selectedDriverId,
               );
               if (!driver) return null;
               const fullName =

@@ -1,23 +1,22 @@
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { SelectActions } from "@/components/SelectActions";
 import type { PersonResource } from "../lib/person.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
+import { ButtonAction } from "@/components/ButtonAction";
+import { Pencil, Trash2, MapPin, List, ListPlus } from "lucide-react";
 
 export const PersonColumns = ({
   onEdit,
   onDelete,
   onViewPriceList,
   onAssignPriceList,
+  onViewAddresses,
 }: // onManageRoles,
 {
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
   onViewPriceList?: (person: PersonResource) => void;
   onAssignPriceList?: (person: PersonResource) => void;
+  onViewAddresses?: (person: PersonResource) => void;
   // onManageRoles: (person: PersonResource) => void;
 }): ColumnDef<PersonResource>[] => [
   {
@@ -33,11 +32,11 @@ export const PersonColumns = ({
             {typeDocument === "RUC"
               ? person.business_name
               : typeDocument === "PASAPORTE"
-              ? person.names
-              : typeDocument === "CE"
-              ? person.names
-              : person.business_name ??
-                `${person.names} ${person.father_surname} ${person.mother_surname}`}
+                ? person.names
+                : typeDocument === "CE"
+                  ? person.names
+                  : (person.business_name ??
+                    `${person.names} ${person.father_surname} ${person.mother_surname}`)}
           </div>
           <div className="text-sm text-muted-foreground">
             {typeDocument &&
@@ -129,29 +128,39 @@ export const PersonColumns = ({
       const person = row.original;
 
       return (
-        <SelectActions>
-          <DropdownMenuGroup>
-            {/* <DropdownMenuItem onClick={() => onManageRoles(person)}>
-              Gestionar Roles
-            </DropdownMenuItem> */}
-            {onViewPriceList && (
-              <DropdownMenuItem onClick={() => onViewPriceList(person)}>
-                Ver Lista de Precios
-              </DropdownMenuItem>
-            )}
-            {onAssignPriceList && (
-              <DropdownMenuItem onClick={() => onAssignPriceList(person)}>
-                Asignar Lista de Precios
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onClick={() => onEdit(person.id)}>
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onDelete(person.id)}>
-              Eliminar
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </SelectActions>
+        <div className="flex items-center gap-1">
+          <ButtonAction
+            icon={List}
+            canRender={!!onViewPriceList}
+            onClick={() => onViewPriceList?.(person)}
+            tooltip="Ver Lista de Precios"
+            color="blue"
+          />
+          <ButtonAction
+            icon={ListPlus}
+            canRender={!!onAssignPriceList}
+            onClick={() => onAssignPriceList?.(person)}
+            tooltip="Asignar Lista de Precios"
+          />
+          <ButtonAction
+            icon={MapPin}
+            color="indigo"
+            canRender={!!onViewAddresses}
+            onClick={() => onViewAddresses?.(person)}
+            tooltip="Ver Direcciones"
+          />
+          <ButtonAction
+            icon={Pencil}
+            onClick={() => onEdit(person.id)}
+            tooltip="Editar"
+          />
+          <ButtonAction
+            icon={Trash2}
+            color="red"
+            onClick={() => onDelete(person.id)}
+            tooltip="Eliminar"
+          />
+        </div>
       );
     },
   },

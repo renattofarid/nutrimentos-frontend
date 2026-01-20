@@ -84,9 +84,20 @@ export interface PersonResource {
   zone_name?: string;
   user_id?: string;
   created_at: string;
-  roles: Role[];
-  client_category?: string;
-  client_category_id?: number;
+  roles?: Role[];
+  client_category?: Clientcategory;
+}
+
+interface Clientcategory {
+  id: number;
+  name: string;
+  code: string;
+  description: string;
+}
+
+interface Role {
+  id: number;
+  name: string;
 }
 
 interface Role {

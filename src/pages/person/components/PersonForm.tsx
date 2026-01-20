@@ -40,8 +40,6 @@ import { useAllJobPositions } from "@/pages/jobposition/lib/jobposition.hook";
 import type { JobPositionResource } from "@/pages/jobposition/lib/jobposition.interface";
 import { useAllBusinessTypes } from "@/pages/businesstype/lib/businesstype.hook";
 import type { BusinessTypeResource } from "@/pages/businesstype/lib/businesstype.interface";
-import { useAllZones } from "@/pages/zone/lib/zone.hook";
-import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
 import { usePriceList } from "@/pages/pricelist/lib/pricelist.hook";
 import type { PriceList } from "@/pages/pricelist/lib/pricelist.interface";
 import { TYPE_DOCUMENT } from "../lib/person.constants";
@@ -80,8 +78,8 @@ export const PersonForm = ({
   const schema = isClient
     ? personCreateSchemaClient
     : isWorker
-    ? personCreateSchemaWorker
-    : personCreateSchema;
+      ? personCreateSchemaWorker
+      : personCreateSchema;
   type FormSchema = PersonSchema | PersonSchemaClient;
 
   const form = useForm<FormSchema>({
@@ -104,8 +102,7 @@ export const PersonForm = ({
       role_id: roleId.toString(),
       job_position_id: initialData?.job_position_id?.toString() || "",
       business_type_id: initialData?.business_type_id?.toString() || "",
-      zone_id: initialData?.zone_id?.toString() || "",
-      client_category_id: initialData?.client_category_id?.toString() || "",
+      client_category_id: initialData?.client_category?.id.toString() || "",
     },
     mode: "onChange", // Validate on change for immediate feedback
   });
@@ -126,14 +123,13 @@ export const PersonForm = ({
     useAllJobPositions();
   const { data: businessTypes, isLoading: isLoadingBusinessTypes } =
     useAllBusinessTypes();
-  const { data: zones, isLoading: isLoadingZones } = useAllZones();
   const { data: priceLists, isLoading: isLoadingPriceLists } = usePriceList();
 
   // Update document_type_id when document_type_id changes
   useEffect(() => {
     if (documentTypes) {
       const selectedDocType = documentTypes.find(
-        (dt: DocumentTypeResource) => dt.id.toString() === document_type_id
+        (dt: DocumentTypeResource) => dt.id.toString() === document_type_id,
       );
       if (selectedDocType) {
         form.setValue("document_type_id", selectedDocType.id.toString(), {
@@ -301,19 +297,19 @@ export const PersonForm = ({
               isLoadingDocumentTypes
                 ? []
                 : isWorker
-                ? (documentTypes || [])
-                    .filter(
-                      (dt: DocumentTypeResource) =>
-                        dt.name === TYPE_DOCUMENT.DNI.name
-                    )
-                    .map((dt: DocumentTypeResource) => ({
+                  ? (documentTypes || [])
+                      .filter(
+                        (dt: DocumentTypeResource) =>
+                          dt.name === TYPE_DOCUMENT.DNI.name,
+                      )
+                      .map((dt: DocumentTypeResource) => ({
+                        value: dt.id.toString(),
+                        label: dt.name,
+                      }))
+                  : (documentTypes || []).map((dt: DocumentTypeResource) => ({
                       value: dt.id.toString(),
                       label: dt.name,
                     }))
-                : (documentTypes || []).map((dt: DocumentTypeResource) => ({
-                    value: dt.id.toString(),
-                    label: dt.name,
-                  }))
             }
           />
 
@@ -336,12 +332,12 @@ export const PersonForm = ({
                         document_type_id === TYPE_DOCUMENT.DNI.id
                           ? "Ingrese 8 dígitos"
                           : document_type_id === TYPE_DOCUMENT.RUC.id
-                          ? "Ingrese 11 dígitos"
-                          : document_type_id === "CE"
-                          ? "Ingrese 8-9 dígitos"
-                          : document_type_id === "PASAPORTE"
-                          ? "Ingrese 8-11 caracteres"
-                          : "Ingrese el número"
+                            ? "Ingrese 11 dígitos"
+                            : document_type_id === "CE"
+                              ? "Ingrese 8-9 dígitos"
+                              : document_type_id === "PASAPORTE"
+                                ? "Ingrese 8-11 caracteres"
+                                : "Ingrese el número"
                       }
                       {...field}
                       className={`
@@ -365,12 +361,12 @@ export const PersonForm = ({
                         document_type_id === TYPE_DOCUMENT.DNI.id
                           ? 8
                           : document_type_id === TYPE_DOCUMENT.RUC.id
-                          ? 11
-                          : document_type_id === "CE"
-                          ? 9
-                          : document_type_id === "PASAPORTE"
-                          ? 11
-                          : 11
+                            ? 11
+                            : document_type_id === "CE"
+                              ? 9
+                              : document_type_id === "PASAPORTE"
+                                ? 11
+                                : 11
                       }
                       onChange={(e) => {
                         let value;
@@ -607,7 +603,7 @@ export const PersonForm = ({
                 new Date(
                   new Date().getFullYear() - 18,
                   new Date().getMonth(),
-                  new Date().getDate()
+                  new Date().getDate(),
                 )
               }
             />
@@ -896,24 +892,6 @@ export const PersonForm = ({
               />
             )}
 
-            {showZone && (
-              <FormSelect
-                control={form.control}
-                name="zone_id"
-                label="Zona"
-                placeholder="Seleccione zona"
-                disabled={isLoadingZones}
-                options={
-                  isLoadingZones
-                    ? []
-                    : (zones || []).map((z: ZoneResource) => ({
-                        value: z.id.toString(),
-                        label: z.name,
-                      }))
-                }
-              />
-            )}
-
             {showPriceList && (
               <FormSelect
                 control={form.control}
@@ -939,7 +917,12 @@ export const PersonForm = ({
         {/* Form Actions */}
         <div className="flex justify-end gap-3">
           {onCancel && (
-            <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onCancel}
+            >
               Cancelar
             </Button>
           )}

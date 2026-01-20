@@ -1,9 +1,10 @@
 import type { UseFormReturn } from "react-hook-form";
-import { User, DollarSign, Clock } from "lucide-react";
+import { User, DollarSign, Clock, FileText, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -34,9 +35,17 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
       <CardHeader className="bg-muted/50 py-3">
         <div className="flex items-center justify-between gap-2">
           <div className="space-y-1">
-            <Badge variant="outline" className="text-xs">
-              {sale.document_type}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs">
+                {sale.document_type}
+              </Badge>
+              {sale.has_credit_notes && (
+                <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
+                  <FileText className="h-3 w-3 mr-1" />
+                  N/C
+                </Badge>
+              )}
+            </div>
             <CardTitle className="text-base font-mono">
               {sale.full_document_number}
             </CardTitle>
@@ -55,6 +64,26 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
           <User className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">{sale.customer.full_name}</span>
         </div>
+
+        {/* Nota de Crédito */}
+        {sale.has_credit_notes && (
+          <div className="flex items-start gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+            <div className="space-y-1 text-xs">
+              <p className="font-semibold text-orange-900">Tiene Nota de Crédito</p>
+              {sale.total_credit_notes_amount && (
+                <p className="text-orange-700">
+                  Monto N/C: S/. {parseFloat(sale.total_credit_notes_amount.toString()).toFixed(2)}
+                </p>
+              )}
+              {sale.credit_note_ids && sale.credit_note_ids.length > 0 && (
+                <p className="text-orange-700">
+                  IDs: {sale.credit_note_ids.join(", ")}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Monto Pendiente */}
         <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
@@ -106,10 +135,39 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
 
         {/* Monto Cobrado */}
         <div className="space-y-2">
-          <label className="text-sm font-medium flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            Monto Cobrado
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Monto Cobrado
+            </label>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id={`auto-fill-mobile-${index}`}
+                checked={parseFloat(formValues?.payment_amount || "0") === parseFloat(sale.current_amount)}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    form.setValue(
+                      `sales.${index}.payment_amount`,
+                      parseFloat(sale.current_amount).toFixed(2),
+                      { shouldValidate: true }
+                    );
+                  } else {
+                    form.setValue(
+                      `sales.${index}.payment_amount`,
+                      "0",
+                      { shouldValidate: true }
+                    );
+                  }
+                }}
+              />
+              <label
+                htmlFor={`auto-fill-mobile-${index}`}
+                className="text-xs text-muted-foreground cursor-pointer select-none"
+              >
+                Auto-llenar
+              </label>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">S/.</span>
             <Input

@@ -15,6 +15,9 @@ export interface SaleWithIndex {
   collected_amount: string;
   delivery_status: "ANULADO" | "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO" | "PENDIENTE";
   delivery_notes: string | null;
+  has_credit_notes: boolean;
+  credit_note_ids?: number[];
+  total_credit_notes_amount?: number;
 }
 
 export const saleSettlementSchema = z.object({

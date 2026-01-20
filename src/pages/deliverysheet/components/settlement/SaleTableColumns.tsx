@@ -3,6 +3,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -10,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FileText, AlertCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DELIVERY_STATUS_OPTIONS } from "./constants";
 import type { SaleWithIndex, SettlementFormSchema } from "./types";
 import { parseFormattedNumber } from "@/lib/utils";
@@ -60,6 +63,41 @@ export function getSaleTableColumns(
           </Badge>
         </div>
       ),
+    },
+    {
+      accessorKey: "has_credit_notes",
+      header: "N/C",
+      cell: ({ row }) => {
+        const hasCreditNotes = row.original.has_credit_notes;
+        const creditNoteAmount = row.original.total_credit_notes_amount;
+        const creditNoteIds = row.original.credit_note_ids;
+
+        if (!hasCreditNotes) return null;
+
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center justify-center gap-1 cursor-help">
+                  <AlertCircle className="h-4 w-4 text-orange-500" />
+                  <FileText className="h-4 w-4 text-orange-500" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="space-y-1 text-xs">
+                  <p className="font-semibold">Tiene Nota de Crédito</p>
+                  {creditNoteAmount && (
+                    <p>Monto: S/. {parseFloat(creditNoteAmount.toString()).toFixed(2)}</p>
+                  )}
+                  {creditNoteIds && creditNoteIds.length > 0 && (
+                    <p>N/C: {creditNoteIds.join(", ")}</p>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      },
     },
     {
       accessorKey: "delivery_status",
@@ -116,16 +154,48 @@ export function getSaleTableColumns(
         const index = row.original.index;
         const formValues = form.watch(`sales.${index}`);
         const formErrors = form.formState.errors.sales?.[index];
+        const currentAmount = parseFloat(row.original.current_amount);
+
+        const handleAutoFill = (checked: boolean) => {
+          if (checked) {
+            form.setValue(
+              `sales.${index}.payment_amount`,
+              currentAmount.toFixed(2),
+              { shouldValidate: true }
+            );
+          } else {
+            form.setValue(
+              `sales.${index}.payment_amount`,
+              "0",
+              { shouldValidate: true }
+            );
+          }
+        };
+
+        const isAutoFilled = parseFloat(formValues?.payment_amount || "0") === currentAmount;
 
         return (
-          <div className="space-y-1">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id={`auto-fill-${index}`}
+                checked={isAutoFilled}
+                onCheckedChange={handleAutoFill}
+              />
+              <label
+                htmlFor={`auto-fill-${index}`}
+                className="text-xs text-muted-foreground cursor-pointer select-none"
+              >
+                Auto
+              </label>
+            </div>
             <div className="flex items-center gap-1">
               <span className="text-sm text-muted-foreground">S/.</span>
               <Input
                 type="number"
                 step="0.01"
                 min="0"
-                max={parseFloat(row.original.current_amount)}
+                max={currentAmount}
                 placeholder="0.00"
                 className={`w-full md:w-[120px] text-right ${
                   formErrors?.payment_amount ? "border-red-500" : ""

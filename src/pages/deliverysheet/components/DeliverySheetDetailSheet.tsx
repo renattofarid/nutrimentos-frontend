@@ -95,7 +95,7 @@ export default function DeliverySheetDetailSheet({
       header: "Cliente",
       cell: ({ row }) => (
         <div className="max-w-[180px] truncate">
-          {row.original.customer.full_name}
+          {row.original.customer.full_name ?? "-"}
         </div>
       ),
     },

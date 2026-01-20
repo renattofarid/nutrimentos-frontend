@@ -44,7 +44,8 @@ export function getSaleTableColumns(
             </Badge>
           </div>
           <div className="text-sm text-muted-foreground">
-            {row.original.customer.full_name}
+            {row.original.customer?.full_name ||
+              row.original.customer?.business_name}
           </div>
         </div>
       ),

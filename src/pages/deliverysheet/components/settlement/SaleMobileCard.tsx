@@ -1,5 +1,14 @@
 import type { UseFormReturn } from "react-hook-form";
-import { User, DollarSign, Clock, FileText, AlertCircle, MessageSquarePlus, MessageSquare, ChevronUp } from "lucide-react";
+import {
+  User,
+  DollarSign,
+  Clock,
+  FileText,
+  AlertCircle,
+  MessageSquarePlus,
+  MessageSquare,
+  ChevronUp,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +41,8 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
   );
   const StatusIcon = statusOption?.icon || Clock;
   const [showNotes, setShowNotes] = useState(false);
-  const hasNote = formValues?.delivery_notes && formValues.delivery_notes.length > 0;
+  const hasNote =
+    formValues?.delivery_notes && formValues.delivery_notes.length > 0;
   const pendingAmount = sale.has_credit_notes
     ? parseFloat(sale.real_pending_amount)
     : parseFloat(sale.current_amount);
@@ -47,7 +57,10 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
                 {sale.document_type}
               </Badge>
               {sale.has_credit_notes && (
-                <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
+                <Badge
+                  variant="outline"
+                  className="text-xs bg-orange-50 text-orange-700 border-orange-200"
+                >
                   <FileText className="h-3 w-3 mr-1" />
                   N/C
                 </Badge>
@@ -69,7 +82,7 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
         {/* Cliente */}
         <div className="flex items-center gap-2 text-sm">
           <User className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">{sale.customer.full_name}</span>
+          <span className="font-medium">{sale.customer?.full_name}</span>
         </div>
 
         {/* Nota de Crédito */}
@@ -77,15 +90,22 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
           <div className="flex items-start gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
             <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
             <div className="space-y-1 text-xs">
-              <p className="font-semibold text-orange-900">Tiene Nota de Crédito</p>
-              {sale.credit_notes_total && parseFloat(sale.credit_notes_total) > 0 && (
-                <p className="text-orange-700">
-                  Monto N/C: S/. {parseFloat(sale.credit_notes_total).toFixed(2)}
-                </p>
-              )}
+              <p className="font-semibold text-orange-900">
+                Tiene Nota de Crédito
+              </p>
+              {sale.credit_notes_total &&
+                parseFloat(sale.credit_notes_total) > 0 && (
+                  <p className="text-orange-700">
+                    Monto N/C: S/.{" "}
+                    {parseFloat(sale.credit_notes_total).toFixed(2)}
+                  </p>
+                )}
               {sale.credit_notes && sale.credit_notes.length > 0 && (
                 <p className="text-orange-700">
-                  N/C: {sale.credit_notes.map(cn => cn.full_document_number).join(", ")}
+                  N/C:{" "}
+                  {sale.credit_notes
+                    .map((cn) => cn.full_document_number)
+                    .join(", ")}
                 </p>
               )}
             </div>
@@ -95,9 +115,7 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
         {/* Monto Pendiente */}
         <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
           <span className="text-sm text-muted-foreground">Monto Pendiente</span>
-          <Badge variant="secondary">
-            S/. {pendingAmount.toFixed(2)}
-          </Badge>
+          <Badge variant="secondary">S/. {pendingAmount.toFixed(2)}</Badge>
         </div>
 
         {/* Estado de Entrega */}
@@ -150,20 +168,21 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
             <div className="flex items-center gap-2">
               <Checkbox
                 id={`auto-fill-mobile-${index}`}
-                checked={parseFloat(formValues?.payment_amount || "0") === pendingAmount}
+                checked={
+                  parseFloat(formValues?.payment_amount || "0") ===
+                  pendingAmount
+                }
                 onCheckedChange={(checked) => {
                   if (checked) {
                     form.setValue(
                       `sales.${index}.payment_amount`,
                       pendingAmount.toFixed(2),
-                      { shouldValidate: true }
+                      { shouldValidate: true },
                     );
                   } else {
-                    form.setValue(
-                      `sales.${index}.payment_amount`,
-                      "0",
-                      { shouldValidate: true }
-                    );
+                    form.setValue(`sales.${index}.payment_amount`, "0", {
+                      shouldValidate: true,
+                    });
                   }
                 }}
               />
@@ -240,9 +259,13 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
                 maxLength={500}
                 value={formValues?.delivery_notes || ""}
                 onChange={(e) =>
-                  form.setValue(`sales.${index}.delivery_notes`, e.target.value, {
-                    shouldValidate: true,
-                  })
+                  form.setValue(
+                    `sales.${index}.delivery_notes`,
+                    e.target.value,
+                    {
+                      shouldValidate: true,
+                    },
+                  )
                 }
               />
               <div className="flex justify-between items-center">

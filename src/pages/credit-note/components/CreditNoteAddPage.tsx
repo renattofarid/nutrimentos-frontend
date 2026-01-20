@@ -34,7 +34,7 @@ export default function CreditNoteAddPage() {
   // Obtener la venta seleccionada
   const selectedSale = useMemo(
     () => sales?.find((sale) => sale.id === selectedSaleId) || null,
-    [sales, selectedSaleId]
+    [sales, selectedSaleId],
   );
 
   // Transformar datos para los selects
@@ -43,17 +43,17 @@ export default function CreditNoteAddPage() {
       sales?.map((sale) => {
         const customer = sale.customer ?? {};
         const name =
-          customer.full_name?.trim() ||
+          customer.names?.trim() ||
           customer.business_name?.trim() ||
           [customer.names, customer.father_surname, customer.mother_surname]
-            .filter((s) => s && s.toString().trim() !== "")
+            .filter((s) => typeof s === "string" && s.trim() !== "")
             .join(" ");
         return {
           value: sale.id.toString(),
           label: `${sale.serie}-${sale.numero} - ${name || ""}`,
         };
       }) || [],
-    [sales]
+    [sales],
   );
 
   const motivesOptions = useMemo(
@@ -62,7 +62,7 @@ export default function CreditNoteAddPage() {
         value: motive.id.toString(),
         label: `${motive.code} - ${motive.name}`,
       })) || [],
-    [motives]
+    [motives],
   );
 
   const handleSubmit = async (data: CreditNoteSchema) => {

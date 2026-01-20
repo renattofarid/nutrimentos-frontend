@@ -43,7 +43,7 @@ export function SettlementDialog({
   sales,
 }: SettlementDialogProps) {
   const form = useForm<SettlementSchema>({
-    resolver: zodResolver(settlementSchema),
+    resolver: zodResolver(settlementSchema) as any,
     defaultValues: {
       sales: sales.map((sale) => ({
         sale_id: sale.id,
@@ -107,7 +107,9 @@ export function SettlementDialog({
                       Estado de Entrega
                     </label>
                     <Select
-                      value={formValues?.delivery_status || sale.delivery_status}
+                      value={
+                        formValues?.delivery_status || sale.delivery_status
+                      }
                       onValueChange={(value) =>
                         handleStatusChange(index, value)
                       }
@@ -133,9 +135,7 @@ export function SettlementDialog({
                       placeholder="Notas de entrega..."
                       className="resize-y min-h-[80px]"
                       value={formValues?.delivery_notes || ""}
-                      onChange={(e) =>
-                        handleNotesChange(index, e.target.value)
-                      }
+                      onChange={(e) => handleNotesChange(index, e.target.value)}
                     />
                   </div>
                 </div>

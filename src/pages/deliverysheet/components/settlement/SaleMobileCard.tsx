@@ -1,5 +1,5 @@
 import type { UseFormReturn } from "react-hook-form";
-import { User, DollarSign, Clock, FileText, AlertCircle, MessageSquarePlus, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { User, DollarSign, Clock, FileText, AlertCircle, MessageSquarePlus, MessageSquare, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

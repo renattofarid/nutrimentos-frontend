@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import { useDynamicPrice } from "../lib/dynamic-price.hook";
 import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { parseFormattedNumber } from "@/lib/utils";
 
 const detailSchema = z.object({
   product_id: z.string().min(1, "Seleccione un producto"),
@@ -218,8 +219,8 @@ export const SaleProductSheet = ({
       subtotal = roundTo6Decimals(totalWeightKg * unitPrice);
     } else {
       // Precio dinámico - usar el subtotal que viene de la API
-      unitPrice = parseFloat(priceData.pricing.unit_price);
-      subtotal = parseFloat(priceData.pricing.subtotal);
+      unitPrice = parseFormattedNumber(priceData.pricing.unit_price);
+      subtotal = parseFormattedNumber(priceData.pricing.subtotal);
     }
 
     const igv = roundTo6Decimals(subtotal * 0.18);
@@ -519,7 +520,7 @@ export const SaleProductSheet = ({
                 <span className="text-sm font-bold">Subtotal:</span>
                 <span className="text-lg font-bold text-primary">
                   {priceData.pricing.currency}{" "}
-                  {parseFloat(priceData.pricing.subtotal).toFixed(2)}
+                  {parseFormattedNumber(priceData.pricing.subtotal).toFixed(2)}
                 </span>
               </div>
             </div>

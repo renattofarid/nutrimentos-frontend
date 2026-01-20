@@ -8,6 +8,7 @@ import {
   type ColumnDef,
   type SortingState,
   type OnChangeFn,
+  type RowSelectionState,
 } from "@tanstack/react-table";
 
 import {
@@ -101,6 +102,10 @@ interface DataTableProps<TData, TValue> extends VariantProps<
   sorting?: SortingState;
   onSortingChange?: OnChangeFn<SortingState>;
   manualSorting?: boolean;
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  enableRowSelection?: boolean;
+  getRowId?: (originalRow: TData, index: number) => string;
 }
 
 export function DataTable<TData, TValue>({
@@ -116,11 +121,16 @@ export function DataTable<TData, TValue>({
   sorting,
   onSortingChange,
   manualSorting = false,
+  rowSelection,
+  onRowSelectionChange,
+  enableRowSelection = false,
+  getRowId,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
     initialColumnVisibility ?? {},
   );
+  const [internalRowSelection, setInternalRowSelection] = useState({});
 
   const table = useReactTable({
     data,
@@ -130,9 +140,13 @@ export function DataTable<TData, TValue>({
     enableSorting: true,
     enableSortingRemoval: true,
     enableMultiSort: false,
+    enableRowSelection,
+    getRowId,
     state: {
       columnFilters,
       columnVisibility,
+      ...(rowSelection !== undefined && { rowSelection }),
+      ...(rowSelection === undefined && { rowSelection: internalRowSelection }),
       ...(sorting !== undefined && { sorting }),
       pagination: {
         pageIndex: 0,
@@ -142,6 +156,8 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
+    ...(onRowSelectionChange && { onRowSelectionChange }),
+    ...(onRowSelectionChange === undefined && { onRowSelectionChange: setInternalRowSelection }),
     ...(onSortingChange && { onSortingChange }),
   });
 

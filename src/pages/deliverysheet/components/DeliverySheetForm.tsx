@@ -28,6 +28,7 @@ import { DELIVERY_SHEET_TYPES } from "../lib/deliverysheet.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import type { AvailableSale } from "../lib/deliverysheet.interface";
+import { parseFormattedNumber } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
@@ -181,7 +182,7 @@ export const DeliverySheetForm = ({
 
   const totalAmount = selectedSaleIds.reduce((sum, saleId) => {
     const sale = availableSales.find((s) => s.id === saleId);
-    return sum + (sale ? parseFloat(sale.total_amount) : 0);
+    return sum + (sale ? parseFormattedNumber(sale.total_amount) : 0);
   }, 0);
 
   const handleFormSubmit = (data: DeliverySheetSchema) => {
@@ -424,7 +425,7 @@ export const DeliverySheetForm = ({
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right font-semibold">
-                          S/. {parseFloat(sale.total_amount).toFixed(2)}
+                          S/. {parseFormattedNumber(sale.total_amount).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     ))}

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { DELIVERY_STATUS_OPTIONS } from "./constants";
 import type { SaleWithIndex, SettlementFormSchema } from "./types";
+import { parseFormattedNumber } from "@/lib/utils";
 
 interface SaleMobileCardProps {
   sale: SaleWithIndex;
@@ -43,7 +44,7 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
           <Badge variant="blue" className="text-right flex flex-col items-end">
             <p className="text-xs text-blue-900">TOTAL</p>
             <p className="font-semibold text-sm">
-              S/. {parseFloat(sale.total_amount).toFixed(2)}
+              S/. {parseFormattedNumber(sale.total_amount).toFixed(2)}
             </p>
           </Badge>
         </div>

@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import type { DeliverySheetResource } from "../../lib/deliverysheet.interface";
+import { parseFormattedNumber } from "@/lib/utils";
 
 interface SettlementSummaryProps {
   deliverySheet: DeliverySheetResource;
@@ -8,10 +9,10 @@ interface SettlementSummaryProps {
 export function SettlementSummary({ deliverySheet }: SettlementSummaryProps) {
   const totalBoletas = deliverySheet.sales.length;
   const montoTotal = deliverySheet.sales
-    .reduce((sum, sale) => sum + parseFloat(sale.total_amount), 0)
+    .reduce((sum, sale) => sum + parseFormattedNumber(sale.total_amount), 0)
     .toFixed(2);
   const totalPendiente = deliverySheet.sales
-    .reduce((sum, sale) => sum + parseFloat(sale.current_amount), 0)
+    .reduce((sum, sale) => sum + parseFormattedNumber(sale.current_amount), 0)
     .toFixed(2);
 
   return (

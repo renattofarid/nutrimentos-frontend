@@ -24,3 +24,16 @@ export function formatDecimalTrunc(value: number, decimals = 6): string {
   // toFixed aquí no redondeará porque ya truncamos
   return v.toFixed(decimals);
 }
+
+/**
+ * Parsea un string numérico que puede tener formato con separadores de miles (comas)
+ * y lo convierte a número.
+ * Ej: parseFormattedNumber("1,200.00") => 1200
+ * Ej: parseFormattedNumber("1200.00") => 1200
+ */
+export function parseFormattedNumber(value: string): number {
+  if (!value || typeof value !== "string") return 0;
+  // Remover comas (separadores de miles)
+  const cleanedValue = value.replace(/,/g, "");
+  return parseFloat(cleanedValue) || 0;
+}

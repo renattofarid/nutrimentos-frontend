@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { DELIVERY_STATUS_OPTIONS } from "./constants";
 import type { SaleWithIndex, SettlementFormSchema } from "./types";
+import { parseFormattedNumber } from "@/lib/utils";
 
 export function getSaleTableColumns(
   form: UseFormReturn<SettlementFormSchema, any, undefined>,
@@ -44,7 +45,7 @@ export function getSaleTableColumns(
       cell: ({ row }) => (
         <div className="text-right">
           <Badge variant="outline">
-            S/. {parseFloat(row.original.total_amount).toFixed(2)}
+            S/. {parseFormattedNumber(row.original.total_amount).toFixed(2)}
           </Badge>
         </div>
       ),

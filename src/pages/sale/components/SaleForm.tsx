@@ -25,7 +25,7 @@ import type { ProductResource } from "@/pages/product/lib/product.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import { useState, useEffect } from "react";
-import { formatDecimalTrunc } from "@/lib/utils";
+import { formatDecimalTrunc, parseFormattedNumber } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatCurrency";
 import {
   DOCUMENT_TYPES,
@@ -173,7 +173,7 @@ export const SaleForm = ({
           const sale_mode: "sacks" | "kg" | undefined =
             qtySacks > 0 ? "sacks" : qtyKg > 0 ? "kg" : undefined;
 
-          const unitPrice = parseFloat(detail.unit_price);
+          const unitPrice = parseFormattedNumber(detail.unit_price);
           const productWeight = product?.weight
             ? parseFloat(product.weight)
             : 0;
@@ -488,9 +488,9 @@ export const SaleForm = ({
             });
 
             if (result) {
-              const unitPrice = parseFloat(result.pricing.unit_price);
+              const unitPrice = parseFormattedNumber(result.pricing.unit_price);
               // El subtotal es la multiplicación simple (precio ya incluye IGV)
-              const subtotal = parseFloat(result.pricing.subtotal);
+              const subtotal = parseFormattedNumber(result.pricing.subtotal);
               const total = subtotal;
               const igv = 0;
 

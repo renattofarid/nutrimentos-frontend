@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { DELIVERY_SHEET_TYPES } from "../lib/deliverysheet.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
@@ -362,8 +362,12 @@ export const DeliverySheetForm = ({
                     ? "Deseleccionar Todas"
                     : "Seleccionar Todas"}
                 </Button>
-                <Badge variant="outline" className="text-lg">
-                  Total: S/. {totalAmount.toFixed(2)}
+                <Badge
+                  variant="green"
+                  className="text-lg flex flex-col items-end"
+                >
+                  <span className="text-green-950 text-xs">TOTAL</span>
+                  <span>S/. {totalAmount.toFixed(2)}</span>
                 </Badge>
               </div>
 
@@ -407,14 +411,15 @@ export const DeliverySheetForm = ({
                         </TableCell>
                         <TableCell>
                           <div className="max-w-[200px] truncate">
-                            {sale.customer.names} {sale.customer.father_surname}{" "}
-                            {sale.customer.mother_surname}
+                            {sale.customer.business_name ??
+                              `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`}
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {new Date(sale.issue_date).toLocaleDateString(
-                              "es-ES",
+                            {format(
+                              parse(sale.issue_date.split("T")[0], "yyyy-MM-dd", new Date()),
+                              "dd/MM/yyyy",
                             )}
                           </Badge>
                         </TableCell>

@@ -11,12 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  FileText,
-  AlertCircle,
-  MessageSquarePlus,
-  MessageSquare,
-} from "lucide-react";
+import { AlertCircle, MessageSquarePlus, MessageSquare } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -52,68 +47,72 @@ export function getSaleTableColumns(
     },
     {
       accessorKey: "total_amount",
-      header: "Montos",
+      header: "Total",
+      cell: ({ row }) => (
+        <Badge variant="outline" className="text-xs">
+          S/. {parseFormattedNumber(row.original.total_amount).toFixed(2)}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "pending_amount",
+      header: "Pendiente",
+      cell: ({ row }) => {
+        const hasCreditNotes = row.original.has_credit_notes;
+        const pendingAmount = hasCreditNotes
+          ? row.original.real_pending_amount
+          : (row.original.current_amount ?? 0);
+
+        return (
+          <Badge variant="secondary" className="text-xs font-semibold">
+            S/. {parseFloat(pendingAmount).toFixed(2)}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "credit_notes_total",
+      header: "N/C",
       cell: ({ row }) => {
         const hasCreditNotes = row.original.has_credit_notes;
         const creditNoteAmount = row.original.credit_notes_total;
         const creditNotes = row.original.credit_notes || [];
-        const pendingAmount = hasCreditNotes
-          ? row.original.real_pending_amount
-          : row.original.current_amount;
+
+        if (!hasCreditNotes) {
+          return <span className="text-xs text-muted-foreground">-</span>;
+        }
 
         return (
-          <div className="space-y-1.5 min-w-[140px]">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs text-muted-foreground">Total:</span>
-              <Badge variant="outline" className="text-xs">
-                S/. {parseFormattedNumber(row.original.total_amount).toFixed(2)}
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs text-muted-foreground">Pendiente:</span>
-              <Badge variant="secondary" className="text-xs font-semibold">
-                S/. {parseFloat(pendingAmount).toFixed(2)}
-              </Badge>
-            </div>
-            {hasCreditNotes && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center justify-between gap-2 cursor-help">
-                      <span className="text-xs text-orange-600">
-                        N/C:{" "}
-                        {creditNoteAmount && parseFloat(creditNoteAmount) > 0
-                          ? parseFloat(creditNoteAmount).toFixed(2)
-                          : ""}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3 text-orange-500" />
-                        <FileText className="h-3 w-3 text-orange-500" />
-                      </div>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <div className="space-y-1 text-xs">
-                      <p className="font-semibold">Tiene Nota de Crédito</p>
-                      {creditNoteAmount && parseFloat(creditNoteAmount) > 0 && (
-                        <p>
-                          Monto: S/. {parseFloat(creditNoteAmount).toFixed(2)}
-                        </p>
-                      )}
-                      {creditNotes.length > 0 && (
-                        <p>
-                          N/C:{" "}
-                          {creditNotes
-                            .map((cn) => cn.full_document_number)
-                            .join(", ")}
-                        </p>
-                      )}
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1 cursor-help">
+                  <Badge
+                    variant="outline"
+                    className="text-xs bg-orange-50 text-orange-700 border-orange-200"
+                  >
+                    S/.{" "}
+                    {creditNoteAmount && parseFloat(creditNoteAmount) > 0
+                      ? parseFloat(creditNoteAmount).toFixed(2)
+                      : "0.00"}
+                  </Badge>
+                  <AlertCircle className="h-3 w-3 text-orange-500" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="space-y-1 text-xs">
+                  <p className="font-semibold">Nota de Crédito</p>
+                  {creditNotes.length > 0 && (
+                    <p>
+                      {creditNotes
+                        .map((cn) => cn.full_document_number)
+                        .join(", ")}
+                    </p>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         );
       },
     },
@@ -124,7 +123,6 @@ export function getSaleTableColumns(
         const index = row.original.index;
         const formValues = form.watch(`sales.${index}`);
         const formErrors = form.formState.errors.sales?.[index];
-        console.log("formValues", formValues);
         return (
           <div className="space-y-1">
             <Select
@@ -204,7 +202,7 @@ export function getSaleTableColumns(
                 type="number"
                 step="0.01"
                 min="0"
-                max={pendingAmount}
+                max={pendingAmount.toString()}
                 placeholder="0.00"
                 className={`w-32 text-right ${
                   formErrors?.payment_amount ? "border-red-500" : ""

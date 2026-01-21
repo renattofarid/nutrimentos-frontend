@@ -14,7 +14,7 @@ export interface SaleWithIndex {
   issue_date: string;
   customer: {
     full_name: string;
-    business_name: string;
+    business_name?: string;
   };
   total_amount: string;
   original_amount: string;

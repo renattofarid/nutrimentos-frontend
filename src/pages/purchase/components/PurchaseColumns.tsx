@@ -1,28 +1,16 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Pencil,
-  MoreVertical,
-  Trash2,
-  Eye,
-  Settings,
-  Wallet,
-  AlertTriangle,
-} from "lucide-react";
+import { Pencil, Eye, Settings, Wallet, AlertTriangle } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { PurchaseResource } from "../lib/purchase.interface";
+import { ButtonAction } from "@/components/ButtonAction";
+import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 interface PurchaseColumnsProps {
   onEdit: (purchase: PurchaseResource) => void;
@@ -116,8 +104,8 @@ export const getPurchaseColumns = ({
         row.original.currency === "PEN"
           ? "S/."
           : row.original.currency === "USD"
-          ? "$"
-          : "€";
+            ? "$"
+            : "€";
       return (
         <span className="font-semibold">
           {currency} {parseFloat(row.original.total_amount).toFixed(2)}
@@ -133,8 +121,8 @@ export const getPurchaseColumns = ({
         row.original.currency === "PEN"
           ? "S/."
           : row.original.currency === "USD"
-          ? "$"
-          : "€";
+            ? "$"
+            : "€";
       const currentAmount = parseFloat(row.original.current_amount);
       const isPaid = currentAmount === 0;
 
@@ -184,7 +172,7 @@ export const getPurchaseColumns = ({
     header: "Cuotas",
     cell: ({ row }) => {
       const hasPendingPayments = row.original.installments?.some(
-        (inst) => parseFloat(inst.pending_amount) > 0
+        (inst) => parseFloat(inst.pending_amount) > 0,
       );
 
       // Validar que la suma de cuotas sea igual al total de la compra
@@ -192,7 +180,7 @@ export const getPurchaseColumns = ({
       const sumOfInstallments =
         row.original.installments?.reduce(
           (sum, inst) => sum + parseFloat(inst.amount),
-          0
+          0,
         ) || 0;
       const isValid = Math.abs(totalAmount - sumOfInstallments) < 0.01;
 
@@ -267,40 +255,29 @@ export const getPurchaseColumns = ({
       const isPaid = row.original.status === "PAGADO";
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onViewDetails(row.original)}>
-              <Eye className="mr-2 h-4 w-4" />
-              Ver Detalle
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onManage(row.original)}>
-              <Settings className="mr-2 h-4 w-4" />
-              Gestionar
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => !isPaid && onEdit(row.original)}
-              disabled={isPaid}
-            >
-              <Pencil className="mr-2 h-4 w-4" />
-              Editar {isPaid && "(Pagado)"}
-            </DropdownMenuItem>
-            <DropdownMenuItem
+        <div className="flex gap-2">
+          <ButtonAction
+            onClick={() => onViewDetails(row.original)}
+            icon={Eye}
+            tooltip="Ver Detalle"
+          />
+          <ButtonAction
+            onClick={() => onManage(row.original)}
+            icon={Settings}
+            tooltip="Gestionar"
+          />
+          <ButtonAction
+            onClick={() => !isPaid && onEdit(row.original)}
+            icon={Pencil}
+            tooltip={isPaid ? "Editar (Pagado)" : "Editar"}
+            disabled={isPaid}
+          />
+          {!isPaid && (
+            <DeleteButton
               onClick={() => !isPaid && onDelete(row.original.id)}
-              disabled={isPaid}
-              className={
-                isPaid ? "opacity-50 cursor-not-allowed" : "text-red-600"
-              }
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Eliminar {isPaid && "(Pagado)"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            />
+          )}
+        </div>
       );
     },
   },

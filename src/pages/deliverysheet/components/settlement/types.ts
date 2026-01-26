@@ -4,6 +4,7 @@ interface CreditNote {
   id: number;
   full_document_number: string;
   total_amount: string;
+  observations?: string;
 }
 
 export interface SaleWithIndex {
@@ -20,7 +21,12 @@ export interface SaleWithIndex {
   original_amount: string;
   current_amount: string;
   collected_amount: string;
-  delivery_status: "ANULADO" | "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO" | "PENDIENTE";
+  delivery_status:
+    | "ANULADO"
+    | "ENTREGADO"
+    | "NO_ENTREGADO"
+    | "DEVUELTO"
+    | "PENDIENTE";
   delivery_notes: string | null;
   has_credit_notes: boolean;
   credit_notes: CreditNote[];

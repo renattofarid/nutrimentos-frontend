@@ -1,12 +1,9 @@
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { SelectActions } from "@/components/SelectActions";
 import type { PurchaseInstallmentResource } from "../lib/purchaseinstallment.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
+import { ButtonAction } from "@/components/ButtonAction";
+import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 export const PurchaseInstallmentColumns = ({
   onViewPurchase,
@@ -85,14 +82,14 @@ export const PurchaseInstallmentColumns = ({
       const purchaseId = row.original.purchase_id;
 
       return (
-        <SelectActions>
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => onViewPurchase(purchaseId)}>
-              <Eye className="w-4 h-4 mr-2" />
-              Ver Compra
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </SelectActions>
+        <div className="flex gap-2">
+          <ButtonAction
+            onClick={() => onViewPurchase(purchaseId)}
+            icon={Eye}
+            tooltip="Ver Compra"
+          />
+          <DeleteButton onClick={() => {/* handle delete action */}} />
+        </div>
       );
     },
   },

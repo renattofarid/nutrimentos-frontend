@@ -1,14 +1,10 @@
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { SelectActions } from "@/components/SelectActions";
 import type { BoxShiftResource } from "../lib/box-shift.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Trash2, DoorClosed } from "lucide-react";
+import { Eye, DoorClosed } from "lucide-react";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { ButtonAction } from "@/components/ButtonAction";
+import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 export const BoxShiftColumns = ({
   onDelete,
@@ -114,30 +110,21 @@ export const BoxShiftColumns = ({
       const isOpen = shift.is_open;
 
       return (
-        <SelectActions>
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => onView(shift.id)}>
-              <Eye className="mr-2 h-4 w-4" />
-              Ver Detalle
-            </DropdownMenuItem>
-            {isOpen && (
-              <DropdownMenuItem onClick={() => onClose(shift.id)}>
-                <DoorClosed className="mr-2 h-4 w-4" />
-                Cerrar Turno
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              onClick={() => onDelete(shift.id)}
-              className="text-red-600"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Eliminar
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </SelectActions>
+        <div className="flex items-center gap-2">
+          <ButtonAction
+            onClick={() => onView(shift.id)}
+            icon={Eye}
+            tooltip="Ver Detalle"
+          />
+          {isOpen && (
+            <ButtonAction
+              onClick={() => onClose(shift.id)}
+              icon={DoorClosed}
+              tooltip="Cerrar Turno"
+            />
+          )}
+          <DeleteButton onClick={() => onDelete(shift.id)} />
+        </div>
       );
     },
   },

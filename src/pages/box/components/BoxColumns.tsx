@@ -1,12 +1,10 @@
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { SelectActions } from "@/components/SelectActions";
 import type { BoxResource } from "../lib/box.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { ButtonAction } from "@/components/ButtonAction";
+import { Eye, Pencil, UserPlus } from "lucide-react";
+import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 export const BoxColumns = ({
   onEdit,
@@ -68,12 +66,12 @@ export const BoxColumns = ({
     header: "Fecha de Creación",
     cell: ({ getValue }) => {
       const date = new Date(getValue() as string);
-      return date.toLocaleDateString('es-PE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+      return date.toLocaleDateString("es-PE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     },
   },
@@ -84,26 +82,28 @@ export const BoxColumns = ({
       const id = row.original.id;
 
       return (
-        <SelectActions>
-          <DropdownMenuGroup>
-            {onViewAssignments && (
-              <DropdownMenuItem onClick={() => onViewAssignments(id)}>
-                Ver Asignaciones
-              </DropdownMenuItem>
-            )}
-            {onAssign && (
-              <DropdownMenuItem onClick={() => onAssign(id)}>
-                Asignar Usuario
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onClick={() => onEdit(id)}>
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onDelete(id)}>
-              Eliminar
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </SelectActions>
+        <div className="flex items-center gap-2">
+          {onViewAssignments && (
+            <ButtonAction
+              onClick={() => onViewAssignments(id)}
+              icon={Eye}
+              tooltip="Ver Asignaciones"
+            />
+          )}
+          {onAssign && (
+            <ButtonAction
+              onClick={() => onAssign(id)}
+              icon={UserPlus}
+              tooltip="Asignar Usuario"
+            />
+          )}
+          <ButtonAction
+            onClick={() => onEdit(id)}
+            icon={Pencil}
+            tooltip="Editar"
+          />
+          <DeleteButton onClick={() => onDelete(id)} />
+        </div>
       );
     },
   },

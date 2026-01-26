@@ -1,12 +1,9 @@
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { SelectActions } from "@/components/SelectActions";
 import type { CreditNoteResource } from "../lib/credit-note.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { FileText } from "lucide-react";
+import { ButtonAction } from "@/components/ButtonAction";
+import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 export const CreditNoteColumns = ({
   onDelete,
@@ -118,8 +115,8 @@ export const CreditNoteColumns = ({
         status === "REGISTRADO"
           ? "default"
           : status === "ANULADO"
-          ? "destructive"
-          : "secondary";
+            ? "destructive"
+            : "secondary";
       return <Badge variant={variant}>{status}</Badge>;
     },
   },
@@ -144,17 +141,14 @@ export const CreditNoteColumns = ({
       const id = row.original.id;
 
       return (
-        <SelectActions>
-          <DropdownMenuGroup>
-            <DropdownMenuItem onSelect={() => onGeneratePdf(id)}>
-              <FileText className="mr-2 h-4 w-4" />
-              Generar PDF
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onDelete(id)}>
-              Eliminar
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </SelectActions>
+        <div className="flex gap-2">
+          <ButtonAction
+            onClick={() => onGeneratePdf(id)}
+            icon={FileText}
+            tooltip="Generar PDF"
+          />
+          <DeleteButton onClick={() => onDelete(id)} />
+        </div>
       );
     },
   },

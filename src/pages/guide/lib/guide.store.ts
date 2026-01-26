@@ -130,7 +130,7 @@ export const useGuideStore = create<GuideStore>((set) => ({
         carrier_document_type: data.carrier_document_type,
         carrier_document_number: data.carrier_document_number,
         carrier_name: data.carrier_name,
-        carrier_ruc: data.carrier_ruc,
+        carrier_ruc: data.carrier_ruc || "",
         carrier_mtc_number: data.carrier_mtc_number,
         vehicle_plate: data.vehicle_plate || null,
         driver_document_type: data.driver_document_type || null,
@@ -182,7 +182,7 @@ export const useGuideStore = create<GuideStore>((set) => ({
           carrier_document_number: data.carrier_document_number,
         }),
         ...(data.carrier_name && { carrier_name: data.carrier_name }),
-        ...(data.carrier_ruc && { carrier_ruc: data.carrier_ruc }),
+        ...(data.carrier_ruc && { carrier_ruc: data.carrier_ruc || "" }),
         ...(data.carrier_mtc_number && {
           carrier_mtc_number: data.carrier_mtc_number,
         }),

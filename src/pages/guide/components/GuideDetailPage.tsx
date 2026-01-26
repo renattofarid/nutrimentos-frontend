@@ -13,7 +13,6 @@ import {
   CircleDot,
   Flag,
   FileCheck,
-  CreditCard,
   Receipt,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -103,6 +102,7 @@ export default function GuideDetailPage() {
           handleBack={() => navigate(ROUTE)}
           title={`${MODEL.name} - ${guide.full_document_number}`}
           mode="view"
+          icon="Truck"
         />
       </div>
 
@@ -418,42 +418,52 @@ export default function GuideDetailPage() {
               </Badge>
             }
           >
-            <div className="space-y-2">
-              {guide.sales.map((sale) => (
-                <div
-                  key={sale.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-muted/30 rounded-lg border hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="font-mono">
-                      {sale.full_document_number}
-                    </Badge>
-                    <Badge variant="secondary">{sale.document_type}</Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {formatDate(sale.issue_date)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Badge variant={paymentTypeVariants[sale.payment_type] || "secondary"}>
-                      {sale.payment_type}
-                    </Badge>
-                    <Badge
-                      variant={
-                        sale.status === "PAGADA"
-                          ? "default"
-                          : sale.status === "ANULADA"
-                          ? "destructive"
-                          : "secondary"
-                      }
-                    >
-                      {sale.status}
-                    </Badge>
-                    <span className="font-bold text-primary">
-                      {formatCurrency(sale.total_amount, sale.currency)}
-                    </span>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-muted-foreground">
+                    <th className="text-left py-2 px-2 font-medium">Documento</th>
+                    <th className="text-left py-2 px-2 font-medium">Tipo</th>
+                    <th className="text-left py-2 px-2 font-medium">Fecha</th>
+                    <th className="text-left py-2 px-2 font-medium">Pago</th>
+                    <th className="text-left py-2 px-2 font-medium">Estado</th>
+                    <th className="text-right py-2 px-2 font-medium">Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {guide.sales.map((sale) => (
+                    <tr key={sale.id} className="border-b last:border-0 hover:bg-muted/30">
+                      <td className="py-1.5 px-2 font-mono text-xs">{sale.full_document_number}</td>
+                      <td className="py-1.5 px-2">
+                        <Badge variant="secondary" className="text-xs">{sale.document_type}</Badge>
+                      </td>
+                      <td className="py-1.5 px-2 text-muted-foreground">{formatDate(sale.issue_date)}</td>
+                      <td className="py-1.5 px-2">
+                        <Badge variant={paymentTypeVariants[sale.payment_type] || "secondary"} className="text-xs">
+                          {sale.payment_type}
+                        </Badge>
+                      </td>
+                      <td className="py-1.5 px-2">
+                        <Badge
+                          variant={
+                            sale.status === "PAGADA"
+                              ? "default"
+                              : sale.status === "ANULADA"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                          className="text-xs"
+                        >
+                          {sale.status}
+                        </Badge>
+                      </td>
+                      <td className="py-1.5 px-2 text-right font-semibold text-primary">
+                        {formatCurrency(sale.total_amount, sale.currency)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </GroupFormSection>
         )}
@@ -465,46 +475,37 @@ export default function GuideDetailPage() {
             icon={Package}
             cols={{ sm: 1 }}
           >
-            <div className="space-y-2">
-              {guide.details.map((detail, index) => (
-                <div
-                  key={detail.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-muted/30 rounded-lg border hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-start gap-3">
-                    <Badge variant="outline" className="shrink-0">
-                      #{index + 1}
-                    </Badge>
-                    <div>
-                      <p className="font-semibold">{detail.product?.name || detail.description}</p>
-                      {detail.product?.codigo && (
-                        <p className="text-xs text-muted-foreground font-mono">
-                          Código: {detail.product.codigo}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {parseFloat(detail.quantity_sacks) > 0 && (
-                      <div className="text-right">
-                        <p className="font-bold text-xl text-primary">
-                          {parseFloat(detail.quantity_sacks)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">sacos</p>
-                      </div>
-                    )}
-                    {parseFloat(detail.quantity_kg) > 0 && (
-                      <div className="text-right">
-                        <p className="font-bold text-xl text-primary">
-                          {parseFloat(detail.quantity_kg)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">kg</p>
-                      </div>
-                    )}
-                    <Badge variant="secondary">{detail.unit_code}</Badge>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-muted-foreground">
+                    <th className="text-left py-2 px-2 font-medium w-10">#</th>
+                    <th className="text-left py-2 px-2 font-medium">Código</th>
+                    <th className="text-left py-2 px-2 font-medium">Producto</th>
+                    <th className="text-right py-2 px-2 font-medium">Sacos</th>
+                    <th className="text-right py-2 px-2 font-medium">Kg</th>
+                    <th className="text-center py-2 px-2 font-medium">Unidad</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {guide.details.map((detail, index) => (
+                    <tr key={detail.id} className="border-b last:border-0 hover:bg-muted/30">
+                      <td className="py-1.5 px-2 text-muted-foreground">{index + 1}</td>
+                      <td className="py-1.5 px-2 font-mono text-xs">{detail.product?.codigo || "-"}</td>
+                      <td className="py-1.5 px-2 font-medium">{detail.product?.name || detail.description}</td>
+                      <td className="py-1.5 px-2 text-right font-semibold text-primary">
+                        {parseFloat(detail.quantity_sacks) > 0 ? parseFloat(detail.quantity_sacks) : "-"}
+                      </td>
+                      <td className="py-1.5 px-2 text-right font-semibold text-primary">
+                        {parseFloat(detail.quantity_kg) > 0 ? parseFloat(detail.quantity_kg) : "-"}
+                      </td>
+                      <td className="py-1.5 px-2 text-center">
+                        <Badge variant="secondary" className="text-xs">{detail.unit_code}</Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </GroupFormSection>
         )}

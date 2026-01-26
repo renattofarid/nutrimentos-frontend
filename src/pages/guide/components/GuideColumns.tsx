@@ -1,12 +1,9 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { GuideResource } from "../lib/guide.interface";
-import { SelectActions } from "@/components/SelectActions";
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { ButtonAction } from "@/components/ButtonAction";
+import { Eye, Pencil } from "lucide-react";
+import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 interface GuideColumnsProps {
   onEdit: (id: number) => void;
@@ -124,25 +121,20 @@ export const GuideColumns = ({
     id: "actions",
     header: "Acciones",
     cell: ({ row }) => (
-      <SelectActions>
-        <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => onView(row.original.id)}>
-            Ver Detalle
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onEdit(row.original.id)}>
-            Editar
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            onClick={() => onDelete(row.original.id)}
-            className="text-destructive"
-          >
-            Eliminar
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </SelectActions>
+      <div className="flex gap-2">
+        <ButtonAction
+          onClick={() => onView(row.original.id)}
+          icon={Eye}
+          color="blue"
+          tooltip="Ver"
+        />
+        <ButtonAction
+          icon={Pencil}
+          onClick={() => onEdit(row.original.id)}
+          tooltip="Editar"
+        />
+        <DeleteButton onClick={() => onDelete(row.original.id)} />
+      </div>
     ),
   },
 ];

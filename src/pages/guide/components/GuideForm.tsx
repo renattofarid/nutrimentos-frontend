@@ -35,14 +35,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { guideSchema, type GuideSchema } from "../lib/guide.schema";
 import { searchUbigeos } from "../lib/ubigeo.actions";
 import type { UbigeoResource } from "../lib/ubigeo.interface";
-import {
-  searchRUC,
-  searchDNI,
-  isValidData,
-} from "@/lib/document-search.service";
+import { searchRUC, isValidData } from "@/lib/document-search.service";
 import {
   MODALITIES,
-  CARRIER_DOCUMENT_TYPES,
   UNIT_MEASUREMENTS,
   type GuideResource,
   type GuideMotiveResource,
@@ -173,7 +168,6 @@ export const GuideForm = ({
   });
 
   const selectedBranchId = form.watch("branch_id");
-  const carrierDocumentType = form.watch("carrier_document_type");
 
   // Filtrar warehouses por branch
   useEffect(() => {
@@ -205,12 +199,11 @@ export const GuideForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBranchId, warehouses]);
 
-  // Función para buscar transportista por número de documento
+  // Función para buscar transportista por RUC
   const handleSearchCarrierDocument = async () => {
     const documentNumber = form.getValues("carrier_document_number");
-    const documentType = form.getValues("carrier_document_type");
 
-    if (!documentNumber || !documentType) {
+    if (!documentNumber || documentNumber.length !== 11) {
       return;
     }
 
@@ -228,30 +221,17 @@ export const GuideForm = ({
           existingCarrier.business_name ||
             `${existingCarrier.names} ${existingCarrier.father_surname}`.trim(),
         );
-        form.setValue("carrier_ruc", existingCarrier.number_document || "");
         toast.success("Transportista encontrado en el sistema");
         return;
       }
 
-      // Si no existe, buscar en APIs externas
-      if (documentType === "RUC" && documentNumber.length === 11) {
-        const result = await searchRUC({ search: documentNumber });
-        if (result && isValidData(result.message) && result.data) {
-          form.setValue("carrier_name", result.data.business_name || "");
-          form.setValue("carrier_ruc", result.data.number_document || "");
-          toast.success("Datos obtenidos de SUNAT");
-        } else {
-          toast.warning("No se encontró información del RUC");
-        }
-      } else if (documentType === "DNI" && documentNumber.length === 8) {
-        const result = await searchDNI({ search: documentNumber });
-        if (result && isValidData(result.message) && result.data) {
-          const fullName = `${result.data.names} ${result.data.father_surname} ${result.data.mother_surname}`;
-          form.setValue("carrier_name", fullName.trim());
-          toast.success("Datos obtenidos de RENIEC");
-        } else {
-          toast.warning("No se encontró información del DNI");
-        }
+      // Si no existe, buscar en SUNAT
+      const result = await searchRUC({ search: documentNumber });
+      if (result && isValidData(result.message) && result.data) {
+        form.setValue("carrier_name", result.data.business_name || "");
+        toast.success("Datos obtenidos de SUNAT");
+      } else {
+        toast.warning("No se encontró información del RUC");
       }
     } catch (error) {
       console.error("Error searching carrier document:", error);
@@ -328,31 +308,46 @@ export const GuideForm = ({
     }
   };
 
-  // Establecer fechas y motivo por defecto automáticamente
+  // Establecer fechas, motivo y tipo de documento transportista por defecto
   useEffect(() => {
     const today = new Date();
     const formattedDate = format(today, "yyyy-MM-dd");
     form.setValue("issue_date", formattedDate);
     form.setValue("transfer_date", formattedDate);
     form.setValue("motive_id", "1");
+    form.setValue("carrier_document_type", "RUC");
   }, [form]);
 
-  // Calcular peso total automáticamente cuando cambian las ventas seleccionadas
+  // Calcular peso total y total de bultos automáticamente cuando cambian las ventas seleccionadas
   useEffect(() => {
     if (selectedSales.length > 0 && salesByRange.length > 0) {
-      const totalWeight = salesByRange
-        .filter((sale) => selectedSales.includes(sale.id))
-        .reduce((sum, sale) => {
-          const weight =
-            typeof sale.total_weight === "string"
-              ? parseFloat(sale.total_weight)
-              : sale.total_weight;
-          return sum + (weight || 0);
-        }, 0);
+      const selectedSalesData = salesByRange.filter((sale) =>
+        selectedSales.includes(sale.id),
+      );
+
+      // Calcular peso total (usa el total_weight que retorna el backend)
+      const totalWeight = selectedSalesData.reduce((sum, sale) => {
+        const weight =
+          typeof sale.total_weight === "string"
+            ? parseFloat(sale.total_weight)
+            : sale.total_weight;
+        return sum + (weight || 0);
+      }, 0);
+
+      // Calcular total de bultos (suma de quantity_sacks de todos los detalles)
+      const totalPackages = selectedSalesData.reduce((sum, sale) => {
+        const sacks = sale.details?.reduce(
+          (detailSum, detail) => detailSum + (detail.quantity_sacks || 0),
+          0,
+        );
+        return sum + (sacks || 0);
+      }, 0);
 
       form.setValue("total_weight", totalWeight as any);
+      form.setValue("total_packages", totalPackages as any);
     } else if (selectedSales.length === 0) {
       form.setValue("total_weight", 0 as any);
+      form.setValue("total_packages", 0 as any);
     }
   }, [selectedSales, salesByRange, form]);
 
@@ -377,10 +372,10 @@ export const GuideForm = ({
       modality: data.modality,
       motive_id: parseInt(data.motive_id),
       sale_document_number: "-",
-      carrier_document_type: data.carrier_document_type,
+      carrier_document_type: "RUC",
       carrier_document_number: data.carrier_document_number,
       carrier_name: data.carrier_name,
-      carrier_ruc: data.carrier_ruc,
+      carrier_ruc: data.carrier_document_number,
       carrier_mtc_number: data.carrier_mtc_number,
       vehicle_plate: data.vehicle_plate || null,
       driver_document_type: data.driver_document_type || null,
@@ -501,274 +496,31 @@ export const GuideForm = ({
           />
         </GroupFormSection>
 
-        {/* Búsqueda de Ventas por Rango */}
-        <GroupFormSection
-          title="Búsqueda de Ventas por Rango"
-          icon={Search}
-          cols={{ sm: 1 }}
-        >
-          <div className="space-y-4">
-            {/* Filtros de búsqueda */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-sidebar rounded-lg">
-              <SearchableSelect
-                buttonSize="default"
-                label="Tipo de Documento"
-                options={[
-                  { value: "FACTURA", label: "FACTURA" },
-                  { value: "BOLETA", label: "BOLETA" },
-                ]}
-                value={searchParams.document_type}
-                onChange={(value) =>
-                  setSearchParams({ ...searchParams, document_type: value })
-                }
-                placeholder="Seleccione tipo"
-                className="md:w-full"
-              />
-
-              <div className="space-y-2">
-                <SearchableSelect
-                  buttonSize="default"
-                  label="Dirección del Cliente"
-                  placeholder="Seleccione una dirección"
-                  disabled={
-                    !customerValue || selectedCustomerAddresses.length === 0
-                  }
-                  value={searchParams.person_zone_id}
-                  onChange={(value) => {
-                    setSearchParams((prev) => ({
-                      ...prev,
-                      person_zone_id: value,
-                    }));
-                  }}
-                  options={selectedCustomerAddresses.map((address) => ({
-                    value: address.id.toString(),
-                    label: `${address.address}${address.is_primary ? " (Principal)" : ""}`,
-                    description: address.zone_name,
-                  }))}
-                  withValue={false}
-                  className="md:w-full"
-                />
-                {customerValue && selectedCustomerAddresses.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    El cliente no tiene direcciones registradas
-                  </p>
-                )}
-              </div>
-
-              <FormInput
-                name="serie"
-                label="Serie"
-                placeholder="Ej: F001"
-                value={searchParams.serie}
-                onChange={(e) =>
-                  setSearchParams({ ...searchParams, serie: e.target.value })
-                }
-              />
-
-              <FormInput
-                name="numero_inicio"
-                label="Número Inicio"
-                type="number"
-                placeholder="Ej: 1"
-                value={searchParams.numero_inicio}
-                onChange={(e) =>
-                  setSearchParams({
-                    ...searchParams,
-                    numero_inicio: e.target.value,
-                  })
-                }
-              />
-
-              <FormInput
-                name="numero_fin"
-                label="Número Fin"
-                placeholder="Ej: 100"
-                type="number"
-                value={searchParams.numero_fin}
-                onChange={(e) =>
-                  setSearchParams({
-                    ...searchParams,
-                    numero_fin: e.target.value,
-                  })
-                }
-              />
-
-              <div className="md:col-span-full flex justify-end">
-                <Button
-                  type="button"
-                  variant="default"
-                  onClick={handleSearchSalesByRange}
-                  disabled={isSearchingSales}
-                >
-                  {isSearchingSales ? (
-                    <>
-                      <Loader className="mr-2 h-4 w-4 animate-spin" />
-                      Buscando...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="mr-2 h-4 w-4" />
-                      Buscar Ventas
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {/* Lista de ventas encontradas */}
-            {salesByRange.length > 0 && (
-              <div className="border rounded-lg overflow-hidden">
-                <div className="p-4 bg-sidebar border-b flex justify-between items-center">
-                  <h3 className="font-semibold">
-                    Ventas encontradas ({salesByRange.length})
-                  </h3>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSelectAllSales}
-                  >
-                    {selectedSales.length === salesByRange.length
-                      ? "Deseleccionar Todas"
-                      : "Seleccionar Todas"}
-                  </Button>
-                </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <Checkbox
-                          checked={
-                            salesByRange.length > 0 &&
-                            selectedSales.length === salesByRange.length
-                          }
-                          onCheckedChange={handleSelectAllSales}
-                          className="cursor-pointer"
-                        />
-                      </TableHead>
-                      <TableHead>Documento</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead className="text-right">Peso (kg)</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {salesByRange.map((sale) => (
-                      <TableRow
-                        key={sale.id}
-                        className={`cursor-pointer hover:bg-muted/30 ${
-                          selectedSales.includes(sale.id) ? "bg-muted/50" : ""
-                        }`}
-                        onClick={() => handleToggleSale(sale.id)}
-                      >
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <Checkbox
-                            checked={selectedSales.includes(sale.id)}
-                            onCheckedChange={() => handleToggleSale(sale.id)}
-                            className="cursor-pointer"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {sale.full_document_number}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {sale.document_type}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {sale.customer.business_name ||
-                            `${sale.customer.names} ${sale.customer.father_surname}`}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(sale.issue_date).toLocaleDateString(
-                            "es-PE",
-                            {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                            },
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {sale.currency} {sale.total_amount.toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {sale.total_weight}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-
-            {/* Resumen de ventas seleccionadas */}
-            {selectedSales.length > 0 && (
-              <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-                <p className="text-sm font-medium text-green-900 dark:text-green-100">
-                  {selectedSales.length} venta(s) seleccionada(s) para la guía
-                </p>
-              </div>
-            )}
-          </div>
-        </GroupFormSection>
-
         {/* Información del Transportista y Conductor */}
         <GroupFormSection
           title="Información del Transportista y Conductor"
           icon={Truck}
           cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
-          <FormSelect
-            control={form.control}
-            name="carrier_document_type"
-            label="Tipo de Documento (Transportista)"
-            placeholder="Seleccione"
-            options={CARRIER_DOCUMENT_TYPES.map((dt) => ({
-              value: dt.value,
-              label: dt.label,
-            }))}
-          />
-
           <FormField
             control={form.control}
             name="carrier_document_number"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Número de Documento (Transportista)</FormLabel>
+                <FormLabel>RUC del Transportista</FormLabel>
                 <div className="flex gap-2">
                   <FormControl>
                     <Input
                       variant="default"
-                      placeholder={
-                        carrierDocumentType === "RUC"
-                          ? "Ingrese 11 dígitos"
-                          : carrierDocumentType === "DNI"
-                            ? "Ingrese 8 dígitos"
-                            : "Ingrese el número"
-                      }
+                      placeholder="Ingrese 11 dígitos"
                       {...field}
-                      maxLength={
-                        carrierDocumentType === "RUC"
-                          ? 11
-                          : carrierDocumentType === "DNI"
-                            ? 8
-                            : 11
-                      }
+                      maxLength={11}
                       onChange={(e) => {
                         const value = e.target.value.replace(/\D/g, "");
                         field.onChange(value);
 
-                        // Auto-search cuando se completa
-                        if (
-                          (carrierDocumentType === "RUC" &&
-                            value.length === 11) ||
-                          (carrierDocumentType === "DNI" && value.length === 8)
-                        ) {
+                        // Auto-search cuando se completa el RUC
+                        if (value.length === 11) {
                           setTimeout(() => handleSearchCarrierDocument(), 100);
                         }
                       }}
@@ -782,10 +534,7 @@ export const GuideForm = ({
                     disabled={
                       isSearchingCarrier ||
                       !field.value ||
-                      (carrierDocumentType === "RUC" &&
-                        field.value.length !== 11) ||
-                      (carrierDocumentType === "DNI" &&
-                        field.value.length !== 8)
+                      field.value.length !== 11
                     }
                   >
                     {isSearchingCarrier ? (
@@ -810,24 +559,6 @@ export const GuideForm = ({
                   <Input
                     variant="default"
                     placeholder="Ej: Transportes SAC"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="carrier_ruc"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>RUC del Transportista</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: 20123456789"
                     {...field}
                   />
                 </FormControl>
@@ -1070,7 +801,7 @@ export const GuideForm = ({
             name="total_weight"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Peso Total</FormLabel>
+                <FormLabel>Peso Total (kg)</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -1078,7 +809,7 @@ export const GuideForm = ({
                     variant="default"
                     placeholder="0.00"
                     {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    className="bg-muted"
                   />
                 </FormControl>
                 <FormMessage />
@@ -1091,14 +822,14 @@ export const GuideForm = ({
             name="total_packages"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Total de Bultos</FormLabel>
+                <FormLabel>Total de Bultos (sacos)</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     variant="default"
                     placeholder="0"
                     {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                    className="bg-muted"
                   />
                 </FormControl>
                 <FormMessage />
@@ -1124,6 +855,238 @@ export const GuideForm = ({
               </FormItem>
             )}
           />
+        </GroupFormSection>
+
+        {/* Búsqueda de Ventas por Rango */}
+        <GroupFormSection
+          title="Búsqueda de Ventas por Rango"
+          icon={Search}
+          cols={{ sm: 1 }}
+        >
+          <div className="space-y-4">
+            {/* Filtros de búsqueda */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-sidebar rounded-lg">
+              <SearchableSelect
+                buttonSize="default"
+                label="Tipo de Documento"
+                options={[
+                  { value: "FACTURA", label: "FACTURA" },
+                  { value: "BOLETA", label: "BOLETA" },
+                ]}
+                value={searchParams.document_type}
+                onChange={(value) =>
+                  setSearchParams({ ...searchParams, document_type: value })
+                }
+                placeholder="Seleccione tipo"
+                className="md:w-full"
+              />
+
+              <div className="space-y-2">
+                <SearchableSelect
+                  buttonSize="default"
+                  label="Dirección del Cliente"
+                  placeholder="Seleccione una dirección"
+                  disabled={
+                    !customerValue || selectedCustomerAddresses.length === 0
+                  }
+                  value={searchParams.person_zone_id}
+                  onChange={(value) => {
+                    setSearchParams((prev) => ({
+                      ...prev,
+                      person_zone_id: value,
+                    }));
+                  }}
+                  options={selectedCustomerAddresses.map((address) => ({
+                    value: address.id.toString(),
+                    label: `${address.address}${address.is_primary ? " (Principal)" : ""}`,
+                    description: address.zone_name,
+                  }))}
+                  withValue={false}
+                  className="md:w-full"
+                />
+                {customerValue && selectedCustomerAddresses.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    El cliente no tiene direcciones registradas
+                  </p>
+                )}
+              </div>
+
+              <FormInput
+                name="serie"
+                label="Serie"
+                placeholder="Ej: F001"
+                value={searchParams.serie}
+                onChange={(e) =>
+                  setSearchParams({ ...searchParams, serie: e.target.value })
+                }
+              />
+
+              <FormInput
+                name="numero_inicio"
+                label="Número Inicio"
+                type="number"
+                placeholder="Ej: 1"
+                value={searchParams.numero_inicio}
+                onChange={(e) =>
+                  setSearchParams({
+                    ...searchParams,
+                    numero_inicio: e.target.value,
+                  })
+                }
+              />
+
+              <FormInput
+                name="numero_fin"
+                label="Número Fin"
+                placeholder="Ej: 100"
+                type="number"
+                value={searchParams.numero_fin}
+                onChange={(e) =>
+                  setSearchParams({
+                    ...searchParams,
+                    numero_fin: e.target.value,
+                  })
+                }
+              />
+
+              <div className="md:col-span-full flex justify-end">
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={handleSearchSalesByRange}
+                  disabled={isSearchingSales}
+                >
+                  {isSearchingSales ? (
+                    <>
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-4 w-4" />
+                      Buscar Ventas
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Lista de ventas encontradas */}
+            {salesByRange.length > 0 && (
+              <div className="border rounded-lg overflow-hidden">
+                <div className="p-4 bg-sidebar border-b flex justify-between items-center">
+                  <h3 className="font-semibold">
+                    Ventas encontradas ({salesByRange.length})
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAllSales}
+                  >
+                    {selectedSales.length === salesByRange.length
+                      ? "Deseleccionar Todas"
+                      : "Seleccionar Todas"}
+                  </Button>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={
+                            salesByRange.length > 0 &&
+                            selectedSales.length === salesByRange.length
+                          }
+                          onCheckedChange={handleSelectAllSales}
+                          className="cursor-pointer"
+                        />
+                      </TableHead>
+                      <TableHead>Documento</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="text-right">Peso (kg)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salesByRange.map((sale) => (
+                      <TableRow
+                        key={sale.id}
+                        className={`cursor-pointer hover:bg-muted/30 ${
+                          selectedSales.includes(sale.id) ? "bg-muted/50" : ""
+                        }`}
+                        onClick={() => handleToggleSale(sale.id)}
+                      >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedSales.includes(sale.id)}
+                            onCheckedChange={() => handleToggleSale(sale.id)}
+                            className="cursor-pointer"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">
+                              {sale.full_document_number}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {sale.document_type}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {sale.customer.business_name ||
+                            `${sale.customer.names} ${sale.customer.father_surname}`}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(sale.issue_date).toLocaleDateString(
+                            "es-PE",
+                            {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                            },
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {sale.currency} {sale.total_amount.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {sale.total_weight}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* Resumen de ventas seleccionadas */}
+            {selectedSales.length > 0 && (
+              <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                  {selectedSales.length} venta(s) seleccionada(s) para la guía
+                </p>
+              </div>
+            )}
+
+            {
+              /* Descripcion de los mensajes de errores del form */
+              form.formState.errors &&
+                Object.keys(form.formState.errors).length > 0 && (
+                  <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
+                    <ul className="list-disc list-inside text-sm text-red-900 dark:text-red-100">
+                      {Object.entries(form.formState.errors).map(
+                        ([fieldName, error]) => (
+                          <li key={fieldName}>{error?.message as string}</li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                )
+            }
+          </div>
         </GroupFormSection>
 
         {/* Botones */}

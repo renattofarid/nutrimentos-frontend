@@ -74,6 +74,7 @@ interface CreditNote {
   total_amount_raw: string;
   reason: string;
   status: string;
+  observations?: string;
 }
 
 export interface DeliverySheetPayment {

@@ -21,16 +21,14 @@ export const guideSchema = z.object({
   carrier_document_type: z
     .string()
     .min(1, { message: "El tipo de documento del transportista es requerido" }),
-  carrier_document_number: z.string().min(1, {
-    message: "El número de documento del transportista es requerido",
-  }),
-  carrier_name: z
-    .string()
-    .min(1, { message: "El nombre del transportista es requerido" }),
-  carrier_ruc: z
+  carrier_document_number: z
     .string()
     .min(11, { message: "El RUC debe tener 11 dígitos" })
     .max(11, { message: "El RUC debe tener 11 dígitos" }),
+  carrier_name: z
+    .string()
+    .min(1, { message: "El nombre del transportista es requerido" }),
+  carrier_ruc: z.string().optional(),
   carrier_mtc_number: z
     .string()
     .min(1, { message: "El número MTC es requerido" }),

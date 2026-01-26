@@ -99,16 +99,18 @@ export function getSaleTableColumns(
                   <AlertCircle className="h-3 w-3 text-orange-500" />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>
-                <div className="space-y-1 text-xs">
+              <TooltipContent className="max-w-xs">
+                <div className="space-y-2 text-xs">
                   <p className="font-semibold">Nota de Crédito</p>
-                  {creditNotes.length > 0 && (
-                    <p>
-                      {creditNotes
-                        .map((cn) => cn.full_document_number)
-                        .join(", ")}
-                    </p>
-                  )}
+                  {creditNotes.length > 0 &&
+                    creditNotes.map((cn) => (
+                      <div key={cn.id} className="space-y-0.5">
+                        <p className="font-medium">{cn.full_document_number}</p>
+                        {cn.observations && (
+                          <p className="text-muted-foreground">{cn.observations}</p>
+                        )}
+                      </div>
+                    ))}
                 </div>
               </TooltipContent>
             </Tooltip>

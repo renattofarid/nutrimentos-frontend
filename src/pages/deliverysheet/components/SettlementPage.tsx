@@ -166,10 +166,21 @@ export default function SettlementPage() {
 
   const salesWithIndex: SaleWithIndex[] = useMemo(() => {
     if (!deliverySheet?.sales) return [];
-    return deliverySheet.sales.map((sale, index) => ({
-      ...sale,
-      index,
-    }));
+    return deliverySheet.sales.map((sale, index) => {
+      const sheetSale = deliverySheet.sheet_sales?.find(
+        (ss) => ss.sale_id === sale.id
+      );
+      return {
+        ...sale,
+        index,
+        total_amount: sheetSale?.original_amount || sale.total_amount,
+        original_amount: sheetSale?.original_amount || sale.original_amount,
+        current_amount: sheetSale?.current_amount || sale.current_amount,
+        collected_amount: sheetSale?.collected_amount || sale.collected_amount,
+        delivery_status: sheetSale?.delivery_status || sale.delivery_status,
+        delivery_notes: sheetSale?.delivery_notes || sale.delivery_notes,
+      };
+    });
   }, [deliverySheet]);
 
   const columns = useMemo(

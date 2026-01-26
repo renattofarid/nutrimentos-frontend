@@ -1,5 +1,6 @@
 import { type UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { SaleWithIndex, SettlementFormSchema } from "./types";
 
 interface SaleTableWithNotesProps {
@@ -12,8 +13,38 @@ interface SaleTableWithNotesProps {
 export function SaleTableWithNotes({ sales, form, expandedNotes, children }: SaleTableWithNotesProps) {
   const expandedSales = sales.filter(sale => expandedNotes.has(sale.index));
 
+  const allPaid = sales.every((sale) => {
+    const formValues = form.watch(`sales.${sale.index}`);
+    const pendingAmount = parseFloat(sale.real_pending_amount || sale.current_amount || "0");
+    return parseFloat(formValues?.payment_amount || "0") === pendingAmount;
+  });
+
+  const handlePayAll = (checked: boolean) => {
+    sales.forEach((sale) => {
+      const pendingAmount = parseFloat(sale.real_pending_amount || sale.current_amount || "0");
+      form.setValue(
+        `sales.${sale.index}.payment_amount`,
+        checked ? pendingAmount.toFixed(2) : "0",
+        { shouldValidate: true }
+      );
+    });
+  };
+
   return (
     <div className="space-y-0">
+      <div className="flex items-center gap-2 px-4 py-3 border rounded-t-md bg-muted/50">
+        <Checkbox
+          id="pay-all"
+          checked={allPaid}
+          onCheckedChange={handlePayAll}
+        />
+        <label
+          htmlFor="pay-all"
+          className="text-sm font-medium cursor-pointer select-none"
+        >
+          Pagar todas
+        </label>
+      </div>
       {children}
       {expandedSales.length > 0 && (
         <div className="border-t">

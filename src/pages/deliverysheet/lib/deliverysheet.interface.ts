@@ -88,22 +88,29 @@ export interface DeliverySheetPayment {
   amount_transfer: string;
   amount_other: string;
   total_amount: string;
-  observations: string | null;
+  observations?: string;
   user: User;
   created_at: string;
 }
 
 export interface SheetSaleDetail {
   id: number;
-  delivery_sheet_id: number;
-  sale_id: number;
-  original_amount: string;
-  current_amount: string;
-  collected_amount: string;
-  delivery_status: "PENDIENTE" | "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO";
-  delivery_notes: string | null;
-  created_at: string;
-  updated_at: string;
+  document_type: string;
+  full_document_number: string;
+  customer: Customer;
+  credit_notes: Creditnote[];
+  credit_notes_total: string;
+  credit_notes_total_raw: number;
+}
+
+interface Creditnote {
+  id: number;
+  document_type?: string;
+  full_document_number: string;
+  total_amount: string;
+  total_amount_raw: string;
+  observations?: string;
+  reason: string;
 }
 
 export interface SheetSale {

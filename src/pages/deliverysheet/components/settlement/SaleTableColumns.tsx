@@ -119,6 +119,30 @@ export function getSaleTableColumns(
       },
     },
     {
+      accessorKey: "credit_notes_observations",
+      header: "Obs. N/C",
+      cell: ({ row }) => {
+        const creditNotes = row.original.credit_notes || [];
+        const observations = creditNotes
+          .filter((cn) => cn.observations)
+          .map((cn) => cn.observations);
+
+        if (observations.length === 0) {
+          return <span className="text-xs text-muted-foreground">-</span>;
+        }
+
+        return (
+          <div className="max-w-[200px] text-xs text-muted-foreground">
+            {observations.map((obs, idx) => (
+              <p key={idx} className="truncate" title={obs}>
+                {obs}
+              </p>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "delivery_status",
       header: "Estado",
       cell: ({ row }) => {

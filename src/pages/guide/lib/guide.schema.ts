@@ -32,7 +32,7 @@ export const guideSchema = z.object({
   carrier_mtc_number: z
     .string()
     .min(1, { message: "El número MTC es requerido" }),
-  vehicle_plate: z.string().optional(),
+  vehicle_id: z.string().optional(),
   // Campos del conductor
   driver_id: z.string().optional(), // ID interno, no se envía al backend
   driver_document_type: z.string().optional(),

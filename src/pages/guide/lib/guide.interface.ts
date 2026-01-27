@@ -42,7 +42,13 @@ export interface GuideResource {
   carrier_name: string;
   carrier_ruc: string;
   carrier_mtc_number: string;
-  vehicle_plate: string;
+  vehicle_id: number | null;
+  vehicle: {
+    id: number;
+    plate: string;
+    brand: string;
+    model: string;
+  } | null;
   driver_document_type: string;
   driver_document_number: string;
   driver_name: string;
@@ -249,7 +255,7 @@ export interface CreateGuideRequest {
   carrier_name: string;
   carrier_ruc: string;
   carrier_mtc_number: string;
-  vehicle_plate?: string | null;
+  vehicle_id?: number | null;
   driver_document_type?: string | null;
   driver_document_number?: string | null;
   driver_name?: string | null;
@@ -280,7 +286,7 @@ export interface UpdateGuideRequest {
   carrier_name?: string;
   carrier_ruc?: string;
   carrier_mtc_number?: string;
-  vehicle_plate?: string | null;
+  vehicle_id?: number | null;
   driver_document_type?: string | null;
   driver_document_number?: string | null;
   driver_name?: string | null;

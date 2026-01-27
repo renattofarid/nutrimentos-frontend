@@ -16,6 +16,7 @@ import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
 import { useAllNationalities } from "@/pages/nationality/lib/nationality.hook";
 import { CLIENT_ROLE_CODE } from "@/pages/client/lib/client.interface";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
+import { useAllVehicles } from "@/pages/vehicle/lib/vehicle.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { useGuideStore } from "../lib/guide.store";
@@ -75,6 +76,11 @@ export default function GuideEditPage() {
     useAllProductTypes();
   const { data: nationalities, refetch: refetchNationalities } =
     useAllNationalities();
+  const {
+    data: vehicles,
+    isLoading: vehiclesLoading,
+    refetch: refetchVehicles,
+  } = useAllVehicles();
 
   const { updateGuide, fetchGuide, guide, isFinding } = useGuideStore();
 
@@ -90,6 +96,7 @@ export default function GuideEditPage() {
     refetchUnits();
     refetchProductTypes();
     refetchNationalities();
+    refetchVehicles();
   }, []);
 
   useEffect(() => {
@@ -109,6 +116,7 @@ export default function GuideEditPage() {
     unitsLoading ||
     !productTypes ||
     !nationalities ||
+    vehiclesLoading ||
     isFinding;
 
   useEffect(() => {
@@ -135,7 +143,7 @@ export default function GuideEditPage() {
       carrier_name: data.carrier_name,
       carrier_ruc: data.carrier_ruc,
       carrier_mtc_number: data.carrier_mtc_number,
-      vehicle_plate: data.vehicle_plate || "",
+      vehicle_id: data.vehicle_id?.toString() || "",
       driver_document_type: data.driver_document_type || "",
       driver_document_number: data.driver_document_number || "",
       driver_name: data.driver_name || "",
@@ -209,6 +217,7 @@ export default function GuideEditPage() {
         nationalities.length > 0 &&
         suppliers &&
         suppliers.length > 0 &&
+        vehicles &&
         guide && (
           <GuideForm
             defaultValues={mapGuideToForm(guide)}
@@ -221,6 +230,7 @@ export default function GuideEditPage() {
             products={products}
             customers={customers}
             motives={motives}
+            vehicles={vehicles}
             guide={guide}
           />
         )}

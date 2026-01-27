@@ -46,6 +46,7 @@ import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interfac
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
+import type { VehicleResource } from "@/pages/vehicle/lib/vehicle.interface";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { getSalesByRange } from "@/pages/sale/lib/sale.actions";
@@ -66,6 +67,7 @@ interface GuideFormProps {
   products: ProductResource[];
   customers: PersonResource[];
   motives: GuideMotiveResource[];
+  vehicles: VehicleResource[];
   guide?: GuideResource;
 }
 
@@ -78,6 +80,7 @@ export const GuideForm = ({
   warehouses,
   customers,
   motives,
+  vehicles,
 }: GuideFormProps) => {
   const [filteredWarehouses, setFilteredWarehouses] = useState<
     WarehouseResource[]
@@ -377,7 +380,7 @@ export const GuideForm = ({
       carrier_name: data.carrier_name,
       carrier_ruc: data.carrier_document_number,
       carrier_mtc_number: data.carrier_mtc_number,
-      vehicle_plate: data.vehicle_plate || null,
+      vehicle_id: data.vehicle_id ? parseInt(data.vehicle_id) : null,
       driver_document_type: data.driver_document_type || null,
       driver_document_number: data.driver_document_number || null,
       driver_name: data.driver_name || null,
@@ -587,16 +590,22 @@ export const GuideForm = ({
 
           <FormField
             control={form.control}
-            name="vehicle_plate"
+            name="vehicle_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Placa del Vehículo (Opcional)</FormLabel>
+                <FormLabel>Vehículo (Opcional)</FormLabel>
                 <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: ABC-123"
-                    {...field}
+                  <SearchableSelect
+                    className="md:w-full"
+                    buttonSize="default"
+                    options={vehicles.map((vehicle) => ({
+                      value: vehicle.id.toString(),
+                      label: `${vehicle.plate} - ${vehicle.brand} ${vehicle.model}`,
+                      description: vehicle.vehicle_type || "",
+                    }))}
                     value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Seleccionar vehículo..."
                   />
                 </FormControl>
                 <FormMessage />

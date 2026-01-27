@@ -299,10 +299,11 @@ export default function GuideDetailPage() {
               <p className="font-mono font-semibold">{guide.carrier_document_number}</p>
             </div>
           )}
-          {guide.vehicle_plate && (
+          {guide.vehicle && (
             <div>
-              <span className="text-sm text-muted-foreground">Placa del Vehículo</span>
-              <p className="font-mono font-bold text-lg text-primary">{guide.vehicle_plate}</p>
+              <span className="text-sm text-muted-foreground">Vehículo</span>
+              <p className="font-mono font-bold text-lg text-primary">{guide.vehicle.plate}</p>
+              <p className="text-sm text-muted-foreground">{guide.vehicle.brand} {guide.vehicle.model}</p>
             </div>
           )}
         </GroupFormSection>

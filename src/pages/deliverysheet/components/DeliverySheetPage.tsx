@@ -7,6 +7,7 @@ import { useDeliverySheetStore } from "../lib/deliverysheet.store";
 import {
   DELIVERY_SHEET,
   type DeliverySheetResource,
+  type DeliverySheetById,
 } from "../lib/deliverysheet.interface";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import DeliverySheetDetailSheet from "./DeliverySheetDetailSheet";
@@ -34,6 +35,8 @@ export default function DeliverySheetPage() {
   >(null);
   const [openDetailSheet, setOpenDetailSheet] = useState(false);
   const [selectedDeliverySheet, setSelectedDeliverySheet] =
+    useState<DeliverySheetById | null>(null);
+  const [selectedDeliverySheetForStatus, setSelectedDeliverySheetForStatus] =
     useState<DeliverySheetResource | null>(null);
   const [openStatusDialog, setOpenStatusDialog] = useState(false);
 
@@ -66,7 +69,7 @@ export default function DeliverySheetPage() {
   };
 
   const handleUpdateStatus = (deliverySheet: DeliverySheetResource) => {
-    setSelectedDeliverySheet(deliverySheet);
+    setSelectedDeliverySheetForStatus(deliverySheet);
     setOpenStatusDialog(true);
   };
 
@@ -88,12 +91,12 @@ export default function DeliverySheetPage() {
   };
 
   const handleStatusSubmit = async (data: DeliverySheetStatusSchema) => {
-    if (selectedDeliverySheet) {
+    if (selectedDeliverySheetForStatus) {
       try {
-        await updateStatus(selectedDeliverySheet.id, data);
+        await updateStatus(selectedDeliverySheetForStatus.id, data);
         fetchDeliverySheets({ page, per_page: perPage });
         setOpenStatusDialog(false);
-        setSelectedDeliverySheet(null);
+        setSelectedDeliverySheetForStatus(null);
       } catch (error) {
         console.error("Error al actualizar estado", error);
       }
@@ -153,16 +156,16 @@ export default function DeliverySheetPage() {
         }}
       />
 
-      {selectedDeliverySheet && (
+      {selectedDeliverySheetForStatus && (
         <StatusUpdateDialog
           open={openStatusDialog}
           onClose={() => {
             setOpenStatusDialog(false);
-            setSelectedDeliverySheet(null);
+            setSelectedDeliverySheetForStatus(null);
           }}
           onSubmit={handleStatusSubmit}
-          currentStatus={selectedDeliverySheet.status}
-          currentDeliveryDate={selectedDeliverySheet.delivery_date}
+          currentStatus={selectedDeliverySheetForStatus.status}
+          currentDeliveryDate={selectedDeliverySheetForStatus.delivery_date}
         />
       )}
     </PageWrapper>

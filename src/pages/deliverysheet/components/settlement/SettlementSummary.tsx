@@ -1,22 +1,24 @@
 import { Card, CardContent } from "@/components/ui/card";
-import type { DeliverySheetResource } from "../../lib/deliverysheet.interface";
+import type { DeliverySheetById } from "../../lib/deliverysheet.interface";
 import { parseFormattedNumber } from "@/lib/utils";
 
 interface SettlementSummaryProps {
-  deliverySheet: DeliverySheetResource;
+  deliverySheet: DeliverySheetById;
 }
 
 export function SettlementSummary({ deliverySheet }: SettlementSummaryProps) {
-  const totalBoletas = deliverySheet.sales.length;
-  const montoTotal = deliverySheet.sales
-    .reduce((sum, sale) => sum + parseFormattedNumber(sale.total_amount), 0)
+  const totalBoletas = deliverySheet.sheet_sales.length;
+  const montoTotal = deliverySheet.sheet_sales
+    .reduce(
+      (sum, sheetSale) => sum + parseFormattedNumber(sheetSale.original_amount),
+      0
+    )
     .toFixed(2);
-  const totalPendiente = deliverySheet.sales
-    .reduce((sum, sale) => {
-      const pendingAmount = sale.has_credit_notes
-        ? parseFormattedNumber(sale.real_pending_amount)
-        : parseFormattedNumber(sale.current_amount);
-      return sum + pendingAmount;
+  const totalPendiente = deliverySheet.sheet_sales
+    .reduce((sum, sheetSale) => {
+      const creditNotesTotal = sheetSale.sale.credit_notes_total_raw || 0;
+      const currentAmount = parseFormattedNumber(sheetSale.current_amount);
+      return sum + (currentAmount - creditNotesTotal);
     }, 0)
     .toFixed(2);
 

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type {
   DeliverySheetResource,
+  DeliverySheetById,
   Meta,
   CreateDeliverySheetRequest,
   UpdateDeliverySheetRequest,
@@ -44,7 +45,7 @@ interface DeliverySheetStore {
   // State
   allDeliverySheets: DeliverySheetResource[] | null;
   deliverySheets: DeliverySheetResource[] | null;
-  deliverySheet: DeliverySheetResource | null;
+  deliverySheet: DeliverySheetById | null;
   availableSales: AvailableSale[] | null;
   meta: Meta | null;
   isLoadingAll: boolean;

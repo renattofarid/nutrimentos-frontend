@@ -1,13 +1,13 @@
 import { User, MapPin, Calendar, FileText } from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
-import type { DeliverySheetResource } from "../../lib/deliverysheet.interface";
+import type { DeliverySheetById } from "../../lib/deliverysheet.interface";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import type { UseFormReturn } from "react-hook-form";
 import { FormInput } from "@/components/FormInput";
 
 interface DeliverySheetInfoProps {
   form: UseFormReturn;
-  deliverySheet: DeliverySheetResource;
+  deliverySheet: DeliverySheetById;
 }
 
 export function DeliverySheetInfo({

@@ -19,64 +19,64 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { DELIVERY_STATUS_OPTIONS } from "./constants";
-import type { SaleWithIndex, SettlementFormSchema } from "./types";
+import type { SettlementFormSchema } from "./types";
 import { parseFormattedNumber } from "@/lib/utils";
+import type { SheetSale } from "../../lib/deliverysheet.interface";
+
+type SheetSaleWithIndex = SheetSale & { index: number };
 
 export function getSaleTableColumns(
   form: UseFormReturn<SettlementFormSchema, any, undefined>,
   expandedNotes: Set<number>,
   toggleNote: (index: number) => void,
-): ColumnDef<SaleWithIndex>[] {
+): ColumnDef<SheetSaleWithIndex>[] {
   return [
     {
-      accessorKey: "full_document_number",
+      id: "document_customer",
       header: "Documento / Cliente",
       cell: ({ row }) => (
         <div className="space-y-2 min-w-[200px]">
           <div className="flex items-center gap-2">
             <Badge className="font-mono font-semibold text-sm">
-              {row.original.full_document_number}
+              {row.original.sale.full_document_number}
             </Badge>
           </div>
           <div className="text-sm text-muted-foreground">
-            {row.original.customer?.full_name ||
-              row.original.customer?.business_name}
+            {row.original.sale.customer?.full_name || "Sin cliente"}
           </div>
         </div>
       ),
     },
     {
-      accessorKey: "total_amount",
+      accessorKey: "original_amount",
       header: "Total",
       cell: ({ row }) => (
         <Badge variant="outline" className="text-xs">
-          S/. {parseFormattedNumber(row.original.total_amount).toFixed(2)}
+          S/. {parseFormattedNumber(row.original.original_amount).toFixed(2)}
         </Badge>
       ),
     },
     {
-      accessorKey: "pending_amount",
+      accessorKey: "current_amount",
       header: "Pendiente",
       cell: ({ row }) => {
-        const hasCreditNotes = row.original.has_credit_notes;
-        const pendingAmount = hasCreditNotes
-          ? row.original.real_pending_amount
-          : (row.original.current_amount ?? 0);
-
+        const creditNotesTotal = row.original.sale.credit_notes_total_raw || 0;
+        const currentAmount = parseFormattedNumber(row.original.current_amount);
+        const pendingAmount = currentAmount - creditNotesTotal;
         return (
           <Badge variant="secondary" className="text-xs font-semibold">
-            S/. {parseFloat(pendingAmount).toFixed(2)}
+            S/. {pendingAmount.toFixed(2)}
           </Badge>
         );
       },
     },
     {
-      accessorKey: "credit_notes_total",
+      id: "credit_notes_total",
       header: "N/C",
       cell: ({ row }) => {
-        const hasCreditNotes = row.original.has_credit_notes;
-        const creditNoteAmount = row.original.credit_notes_total;
-        const creditNotes = row.original.credit_notes || [];
+        const creditNotes = row.original.sale.credit_notes || [];
+        const hasCreditNotes = creditNotes.length > 0;
+        const creditNoteAmount = row.original.sale.credit_notes_total;
 
         if (!hasCreditNotes) {
           return <span className="text-xs text-muted-foreground">-</span>;
@@ -106,9 +106,6 @@ export function getSaleTableColumns(
                     creditNotes.map((cn) => (
                       <div key={cn.id} className="space-y-0.5">
                         <p className="font-medium">{cn.full_document_number}</p>
-                        {cn.observations && (
-                          <p className="text-muted-foreground">{cn.observations}</p>
-                        )}
                       </div>
                     ))}
                 </div>
@@ -119,13 +116,13 @@ export function getSaleTableColumns(
       },
     },
     {
-      accessorKey: "credit_notes_observations",
+      id: "credit_notes_observations",
       header: "Obs. N/C",
       cell: ({ row }) => {
-        const creditNotes = row.original.credit_notes || [];
+        const creditNotes = row.original.sale.credit_notes || [];
         const observations = creditNotes
           .filter((cn) => cn.observations)
-          .map((cn) => cn.observations);
+          .map((cn) => cn.observations as string);
 
         if (observations.length === 0) {
           return <span className="text-xs text-muted-foreground">-</span>;
@@ -134,7 +131,7 @@ export function getSaleTableColumns(
         return (
           <div className="max-w-[200px] text-xs text-muted-foreground">
             {observations.map((obs, idx) => (
-              <p key={idx} className="truncate" title={obs}>
+              <p key={idx} className="text-wrap" title={obs}>
                 {obs}
               </p>
             ))}
@@ -190,16 +187,15 @@ export function getSaleTableColumns(
       },
     },
     {
-      accessorKey: "payment_amount",
+      id: "payment_amount",
       header: "Monto Cobrado",
       cell: ({ row }) => {
         const index = row.original.index;
         const formValues = form.watch(`sales.${index}`);
         const formErrors = form.formState.errors.sales?.[index];
-        const hasCreditNotes = row.original.has_credit_notes;
-        const pendingAmount = hasCreditNotes
-          ? parseFloat(row.original.real_pending_amount)
-          : parseFloat(row.original.current_amount);
+        const creditNotesTotal = row.original.sale.credit_notes_total_raw || 0;
+        const currentAmount = parseFormattedNumber(row.original.current_amount);
+        const pendingAmount = currentAmount - creditNotesTotal;
 
         const handleAutoFill = (checked: boolean) => {
           if (checked) {

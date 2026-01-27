@@ -14,47 +14,87 @@ export interface Zone {
   name: string;
 }
 
-export interface Driver {
-  id: number;
-  full_name: string;
-  document_number: string | null;
-}
-
-export interface Customer {
-  id: number;
-  full_name: string;
-  document_number: string | null;
-}
-
-export interface User {
-  id: number;
-  name: string;
-}
-
 export interface SaleCustomer {
   id: number;
   full_name: string;
   document_number: string | null;
 }
 
+export interface DeliverySheetById {
+  id: number;
+  sheet_number: string;
+  type: "CONTADO" | "CREDITO";
+  status: "PENDIENTE" | "EN_REPARTO" | "COMPLETADO" | "CANCELADO" | "RENDIDA";
+  issue_date: string;
+  delivery_date: string;
+  total_amount: string;
+  total_amount_raw: string;
+  collected_amount: string;
+  collected_amount_raw: string;
+  pending_amount: string;
+  pending_amount_raw: string;
+  zone: Zone | null;
+  driver: Driver | null;
+  customer: SaleCustomer | null;
+  user: User | null;
+  sales: Sale[];
+  sheet_sales: SheetSale[];
+  payments: DeliverySheetPayment[];
+  credit_notes_summary: CreditNotesSummary;
+  total_paid: string;
+  sales_count: number;
+  observations: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CreditNotesSummary {
+  total_count: number;
+  total_amount: string;
+  total_amount_raw: number;
+  has_credit_notes: boolean;
+  real_pending_amount: string;
+  real_pending_amount_raw: number;
+}
+
+export interface SheetSale {
+  id: number;
+  sale_id: number;
+  original_amount: string;
+  original_amount_raw: string;
+  current_amount: string;
+  current_amount_raw: string;
+  collected_amount: string;
+  collected_amount_raw: string;
+  delivery_status: "PENDIENTE" | "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO";
+  delivery_notes: string | null;
+  sale: SheetSaleDetail;
+}
+
+interface Customer {
+  id: number;
+  full_name: string;
+  document_number?: string | null;
+}
+
+// Tipo para mostrar en la tabla de ventas del detalle de planilla
 export interface DeliverySheetSale {
   id: number;
   document_type: string;
   full_document_number: string;
   issue_date: string;
   total_amount: string;
-  customer: SaleCustomer;
-  original_amount: string;
-  current_amount: string;
   collected_amount: string;
-  delivery_status:
-    | "ANULADO"
-    | "ENTREGADO"
-    | "NO_ENTREGADO"
-    | "DEVUELTO"
-    | "PENDIENTE";
-  delivery_notes: string | null;
-  credit_notes: CreditNote[];
+  delivery_status: "PENDIENTE" | "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO";
+  delivery_notes?: string | null;
+  customer?: Customer;
+}
+
+interface Sale {
+  id: number;
+  document_type: string;
+  full_document_number: string;
+  credit_notes: Creditnote[];
   credit_notes_count: number;
   credit_notes_total: string;
   credit_notes_total_raw: number;
@@ -63,18 +103,28 @@ export interface DeliverySheetSale {
   real_pending_amount_raw: number;
 }
 
-interface CreditNote {
+export interface CreditNote {
   id: number;
-  document_type: null;
-  serie: null;
-  numero: null;
+  document_type: string | null;
+  serie: string | null;
+  numero: string | null;
   full_document_number: string;
   issue_date: string;
   total_amount: string;
   total_amount_raw: string;
   reason: string;
   status: string;
-  observations?: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+}
+
+interface Driver {
+  id: number;
+  full_name: string;
+  document_number: string | null;
 }
 
 export interface DeliverySheetPayment {
@@ -105,26 +155,12 @@ export interface SheetSaleDetail {
 
 interface Creditnote {
   id: number;
-  document_type?: string;
+  document_type: string | null;
   full_document_number: string;
   total_amount: string;
   total_amount_raw: string;
-  observations?: string;
+  observations: string | null;
   reason: string;
-}
-
-export interface SheetSale {
-  id: number;
-  sale_id: number;
-  original_amount: string;
-  original_amount_raw: string;
-  current_amount: string;
-  current_amount_raw: string;
-  collected_amount: string;
-  collected_amount_raw: string;
-  delivery_status: "PENDIENTE" | "ENTREGADO" | "NO_ENTREGADO" | "DEVUELTO";
-  delivery_notes: string | null;
-  sale: SheetSaleDetail;
 }
 
 export interface DeliverySheetResource {
@@ -142,14 +178,14 @@ export interface DeliverySheetResource {
   pending_amount_raw: string;
   zone?: Zone;
   driver?: Driver;
-  customer: Customer;
-  user: User;
-  sales: DeliverySheetSale[];
+  customer?: Customer;
+  user?: User;
+  sales?: Sale[];
   sheet_sales?: SheetSale[];
-  payments: DeliverySheetPayment[];
+  payments?: DeliverySheetPayment[];
   total_paid: string;
   sales_count: number;
-  observations: string | null;
+  observations?: string;
   created_at: string;
   updated_at: string;
 }
@@ -178,7 +214,7 @@ export interface DeliverySheetResponse {
 }
 
 export interface DeliverySheetResourceById {
-  data: DeliverySheetResource;
+  data: DeliverySheetById;
 }
 
 // ===== CREATE/UPDATE REQUESTS =====

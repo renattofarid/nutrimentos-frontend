@@ -1,41 +1,7 @@
 import { z } from "zod";
+import type { SheetSale } from "../../lib/deliverysheet.interface";
 
-interface CreditNote {
-  id: number;
-  full_document_number: string;
-  total_amount: string;
-  observations?: string;
-}
-
-export interface SaleWithIndex {
-  index: number;
-  id: number;
-  document_type: string;
-  full_document_number: string;
-  issue_date: string;
-  customer: {
-    full_name: string;
-    business_name?: string;
-  };
-  total_amount: string;
-  original_amount: string;
-  current_amount: string;
-  collected_amount: string;
-  delivery_status:
-    | "ANULADO"
-    | "ENTREGADO"
-    | "NO_ENTREGADO"
-    | "DEVUELTO"
-    | "PENDIENTE";
-  delivery_notes: string | null;
-  has_credit_notes: boolean;
-  credit_notes: CreditNote[];
-  credit_notes_count: number;
-  credit_notes_total: string;
-  credit_notes_total_raw: number;
-  real_pending_amount: string;
-  real_pending_amount_raw: number;
-}
+export type SaleWithIndex = SheetSale & { index: number };
 
 export const saleSettlementSchema = z.object({
   sale_id: z.number(),

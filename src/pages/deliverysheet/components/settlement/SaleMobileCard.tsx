@@ -41,9 +41,10 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
   const [showNotes, setShowNotes] = useState(false);
   const hasNote =
     formValues?.delivery_notes && formValues.delivery_notes.length > 0;
-  const pendingAmount = sale.has_credit_notes
-    ? parseFloat(sale.real_pending_amount)
-    : parseFloat(sale.current_amount);
+  const creditNotesTotal = sale.sale.credit_notes_total_raw || 0;
+  const currentAmount = parseFormattedNumber(sale.current_amount);
+  const pendingAmount = currentAmount - creditNotesTotal;
+  const hasCreditNotes = sale.sale.credit_notes.length > 0;
 
   return (
     <Card className="overflow-hidden py-0">
@@ -52,18 +53,18 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs">
-                {sale.document_type}
+                {sale.sale.document_type}
               </Badge>
             </div>
             <CardTitle className="text-base font-mono">
-              {sale.full_document_number}
+              {sale.sale.full_document_number}
             </CardTitle>
           </div>
           <div className="flex gap-2">
             <Badge variant="outline" className="text-right flex flex-col items-end">
               <p className="text-xs text-muted-foreground">Total</p>
               <p className="font-semibold text-sm">
-                S/. {parseFormattedNumber(sale.total_amount).toFixed(2)}
+                S/. {parseFormattedNumber(sale.original_amount).toFixed(2)}
               </p>
             </Badge>
             <Badge variant="secondary" className="text-right flex flex-col items-end">
@@ -72,18 +73,14 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
                 S/. {pendingAmount.toFixed(2)}
               </p>
             </Badge>
-            {sale.has_credit_notes && (
+            {hasCreditNotes && (
               <Badge
                 variant="outline"
                 className="text-right flex flex-col items-end bg-orange-50 text-orange-700 border-orange-200"
               >
                 <p className="text-xs">N/C</p>
                 <p className="font-semibold text-sm">
-                  S/.{" "}
-                  {sale.credit_notes_total &&
-                  parseFloat(sale.credit_notes_total) > 0
-                    ? parseFloat(sale.credit_notes_total).toFixed(2)
-                    : "0.00"}
+                  S/. {creditNotesTotal.toFixed(2)}
                 </p>
               </Badge>
             )}
@@ -94,7 +91,7 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
         {/* Cliente */}
         <div className="flex items-center gap-2 text-sm">
           <User className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">{sale.customer?.full_name}</span>
+          <span className="font-medium">{sale.sale.customer?.full_name}</span>
         </div>
 
         {/* Estado de Entrega */}

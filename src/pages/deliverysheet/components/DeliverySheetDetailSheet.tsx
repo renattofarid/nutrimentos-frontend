@@ -14,7 +14,7 @@ import {
   Receipt,
 } from "lucide-react";
 import type {
-  DeliverySheetResource,
+  DeliverySheetById,
   DeliverySheetSale,
   DeliverySheetPayment,
 } from "../lib/deliverysheet.interface";
@@ -23,7 +23,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { parse } from "date-fns";
 
 interface DeliverySheetDetailSheetProps {
-  deliverySheet: DeliverySheetResource | null;
+  deliverySheet: DeliverySheetById | null;
   open: boolean;
   onClose: () => void;
 }
@@ -400,14 +400,23 @@ export default function DeliverySheetDetailSheet({
         >
           <DataTable
             columns={salesColumns}
-            data={deliverySheet.sales}
+            data={deliverySheet.sheet_sales.map((ss) => ({
+              id: ss.sale.id,
+              document_type: ss.sale.document_type,
+              full_document_number: ss.sale.full_document_number,
+              issue_date: deliverySheet.issue_date,
+              total_amount: ss.original_amount,
+              collected_amount: ss.collected_amount,
+              delivery_status: ss.delivery_status,
+              customer: ss.sale.customer,
+            }))}
             isVisibleColumnFilter={false}
             variant="simple"
           />
         </GroupFormSection>
 
         {/* Pagos */}
-        {deliverySheet.payments?.length > 0 && (
+        {deliverySheet.payments.length > 0 && (
           <GroupFormSection
             title={`Pagos Registrados (${deliverySheet.payments.length})`}
             icon={Wallet}

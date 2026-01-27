@@ -13,15 +13,21 @@ interface SaleTableWithNotesProps {
 export function SaleTableWithNotes({ sales, form, expandedNotes, children }: SaleTableWithNotesProps) {
   const expandedSales = sales.filter(sale => expandedNotes.has(sale.index));
 
+  const getPendingAmount = (sale: SaleWithIndex) => {
+    const creditNotesTotal = sale.sale.credit_notes_total_raw || 0;
+    const currentAmount = parseFloat(sale.current_amount || "0");
+    return currentAmount - creditNotesTotal;
+  };
+
   const allPaid = sales.every((sale) => {
     const formValues = form.watch(`sales.${sale.index}`);
-    const pendingAmount = parseFloat(sale.real_pending_amount || sale.current_amount || "0");
+    const pendingAmount = getPendingAmount(sale);
     return parseFloat(formValues?.payment_amount || "0") === pendingAmount;
   });
 
   const handlePayAll = (checked: boolean) => {
     sales.forEach((sale) => {
-      const pendingAmount = parseFloat(sale.real_pending_amount || sale.current_amount || "0");
+      const pendingAmount = getPendingAmount(sale);
       form.setValue(
         `sales.${sale.index}.payment_amount`,
         checked ? pendingAmount.toFixed(2) : "0",
@@ -60,7 +66,7 @@ export function SaleTableWithNotes({ sales, form, expandedNotes, children }: Sal
               >
                 <div className="flex items-start gap-2">
                   <label className="text-xs font-medium text-muted-foreground pt-2 min-w-[140px]">
-                    Notas ({sale.full_document_number}):
+                    Notas ({sale.sale.full_document_number}):
                   </label>
                   <div className="flex-1 space-y-1">
                     <Input

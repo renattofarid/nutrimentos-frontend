@@ -32,8 +32,9 @@ import {
 export default function SettlementPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [deliverySheet, setDeliverySheet] =
-    useState<DeliverySheetById | null>(null);
+  const [deliverySheet, setDeliverySheet] = useState<DeliverySheetById | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
   const { submitSettlement } = useDeliverySheetStore();
@@ -86,12 +87,12 @@ export default function SettlementPage() {
         } else {
           setErrors(["La planilla no tiene ventas asociadas"]);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error al cargar la planilla:", error);
         setErrors([
-          error instanceof Error
-            ? error.message
-            : "Error al cargar la planilla de reparto",
+          error.response.data.message ||
+            error.response.data.error ||
+            "Error al cargar la planilla de reparto",
         ]);
         toast.error("Error al cargar la planilla");
       } finally {
@@ -141,12 +142,12 @@ export default function SettlementPage() {
       await submitSettlement(deliverySheet.id, settlementData);
       toast.success("Rendición registrada exitosamente");
       navigate(DELIVERY_SHEET.ROUTE);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al registrar la rendición:", error);
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Error al registrar la rendición";
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Error al registrar la rendición";
       setErrors([errorMessage]);
       toast.error(errorMessage);
     } finally {

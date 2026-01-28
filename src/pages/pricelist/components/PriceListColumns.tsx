@@ -1,12 +1,9 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { PriceList } from "../lib/pricelist.interface";
-import { SelectActions } from "@/components/SelectActions";
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Pencil, Eye, UserPlus } from "lucide-react"; // Import necessary icons
+import { ButtonAction } from "@/components/ButtonAction"; // Import ButtonAction component
+import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 interface PriceListColumnsProps {
   onEdit: (id: number) => void;
@@ -103,28 +100,24 @@ export const PriceListColumns = ({
     id: "actions",
     header: "Acciones",
     cell: ({ row }) => (
-      <SelectActions>
-        <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => onViewDetails(row.original.id)}>
-            Ver Detalles
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onEdit(row.original.id)}>
-            Editar
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onAssignClient(row.original.id)}>
-            Asignar Cliente
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            onClick={() => onDelete(row.original.id)}
-            className="text-destructive"
-          >
-            Eliminar
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </SelectActions>
+      <div className="flex gap-2">
+        <ButtonAction
+          onClick={() => onViewDetails(row.original.id)}
+          icon={Eye}
+          tooltip="Ver Detalles"
+        />
+        <ButtonAction
+          onClick={() => onEdit(row.original.id)}
+          icon={Pencil}
+          tooltip="Editar"
+        />
+        <ButtonAction
+          onClick={() => onAssignClient(row.original.id)}
+          icon={UserPlus}
+          tooltip="Asignar Cliente"
+        />
+        <DeleteButton onClick={() => onDelete(row.original.id)} />
+      </div>
     ),
   },
 ];

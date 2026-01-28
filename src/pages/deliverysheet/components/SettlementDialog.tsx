@@ -94,7 +94,7 @@ export function SettlementDialog({
                         </span>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {sale.customer.full_name}
+                        {sale.customer?.full_name}
                       </div>
                     </div>
                     <Badge variant="outline" className="shrink-0">

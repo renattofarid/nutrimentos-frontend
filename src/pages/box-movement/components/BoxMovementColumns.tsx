@@ -1,14 +1,10 @@
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { SelectActions } from "@/components/SelectActions";
 import type { BoxMovementResource } from "../lib/box-movement.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye } from "lucide-react";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { ButtonAction } from "@/components/ButtonAction";
+import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 export const BoxMovementColumns = ({
   onDelete,
@@ -67,8 +63,11 @@ export const BoxMovementColumns = ({
       const type = row.original.type;
       const isIncome = type === "INGRESO";
       return (
-        <span className={`font-semibold ${isIncome ? "text-green-600" : "text-red-600"}`}>
-          {isIncome ? "+" : "-"}{formatCurrency(amount)}
+        <span
+          className={`font-semibold ${isIncome ? "text-green-600" : "text-red-600"}`}
+        >
+          {isIncome ? "+" : "-"}
+          {formatCurrency(amount)}
         </span>
       );
     },
@@ -100,24 +99,14 @@ export const BoxMovementColumns = ({
       const movement = row.original;
 
       return (
-        <SelectActions>
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => onView(movement.id)}>
-              <Eye className="mr-2 h-4 w-4" />
-              Ver Detalle
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              onClick={() => onDelete(movement.id)}
-              className="text-red-600"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Eliminar
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </SelectActions>
+        <div className="flex gap-2">
+          <ButtonAction
+            onClick={() => onView(movement.id)}
+            icon={Eye}
+            tooltip="Ver Detalle"
+          />
+          <DeleteButton onClick={() => onDelete(movement.id)} />
+        </div>
       );
     },
   },

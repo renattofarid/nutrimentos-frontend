@@ -35,14 +35,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { guideSchema, type GuideSchema } from "../lib/guide.schema";
 import { searchUbigeos } from "../lib/ubigeo.actions";
 import type { UbigeoResource } from "../lib/ubigeo.interface";
-import {
-  searchRUC,
-  searchDNI,
-  isValidData,
-} from "@/lib/document-search.service";
+import { searchRUC, isValidData } from "@/lib/document-search.service";
 import {
   MODALITIES,
-  CARRIER_DOCUMENT_TYPES,
   UNIT_MEASUREMENTS,
   type GuideResource,
   type GuideMotiveResource,
@@ -51,6 +46,7 @@ import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interfac
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
+import type { VehicleResource } from "@/pages/vehicle/lib/vehicle.interface";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { getSalesByRange } from "@/pages/sale/lib/sale.actions";
@@ -71,6 +67,7 @@ interface GuideFormProps {
   products: ProductResource[];
   customers: PersonResource[];
   motives: GuideMotiveResource[];
+  vehicles: VehicleResource[];
   guide?: GuideResource;
 }
 
@@ -83,6 +80,7 @@ export const GuideForm = ({
   warehouses,
   customers,
   motives,
+  vehicles,
 }: GuideFormProps) => {
   const [filteredWarehouses, setFilteredWarehouses] = useState<
     WarehouseResource[]
@@ -173,7 +171,6 @@ export const GuideForm = ({
   });
 
   const selectedBranchId = form.watch("branch_id");
-  const carrierDocumentType = form.watch("carrier_document_type");
 
   // Filtrar warehouses por branch
   useEffect(() => {
@@ -205,12 +202,11 @@ export const GuideForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBranchId, warehouses]);
 
-  // Función para buscar transportista por número de documento
+  // Función para buscar transportista por RUC
   const handleSearchCarrierDocument = async () => {
     const documentNumber = form.getValues("carrier_document_number");
-    const documentType = form.getValues("carrier_document_type");
 
-    if (!documentNumber || !documentType) {
+    if (!documentNumber || documentNumber.length !== 11) {
       return;
     }
 
@@ -228,30 +224,17 @@ export const GuideForm = ({
           existingCarrier.business_name ||
             `${existingCarrier.names} ${existingCarrier.father_surname}`.trim(),
         );
-        form.setValue("carrier_ruc", existingCarrier.number_document || "");
         toast.success("Transportista encontrado en el sistema");
         return;
       }
 
-      // Si no existe, buscar en APIs externas
-      if (documentType === "RUC" && documentNumber.length === 11) {
-        const result = await searchRUC({ search: documentNumber });
-        if (result && isValidData(result.message) && result.data) {
-          form.setValue("carrier_name", result.data.business_name || "");
-          form.setValue("carrier_ruc", result.data.number_document || "");
-          toast.success("Datos obtenidos de SUNAT");
-        } else {
-          toast.warning("No se encontró información del RUC");
-        }
-      } else if (documentType === "DNI" && documentNumber.length === 8) {
-        const result = await searchDNI({ search: documentNumber });
-        if (result && isValidData(result.message) && result.data) {
-          const fullName = `${result.data.names} ${result.data.father_surname} ${result.data.mother_surname}`;
-          form.setValue("carrier_name", fullName.trim());
-          toast.success("Datos obtenidos de RENIEC");
-        } else {
-          toast.warning("No se encontró información del DNI");
-        }
+      // Si no existe, buscar en SUNAT
+      const result = await searchRUC({ search: documentNumber });
+      if (result && isValidData(result.message) && result.data) {
+        form.setValue("carrier_name", result.data.business_name || "");
+        toast.success("Datos obtenidos de SUNAT");
+      } else {
+        toast.warning("No se encontró información del RUC");
       }
     } catch (error) {
       console.error("Error searching carrier document:", error);
@@ -328,31 +311,46 @@ export const GuideForm = ({
     }
   };
 
-  // Establecer fechas y motivo por defecto automáticamente
+  // Establecer fechas, motivo y tipo de documento transportista por defecto
   useEffect(() => {
     const today = new Date();
     const formattedDate = format(today, "yyyy-MM-dd");
     form.setValue("issue_date", formattedDate);
     form.setValue("transfer_date", formattedDate);
     form.setValue("motive_id", "1");
+    form.setValue("carrier_document_type", "RUC");
   }, [form]);
 
-  // Calcular peso total automáticamente cuando cambian las ventas seleccionadas
+  // Calcular peso total y total de bultos automáticamente cuando cambian las ventas seleccionadas
   useEffect(() => {
     if (selectedSales.length > 0 && salesByRange.length > 0) {
-      const totalWeight = salesByRange
-        .filter((sale) => selectedSales.includes(sale.id))
-        .reduce((sum, sale) => {
-          const weight =
-            typeof sale.total_weight === "string"
-              ? parseFloat(sale.total_weight)
-              : sale.total_weight;
-          return sum + (weight || 0);
-        }, 0);
+      const selectedSalesData = salesByRange.filter((sale) =>
+        selectedSales.includes(sale.id),
+      );
+
+      // Calcular peso total (usa el total_weight que retorna el backend)
+      const totalWeight = selectedSalesData.reduce((sum, sale) => {
+        const weight =
+          typeof sale.total_weight === "string"
+            ? parseFloat(sale.total_weight)
+            : sale.total_weight;
+        return sum + (weight || 0);
+      }, 0);
+
+      // Calcular total de bultos (suma de quantity_sacks de todos los detalles)
+      const totalPackages = selectedSalesData.reduce((sum, sale) => {
+        const sacks = sale.details?.reduce(
+          (detailSum, detail) => detailSum + (detail.quantity_sacks || 0),
+          0,
+        );
+        return sum + (sacks || 0);
+      }, 0);
 
       form.setValue("total_weight", totalWeight as any);
+      form.setValue("total_packages", totalPackages as any);
     } else if (selectedSales.length === 0) {
       form.setValue("total_weight", 0 as any);
+      form.setValue("total_packages", 0 as any);
     }
   }, [selectedSales, salesByRange, form]);
 
@@ -377,12 +375,12 @@ export const GuideForm = ({
       modality: data.modality,
       motive_id: parseInt(data.motive_id),
       sale_document_number: "-",
-      carrier_document_type: data.carrier_document_type,
+      carrier_document_type: "RUC",
       carrier_document_number: data.carrier_document_number,
       carrier_name: data.carrier_name,
-      carrier_ruc: data.carrier_ruc,
+      carrier_ruc: data.carrier_document_number,
       carrier_mtc_number: data.carrier_mtc_number,
-      vehicle_plate: data.vehicle_plate || null,
+      vehicle_id: data.vehicle_id ? parseInt(data.vehicle_id) : null,
       driver_document_type: data.driver_document_type || null,
       driver_document_number: data.driver_document_number || null,
       driver_name: data.driver_name || null,
@@ -498,6 +496,373 @@ export const GuideForm = ({
             name="transfer_date"
             label="Fecha de Traslado"
             placeholder="Seleccione fecha"
+          />
+        </GroupFormSection>
+
+        {/* Información del Transportista y Conductor */}
+        <GroupFormSection
+          title="Información del Transportista y Conductor"
+          icon={Truck}
+          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
+        >
+          <FormField
+            control={form.control}
+            name="carrier_document_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>RUC del Transportista</FormLabel>
+                <div className="flex gap-2">
+                  <FormControl>
+                    <Input
+                      variant="default"
+                      placeholder="Ingrese 11 dígitos"
+                      {...field}
+                      maxLength={11}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "");
+                        field.onChange(value);
+
+                        // Auto-search cuando se completa el RUC
+                        if (value.length === 11) {
+                          setTimeout(() => handleSearchCarrierDocument(), 100);
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleSearchCarrierDocument}
+                    disabled={
+                      isSearchingCarrier ||
+                      !field.value ||
+                      field.value.length !== 11
+                    }
+                  >
+                    {isSearchingCarrier ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Search className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="carrier_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nombre del Transportista</FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Ej: Transportes SAC"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="carrier_mtc_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Número MTC</FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Ej: MTC-123456"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="vehicle_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Vehículo (Opcional)</FormLabel>
+                <FormControl>
+                  <SearchableSelect
+                    className="md:w-full"
+                    buttonSize="default"
+                    options={vehicles.map((vehicle) => ({
+                      value: vehicle.id.toString(),
+                      label: `${vehicle.plate} - ${vehicle.brand} ${vehicle.model}`,
+                      description: vehicle.vehicle_type || "",
+                    }))}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Seleccionar vehículo..."
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Selector de Conductor */}
+          <FormItem>
+            <FormLabel>Conductor</FormLabel>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <SearchableSelect
+                  className="md:w-full"
+                  buttonSize="default"
+                  options={
+                    drivers?.map((driver) => ({
+                      value: driver.id.toString(),
+                      label:
+                        driver.business_name ||
+                        `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
+                      description: driver.number_document || "",
+                    })) || []
+                  }
+                  value={selectedDriverId}
+                  onChange={(value) => {
+                    setSelectedDriverId(value);
+                    const selectedDriver = drivers?.find(
+                      (d) => d.id.toString() === value,
+                    );
+                    if (selectedDriver) {
+                      const docType =
+                        selectedDriver.document_type_name ||
+                        (selectedDriver.number_document?.length === 8
+                          ? "DNI"
+                          : "CE");
+                      form.setValue("driver_document_type", docType);
+                      form.setValue(
+                        "driver_document_number",
+                        selectedDriver.number_document || "",
+                      );
+                      const fullName =
+                        selectedDriver.business_name ||
+                        `${selectedDriver.names} ${selectedDriver.father_surname} ${selectedDriver.mother_surname}`.trim();
+                      form.setValue("driver_name", fullName);
+                    }
+                  }}
+                  placeholder="Buscar conductor..."
+                />
+              </div>
+              <Button type="button" variant="outline" size="icon" asChild>
+                <Link to={DRIVER.ROUTE_ADD} target="_blank">
+                  <Plus className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </FormItem>
+
+          {/* Alert con datos del conductor seleccionado */}
+          {selectedDriverId &&
+            (() => {
+              const driver = drivers?.find(
+                (d) => d.id.toString() === selectedDriverId,
+              );
+              if (!driver) return null;
+              const fullName =
+                driver.business_name ||
+                `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
+              const docType =
+                driver.document_type_name ||
+                (driver.number_document?.length === 8 ? "DNI" : "CE");
+              return (
+                <Alert className="md:col-span-4">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Datos del Conductor</AlertTitle>
+                  <AlertDescription>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                      <div>
+                        <span className="text-muted-foreground text-xs">
+                          Nombre:
+                        </span>
+                        <p className="font-medium">{fullName}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">
+                          Tipo Doc:
+                        </span>
+                        <p className="font-medium">{docType}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">
+                          Nro. Documento:
+                        </span>
+                        <p className="font-medium">
+                          {driver.number_document || "-"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">
+                          Teléfono:
+                        </span>
+                        <p className="font-medium">{driver.phone || "-"}</p>
+                      </div>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              );
+            })()}
+        </GroupFormSection>
+
+        {/* Direcciones, Carga y Observaciones */}
+        <GroupFormSection
+          title="Direcciones, Carga y Observaciones"
+          icon={MapPin}
+          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
+        >
+          <FormField
+            control={form.control}
+            name="origin_address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Dirección de Origen</FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Ej: Av. Principal 123"
+                    className="w-full"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <SelectSearchForm<UbigeoResource>
+            name="ubigeo_origin_id"
+            label="Ubigeo de Origen"
+            placeholder="Buscar ubigeo..."
+            control={form.control}
+            searchPlaceholder="Buscar por nombre o código..."
+            emptyMessage="No se encontraron ubigeos"
+            minSearchLength={2}
+            debounceMs={300}
+            items={originUbigeos}
+            isSearching={isSearchingOrigin}
+            onSearch={handleSearchOriginUbigeos}
+            getItemId={(ubigeo) => ubigeo.id}
+            formatLabel={formatUbigeoLabel}
+            formatDescription={(ubigeo) => ubigeo.ubigeo_code}
+          />
+
+          <FormField
+            control={form.control}
+            name="destination_address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Dirección de Destino</FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Ej: Av. Secundaria 456"
+                    className="w-full"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <SelectSearchForm<UbigeoResource>
+            name="ubigeo_destination_id"
+            label="Ubigeo de Destino"
+            placeholder="Buscar ubigeo..."
+            control={form.control}
+            searchPlaceholder="Buscar por nombre o código..."
+            emptyMessage="No se encontraron ubigeos"
+            minSearchLength={2}
+            debounceMs={300}
+            items={destinationUbigeos}
+            isSearching={isSearchingDestination}
+            onSearch={handleSearchDestinationUbigeos}
+            getItemId={(ubigeo) => ubigeo.id}
+            formatLabel={formatUbigeoLabel}
+            formatDescription={(ubigeo) => ubigeo.ubigeo_code}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="unit_measurement"
+            label="Unidad de Medida"
+            placeholder="Seleccione"
+            options={UNIT_MEASUREMENTS.map((um) => ({
+              value: um.value,
+              label: um.label,
+            }))}
+          />
+
+          <FormField
+            control={form.control}
+            name="total_weight"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Peso Total (kg)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    variant="default"
+                    placeholder="0.00"
+                    {...field}
+                    className="bg-muted"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="total_packages"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Total de Bultos (sacos)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    variant="default"
+                    placeholder="0"
+                    {...field}
+                    className="bg-muted"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="observations"
+            render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Observaciones (Opcional)</FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Observaciones adicionales"
+                    className="w-full"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </GroupFormSection>
 
@@ -714,416 +1079,23 @@ export const GuideForm = ({
                 </p>
               </div>
             )}
+
+            {
+              /* Descripcion de los mensajes de errores del form */
+              form.formState.errors &&
+                Object.keys(form.formState.errors).length > 0 && (
+                  <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
+                    <ul className="list-disc list-inside text-sm text-red-900 dark:text-red-100">
+                      {Object.entries(form.formState.errors).map(
+                        ([fieldName, error]) => (
+                          <li key={fieldName}>{error?.message as string}</li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                )
+            }
           </div>
-        </GroupFormSection>
-
-        {/* Información del Transportista y Conductor */}
-        <GroupFormSection
-          title="Información del Transportista y Conductor"
-          icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
-        >
-          <FormSelect
-            control={form.control}
-            name="carrier_document_type"
-            label="Tipo de Documento (Transportista)"
-            placeholder="Seleccione"
-            options={CARRIER_DOCUMENT_TYPES.map((dt) => ({
-              value: dt.value,
-              label: dt.label,
-            }))}
-          />
-
-          <FormField
-            control={form.control}
-            name="carrier_document_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Número de Documento (Transportista)</FormLabel>
-                <div className="flex gap-2">
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder={
-                        carrierDocumentType === "RUC"
-                          ? "Ingrese 11 dígitos"
-                          : carrierDocumentType === "DNI"
-                            ? "Ingrese 8 dígitos"
-                            : "Ingrese el número"
-                      }
-                      {...field}
-                      maxLength={
-                        carrierDocumentType === "RUC"
-                          ? 11
-                          : carrierDocumentType === "DNI"
-                            ? 8
-                            : 11
-                      }
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, "");
-                        field.onChange(value);
-
-                        // Auto-search cuando se completa
-                        if (
-                          (carrierDocumentType === "RUC" &&
-                            value.length === 11) ||
-                          (carrierDocumentType === "DNI" && value.length === 8)
-                        ) {
-                          setTimeout(() => handleSearchCarrierDocument(), 100);
-                        }
-                      }}
-                    />
-                  </FormControl>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleSearchCarrierDocument}
-                    disabled={
-                      isSearchingCarrier ||
-                      !field.value ||
-                      (carrierDocumentType === "RUC" &&
-                        field.value.length !== 11) ||
-                      (carrierDocumentType === "DNI" &&
-                        field.value.length !== 8)
-                    }
-                  >
-                    {isSearchingCarrier ? (
-                      <Loader className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Search className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="carrier_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nombre del Transportista</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Transportes SAC"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="carrier_ruc"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>RUC del Transportista</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: 20123456789"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="carrier_mtc_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Número MTC</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: MTC-123456"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="vehicle_plate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Placa del Vehículo (Opcional)</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: ABC-123"
-                    {...field}
-                    value={field.value ?? ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Selector de Conductor */}
-          <FormItem>
-            <FormLabel>Conductor</FormLabel>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <SearchableSelect
-                  className="md:w-full"
-                  buttonSize="default"
-                  options={
-                    drivers?.map((driver) => ({
-                      value: driver.id.toString(),
-                      label:
-                        driver.business_name ||
-                        `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
-                      description: driver.number_document || "",
-                    })) || []
-                  }
-                  value={selectedDriverId}
-                  onChange={(value) => {
-                    setSelectedDriverId(value);
-                    const selectedDriver = drivers?.find(
-                      (d) => d.id.toString() === value,
-                    );
-                    if (selectedDriver) {
-                      const docType =
-                        selectedDriver.document_type_name ||
-                        (selectedDriver.number_document?.length === 8
-                          ? "DNI"
-                          : "CE");
-                      form.setValue("driver_document_type", docType);
-                      form.setValue(
-                        "driver_document_number",
-                        selectedDriver.number_document || "",
-                      );
-                      const fullName =
-                        selectedDriver.business_name ||
-                        `${selectedDriver.names} ${selectedDriver.father_surname} ${selectedDriver.mother_surname}`.trim();
-                      form.setValue("driver_name", fullName);
-                    }
-                  }}
-                  placeholder="Buscar conductor..."
-                />
-              </div>
-              <Button type="button" variant="outline" size="icon" asChild>
-                <Link to={DRIVER.ROUTE_ADD} target="_blank">
-                  <Plus className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </FormItem>
-
-          {/* Alert con datos del conductor seleccionado */}
-          {selectedDriverId &&
-            (() => {
-              const driver = drivers?.find(
-                (d) => d.id.toString() === selectedDriverId,
-              );
-              if (!driver) return null;
-              const fullName =
-                driver.business_name ||
-                `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
-              const docType =
-                driver.document_type_name ||
-                (driver.number_document?.length === 8 ? "DNI" : "CE");
-              return (
-                <Alert className="md:col-span-4">
-                  <Info className="h-4 w-4" />
-                  <AlertTitle>Datos del Conductor</AlertTitle>
-                  <AlertDescription>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                      <div>
-                        <span className="text-muted-foreground text-xs">
-                          Nombre:
-                        </span>
-                        <p className="font-medium">{fullName}</p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground text-xs">
-                          Tipo Doc:
-                        </span>
-                        <p className="font-medium">{docType}</p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground text-xs">
-                          Nro. Documento:
-                        </span>
-                        <p className="font-medium">
-                          {driver.number_document || "-"}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground text-xs">
-                          Teléfono:
-                        </span>
-                        <p className="font-medium">{driver.phone || "-"}</p>
-                      </div>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              );
-            })()}
-        </GroupFormSection>
-
-        {/* Direcciones, Carga y Observaciones */}
-        <GroupFormSection
-          title="Direcciones, Carga y Observaciones"
-          icon={MapPin}
-          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
-        >
-          <FormField
-            control={form.control}
-            name="origin_address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Dirección de Origen</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Av. Principal 123"
-                    className="w-full"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <SelectSearchForm<UbigeoResource>
-            name="ubigeo_origin_id"
-            label="Ubigeo de Origen"
-            placeholder="Buscar ubigeo..."
-            control={form.control}
-            searchPlaceholder="Buscar por nombre o código..."
-            emptyMessage="No se encontraron ubigeos"
-            minSearchLength={2}
-            debounceMs={300}
-            items={originUbigeos}
-            isSearching={isSearchingOrigin}
-            onSearch={handleSearchOriginUbigeos}
-            getItemId={(ubigeo) => ubigeo.id}
-            formatLabel={formatUbigeoLabel}
-            formatDescription={(ubigeo) => ubigeo.ubigeo_code}
-          />
-
-          <FormField
-            control={form.control}
-            name="destination_address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Dirección de Destino</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Av. Secundaria 456"
-                    className="w-full"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <SelectSearchForm<UbigeoResource>
-            name="ubigeo_destination_id"
-            label="Ubigeo de Destino"
-            placeholder="Buscar ubigeo..."
-            control={form.control}
-            searchPlaceholder="Buscar por nombre o código..."
-            emptyMessage="No se encontraron ubigeos"
-            minSearchLength={2}
-            debounceMs={300}
-            items={destinationUbigeos}
-            isSearching={isSearchingDestination}
-            onSearch={handleSearchDestinationUbigeos}
-            getItemId={(ubigeo) => ubigeo.id}
-            formatLabel={formatUbigeoLabel}
-            formatDescription={(ubigeo) => ubigeo.ubigeo_code}
-          />
-
-          <FormSelect
-            control={form.control}
-            name="unit_measurement"
-            label="Unidad de Medida"
-            placeholder="Seleccione"
-            options={UNIT_MEASUREMENTS.map((um) => ({
-              value: um.value,
-              label: um.label,
-            }))}
-          />
-
-          <FormField
-            control={form.control}
-            name="total_weight"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Peso Total</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    variant="default"
-                    placeholder="0.00"
-                    {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="total_packages"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Total de Bultos</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    variant="default"
-                    placeholder="0"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="observations"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Observaciones (Opcional)</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Observaciones adicionales"
-                    className="w-full"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </GroupFormSection>
 
         {/* Botones */}

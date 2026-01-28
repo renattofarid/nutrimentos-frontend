@@ -13,6 +13,7 @@ import { useAllBrands } from "@/pages/brand/lib/brand.hook";
 import { useAllUnits } from "@/pages/unit/lib/unit.hook";
 import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
 import { useAllNationalities } from "@/pages/nationality/lib/nationality.hook";
+import { useAllVehicles } from "@/pages/vehicle/lib/vehicle.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import {
   ERROR_MESSAGE,
@@ -79,6 +80,11 @@ export default function GuideAddPage() {
     useAllProductTypes();
   const { data: nationalities, refetch: refetchNationalities } =
     useAllNationalities();
+  const {
+    data: vehicles,
+    isLoading: vehiclesLoading,
+    refetch: refetchVehicles,
+  } = useAllVehicles();
 
   const { createGuide } = useGuideStore();
 
@@ -94,6 +100,7 @@ export default function GuideAddPage() {
     refetchUnits();
     refetchProductTypes();
     refetchNationalities();
+    refetchVehicles();
   }, []);
 
   useEffect(() => {
@@ -112,7 +119,8 @@ export default function GuideAddPage() {
     brandsLoading ||
     unitsLoading ||
     !productTypes ||
-    !nationalities;
+    !nationalities ||
+    vehiclesLoading;
 
   const getDefaultValues = (): Partial<GuideSchema> => ({
     branch_id: "",
@@ -129,7 +137,7 @@ export default function GuideAddPage() {
     carrier_name: "",
     carrier_ruc: "",
     carrier_mtc_number: "",
-    vehicle_plate: "",
+    vehicle_id: "",
     driver_document_type: "",
     driver_document_number: "",
     driver_name: "",
@@ -199,7 +207,8 @@ export default function GuideAddPage() {
         nationalities &&
         nationalities.length > 0 &&
         suppliers &&
-        suppliers.length > 0 && (
+        suppliers.length > 0 &&
+        vehicles && (
           <GuideForm
             defaultValues={getDefaultValues()}
             onSubmit={handleSubmit}
@@ -211,6 +220,7 @@ export default function GuideAddPage() {
             products={products}
             customers={customers}
             motives={motives}
+            vehicles={vehicles}
           />
         )}
     </PageWrapper>

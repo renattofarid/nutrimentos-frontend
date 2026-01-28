@@ -13,12 +13,14 @@ import PageWrapper from "@/components/PageWrapper";
 import { DataTable } from "@/components/DataTable";
 import { findDeliverySheetById } from "../lib/deliverysheet.actions";
 import { useDeliverySheetStore } from "../lib/deliverysheet.store";
-import type { DeliverySheetResource } from "../lib/deliverysheet.interface";
+import type {
+  DeliverySheetById,
+  SheetSale,
+} from "../lib/deliverysheet.interface";
 import { DELIVERY_SHEET } from "../lib/deliverysheet.interface";
 import {
   settlementFormSchema,
   type SettlementFormSchema,
-  type SaleWithIndex,
   SettlementHeader,
   DeliverySheetInfo,
   getSaleTableColumns,
@@ -30,8 +32,9 @@ import {
 export default function SettlementPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [deliverySheet, setDeliverySheet] =
-    useState<DeliverySheetResource | null>(null);
+  const [deliverySheet, setDeliverySheet] = useState<DeliverySheetById | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
   const { submitSettlement } = useDeliverySheetStore();
@@ -67,15 +70,15 @@ export default function SettlementPage() {
 
         setDeliverySheet(response.data);
 
-        if (response.data.sales && response.data.sales.length > 0) {
+        if (response.data.sheet_sales && response.data.sheet_sales.length > 0) {
           form.reset({
-            sales: response.data.sales.map((sale) => ({
-              sale_id: sale.id,
+            sales: response.data.sheet_sales.map((sheetSale) => ({
+              sale_id: sheetSale.sale_id,
               delivery_status:
-                sale.delivery_status === "PENDIENTE"
+                sheetSale.delivery_status === "PENDIENTE"
                   ? "ENTREGADO"
-                  : sale.delivery_status,
-              delivery_notes: sale.delivery_notes || "",
+                  : sheetSale.delivery_status,
+              delivery_notes: sheetSale.delivery_notes || "",
               payment_amount: "0",
             })),
             payment_date: new Date().toISOString().split("T")[0],
@@ -84,12 +87,12 @@ export default function SettlementPage() {
         } else {
           setErrors(["La planilla no tiene ventas asociadas"]);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error al cargar la planilla:", error);
         setErrors([
-          error instanceof Error
-            ? error.message
-            : "Error al cargar la planilla de reparto",
+          error.response.data.message ||
+            error.response.data.error ||
+            "Error al cargar la planilla de reparto",
         ]);
         toast.error("Error al cargar la planilla");
       } finally {
@@ -139,12 +142,12 @@ export default function SettlementPage() {
       await submitSettlement(deliverySheet.id, settlementData);
       toast.success("Rendición registrada exitosamente");
       navigate(DELIVERY_SHEET.ROUTE);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al registrar la rendición:", error);
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Error al registrar la rendición";
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Error al registrar la rendición";
       setErrors([errorMessage]);
       toast.error(errorMessage);
     } finally {
@@ -164,10 +167,10 @@ export default function SettlementPage() {
     });
   };
 
-  const salesWithIndex: SaleWithIndex[] = useMemo(() => {
-    if (!deliverySheet?.sales) return [];
-    return deliverySheet.sales.map((sale, index) => ({
-      ...sale,
+  const salesWithIndex = useMemo(() => {
+    if (!deliverySheet?.sheet_sales) return [];
+    return deliverySheet.sheet_sales.map((sheetSale, index) => ({
+      ...sheetSale,
       index,
     }));
   }, [deliverySheet]);
@@ -177,7 +180,7 @@ export default function SettlementPage() {
     [form, expandedNotes],
   );
 
-  const mobileCardRender = (sale: SaleWithIndex) => (
+  const mobileCardRender = (sale: SheetSale & { index: number }) => (
     <SaleMobileCard sale={sale} form={form as any} />
   );
 

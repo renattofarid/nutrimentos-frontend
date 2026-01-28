@@ -1,10 +1,8 @@
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { SelectActions } from "@/components/SelectActions";
 import type { WarehouseResource } from "../lib/warehouse.interface";
 import type { ColumnDef } from "@tanstack/react-table";
+import { ButtonAction } from "@/components/ButtonAction";
+import { Pencil } from "lucide-react";
+import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 export const WarehouseColumns = ({
   onEdit,
@@ -63,16 +61,14 @@ export const WarehouseColumns = ({
       const id = row.original.id;
 
       return (
-        <SelectActions>
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => onEdit(id)}>
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onDelete(id)}>
-              Eliminar
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </SelectActions>
+        <div className="flex gap-2">
+          <ButtonAction
+            onClick={() => onEdit(id)}
+            icon={Pencil}
+            tooltip="Editar"
+          />
+          <DeleteButton onClick={() => onDelete(id)} />
+        </div>
       );
     },
   },

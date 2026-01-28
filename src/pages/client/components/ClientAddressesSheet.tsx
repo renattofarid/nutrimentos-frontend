@@ -130,7 +130,7 @@ export default function ClientAddressesSheet({
       size="xl"
     >
       <div className="space-y-4">
-        <div className="flex justify-end">
+        <div className="flex gap-2">
           <Button onClick={handleCreate} size="sm">
             <Plus className="size-4 mr-2" />
             Nueva Dirección

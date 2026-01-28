@@ -159,10 +159,10 @@ export const getDeliverySheetColumns = ({
     header: "Acciones",
     cell: ({ row }) => {
       const canDelete = row.original.status === "PENDIENTE";
-      const canUpdateStatus =
-        row.original.status === "PENDIENTE" ||
-        row.original.status === "EN_REPARTO";
-      const canSettlement = row.original.status === "EN_REPARTO";
+      // const canUpdateStatus =
+      //   row.original.status === "PENDIENTE" ||
+      //   row.original.status === "EN_REPARTO";
+      const canSettlement = row.original.status !== "RENDIDA";
 
       return (
         <div className="flex items-center gap-1">
@@ -174,7 +174,7 @@ export const getDeliverySheetColumns = ({
           <ButtonAction
             icon={RefreshCcw}
             onClick={() => onUpdateStatus(row.original)}
-            canRender={canUpdateStatus}
+            canRender={false}
             tooltip="Cambiar Estado"
           />
           <ButtonAction

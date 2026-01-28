@@ -1,11 +1,9 @@
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { SelectActions } from "@/components/SelectActions";
 import type { CategoryResource } from "../lib/category.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
+import { Pencil } from "lucide-react"; // Import the Pencil icon
+import { ButtonAction } from "@/components/ButtonAction"; // Import ButtonAction component
+import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 export const CategoryColumns = ({
   onEdit,
@@ -75,16 +73,14 @@ export const CategoryColumns = ({
       const id = row.original.id;
 
       return (
-        <SelectActions>
-          <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => onEdit(id)}>
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onDelete(id)}>
-              Eliminar
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </SelectActions>
+        <div className="flex gap-2">
+          <ButtonAction
+            onClick={() => onEdit(id)}
+            icon={Pencil}
+            tooltip="Editar"
+          />
+          <DeleteButton onClick={() => onDelete(id)} />
+        </div>
       );
     },
   },

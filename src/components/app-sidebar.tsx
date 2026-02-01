@@ -58,6 +58,7 @@ import {
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
   REPORTS,
 } from "@/pages/reports/lib/reports.interface";
+import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-credit-note.interface";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -246,6 +247,12 @@ const {
 } = CREDIT_NOTE;
 
 const {
+  ICON_REACT: PurchaseCreditNoteIcon,
+  ROUTE: PurchaseCreditNoteRoute,
+  MODEL: { plural: PurchaseCreditNoteTitle },
+} = PURCHASE_CREDIT_NOTE;
+
+const {
   ICON_REACT: ReportsIcon,
   MODEL: { name: ReportsTitle },
 } = REPORTS;
@@ -298,6 +305,11 @@ const data = {
           title: PurchaseTitle,
           url: PurchaseRoute,
           icon: PurchaseIcon,
+        },
+        {
+          title: PurchaseCreditNoteTitle,
+          url: PurchaseCreditNoteRoute,
+          icon: PurchaseCreditNoteIcon,
         },
         {
           title: AccountsPayableTitle,

@@ -110,6 +110,10 @@ import DriverAddPage from "./pages/driver/components/DriverAddPage";
 import DriverEditPage from "./pages/driver/components/DriverEditPage";
 import { CustomerAccountStatementPage } from "./pages/reports/components";
 import { CUSTOMER_ACCOUNT_STATEMENT_ROUTE } from "./pages/reports/lib/reports.interface";
+import { PURCHASE_CREDIT_NOTE } from "./pages/purchase-credit-note/lib/purchase-credit-note.interface";
+import PurchaseCreditNotePage from "./pages/purchase-credit-note/components/PurchaseCreditNotePage";
+import PurchaseCreditNoteAddPage from "./pages/purchase-credit-note/components/PurchaseCreditNoteAddPage";
+import PurchaseCreditNoteEditPage from "./pages/purchase-credit-note/components/PurchaseCreditNoteEditPage";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -147,6 +151,11 @@ const {
   ROUTE_UPDATE: DeliverySheetRouteUpdate,
 } = DELIVERY_SHEET;
 const { ROUTE: CreditNoteRoute, ROUTE_ADD: CreditNoteRouteAdd } = CREDIT_NOTE;
+const {
+  ROUTE: PurchaseCreditNoteRoute,
+  ROUTE_ADD: PurchaseCreditNoteRouteAdd,
+  ROUTE_UPDATE: PurchaseCreditNoteRouteUpdate,
+} = PURCHASE_CREDIT_NOTE;
 
 export const hasAccessToRoute = (access: Access[], route: string): boolean => {
   const transformRoute = route.split("/").pop();
@@ -699,6 +708,33 @@ export default function App() {
             element={
               <ProtectedRoute path={CreditNoteRoute}>
                 <CreditNoteAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={PurchaseCreditNoteRoute}
+            element={
+              <ProtectedRoute path={PurchaseCreditNoteRoute}>
+                <PurchaseCreditNotePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={PurchaseCreditNoteRouteAdd}
+            element={
+              <ProtectedRoute path={PurchaseCreditNoteRoute}>
+                <PurchaseCreditNoteAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path={PurchaseCreditNoteRouteUpdate}
+            element={
+              <ProtectedRoute path={PurchaseCreditNoteRoute}>
+                <PurchaseCreditNoteEditPage />
               </ProtectedRoute>
             }
           />

@@ -43,14 +43,20 @@ export function NavMain({
     if (!item.items) {
       return location.pathname === item.url;
     }
-    return item.items.some((subItem) =>
-      location.pathname.startsWith(subItem.url)
+    return item.items.some(
+      (subItem) =>
+        location.pathname === subItem.url ||
+        location.pathname.startsWith(subItem.url + "/")
     );
   };
 
   // Función para verificar si un subitem está activo
   const isSubItemActive = (url: string): boolean => {
-    return location.pathname.startsWith(url);
+    // Coincidencia exacta o coincidencia con sub-ruta (seguida de /)
+    return (
+      location.pathname === url ||
+      location.pathname.startsWith(url + "/")
+    );
   };
 
   // Efecto para abrir automáticamente el collapsible que contiene la ruta actual

@@ -140,7 +140,8 @@ export interface getPurchaseCreditNoteProps {
 // ===== CONSTANTS =====
 
 export const PURCHASE_CREDIT_NOTE_ENDPOINT = "/purchase-credit-note";
-export const PURCHASE_CREDIT_NOTE_TYPES_ENDPOINT = "/purchase-credit-note-types";
+export const PURCHASE_CREDIT_NOTE_TYPES_ENDPOINT =
+  "/purchase-credit-note-types";
 export const PURCHASE_CREDIT_NOTE_QUERY_KEY = "purchase-credit-notes";
 
 // ===== ROUTES =====
@@ -172,13 +173,13 @@ export const NC_CURRENCIES = [
 
 // ===== MODEL COMPLETE =====
 
-const NAME = "Nota de Crédito de Compra";
+const NAME = "Nota Crédito Compra";
 
 export const PURCHASE_CREDIT_NOTE: ModelComplete<PurchaseCreditNoteResource> = {
   MODEL: {
     name: NAME,
     description: "Gestión de notas de crédito de compras.",
-    plural: "Notas de Crédito de Compras",
+    plural: "Nota Crédito Compra",
     gender: false,
   },
   ICON: "FileText",

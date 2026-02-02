@@ -226,7 +226,6 @@ export default function PurchaseCreditNoteEditPage() {
         onSubmit={handleSubmit}
         onCancel={() => navigate(ROUTE)}
         isSubmitting={isSubmitting}
-        mode="update"
         purchases={purchasesOptions}
         suppliers={suppliersOptions}
         warehouses={warehousesOptions}

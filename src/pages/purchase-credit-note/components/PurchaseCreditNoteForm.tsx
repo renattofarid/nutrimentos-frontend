@@ -44,7 +44,6 @@ interface PurchaseCreditNoteFormProps {
   onSubmit: (data: PurchaseCreditNoteSchema) => void;
   onCancel?: () => void;
   isSubmitting?: boolean;
-  mode?: "create" | "update";
   purchases?: Array<{ value: string; label: string }>;
   suppliers?: Array<{ value: string; label: string }>;
   warehouses?: Array<{ value: string; label: string }>;
@@ -58,7 +57,6 @@ export const PurchaseCreditNoteForm = ({
   onSubmit,
   onCancel,
   isSubmitting = false,
-  mode = "create",
   purchases = [],
   suppliers = [],
   warehouses = [],

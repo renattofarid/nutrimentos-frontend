@@ -163,7 +163,6 @@ export default function PurchaseCreditNoteAddPage() {
         onSubmit={handleSubmit}
         onCancel={() => navigate(ROUTE)}
         isSubmitting={isSubmitting}
-        mode="create"
         purchases={purchasesOptions}
         suppliers={suppliersOptions}
         warehouses={warehousesOptions}

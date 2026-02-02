@@ -29,6 +29,15 @@ import {
   NC_DOCUMENT_TYPES,
   NC_CURRENCIES,
 } from "../lib/purchase-credit-note.interface";
+import { GroupFormSection } from "@/components/GroupFormSection";
+import {
+  FileText,
+  ShoppingCart,
+  FileCheck,
+  MessageSquare,
+  DollarSign,
+  Package,
+} from "lucide-react";
 
 interface PurchaseCreditNoteFormProps {
   defaultValues: Partial<PurchaseCreditNoteSchema>;
@@ -89,6 +98,7 @@ export const PurchaseCreditNoteForm = ({
 
   const isDetailed = form.watch("is_detailed");
   const watchPurchaseId = form.watch("purchase_id");
+  const watchSubtotal = form.watch("subtotal");
 
   // Cuando cambia purchase_id, notificar al padre
   useEffect(() => {
@@ -115,15 +125,39 @@ export const PurchaseCreditNoteForm = ({
         }));
       replace(mappedDetails);
 
-      // Auto-fill supplier
+      // Auto-fill supplier and warehouse
       form.setValue(
         "supplier_id",
         selectedPurchase.supplier_id.toString(),
+      );
+      form.setValue(
+        "warehouse_id",
+        selectedPurchase.warehouse_id.toString(),
+      );
+
+      // Auto-fill affected document fields from purchase
+      form.setValue("affected_document_type", selectedPurchase.document_type);
+      form.setValue("affected_document_number", selectedPurchase.document_number);
+      form.setValue(
+        "affected_issue_date",
+        format(new Date(selectedPurchase.issue_date), "yyyy-MM-dd"),
       );
     } else if (isDetailed) {
       replace([]);
     }
   }, [selectedPurchase, replace, isDetailed]);
+
+  // Calcular IGV y total automáticamente en modo consolidado
+  useEffect(() => {
+    if (!isDetailed && watchSubtotal !== undefined) {
+      const subtotal = Number(watchSubtotal) || 0;
+      const igv = subtotal * 0.18;
+      const total = subtotal * 1.18;
+
+      form.setValue("tax_amount", Number(igv.toFixed(2)));
+      form.setValue("total_amount", Number(total.toFixed(2)));
+    }
+  }, [watchSubtotal, isDetailed, form]);
 
   // Limpiar al cambiar modo
   useEffect(() => {
@@ -168,24 +202,32 @@ export const PurchaseCreditNoteForm = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-4 w-full"
+        className="space-y-6 w-full"
       >
         {/* Modo de NC */}
-        <div className="bg-sidebar p-4 rounded-lg">
+        <GroupFormSection
+          title="Tipo de Nota de Crédito"
+          icon={FileText}
+          cols={{ sm: 1, md: 1 }}
+        >
           <FormSwitch
             control={form.control}
             name="is_detailed"
-            label="Tipo de Nota de Crédito"
+            label="Modo de Nota de Crédito"
             text={
               isDetailed
                 ? "Detallada - Asociada a una compra específica"
                 : "Consolidada - Sin compra asociada (montos manuales)"
             }
           />
-        </div>
+        </GroupFormSection>
 
-        {/* Campos principales */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sidebar p-4 rounded-lg">
+        {/* Información General */}
+        <GroupFormSection
+          title="Información General"
+          icon={ShoppingCart}
+          cols={{ sm: 1, md: 2, lg: 3 }}
+        >
           {isDetailed && (
             <FormSelect
               control={form.control}
@@ -211,6 +253,7 @@ export const PurchaseCreditNoteForm = ({
             label="Almacén"
             placeholder="Seleccione un almacén"
             options={warehouses}
+            disabled={isDetailed && !!selectedPurchase}
           />
 
           <DatePickerFormField
@@ -243,10 +286,14 @@ export const PurchaseCreditNoteForm = ({
             placeholder="Seleccione moneda"
             options={currencyOptions}
           />
-        </div>
+        </GroupFormSection>
 
-        {/* Documento afectado */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-sidebar p-4 rounded-lg">
+        {/* Documento Afectado */}
+        <GroupFormSection
+          title="Documento Afectado"
+          icon={FileCheck}
+          cols={{ sm: 1, md: 3 }}
+        >
           <FormSelect
             control={form.control}
             name="affected_document_type"
@@ -262,10 +309,7 @@ export const PurchaseCreditNoteForm = ({
               <FormItem>
                 <FormLabel>N° Doc. Afectado</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Ej: F001-00001234"
-                    {...field}
-                  />
+                  <Input placeholder="Ej: F001-00001234" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -278,10 +322,14 @@ export const PurchaseCreditNoteForm = ({
             label="Fecha Doc. Afectado"
             placeholder="Seleccione la fecha"
           />
-        </div>
+        </GroupFormSection>
 
-        {/* Descripción y observaciones */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sidebar p-4 rounded-lg">
+        {/* Descripciones */}
+        <GroupFormSection
+          title="Descripciones"
+          icon={MessageSquare}
+          cols={{ sm: 1, md: 2 }}
+        >
           <FormField
             control={form.control}
             name="credit_note_description"
@@ -319,7 +367,7 @@ export const PurchaseCreditNoteForm = ({
               </FormItem>
             )}
           />
-        </div>
+        </GroupFormSection>
 
         {/* Resumen de la compra seleccionada (modo detallada) */}
         {isDetailed && selectedPurchase && (
@@ -384,102 +432,90 @@ export const PurchaseCreditNoteForm = ({
 
         {/* Montos consolidada */}
         {!isDetailed && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Montos</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Ingrese los montos para la nota de crédito consolidada
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="subtotal"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Subtotal</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                          value={field.value ?? ""}
-                          onChange={(e) =>
-                            field.onChange(parseFloat(e.target.value) || 0)
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <GroupFormSection
+            title="Montos"
+            icon={DollarSign}
+            cols={{ sm: 1, md: 3 }}
+          >
+            <FormField
+              control={form.control}
+              name="subtotal"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Subtotal</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(parseFloat(e.target.value) || 0)
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <FormField
-                  control={form.control}
-                  name="tax_amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>IGV</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                          value={field.value ?? ""}
-                          onChange={(e) =>
-                            field.onChange(parseFloat(e.target.value) || 0)
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <FormField
+              control={form.control}
+              name="tax_amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>IGV</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(parseFloat(e.target.value) || 0)
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <FormField
-                  control={form.control}
-                  name="total_amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Total</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                          value={field.value ?? ""}
-                          onChange={(e) =>
-                            field.onChange(parseFloat(e.target.value) || 0)
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
+            <FormField
+              control={form.control}
+              name="total_amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Total</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(parseFloat(e.target.value) || 0)
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </GroupFormSection>
         )}
 
         {/* Detalles seleccionables (modo detallada) */}
         {isDetailed && fields.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">
-                Detalles de la Nota de Crédito
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Seleccione los productos y ajuste las cantidades/precios para
-                incluir en la nota de crédito
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+          <GroupFormSection
+            title="Detalles de la Nota de Crédito"
+            icon={Package}
+            cols={{ sm: 1, md: 1 }}
+          >
+            <div className="col-span-full space-y-4">
                 {fields.map((field, index) => {
                   const detail = selectedPurchase?.details[index];
                   if (!detail) return null;
@@ -663,7 +699,6 @@ export const PurchaseCreditNoteForm = ({
                     </div>
                   );
                 })}
-              </div>
               {form.formState.errors.details && (
                 <p className="text-sm text-destructive mt-2">
                   {typeof form.formState.errors.details === "object" &&
@@ -672,8 +707,8 @@ export const PurchaseCreditNoteForm = ({
                     : (form.formState.errors.details as any)?.message}
                 </p>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </GroupFormSection>
         )}
 
         <div className="flex gap-4 w-full justify-end">

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { format } from "date-fns";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { PurchaseCreditNoteForm } from "./PurchaseCreditNoteForm";
 import { type PurchaseCreditNoteSchema } from "../lib/purchase-credit-note.schema";
@@ -142,10 +143,13 @@ export default function PurchaseCreditNoteEditPage() {
         supplier_id: Number(data.supplier_id),
         warehouse_id: data.warehouse_id ? Number(data.warehouse_id) : null,
         document_type: data.document_type,
-        issue_date: data.issue_date,
+        issue_date: format(new Date(data.issue_date), "yyyy-MM-dd"),
         affected_document_type: data.affected_document_type,
         affected_document_number: data.affected_document_number,
-        affected_issue_date: data.affected_issue_date,
+        affected_issue_date: format(
+          new Date(data.affected_issue_date),
+          "yyyy-MM-dd",
+        ),
         credit_note_type_id: Number(data.credit_note_type_id),
         credit_note_description: data.credit_note_description || null,
         currency: data.currency || "PEN",

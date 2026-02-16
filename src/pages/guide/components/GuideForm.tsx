@@ -172,6 +172,14 @@ export const GuideForm = ({
 
   const selectedBranchId = form.watch("branch_id");
 
+  // Setear automáticamente la primera tienda si solo hay una
+  useEffect(() => {
+    if (branches.length === 1 && !selectedBranchId) {
+      form.setValue("branch_id", branches[0].id.toString());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branches]);
+
   // Filtrar warehouses por branch
   useEffect(() => {
     if (selectedBranchId) {

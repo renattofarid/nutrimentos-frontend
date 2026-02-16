@@ -91,14 +91,14 @@ export function FormSelectAsync({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [allOptions, setAllOptions] = useState<Option[]>(
-    defaultOption ? [defaultOption] : []
+    defaultOption ? [defaultOption] : [],
   );
   const [selectedOption, setSelectedOption] = useState<Option | null>(
-    defaultOption || null
+    defaultOption || null,
   );
   const scrollRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined
+    undefined,
   );
 
   // Hook de consulta con parámetros dinámicos
@@ -146,7 +146,7 @@ export function FormSelectAsync({
           // Evitar duplicados
           const existingIds = new Set(prev.map((opt) => opt.value));
           const uniqueNew = newOptions.filter(
-            (opt) => !existingIds.has(opt.value)
+            (opt) => !existingIds.has(opt.value),
           );
           return [...prev, ...uniqueNew];
         });
@@ -171,7 +171,7 @@ export function FormSelectAsync({
         setPage((prev) => prev + 1);
       }
     },
-    [isLoading, isFetching, data?.meta?.last_page, page]
+    [isLoading, isFetching, data?.meta?.last_page, page],
   );
 
   // Reset cuando se cierra el popover
@@ -242,7 +242,7 @@ export function FormSelectAsync({
                       className={cn(
                         "w-full justify-between min-h-10 flex",
                         !field.value && "text-muted-foreground",
-                        className
+                        className,
                       )}
                     >
                       <span className="text-nowrap! line-clamp-1">
@@ -258,7 +258,7 @@ export function FormSelectAsync({
                 </PopoverTrigger>
 
                 <PopoverContent
-                  className="p-0 w-(--radix-popover-trigger-width)!"
+                  className="p-0 min-w-(--radix-popover-trigger-width)! w-auto"
                   onWheel={(e) => e.stopPropagation()}
                   onWheelCapture={(e) => e.stopPropagation()}
                   onTouchMove={(e) => e.stopPropagation()}
@@ -304,7 +304,7 @@ export function FormSelectAsync({
                                 if (onValueChange) {
                                   const selectedItem = data?.data?.find(
                                     (item) =>
-                                      mapOptionFn(item).value === option.value
+                                      mapOptionFn(item).value === option.value,
                                   );
                                   onValueChange(newValue, selectedItem);
                                 }
@@ -316,7 +316,7 @@ export function FormSelectAsync({
                                   "mr-2 h-4 w-4 shrink-0",
                                   option.value === field.value
                                     ? "opacity-100"
-                                    : "opacity-0"
+                                    : "opacity-0",
                                 )}
                               />
                               <div className="flex flex-col min-w-0 flex-1">

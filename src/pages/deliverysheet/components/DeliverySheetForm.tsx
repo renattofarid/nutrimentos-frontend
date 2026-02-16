@@ -12,7 +12,6 @@ import { Loader, Search, Info, List } from "lucide-react";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
 import { FormSelect } from "@/components/FormSelect";
-import { FormSwitch } from "@/components/FormSwitch";
 import {
   FormField,
   FormItem,
@@ -92,16 +91,16 @@ export const DeliverySheetForm = ({
   const form = useForm<DeliverySheetSchema>({
     resolver: zodResolver(deliverySheetSchemaCreate) as any,
     defaultValues: {
-      branch_id: defaultValues.branch_id || "",
+      branch_id: defaultValues.branch_id || (branches.length > 0 ? branches[0].id.toString() : ""),
       zone_id: defaultValues.zone_id || "",
       driver_id: defaultValues.driver_id || "",
       customer_id: defaultValues.customer_id || "",
-      type: defaultValues.type || "",
+      type: defaultValues.type || "CONTADO",
       issue_date: defaultValues.issue_date,
       delivery_date: defaultValues.delivery_date,
       sale_ids: defaultValues.sale_ids || [],
       observations: defaultValues.observations || "",
-      for_single_customer: defaultValues.for_single_customer ?? true,
+      for_single_customer: defaultValues.for_single_customer ?? false,
     },
   });
 
@@ -238,13 +237,6 @@ export const DeliverySheetForm = ({
               value: type.value,
               label: type.label,
             }))}
-          />
-
-          <FormSwitch
-            control={form.control}
-            name="for_single_customer"
-            label="Tipo de Planilla"
-            text="Cliente Único"
           />
 
           {forSingleCustomer ? (

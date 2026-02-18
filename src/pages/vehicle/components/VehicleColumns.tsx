@@ -47,6 +47,10 @@ export const VehicleColumns = ({
     cell: ({ getValue }) => <span>{getValue() as string} kg</span>,
   },
   {
+    accessorKey: "mtc",
+    header: "MTC",
+  },
+  {
     accessorKey: "status",
     header: "Estado",
     cell: ({ getValue }) => {

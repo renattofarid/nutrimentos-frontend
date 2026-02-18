@@ -32,6 +32,7 @@ interface FormInputProps extends Omit<
   addonStart?: React.ReactNode;
   addonEnd?: React.ReactNode;
   error?: string;
+  uppercase?: boolean;
 }
 
 export function FormInput({
@@ -48,6 +49,7 @@ export function FormInput({
   error,
   value,
   onChange,
+  uppercase,
   ...inputProps
 }: FormInputProps) {
   const isNumberType = inputProps.type === "number";
@@ -68,22 +70,30 @@ export function FormInput({
           } as React.ChangeEvent<HTMLInputElement>;
           onChange(syntheticEvent);
         } else {
-          onChange(e);
+          const val = uppercase ? e.target.value.toUpperCase() : e.target.value;
+          const syntheticEvent = {
+            ...e,
+            target: {
+              ...e.target,
+              value: val,
+            },
+          } as React.ChangeEvent<HTMLInputElement>;
+          onChange(syntheticEvent);
         }
       }
     };
 
     return (
-      <div className="flex flex-col justify-start gap-2">
+      <div className="flex flex-col justify-between">
         {label && (
-          <label className="flex justify-start items-center text-xs md:text-sm mb-1 font-medium leading-none">
+          <label className="flex justify-start items-center text-xs md:text-sm mb-1 leading-none h-fit font-medium text-muted-foreground">
             {label}
             {required && <RequiredField />}
             {tooltip && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Badge
-                    variant="tertiary"
+                    color="tertiary"
                     className="ml-2 p-0 aspect-square w-4 h-4 text-center justify-center"
                   >
                     ?
@@ -104,7 +114,7 @@ export function FormInput({
             <Input
               name={name}
               className={cn(
-                "h-8 md:h-9 text-xs md:text-sm",
+                "h-8 md:h-10 text-xs md:text-sm",
                 addonStart && "pl-10",
                 addonEnd && "pr-10",
                 className,
@@ -144,20 +154,23 @@ export function FormInput({
             // Permitir string vacío temporalmente
             field.onChange(val === "" ? "" : Number(val));
           } else {
-            field.onChange(e);
+            const val = uppercase
+              ? e.target.value.toUpperCase()
+              : e.target.value;
+            field.onChange(val);
           }
         };
 
         return (
           <FormItem className="flex flex-col justify-between">
-            <FormLabel className="flex justify-start items-center">
+            <FormLabel className="flex justify-start items-center text-xs md:text-sm leading-none h-fit dark:text-muted-foreground">
               {label}
               {required && <RequiredField />}
               {tooltip && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Badge
-                      variant="tertiary"
+                      color="tertiary"
                       className="ml-2 p-0 aspect-square w-4 h-4 text-center justify-center"
                     >
                       ?
@@ -177,7 +190,7 @@ export function FormInput({
                 <FormControl>
                   <Input
                     className={cn(
-                      "h-8 md:h-9 text-xs md:text-sm",
+                      "text-xs md:text-sm",
                       addonStart && "pl-10",
                       addonEnd && "pr-10",
                       className,

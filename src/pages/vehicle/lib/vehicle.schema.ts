@@ -68,6 +68,13 @@ export const vehicleSchemaCreate = z.object({
       })
   ),
   owner_id: requiredStringId("El proveedor es requerido"),
+  mtc: z
+    .string()
+    .max(100, {
+      message: "El MTC no puede tener más de 100 caracteres",
+    })
+    .optional()
+    .or(z.literal("")),
   observations: z
     .string()
     .max(500, {

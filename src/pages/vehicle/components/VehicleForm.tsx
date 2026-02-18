@@ -18,10 +18,9 @@ import {
   type VehicleSchema,
 } from "../lib/vehicle.schema.ts";
 import { Loader } from "lucide-react";
-import { useAllSuppliers } from "@/pages/supplier/lib/supplier.hook";
-import { FormSelect } from "@/components/FormSelect";
+import { useSuppliers } from "@/pages/supplier/lib/supplier.hook";
 import { FormInput } from "@/components/FormInput";
-import type { Option } from "@/lib/core.interface";
+import { FormSelectAsync } from "@/components/FormSelectAsync.tsx";
 
 interface VehicleFormProps {
   defaultValues: Partial<VehicleSchema>;
@@ -38,11 +37,9 @@ export const VehicleForm = ({
   isSubmitting = false,
   mode = "create",
 }: VehicleFormProps) => {
-  const { data: suppliers } = useAllSuppliers();
-
   const form = useForm({
     resolver: zodResolver(
-      mode === "create" ? vehicleSchemaCreate : vehicleSchemaUpdate
+      mode === "create" ? vehicleSchemaCreate : vehicleSchemaUpdate,
     ),
     defaultValues: {
       plate: "",
@@ -53,18 +50,12 @@ export const VehicleForm = ({
       vehicle_type: "",
       max_weight: 0,
       owner_id: "",
+      mtc: "-",
       observations: "",
       ...defaultValues,
     },
     mode: "onChange",
   });
-
-  // Convertir suppliers a opciones para FormSelect
-  const supplierOptions: Option[] =
-    suppliers?.map((supplier) => ({
-      value: supplier.id.toString(),
-      label: `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`,
-    })) || [];
 
   return (
     <Form {...form}>
@@ -77,7 +68,9 @@ export const VehicleForm = ({
             placeholder="Ej: ABC-123"
             className="font-mono uppercase"
             maxLength={20}
-            onChange={(e) => form.setValue("plate", e.target.value.toUpperCase())}
+            onChange={(e) =>
+              form.setValue("plate", e.target.value.toUpperCase())
+            }
           />
 
           <FormInput
@@ -124,12 +117,27 @@ export const VehicleForm = ({
             placeholder="Ej: 100"
           />
 
-          <FormSelect
+          <FormSelectAsync
             control={form.control}
             name="owner_id"
             label="Proveedor"
             placeholder="Seleccione un proveedor"
-            options={supplierOptions}
+            useQueryHook={useSuppliers}
+            mapOptionFn={(supplier) => ({
+              value: supplier.id.toString(),
+              label: supplier.business_name
+                ? supplier.business_name
+                : `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`,
+            })}
+            preloadItemId={defaultValues.owner_id}
+          />
+
+          <FormInput
+            control={form.control}
+            name="mtc"
+            label="MTC"
+            placeholder="Ej: MTC-123456"
+            uppercase
           />
 
           <FormField
@@ -157,7 +165,7 @@ export const VehicleForm = ({
             Cancelar
           </Button>
 
-         <Button
+          <Button
             size="sm"
             type="submit"
             disabled={isSubmitting || !form.formState.isValid}

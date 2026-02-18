@@ -500,6 +500,11 @@ const data = {
           url: CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
           icon: ReportsIcon,
         },
+         {
+          title: "Reportes",
+          url: '/reportes',
+          icon: ReportsIcon,
+        },
       ],
     },
   ],

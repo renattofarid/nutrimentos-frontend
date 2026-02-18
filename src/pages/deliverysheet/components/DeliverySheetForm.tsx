@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
-import { format, parse } from "date-fns";
+import { format, parse, startOfMonth } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { DELIVERY_SHEET_TYPES } from "../lib/deliverysheet.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
@@ -82,8 +82,8 @@ export const DeliverySheetForm = ({
     zone_id: "",
     customer_id: "",
     person_zone_id: "",
-    date_from: undefined as Date | undefined,
-    date_to: undefined as Date | undefined,
+    date_from: startOfMonth(new Date()) as Date | undefined,
+    date_to: new Date() as Date | undefined,
   });
 
   const form = useForm<DeliverySheetSchema>({

@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {  useMemo } from "react";
+import { useMemo } from "react";
 import {
   Form,
   FormField,
@@ -472,6 +472,23 @@ export const GuideForm = ({
             placeholder="Seleccione fecha"
           />
 
+          <FormSelectAsync
+            control={form.control}
+            name="ubigeo_origin_id"
+            label="Ubigeo de Origen"
+            placeholder="Buscar ubigeo..."
+            useQueryHook={useUbigeosFrom}
+            additionalParams={{
+              per_page: 1300,
+            }}
+            mapOptionFn={(item: UbigeoResource) => ({
+              value: item.id.toString(),
+              label: item.name,
+              description: item.cadena,
+            })}
+            preloadItemId={defaultValues.ubigeo_origin_id}
+          />
+
           <FormField
             control={form.control}
             name="origin_address"
@@ -493,10 +510,10 @@ export const GuideForm = ({
 
           <FormSelectAsync
             control={form.control}
-            name="ubigeo_origin_id"
-            label="Ubigeo de Origen"
+            name="ubigeo_destination_id"
+            label="Ubigeo de Destino"
             placeholder="Buscar ubigeo..."
-            useQueryHook={useUbigeosFrom}
+            useQueryHook={useUbigeosTo}
             mapOptionFn={(item: UbigeoResource) => ({
               value: item.id.toString(),
               label: item.name,
@@ -523,24 +540,11 @@ export const GuideForm = ({
             )}
           />
 
-          <FormSelectAsync
-            control={form.control}
-            name="ubigeo_destination_id"
-            label="Ubigeo de Destino"
-            placeholder="Buscar ubigeo..."
-            useQueryHook={useUbigeosTo}
-            mapOptionFn={(item: UbigeoResource) => ({
-              value: item.id.toString(),
-              label: item.name,
-              description: item.cadena,
-            })}
-          />
-
           <FormField
             control={form.control}
             name="observations"
             render={({ field }) => (
-              <FormItem className="md:col-span-2">
+              <FormItem className="col-span-full">
                 <FormLabel>Observaciones (Opcional)</FormLabel>
                 <FormControl>
                   <Input
@@ -656,8 +660,7 @@ export const GuideForm = ({
           {/* Selector de Conductor */}
           <FormItem className="md:col-span-2">
             <FormLabel>
-              Buscar Conductor{" "}
-              {modalityValue === "PUBLICO" ? "" : "(Opcional)"}
+              Buscar Conductor {modalityValue === "PUBLICO" ? "" : "(Opcional)"}
             </FormLabel>
             <div className="flex gap-2">
               <div className="flex-1">
@@ -1098,7 +1101,7 @@ export const GuideForm = ({
         </GroupFormSection>
 
         {/* Botones */}
-        <div className="flex gap-4 w-full justify-end">
+        <div className="flex gap-4 w-full justify-end col-span-full">
           <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             Cancelar
           </Button>

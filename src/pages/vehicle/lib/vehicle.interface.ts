@@ -43,6 +43,7 @@ export const VEHICLE: ModelComplete<VehicleResource> = {
     vehicle_type: "",
     max_weight: "",
     status: "",
+    mtc: "",
     observations: "",
     owner: null,
     created_at: "",
@@ -65,6 +66,7 @@ export interface VehicleResource {
   vehicle_type: string;
   max_weight: string;
   status: string;
+  mtc: string;
   observations: string;
   owner: {
     id: number;

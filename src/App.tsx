@@ -114,6 +114,7 @@ import { PURCHASE_CREDIT_NOTE } from "./pages/purchase-credit-note/lib/purchase-
 import PurchaseCreditNotePage from "./pages/purchase-credit-note/components/PurchaseCreditNotePage";
 import PurchaseCreditNoteAddPage from "./pages/purchase-credit-note/components/PurchaseCreditNoteAddPage";
 import PurchaseCreditNoteEditPage from "./pages/purchase-credit-note/components/PurchaseCreditNoteEditPage";
+import ReportsPage from "./pages/reportes/page";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -856,6 +857,15 @@ export default function App() {
             element={
               <ProtectedRoute path={CUSTOMER_ACCOUNT_STATEMENT_ROUTE}>
                 <CustomerAccountStatementPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Reportes */}
+          <Route
+            path="reportes"
+            element={
+              <ProtectedRoute path="reportes">
+                <ReportsPage />
               </ProtectedRoute>
             }
           />

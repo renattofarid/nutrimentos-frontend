@@ -121,8 +121,9 @@ export function FormSelect({
                     role="combobox"
                     disabled={disabled}
                     className={cn(
-                      "w-full justify-between min-h-7 flex",
-                      !field.value && "text-muted-foreground"
+                      "w-full justify-between min-h-7 flex min-w-0",
+                      !field.value && "text-muted-foreground",
+                      field.value && "bg-muted",
                     )}
                   >
                     <span className="!text-nowrap line-clamp-1">
@@ -138,7 +139,7 @@ export function FormSelect({
               </PopoverTrigger>
 
               <PopoverContent
-                className="p-0 !w-(--radix-popover-trigger-width)"
+                className="p-0 !min-w-(--radix-popover-trigger-width) w-auto"
                 onWheel={(e) => e.stopPropagation()}
                 onWheelCapture={(e) => e.stopPropagation()}
                 onTouchMove={(e) => e.stopPropagation()}
@@ -207,11 +208,13 @@ export function FormSelect({
                                   "mr-2 h-4 w-4 shrink-0",
                                   option.value === field.value
                                     ? "opacity-100"
-                                    : "opacity-0"
+                                    : "opacity-0",
                                 )}
                               />
                               <div className="flex flex-col min-w-0 flex-1">
-                                <span className={cn("truncate", classNameOption)}>
+                                <span
+                                  className={cn("truncate", classNameOption)}
+                                >
                                   {typeof option.label === "function"
                                     ? option.label()
                                     : option.label}
@@ -269,11 +272,13 @@ export function FormSelect({
                                     "mr-2 h-4 w-4 shrink-0",
                                     option.value === field.value
                                       ? "opacity-100"
-                                      : "opacity-0"
+                                      : "opacity-0",
                                   )}
                                 />
                                 <div className="flex flex-col min-w-0 flex-1">
-                                  <span className={cn("truncate", classNameOption)}>
+                                  <span
+                                    className={cn("truncate", classNameOption)}
+                                  >
                                     {typeof option.label === "function"
                                       ? option.label()
                                       : option.label}
@@ -335,7 +340,7 @@ export function FormSelect({
                               "mr-2 h-4 w-4 shrink-0",
                               option.value === field.value
                                 ? "opacity-100"
-                                : "opacity-0"
+                                : "opacity-0",
                             )}
                           />
                           <div className="flex flex-col min-w-0 flex-1">

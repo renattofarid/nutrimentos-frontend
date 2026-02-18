@@ -20,6 +20,10 @@ export const PersonColumns = ({
   // onManageRoles: (person: PersonResource) => void;
 }): ColumnDef<PersonResource>[] => [
   {
+    accessorKey: "id",
+    header: "ID",
+  },
+  {
     accessorKey: "full_name",
     header: "Nombre Completo",
     cell: ({ row }) => {

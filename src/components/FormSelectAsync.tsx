@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Control } from "react-hook-form";
+import { useController } from "react-hook-form";
 import { useState, useEffect, useRef, useCallback } from "react";
 import React from "react";
 import {
@@ -49,7 +50,7 @@ interface FormSelectAsyncProps {
   // Props específicos para async
   useQueryHook: (params: {
     search?: string;
-    page?: number;
+    2?: number;
     per_page?: number;
     [key: string]: any;
   }) => {
@@ -63,6 +64,7 @@ interface FormSelectAsyncProps {
   defaultOption?: Option; // Opción inicial para mostrar cuando se edita
   additionalParams?: Record<string, any>; // Parámetros adicionales para el hook
   onValueChange?: (value: string, item?: any) => void; // Callback cuando cambia el valor
+  preloadItemId?: string; // ID del item a precargar buscando en todas las páginas
 }
 
 export function FormSelectAsync({
@@ -85,21 +87,25 @@ export function FormSelectAsync({
   defaultOption,
   additionalParams = {},
   onValueChange,
+  preloadItemId,
 }: FormSelectAsyncProps) {
+  const { field: controlField } = useController({ name, control });
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [allOptions, setAllOptions] = useState<Option[]>(
-    defaultOption ? [defaultOption] : []
+    defaultOption ? [defaultOption] : [],
   );
   const [selectedOption, setSelectedOption] = useState<Option | null>(
-    defaultOption || null
+    defaultOption || null,
   );
   const scrollRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined
+    undefined,
   );
+  const rawItemsMap = useRef<Map<string, any>>(new Map());
+  const hasAutoSelected = useRef(false);
 
   // Hook de consulta con parámetros dinámicos
   const { data, isLoading, isFetching } = useQueryHook({
@@ -139,6 +145,12 @@ export function FormSelectAsync({
     if (data?.data) {
       const newOptions = data.data.map(mapOptionFn);
 
+      // Store raw items for reliable lookup in onValueChange
+      for (const item of data.data) {
+        const opt = mapOptionFn(item);
+        rawItemsMap.current.set(opt.value, item);
+      }
+
       if (page === 1) {
         setAllOptions(newOptions);
       } else {
@@ -146,13 +158,54 @@ export function FormSelectAsync({
           // Evitar duplicados
           const existingIds = new Set(prev.map((opt) => opt.value));
           const uniqueNew = newOptions.filter(
-            (opt) => !existingIds.has(opt.value)
+            (opt) => !existingIds.has(opt.value),
           );
           return [...prev, ...uniqueNew];
         });
       }
     }
   }, [data, page, mapOptionFn]);
+
+  // Precargar item específico buscando en todas las páginas
+  useEffect(() => {
+    if (
+      preloadItemId &&
+      !isLoading &&
+      !isFetching &&
+      data?.meta?.last_page &&
+      page < data.meta.last_page
+    ) {
+      // Verificar si el item ya está cargado
+      const itemFound = allOptions.some((opt) => opt.value === preloadItemId);
+
+      if (!itemFound) {
+        // Cargar siguiente página para buscar el item
+        setPage((prev) => prev + 1);
+      }
+    }
+  }, [
+    preloadItemId,
+    allOptions,
+    isLoading,
+    isFetching,
+    data?.meta?.last_page,
+    page,
+  ]);
+
+  // Auto-seleccionar el item de preloadItemId cuando aparece en las opciones
+  useEffect(() => {
+    if (!preloadItemId || hasAutoSelected.current || controlField.value) return;
+    const found = allOptions.find((opt) => opt.value === preloadItemId);
+    if (found) {
+      hasAutoSelected.current = true;
+      controlField.onChange(preloadItemId);
+      setSelectedOption(found);
+      if (onValueChange) {
+        const rawItem = rawItemsMap.current.get(preloadItemId);
+        onValueChange(preloadItemId, rawItem);
+      }
+    }
+  }, [allOptions, preloadItemId, controlField, onValueChange]);
 
   // Manejar scroll para cargar más
   const handleScroll = useCallback(
@@ -171,7 +224,7 @@ export function FormSelectAsync({
         setPage((prev) => prev + 1);
       }
     },
-    [isLoading, isFetching, data?.meta?.last_page, page]
+    [isLoading, isFetching, data?.meta?.last_page, page],
   );
 
   // Reset cuando se cierra el popover
@@ -196,16 +249,6 @@ export function FormSelectAsync({
           (field.value && selectedOption?.value === field.value
             ? selectedOption
             : null);
-
-        // Actualizar cache cuando se encuentra la opción seleccionada
-        if (field.value && selected && selected !== selectedOption) {
-          setSelectedOption(selected);
-        }
-
-        // Limpiar cache si no hay valor seleccionado
-        if (!field.value && selectedOption) {
-          setSelectedOption(null);
-        }
 
         return (
           <FormItem className="flex flex-col justify-between">
@@ -240,9 +283,10 @@ export function FormSelectAsync({
                       role="combobox"
                       disabled={disabled}
                       className={cn(
-                        "w-full justify-between min-h-10 flex",
+                        "w-full justify-between min-h-7 flex min-w-0",
                         !field.value && "text-muted-foreground",
-                        className
+                        field.value && "bg-muted",
+                        className,
                       )}
                     >
                       <span className="text-nowrap! line-clamp-1">
@@ -258,7 +302,7 @@ export function FormSelectAsync({
                 </PopoverTrigger>
 
                 <PopoverContent
-                  className="p-0 w-(--radix-popover-trigger-width)!"
+                  className="p-0 min-w-(--radix-popover-trigger-width)! w-auto"
                   onWheel={(e) => e.stopPropagation()}
                   onWheelCapture={(e) => e.stopPropagation()}
                   onTouchMove={(e) => e.stopPropagation()}
@@ -300,11 +344,12 @@ export function FormSelectAsync({
                                     ? ""
                                     : option.value;
                                 field.onChange(newValue);
+                                // Actualizar cache de la opción seleccionada
+                                setSelectedOption(newValue ? option : null);
                                 // Llamar onValueChange si existe, pasando el item completo
                                 if (onValueChange) {
-                                  const selectedItem = data?.data?.find(
-                                    (item) =>
-                                      mapOptionFn(item).value === option.value
+                                  const selectedItem = rawItemsMap.current.get(
+                                    option.value,
                                   );
                                   onValueChange(newValue, selectedItem);
                                 }
@@ -316,7 +361,7 @@ export function FormSelectAsync({
                                   "mr-2 h-4 w-4 shrink-0",
                                   option.value === field.value
                                     ? "opacity-100"
-                                    : "opacity-0"
+                                    : "opacity-0",
                                 )}
                               />
                               <div className="flex flex-col min-w-0 flex-1">

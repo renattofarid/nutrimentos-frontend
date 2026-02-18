@@ -53,6 +53,7 @@ export default function VehicleModal({
     max_weight: parseFloat(data?.max_weight || "0"),
     owner_id: data?.owner?.id?.toString() || "",
     observations: data?.observations || "",
+    mtc: data?.mtc || "-",
   });
 
   const { isSubmitting, updateVehicle, createVehicle } = useVehicleStore();

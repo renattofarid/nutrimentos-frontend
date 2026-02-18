@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import {
   Form,
   FormField,
@@ -21,19 +21,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader, Truck, MapPin, Search, Plus, Info } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader, Truck, MapPin, Search, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import { FormSelect } from "@/components/FormSelect";
-import { SelectSearchForm } from "@/components/SelectSearchForm";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { FormInput } from "@/components/FormInput";
 import { Checkbox } from "@/components/ui/checkbox";
 import { guideSchema, type GuideSchema } from "../lib/guide.schema";
-import { searchUbigeos } from "../lib/ubigeo.actions";
 import type { UbigeoResource } from "../lib/ubigeo.interface";
 import { searchRUC, isValidData } from "@/lib/document-search.service";
 import {
@@ -52,9 +49,11 @@ import { format } from "date-fns";
 import { getSalesByRange } from "@/pages/sale/lib/sale.actions";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import { toast } from "sonner";
-import { useAllDrivers } from "@/pages/driver/lib/driver.hook";
+import { useDrivers } from "@/pages/driver/lib/driver.hook";
 import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
 import { successToast } from "@/lib/core.function";
+import { FormSelectAsync } from "@/components/FormSelectAsync";
+import { useUbigeosFrom, useUbigeosTo } from "../lib/ubigeo.hook";
 
 interface GuideFormProps {
   defaultValues: Partial<GuideSchema>;
@@ -86,16 +85,6 @@ export const GuideForm = ({
     WarehouseResource[]
   >([]);
 
-  // Estado local para ubigeos de origen
-  const [originUbigeos, setOriginUbigeos] = useState<UbigeoResource[]>([]);
-  const [isSearchingOrigin, setIsSearchingOrigin] = useState(false);
-
-  // Estado local para ubigeos de destino
-  const [destinationUbigeos, setDestinationUbigeos] = useState<
-    UbigeoResource[]
-  >([]);
-  const [isSearchingDestination, setIsSearchingDestination] = useState(false);
-
   // Estados para búsqueda de ventas por rango
   const [salesByRange, setSalesByRange] = useState<SaleResource[]>([]);
   const [selectedSales, setSelectedSales] = useState<number[]>([]);
@@ -108,59 +97,15 @@ export const GuideForm = ({
     numero_fin: "",
   });
 
-  // Cargar conductores y transportistas
-  const { data: drivers, refetch: refetchDrivers } = useAllDrivers();
+  // Cargar transportistas
   const { data: carriers, refetch: refetchCarriers } = useAllCarriers();
 
   useEffect(() => {
-    refetchDrivers();
     refetchCarriers();
   }, []);
 
   // Estado para búsqueda de transportista
   const [isSearchingCarrier, setIsSearchingCarrier] = useState(false);
-
-  // Estado para conductor seleccionado
-  const [selectedDriverId, setSelectedDriverId] = useState<string>("");
-
-  const formatUbigeoLabel = (ubigeo: UbigeoResource): string => {
-    const parts = ubigeo.cadena.split("-");
-    if (parts.length >= 4) {
-      return `${parts[1]} > ${parts[2]} > ${parts[3]}`;
-    }
-    return ubigeo.cadena;
-  };
-
-  // Función para buscar ubigeos de origen
-  const handleSearchOriginUbigeos = useCallback(async (cadena?: string) => {
-    setIsSearchingOrigin(true);
-    try {
-      const response = await searchUbigeos(cadena, 15);
-      setOriginUbigeos(response.data);
-    } catch (error) {
-      console.error("Error searching origin ubigeos:", error);
-      setOriginUbigeos([]);
-    } finally {
-      setIsSearchingOrigin(false);
-    }
-  }, []);
-
-  // Función para buscar ubigeos de destino
-  const handleSearchDestinationUbigeos = useCallback(
-    async (cadena?: string) => {
-      setIsSearchingDestination(true);
-      try {
-        const response = await searchUbigeos(cadena, 15);
-        setDestinationUbigeos(response.data);
-      } catch (error) {
-        console.error("Error searching destination ubigeos:", error);
-        setDestinationUbigeos([]);
-      } finally {
-        setIsSearchingDestination(false);
-      }
-    },
-    [],
-  );
 
   const form = useForm({
     resolver: zodResolver(guideSchema) as any,
@@ -171,6 +116,15 @@ export const GuideForm = ({
   });
 
   const selectedBranchId = form.watch("branch_id");
+  const modalityValue = form.watch("modality");
+
+  // Setear automáticamente la primera tienda si solo hay una
+  useEffect(() => {
+    if (branches.length === 1 && !selectedBranchId) {
+      form.setValue("branch_id", branches[0].id.toString());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branches]);
 
   // Filtrar warehouses por branch
   useEffect(() => {
@@ -243,6 +197,21 @@ export const GuideForm = ({
       setIsSearchingCarrier(false);
     }
   };
+
+  // Comportamiento al cambiar modalidad
+  useEffect(() => {
+    if (modalityValue === "PUBLICO") {
+      const currentRuc = form.getValues("carrier_document_number");
+      if (!currentRuc || currentRuc.length !== 11) {
+        form.setValue("carrier_document_number", "20480386460");
+        setTimeout(() => handleSearchCarrierDocument(), 100);
+      }
+    } else if (modalityValue === "PRIVADO") {
+      form.setValue("carrier_document_number", "");
+      form.setValue("carrier_name", "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalityValue]);
 
   // Función para buscar ventas por rango
   const handleSearchSalesByRange = async () => {
@@ -408,17 +377,32 @@ export const GuideForm = ({
     return customer?.person_zones || [];
   }, [customerValue, customers]);
 
+  // Setear automáticamente la primera person_zone cuando se selecciona un cliente y solo hay una
+  useEffect(() => {
+    if (customerValue && selectedCustomerAddresses.length === 1) {
+      setSearchParams((prev) => ({
+        ...prev,
+        person_zone_id: selectedCustomerAddresses[0].id.toString(),
+      }));
+    } else if (!customerValue) {
+      setSearchParams((prev) => ({
+        ...prev,
+        person_zone_id: "",
+      }));
+    }
+  }, [customerValue, selectedCustomerAddresses]);
+
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleFormSubmit)}
-        className="space-y-6 w-full"
+        className="w-full grid grid-cols-1 md:grid-cols-2 gap-6"
       >
-        {/* Información General */}
+        {/* Información de la Guía */}
         <GroupFormSection
-          title="Información General"
+          title="Información de la Guía"
           icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
+          cols={{ sm: 1, md: 2, lg: 3 }}
         >
           <FormSelect
             control={form.control}
@@ -497,231 +481,24 @@ export const GuideForm = ({
             label="Fecha de Traslado"
             placeholder="Seleccione fecha"
           />
-        </GroupFormSection>
 
-        {/* Información del Transportista y Conductor */}
-        <GroupFormSection
-          title="Información del Transportista y Conductor"
-          icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
-        >
-          <FormField
+          <FormSelectAsync
             control={form.control}
-            name="carrier_document_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>RUC del Transportista</FormLabel>
-                <div className="flex gap-2">
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder="Ingrese 11 dígitos"
-                      {...field}
-                      maxLength={11}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, "");
-                        field.onChange(value);
-
-                        // Auto-search cuando se completa el RUC
-                        if (value.length === 11) {
-                          setTimeout(() => handleSearchCarrierDocument(), 100);
-                        }
-                      }}
-                    />
-                  </FormControl>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleSearchCarrierDocument}
-                    disabled={
-                      isSearchingCarrier ||
-                      !field.value ||
-                      field.value.length !== 11
-                    }
-                  >
-                    {isSearchingCarrier ? (
-                      <Loader className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Search className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
+            name="ubigeo_origin_id"
+            label="Ubigeo de Origen"
+            placeholder="Buscar ubigeo..."
+            useQueryHook={useUbigeosFrom}
+            additionalParams={{
+              per_page: 1300,
+            }}
+            mapOptionFn={(item: UbigeoResource) => ({
+              value: item.id.toString(),
+              label: item.name,
+              description: item.cadena,
+            })}
+            preloadItemId={defaultValues.ubigeo_origin_id}
           />
 
-          <FormField
-            control={form.control}
-            name="carrier_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nombre del Transportista</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Transportes SAC"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="carrier_mtc_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Número MTC</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: MTC-123456"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="vehicle_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Vehículo (Opcional)</FormLabel>
-                <FormControl>
-                  <SearchableSelect
-                    className="md:w-full"
-                    buttonSize="default"
-                    options={vehicles.map((vehicle) => ({
-                      value: vehicle.id.toString(),
-                      label: `${vehicle.plate} - ${vehicle.brand} ${vehicle.model}`,
-                      description: vehicle.vehicle_type || "",
-                    }))}
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    placeholder="Seleccionar vehículo..."
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Selector de Conductor */}
-          <FormItem>
-            <FormLabel>Conductor</FormLabel>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <SearchableSelect
-                  className="md:w-full"
-                  buttonSize="default"
-                  options={
-                    drivers?.map((driver) => ({
-                      value: driver.id.toString(),
-                      label:
-                        driver.business_name ||
-                        `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
-                      description: driver.number_document || "",
-                    })) || []
-                  }
-                  value={selectedDriverId}
-                  onChange={(value) => {
-                    setSelectedDriverId(value);
-                    const selectedDriver = drivers?.find(
-                      (d) => d.id.toString() === value,
-                    );
-                    if (selectedDriver) {
-                      const docType =
-                        selectedDriver.document_type_name ||
-                        (selectedDriver.number_document?.length === 8
-                          ? "DNI"
-                          : "CE");
-                      form.setValue("driver_document_type", docType);
-                      form.setValue(
-                        "driver_document_number",
-                        selectedDriver.number_document || "",
-                      );
-                      const fullName =
-                        selectedDriver.business_name ||
-                        `${selectedDriver.names} ${selectedDriver.father_surname} ${selectedDriver.mother_surname}`.trim();
-                      form.setValue("driver_name", fullName);
-                    }
-                  }}
-                  placeholder="Buscar conductor..."
-                />
-              </div>
-              <Button type="button" variant="outline" size="icon" asChild>
-                <Link to={DRIVER.ROUTE_ADD} target="_blank">
-                  <Plus className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </FormItem>
-
-          {/* Alert con datos del conductor seleccionado */}
-          {selectedDriverId &&
-            (() => {
-              const driver = drivers?.find(
-                (d) => d.id.toString() === selectedDriverId,
-              );
-              if (!driver) return null;
-              const fullName =
-                driver.business_name ||
-                `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
-              const docType =
-                driver.document_type_name ||
-                (driver.number_document?.length === 8 ? "DNI" : "CE");
-              return (
-                <Alert className="md:col-span-4">
-                  <Info className="h-4 w-4" />
-                  <AlertTitle>Datos del Conductor</AlertTitle>
-                  <AlertDescription>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                      <div>
-                        <span className="text-muted-foreground text-xs">
-                          Nombre:
-                        </span>
-                        <p className="font-medium">{fullName}</p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground text-xs">
-                          Tipo Doc:
-                        </span>
-                        <p className="font-medium">{docType}</p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground text-xs">
-                          Nro. Documento:
-                        </span>
-                        <p className="font-medium">
-                          {driver.number_document || "-"}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground text-xs">
-                          Teléfono:
-                        </span>
-                        <p className="font-medium">{driver.phone || "-"}</p>
-                      </div>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              );
-            })()}
-        </GroupFormSection>
-
-        {/* Direcciones, Carga y Observaciones */}
-        <GroupFormSection
-          title="Direcciones, Carga y Observaciones"
-          icon={MapPin}
-          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
-        >
           <FormField
             control={form.control}
             name="origin_address"
@@ -741,21 +518,17 @@ export const GuideForm = ({
             )}
           />
 
-          <SelectSearchForm<UbigeoResource>
-            name="ubigeo_origin_id"
-            label="Ubigeo de Origen"
-            placeholder="Buscar ubigeo..."
+          <FormSelectAsync
             control={form.control}
-            searchPlaceholder="Buscar por nombre o código..."
-            emptyMessage="No se encontraron ubigeos"
-            minSearchLength={2}
-            debounceMs={300}
-            items={originUbigeos}
-            isSearching={isSearchingOrigin}
-            onSearch={handleSearchOriginUbigeos}
-            getItemId={(ubigeo) => ubigeo.id}
-            formatLabel={formatUbigeoLabel}
-            formatDescription={(ubigeo) => ubigeo.ubigeo_code}
+            name="ubigeo_destination_id"
+            label="Ubigeo de Destino"
+            placeholder="Buscar ubigeo..."
+            useQueryHook={useUbigeosTo}
+            mapOptionFn={(item: UbigeoResource) => ({
+              value: item.id.toString(),
+              label: item.name,
+              description: item.cadena,
+            })}
           />
 
           <FormField
@@ -777,21 +550,279 @@ export const GuideForm = ({
             )}
           />
 
-          <SelectSearchForm<UbigeoResource>
-            name="ubigeo_destination_id"
-            label="Ubigeo de Destino"
-            placeholder="Buscar ubigeo..."
+          <FormField
             control={form.control}
-            searchPlaceholder="Buscar por nombre o código..."
-            emptyMessage="No se encontraron ubigeos"
-            minSearchLength={2}
-            debounceMs={300}
-            items={destinationUbigeos}
-            isSearching={isSearchingDestination}
-            onSearch={handleSearchDestinationUbigeos}
-            getItemId={(ubigeo) => ubigeo.id}
-            formatLabel={formatUbigeoLabel}
-            formatDescription={(ubigeo) => ubigeo.ubigeo_code}
+            name="observations"
+            render={({ field }) => (
+              <FormItem className="col-span-full">
+                <FormLabel>Observaciones </FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Observaciones adicionales"
+                    className="w-full"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </GroupFormSection>
+
+        {/* Información del Transporte, Direcciones y Carga */}
+        <GroupFormSection
+          title="Información del Transporte, Direcciones y Carga"
+          icon={MapPin}
+          cols={{ sm: 1, md: 2, lg: 3 }}
+        >
+          {modalityValue !== "PRIVADO" && (
+            <FormField
+              control={form.control}
+              name="carrier_document_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    RUC del Transportista
+                    {modalityValue === "PUBLICO" ? "" : " "}
+                  </FormLabel>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input
+                        variant="default"
+                        placeholder="Ingrese 11 dígitos"
+                        {...field}
+                        maxLength={11}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, "");
+                          field.onChange(value);
+
+                          // Auto-search cuando se completa el RUC
+                          if (value.length === 11) {
+                            setTimeout(
+                              () => handleSearchCarrierDocument(),
+                              100,
+                            );
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={handleSearchCarrierDocument}
+                      disabled={
+                        isSearchingCarrier ||
+                        !field.value ||
+                        field.value.length !== 11
+                      }
+                    >
+                      {isSearchingCarrier ? (
+                        <Loader className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Search className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {modalityValue !== "PRIVADO" && (
+            <FormField
+              control={form.control}
+              name="carrier_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Nombre del Transportista
+                    {modalityValue === "PUBLICO" ? "" : " "}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      variant="default"
+                      placeholder="Ej: Transportes SAC"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {/* Selector de Conductor */}
+          <div className="md:col-span-2">
+            <FormSelectAsync
+              name="driver_id"
+              label="Conductor"
+              control={form.control}
+              placeholder="Buscar conductor..."
+              useQueryHook={useDrivers}
+              mapOptionFn={(driver) => ({
+                value: driver.id.toString(),
+                label:
+                  driver.business_name ||
+                  `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
+                description: driver.number_document || "",
+              })}
+              onValueChange={(_value, driver) => {
+                if (driver) {
+                  const docType =
+                    driver.document_type_name ||
+                    (driver.number_document?.length === 8 ? "DNI" : "CE");
+                  form.setValue("driver_document_type", docType);
+                  form.setValue(
+                    "driver_document_number",
+                    driver.number_document || "",
+                  );
+                  const fullName =
+                    driver.business_name ||
+                    `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
+                  form.setValue("driver_name", fullName);
+                }
+              }}
+              preloadItemId={"37"}
+            >
+              <Button type="button" variant="outline" size="icon" asChild>
+                <Link to={DRIVER.ROUTE_ADD} target="_blank">
+                  <Plus className="h-4 w-4" />
+                </Link>
+              </Button>
+            </FormSelectAsync>
+          </div>
+
+          <FormField
+            control={form.control}
+            name="vehicle_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Vehículo{modalityValue === "PUBLICO" ? "" : " "}
+                </FormLabel>
+                <FormControl>
+                  <SearchableSelect
+                    className="md:w-full"
+                    buttonSize="default"
+                    options={vehicles.map((vehicle) => ({
+                      value: vehicle.id.toString(),
+                      label: `${vehicle.plate} - ${vehicle.brand} ${vehicle.model}`,
+                      description: vehicle.vehicle_type || "",
+                    }))}
+                    value={field.value ?? ""}
+                    onChange={(value) => {
+                      field.onChange(value);
+                      const vehicle = vehicles.find(
+                        (v) => v.id.toString() === value,
+                      );
+                      if (vehicle?.mtc) {
+                        form.setValue("carrier_mtc_number", vehicle.mtc);
+                      }
+                    }}
+                    placeholder="Seleccionar vehículo..."
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="driver_document_type"
+            label={`Tipo de Documento del Conductor${modalityValue === "PUBLICO" ? "" : " "}`}
+            placeholder="Seleccione tipo"
+            options={[
+              { value: "DNI", label: "DNI" },
+              { value: "CE", label: "Carnet de Extranjería" },
+              { value: "PASAPORTE", label: "Pasaporte" },
+            ]}
+          />
+
+          <FormField
+            control={form.control}
+            name="driver_document_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Número de Documento del Conductor
+                  {modalityValue === "PUBLICO" ? "" : " "}
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Ej: 12345678"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="driver_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Nombre Completo del Conductor
+                  {modalityValue === "PUBLICO" ? "" : " "}
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Ej: Juan Pérez García"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="driver_license"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Licencia de Conducir
+                  {modalityValue === "PUBLICO" ? "" : " "}
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Ej: Q12345678"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="carrier_mtc_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Número MTC{modalityValue === "PUBLICO" ? "" : " "}
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    variant="default"
+                    placeholder="Ej: MTC-123456"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
           <FormSelect
@@ -845,29 +876,11 @@ export const GuideForm = ({
               </FormItem>
             )}
           />
-
-          <FormField
-            control={form.control}
-            name="observations"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Observaciones (Opcional)</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Observaciones adicionales"
-                    className="w-full"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </GroupFormSection>
 
         {/* Búsqueda de Ventas por Rango */}
         <GroupFormSection
+          className="col-span-full"
           title="Búsqueda de Ventas por Rango"
           icon={Search}
           cols={{ sm: 1 }}
@@ -1099,7 +1112,7 @@ export const GuideForm = ({
         </GroupFormSection>
 
         {/* Botones */}
-        <div className="flex gap-4 w-full justify-end">
+        <div className="flex gap-4 w-full justify-end col-span-full">
           <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             Cancelar
           </Button>

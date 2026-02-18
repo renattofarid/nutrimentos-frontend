@@ -36,10 +36,10 @@ export default function WorkerPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [roleAssignmentPerson, setRoleAssignmentPerson] =
     useState<PersonResource | null>(null);
-  const { data, meta, isLoading, refetch } = useWorkers();
+  const { data, isLoading, refetch } = useWorkers();
 
   useEffect(() => {
-    refetch({ page, search, per_page });
+    setPage(1);
   }, [page, search, per_page]);
 
   const handleDelete = async () => {
@@ -82,18 +82,18 @@ export default function WorkerPage() {
           onDelete: setDeleteId,
           // onManageRoles: handleManageRoles,
         })}
-        data={data || []}
+        data={data?.data || []}
       >
         <PersonOptions search={search} setSearch={setSearch} />
       </PersonTable>
 
       <DataTablePagination
         page={page}
-        totalPages={meta?.last_page || 1}
+        totalPages={data?.meta?.last_page || 1}
         onPageChange={setPage}
         per_page={per_page}
         setPerPage={setPerPage}
-        totalData={meta?.total || 0}
+        totalData={data?.meta?.total || 0}
       />
 
       {/* Role Assignment Modal */}
@@ -121,8 +121,8 @@ export default function WorkerPage() {
           open={true}
           onOpenChange={(open) => !open && setDeleteId(null)}
           onConfirm={handleDelete}
-        // title={`Eliminar ${MODEL.name}`}
-        // description={`¿Está seguro de que desea eliminar este ${MODEL.name.toLowerCase()}? Esta acción no se puede deshacer.`}
+          // title={`Eliminar ${MODEL.name}`}
+          // description={`¿Está seguro de que desea eliminar este ${MODEL.name.toLowerCase()}? Esta acción no se puede deshacer.`}
         />
       )}
     </div>

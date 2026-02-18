@@ -6,7 +6,6 @@ import TitleFormComponent from "@/components/TitleFormComponent";
 import { SaleForm } from "./SaleForm";
 import { type SaleSchema } from "../lib/sale.schema";
 import { useSaleStore } from "../lib/sales.store";
-import { useClients } from "@/pages/client/lib/client.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
@@ -30,11 +29,6 @@ export const SaleAddPage = () => {
     company_id: user?.company_id,
   });
   const {
-    data: customers,
-    isLoading: customersLoading,
-    refetch: onRefreshClients,
-  } = useClients();
-  const {
     data: warehouses,
     isLoading: warehousesLoading,
     refetch: onRefreshWarehouses,
@@ -46,7 +40,6 @@ export const SaleAddPage = () => {
   } = useAllProducts();
 
   useEffect(() => {
-    onRefreshClients();
     onRefreshWarehouses();
     onRefreshProducts();
   }, []);
@@ -58,8 +51,7 @@ export const SaleAddPage = () => {
 
   const { createSale } = useSaleStore();
 
-  const isLoading =
-    branchesLoading || customersLoading || warehousesLoading || productsLoading;
+  const isLoading = branchesLoading || warehousesLoading || productsLoading;
 
   const getDefaultValues = (): Partial<SaleSchema> => ({
     branch_id: "",
@@ -104,8 +96,6 @@ export const SaleAddPage = () => {
   const missingDependencies = [];
   if (!branches || branches.length === 0)
     missingDependencies.push("Sucursales");
-  if (!customers || customers.length === 0)
-    missingDependencies.push("Clientes");
   if (!warehouses || warehouses.length === 0)
     missingDependencies.push("Almacenes");
   if (!products || products.length === 0) missingDependencies.push("Productos");
@@ -142,11 +132,9 @@ export const SaleAddPage = () => {
           isSubmitting={isSubmitting}
           mode="create"
           branches={branches!}
-          customers={customers!}
           warehouses={warehouses!}
           products={products!}
           onCancel={() => navigate("/ventas")}
-          onRefreshClients={onRefreshClients}
         />
       )}
     </PageWrapper>

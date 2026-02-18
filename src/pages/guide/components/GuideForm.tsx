@@ -107,7 +107,6 @@ export const GuideForm = ({
   // Estado para búsqueda de transportista
   const [isSearchingCarrier, setIsSearchingCarrier] = useState(false);
 
-
   const form = useForm({
     resolver: zodResolver(guideSchema) as any,
     defaultValues: {
@@ -686,6 +685,7 @@ export const GuideForm = ({
                   form.setValue("driver_name", fullName);
                 }
               }}
+              preloadItemId={"37"}
             >
               <Button type="button" variant="outline" size="icon" asChild>
                 <Link to={DRIVER.ROUTE_ADD} target="_blank">
@@ -697,17 +697,32 @@ export const GuideForm = ({
 
           <FormField
             control={form.control}
-            name="carrier_mtc_number"
+            name="vehicle_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Número MTC{modalityValue === "PUBLICO" ? "" : " "}
+                  Vehículo{modalityValue === "PUBLICO" ? "" : " "}
                 </FormLabel>
                 <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: MTC-123456"
-                    {...field}
+                  <SearchableSelect
+                    className="md:w-full"
+                    buttonSize="default"
+                    options={vehicles.map((vehicle) => ({
+                      value: vehicle.id.toString(),
+                      label: `${vehicle.plate} - ${vehicle.brand} ${vehicle.model}`,
+                      description: vehicle.vehicle_type || "",
+                    }))}
+                    value={field.value ?? ""}
+                    onChange={(value) => {
+                      field.onChange(value);
+                      const vehicle = vehicles.find(
+                        (v) => v.id.toString() === value,
+                      );
+                      if (vehicle?.mtc) {
+                        form.setValue("carrier_mtc_number", vehicle.mtc);
+                      }
+                    }}
+                    placeholder="Seleccionar vehículo..."
                   />
                 </FormControl>
                 <FormMessage />
@@ -792,24 +807,17 @@ export const GuideForm = ({
 
           <FormField
             control={form.control}
-            name="vehicle_id"
+            name="carrier_mtc_number"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Vehículo{modalityValue === "PUBLICO" ? "" : " "}
+                  Número MTC{modalityValue === "PUBLICO" ? "" : " "}
                 </FormLabel>
                 <FormControl>
-                  <SearchableSelect
-                    className="md:w-full"
-                    buttonSize="default"
-                    options={vehicles.map((vehicle) => ({
-                      value: vehicle.id.toString(),
-                      label: `${vehicle.plate} - ${vehicle.brand} ${vehicle.model}`,
-                      description: vehicle.vehicle_type || "",
-                    }))}
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    placeholder="Seleccionar vehículo..."
+                  <Input
+                    variant="default"
+                    placeholder="Ej: MTC-123456"
+                    {...field}
                   />
                 </FormControl>
                 <FormMessage />

@@ -141,7 +141,7 @@ export default function GuideAddPage() {
     driver_document_type: "",
     driver_document_number: "",
     driver_name: "",
-    driver_license: "",
+    driver_license: "-",
     origin_address: "TUPAC AMARU MZ H1 LT. 4 CHOSICA DEL NORTE CHICLAYO",
     ubigeo_origin_id: "1243",
     destination_address: "",

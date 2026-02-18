@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Control } from "react-hook-form";
+import { useController } from "react-hook-form";
 import { useState, useEffect, useRef, useCallback } from "react";
 import React from "react";
 import {
@@ -88,6 +89,7 @@ export function FormSelectAsync({
   onValueChange,
   preloadItemId,
 }: FormSelectAsyncProps) {
+  const { field: controlField } = useController({ name, control });
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -103,6 +105,7 @@ export function FormSelectAsync({
     undefined,
   );
   const rawItemsMap = useRef<Map<string, any>>(new Map());
+  const hasAutoSelected = useRef(false);
 
   // Hook de consulta con parámetros dinámicos
   const { data, isLoading, isFetching } = useQueryHook({
@@ -188,6 +191,21 @@ export function FormSelectAsync({
     data?.meta?.last_page,
     page,
   ]);
+
+  // Auto-seleccionar el item de preloadItemId cuando aparece en las opciones
+  useEffect(() => {
+    if (!preloadItemId || hasAutoSelected.current || controlField.value) return;
+    const found = allOptions.find((opt) => opt.value === preloadItemId);
+    if (found) {
+      hasAutoSelected.current = true;
+      controlField.onChange(preloadItemId);
+      setSelectedOption(found);
+      if (onValueChange) {
+        const rawItem = rawItemsMap.current.get(preloadItemId);
+        onValueChange(preloadItemId, rawItem);
+      }
+    }
+  }, [allOptions, preloadItemId, controlField, onValueChange]);
 
   // Manejar scroll para cargar más
   const handleScroll = useCallback(

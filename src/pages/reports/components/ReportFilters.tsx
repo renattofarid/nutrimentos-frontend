@@ -24,14 +24,16 @@ interface ReportFiltersProps {
   fields: ReportField[];
   onSubmit: (values: ReportFilterValues) => void;
   isLoading?: boolean;
+  formats?: ReportFormat[];
 }
 
 export function ReportFilters({
   fields,
   onSubmit,
   isLoading,
+  formats = ["excel", "pdf"],
 }: ReportFiltersProps) {
-  const [format, setFormat] = useState<ReportFormat>("excel");
+  const [format, setFormat] = useState<ReportFormat>(formats[0]);
   // Construir el schema dinámicamente basado en los campos
   const buildSchema = () => {
     const schemaFields: Record<string, z.ZodTypeAny> = {};
@@ -133,28 +135,35 @@ export function ReportFilters({
 
         {/* Selector de formato y botón de descarga */}
         <div className="flex items-center justify-between">
-          <div className="inline-flex rounded-md shadow-sm" role="group">
-            <Button
-              type="button"
-              variant={format === "excel" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFormat("excel")}
-              className="rounded-r-none"
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-              <span className="ml-2">Excel</span>
-            </Button>
-            <Button
-              type="button"
-              variant={format === "pdf" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFormat("pdf")}
-              className="rounded-l-none border-l-0"
-            >
-              <FileText className="h-4 w-4" />
-              <span className="ml-2">PDF</span>
-            </Button>
-          </div>
+          {formats.length > 1 && (
+            <div className="inline-flex rounded-md shadow-sm" role="group">
+              {formats.includes("excel") && (
+                <Button
+                  type="button"
+                  variant={format === "excel" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFormat("excel")}
+                  className={formats.includes("pdf") ? "rounded-r-none" : ""}
+                >
+                  <FileSpreadsheet className="h-4 w-4" />
+                  <span className="ml-2">Excel</span>
+                </Button>
+              )}
+              {formats.includes("pdf") && (
+                <Button
+                  type="button"
+                  variant={format === "pdf" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFormat("pdf")}
+                  className={formats.includes("excel") ? "rounded-l-none border-l-0" : ""}
+                >
+                  <FileText className="h-4 w-4" />
+                  <span className="ml-2">PDF</span>
+                </Button>
+              )}
+            </div>
+          )}
+          {formats.length === 1 && <div />}
 
           <Button size={"sm"} type="submit" disabled={isLoading}>
             {isLoading ? (

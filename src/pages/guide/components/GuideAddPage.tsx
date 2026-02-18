@@ -129,7 +129,7 @@ export default function GuideAddPage() {
     customer_id: "",
     issue_date: "",
     transfer_date: "",
-    modality: "PUBLICO",
+    modality: "PRIVADO",
     motive_id: "",
     sale_document_number: "-",
     carrier_document_type: "RUC",

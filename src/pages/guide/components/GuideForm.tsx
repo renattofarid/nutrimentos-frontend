@@ -49,7 +49,7 @@ import { format } from "date-fns";
 import { getSalesByRange } from "@/pages/sale/lib/sale.actions";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import { toast } from "sonner";
-import { useAllDrivers } from "@/pages/driver/lib/driver.hook";
+import { useDrivers } from "@/pages/driver/lib/driver.hook";
 import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
 import { successToast } from "@/lib/core.function";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
@@ -97,20 +97,16 @@ export const GuideForm = ({
     numero_fin: "",
   });
 
-  // Cargar conductores y transportistas
-  const { data: drivers, refetch: refetchDrivers } = useAllDrivers();
+  // Cargar transportistas
   const { data: carriers, refetch: refetchCarriers } = useAllCarriers();
 
   useEffect(() => {
-    refetchDrivers();
     refetchCarriers();
   }, []);
 
   // Estado para búsqueda de transportista
   const [isSearchingCarrier, setIsSearchingCarrier] = useState(false);
 
-  // Estado para conductor seleccionado
-  const [selectedDriverId, setSelectedDriverId] = useState<string>("");
 
   const form = useForm({
     resolver: zodResolver(guideSchema) as any,
@@ -202,6 +198,21 @@ export const GuideForm = ({
       setIsSearchingCarrier(false);
     }
   };
+
+  // Comportamiento al cambiar modalidad
+  useEffect(() => {
+    if (modalityValue === "PUBLICO") {
+      const currentRuc = form.getValues("carrier_document_number");
+      if (!currentRuc || currentRuc.length !== 11) {
+        form.setValue("carrier_document_number", "20480386460");
+        setTimeout(() => handleSearchCarrierDocument(), 100);
+      }
+    } else if (modalityValue === "PRIVADO") {
+      form.setValue("carrier_document_number", "");
+      form.setValue("carrier_name", "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalityValue]);
 
   // Función para buscar ventas por rango
   const handleSearchSalesByRange = async () => {
@@ -545,7 +556,7 @@ export const GuideForm = ({
             name="observations"
             render={({ field }) => (
               <FormItem className="col-span-full">
-                <FormLabel>Observaciones (Opcional)</FormLabel>
+                <FormLabel>Observaciones </FormLabel>
                 <FormControl>
                   <Input
                     variant="default"
@@ -566,76 +577,123 @@ export const GuideForm = ({
           icon={MapPin}
           cols={{ sm: 1, md: 2, lg: 3 }}
         >
-          <FormField
-            control={form.control}
-            name="carrier_document_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  RUC del Transportista
-                  {modalityValue === "PUBLICO" ? "" : " (Opcional)"}
-                </FormLabel>
-                <div className="flex gap-2">
+          {modalityValue !== "PRIVADO" && (
+            <FormField
+              control={form.control}
+              name="carrier_document_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    RUC del Transportista
+                    {modalityValue === "PUBLICO" ? "" : " "}
+                  </FormLabel>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input
+                        variant="default"
+                        placeholder="Ingrese 11 dígitos"
+                        {...field}
+                        maxLength={11}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, "");
+                          field.onChange(value);
+
+                          // Auto-search cuando se completa el RUC
+                          if (value.length === 11) {
+                            setTimeout(
+                              () => handleSearchCarrierDocument(),
+                              100,
+                            );
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={handleSearchCarrierDocument}
+                      disabled={
+                        isSearchingCarrier ||
+                        !field.value ||
+                        field.value.length !== 11
+                      }
+                    >
+                      {isSearchingCarrier ? (
+                        <Loader className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Search className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {modalityValue !== "PRIVADO" && (
+            <FormField
+              control={form.control}
+              name="carrier_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Nombre del Transportista
+                    {modalityValue === "PUBLICO" ? "" : " "}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       variant="default"
-                      placeholder="Ingrese 11 dígitos"
+                      placeholder="Ej: Transportes SAC"
                       {...field}
-                      maxLength={11}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, "");
-                        field.onChange(value);
-
-                        // Auto-search cuando se completa el RUC
-                        if (value.length === 11) {
-                          setTimeout(() => handleSearchCarrierDocument(), 100);
-                        }
-                      }}
                     />
                   </FormControl>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleSearchCarrierDocument}
-                    disabled={
-                      isSearchingCarrier ||
-                      !field.value ||
-                      field.value.length !== 11
-                    }
-                  >
-                    {isSearchingCarrier ? (
-                      <Loader className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Search className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
-          <FormField
-            control={form.control}
-            name="carrier_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Nombre del Transportista
-                  {modalityValue === "PUBLICO" ? "" : " (Opcional)"}
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Transportes SAC"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Selector de Conductor */}
+          <div className="md:col-span-2">
+            <FormSelectAsync
+              name="driver_id"
+              label="Conductor"
+              control={form.control}
+              placeholder="Buscar conductor..."
+              useQueryHook={useDrivers}
+              mapOptionFn={(driver) => ({
+                value: driver.id.toString(),
+                label:
+                  driver.business_name ||
+                  `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
+                description: driver.number_document || "",
+              })}
+              onValueChange={(_value, driver) => {
+                if (driver) {
+                  const docType =
+                    driver.document_type_name ||
+                    (driver.number_document?.length === 8 ? "DNI" : "CE");
+                  form.setValue("driver_document_type", docType);
+                  form.setValue(
+                    "driver_document_number",
+                    driver.number_document || "",
+                  );
+                  const fullName =
+                    driver.business_name ||
+                    `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
+                  form.setValue("driver_name", fullName);
+                }
+              }}
+            >
+              <Button type="button" variant="outline" size="icon" asChild>
+                <Link to={DRIVER.ROUTE_ADD} target="_blank">
+                  <Plus className="h-4 w-4" />
+                </Link>
+              </Button>
+            </FormSelectAsync>
+          </div>
 
           <FormField
             control={form.control}
@@ -643,7 +701,7 @@ export const GuideForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Número MTC{modalityValue === "PUBLICO" ? "" : " (Opcional)"}
+                  Número MTC{modalityValue === "PUBLICO" ? "" : " "}
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -657,65 +715,10 @@ export const GuideForm = ({
             )}
           />
 
-          {/* Selector de Conductor */}
-          <FormItem className="md:col-span-2">
-            <FormLabel>
-              Buscar Conductor {modalityValue === "PUBLICO" ? "" : "(Opcional)"}
-            </FormLabel>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <SearchableSelect
-                  className="md:w-full"
-                  buttonSize="default"
-                  options={
-                    drivers?.map((driver) => ({
-                      value: driver.id.toString(),
-                      label:
-                        driver.business_name ||
-                        `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
-                      description: driver.number_document || "",
-                    })) || []
-                  }
-                  value={selectedDriverId}
-                  onChange={(value) => {
-                    setSelectedDriverId(value);
-                    const selectedDriver = drivers?.find(
-                      (d) => d.id.toString() === value,
-                    );
-                    if (selectedDriver) {
-                      const docType =
-                        selectedDriver.document_type_name ||
-                        (selectedDriver.number_document?.length === 8
-                          ? "DNI"
-                          : "CE");
-                      form.setValue("driver_document_type", docType);
-                      form.setValue(
-                        "driver_document_number",
-                        selectedDriver.number_document || "",
-                      );
-                      const fullName =
-                        selectedDriver.business_name ||
-                        `${selectedDriver.names} ${selectedDriver.father_surname} ${selectedDriver.mother_surname}`.trim();
-                      form.setValue("driver_name", fullName);
-                      // Si el conductor tiene licencia, también la llenamos
-                      // (actualmente el modelo no tiene este campo, se debe agregar manualmente)
-                    }
-                  }}
-                  placeholder="Buscar conductor..."
-                />
-              </div>
-              <Button type="button" variant="outline" size="icon" asChild>
-                <Link to={DRIVER.ROUTE_ADD} target="_blank">
-                  <Plus className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </FormItem>
-
           <FormSelect
             control={form.control}
             name="driver_document_type"
-            label={`Tipo de Documento del Conductor${modalityValue === "PUBLICO" ? "" : " (Opcional)"}`}
+            label={`Tipo de Documento del Conductor${modalityValue === "PUBLICO" ? "" : " "}`}
             placeholder="Seleccione tipo"
             options={[
               { value: "DNI", label: "DNI" },
@@ -731,7 +734,7 @@ export const GuideForm = ({
               <FormItem>
                 <FormLabel>
                   Número de Documento del Conductor
-                  {modalityValue === "PUBLICO" ? "" : " (Opcional)"}
+                  {modalityValue === "PUBLICO" ? "" : " "}
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -752,7 +755,7 @@ export const GuideForm = ({
               <FormItem>
                 <FormLabel>
                   Nombre Completo del Conductor
-                  {modalityValue === "PUBLICO" ? "" : " (Opcional)"}
+                  {modalityValue === "PUBLICO" ? "" : " "}
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -773,7 +776,7 @@ export const GuideForm = ({
               <FormItem>
                 <FormLabel>
                   Licencia de Conducir
-                  {modalityValue === "PUBLICO" ? "" : " (Opcional)"}
+                  {modalityValue === "PUBLICO" ? "" : " "}
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -793,7 +796,7 @@ export const GuideForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Vehículo{modalityValue === "PUBLICO" ? "" : " (Opcional)"}
+                  Vehículo{modalityValue === "PUBLICO" ? "" : " "}
                 </FormLabel>
                 <FormControl>
                   <SearchableSelect

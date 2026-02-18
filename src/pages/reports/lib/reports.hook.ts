@@ -32,10 +32,12 @@ export const useDownloadReport = () => {
     mutationFn: ({
       endpoint,
       params,
+      method,
     }: {
       endpoint: string;
       params: Record<string, any>;
-    }) => downloadReport(endpoint, params),
+      method?: "get" | "post";
+    }) => downloadReport(endpoint, params, method),
     onSuccess: () => {
       successToast("El reporte se ha descargado correctamente");
     },
@@ -67,6 +69,20 @@ export const useProductAsyncSearch = (params: {
   return useQuery({
     queryKey: ["products-async-search", params],
     queryFn: () => fetchSearchEndpoint("/product", params),
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useWarehouseAsyncSearch = (params: {
+  search?: string;
+  page?: number;
+  per_page?: number;
+  [key: string]: any;
+}) => {
+  return useQuery({
+    queryKey: ["warehouses-async-search", params],
+    queryFn: () => fetchSearchEndpoint("/warehouse", params),
     staleTime: 30 * 1000,
     refetchOnWindowFocus: false,
   });

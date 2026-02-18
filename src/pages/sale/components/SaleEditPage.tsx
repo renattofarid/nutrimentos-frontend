@@ -6,7 +6,6 @@ import TitleFormComponent from "@/components/TitleFormComponent";
 import { SaleForm } from "./SaleForm";
 import { type SaleUpdateSchema } from "../lib/sale.schema";
 import { useSaleStore } from "../lib/sales.store";
-import { useClients } from "@/pages/client/lib/client.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
@@ -25,11 +24,6 @@ export const SaleEditPage = () => {
   const { data: companies, isLoading: companiesLoading } = useAllCompanies();
   const { data: branches, isLoading: branchesLoading } = useAllBranches();
   const {
-    data: customers,
-    isLoading: customersLoading,
-    refetch: onRefreshClients,
-  } = useClients();
-  const {
     data: warehouses,
     isLoading: warehousesLoading,
     refetch: onRefreshWarehouses,
@@ -45,13 +39,11 @@ export const SaleEditPage = () => {
   const isLoading =
     companiesLoading ||
     branchesLoading ||
-    customersLoading ||
     warehousesLoading ||
     productsLoading ||
     isFinding;
 
   useEffect(() => {
-    onRefreshClients();
     onRefreshWarehouses();
     onRefreshProducts();
   }, []);
@@ -163,8 +155,6 @@ export const SaleEditPage = () => {
           companies.length > 0 &&
           branches &&
           branches.length > 0 &&
-          customers &&
-          customers.length > 0 &&
           warehouses &&
           warehouses.length > 0 &&
           products &&
@@ -175,12 +165,10 @@ export const SaleEditPage = () => {
               isSubmitting={isSubmitting}
               mode="update"
               branches={branches}
-              customers={customers}
               warehouses={warehouses}
               products={products}
               sale={sale}
               onCancel={() => navigate("/ventas")}
-              onRefreshClients={onRefreshClients}
             />
           )}
       </div>

@@ -72,6 +72,8 @@ export interface ReportConfig {
   description: string;
   icon?: string;
   endpoint: string;
+  method?: "get" | "post";
+  formats?: ReportFormat[];
   fields: ReportField[];
   // Parámetros adicionales que siempre se envían
   defaultParams?: Record<string, any>;
@@ -99,6 +101,7 @@ export function ReportCard({ report }: ReportCardProps) {
     downloadReport({
       endpoint: report.endpoint,
       params,
+      method: report.method,
     });
   };
 
@@ -148,11 +151,13 @@ export function ReportCard({ report }: ReportCardProps) {
         subtitle={report.description}
         icon={report.icon as keyof typeof LucideIcons}
         size="md"
+        side="left"
       >
         <ReportFilters
           fields={report.fields}
           onSubmit={handleDownload}
           isLoading={isPending}
+          formats={report.formats}
         />
       </GeneralSheet>
     </>

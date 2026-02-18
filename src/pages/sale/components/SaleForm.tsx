@@ -18,12 +18,17 @@ import {
   FileText,
 } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
+import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import type { SaleResource } from "../lib/sale.interface";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
+import { useClients } from "@/pages/client/lib/client.hook";
+import { CLIENT } from "@/pages/client/lib/client.interface";
+import { getPersonZones } from "@/pages/client/lib/personzone.actions";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { formatDecimalTrunc, parseFormattedNumber } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatCurrency";
@@ -53,11 +58,9 @@ interface SaleFormProps {
   isSubmitting?: boolean;
   mode?: "create" | "update";
   branches: BranchResource[];
-  customers: PersonResource[];
   warehouses: WarehouseResource[];
   products: ProductResource[];
   sale?: SaleResource;
-  onRefreshClients: () => void;
 }
 
 interface DetailRow {
@@ -88,10 +91,9 @@ export const SaleForm = ({
   isSubmitting = false,
   mode = "create",
   branches,
-  customers,
   warehouses,
   products,
-  onRefreshClients,
+  sale,
 }: SaleFormProps) => {
   const [filteredWarehouses, setFilteredWarehouses] = useState<
     WarehouseResource[]
@@ -109,6 +111,7 @@ export const SaleForm = ({
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
 
   const { fetchDynamicPrice } = useDynamicPrice();
+  const queryClient = useQueryClient();
 
   // Hook para obtener vendedores
   const { data: workers = [] } = useAllWorkers();
@@ -228,6 +231,27 @@ export const SaleForm = ({
         form.setValue("installments", initialInstallments);
       }
 
+      // Cargar zonas del cliente en modo edición
+      if (defaultValues.customer_id) {
+        getPersonZones(Number(defaultValues.customer_id)).then((zones) => {
+          if (zones && zones.length > 0) {
+            const mapped = zones.map((z) => ({
+              id: z.id,
+              zone_name: z.zone.name,
+              address: z.address,
+              is_primary: z.is_primary,
+            }));
+            setCustomerAddresses(mapped);
+            const primary = mapped.find((pz) => pz.is_primary);
+            if (primary) {
+              form.setValue("person_zone_id", primary.id.toString());
+            } else {
+              form.setValue("person_zone_id", mapped[0].id.toString());
+            }
+          }
+        });
+      }
+
       // Disparar validación después de setear valores en modo edición
       form.trigger();
     }
@@ -310,41 +334,21 @@ export const SaleForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedWarehouseId, products]);
 
-  // Efecto para actualizar direcciones cuando cambia el cliente
-  useEffect(() => {
-    if (selectedCustomerId) {
-      const customer = customers.find(
-        (c) => c.id.toString() === selectedCustomerId,
-      );
-      if (
-        customer &&
-        customer.person_zones &&
-        customer.person_zones.length > 0
-      ) {
-        setCustomerAddresses(customer.person_zones);
-        // Seleccionar automáticamente la dirección primaria
-        const primaryAddress = customer.person_zones.find(
-          (pz) => pz.is_primary,
-        );
-        if (primaryAddress) {
-          form.setValue("person_zone_id", primaryAddress.id.toString());
-        } else {
-          // Si no hay primaria, seleccionar la primera
-          form.setValue(
-            "person_zone_id",
-            customer.person_zones[0].id.toString(),
-          );
-        }
+  // Actualizar direcciones al seleccionar un cliente en el FormSelectAsync
+  const handleCustomerChange = (_value: string, item?: PersonResource) => {
+    if (item && item.person_zones && item.person_zones.length > 0) {
+      setCustomerAddresses(item.person_zones);
+      const primary = item.person_zones.find((pz) => pz.is_primary);
+      if (primary) {
+        form.setValue("person_zone_id", primary.id.toString());
       } else {
-        setCustomerAddresses([]);
-        form.setValue("person_zone_id", "");
+        form.setValue("person_zone_id", item.person_zones[0].id.toString());
       }
     } else {
       setCustomerAddresses([]);
       form.setValue("person_zone_id", "");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCustomerId, customers]);
+  };
 
   // Efecto para obtener serie y número automático
   useEffect(() => {
@@ -945,25 +949,31 @@ export const SaleForm = ({
 
           <div className="flex gap-2 items-end">
             <div className="truncate! flex-1">
-              <FormSelect
+              <FormSelectAsync
                 control={form.control}
                 name="customer_id"
                 label="Cliente"
                 placeholder="Seleccione un cliente"
-                options={customers.map((customer) => ({
+                useQueryHook={useClients}
+                mapOptionFn={(customer: PersonResource) => ({
                   value: customer.id.toString(),
                   label:
-                    customer.business_name ??
-                    customer.names +
-                      " " +
-                      customer.father_surname +
-                      " " +
-                      customer.mother_surname,
-                  description:
-                    (customer.number_document ?? "-") +
-                    " | " +
-                    (customer.zone_name ?? "-"),
-                }))}
+                    customer.business_name ||
+                    `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
+                  description: `${customer.number_document ?? "-"} | ${customer.zone_name ?? "-"}`,
+                })}
+                onValueChange={handleCustomerChange}
+                defaultOption={
+                  mode === "update" && sale?.customer
+                    ? {
+                        value: sale.customer.id.toString(),
+                        label:
+                          sale.customer.business_name ||
+                          `${sale.customer.names ?? ""} ${sale.customer.father_surname ?? ""} ${sale.customer.mother_surname ?? ""}`.trim(),
+                        description: sale.customer.number_document ?? "-",
+                      }
+                    : undefined
+                }
                 disabled={mode === "update"}
               />
             </div>
@@ -1287,7 +1297,7 @@ export const SaleForm = ({
         open={isClientDialogOpen}
         onOpenChange={setIsClientDialogOpen}
         onClientCreated={() => {
-          onRefreshClients?.();
+          queryClient.invalidateQueries({ queryKey: [CLIENT.QUERY_KEY] });
         }}
       />
     </Form>

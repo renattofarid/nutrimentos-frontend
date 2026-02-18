@@ -9,8 +9,8 @@ export default function ReportsPage() {
     <PageWrapper>
       {/* Header */}
       <TitleComponent
-        title="Reportes Comerciales"
-        subtitle="Visualiza y exporta reportes detallados de ventas, clientes y productos."
+        title="Reportes"
+        subtitle="Visualiza y exporta reportes detallados."
         icon="FileBarChart"
       />
 

@@ -154,6 +154,12 @@ export const DeliverySheetForm = ({
   }, [selectedSaleIds, form]);
 
   useEffect(() => {
+    if (branches.length > 0 && !form.getValues("branch_id")) {
+      form.setValue("branch_id", branches[0].id.toString());
+    }
+  }, [branches, form]);
+
+  useEffect(() => {
     if (typeValue) {
       setSearchParams((prev) => ({ ...prev, payment_type: typeValue }));
     }

@@ -6,11 +6,9 @@ import { useDeliverySheetStore } from "../lib/deliverysheet.store";
 import type { DeliverySheetSchema } from "../lib/deliverysheet.schema";
 import { DELIVERY_SHEET } from "../lib/deliverysheet.interface";
 import TitleFormComponent from "@/components/TitleFormComponent";
-import { useAllClients } from "@/pages/client/lib/client.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import FormWrapper from "@/components/FormWrapper";
-import { useAllDrivers } from "@/pages/driver/lib/driver.hook";
 import { useEffect } from "react";
 import { format } from "date-fns";
 
@@ -25,15 +23,11 @@ export default function DeliverySheetAddPage() {
   } = useDeliverySheetStore();
 
   const { data: allBranches = [], refetch: refetchBranches } = useAllBranches();
-  const { data: customers = [], refetch: refetchCustomers } = useAllClients();
   const { data: zones = [], refetch: refetchZones } = useAllZones();
-  const { data: drivers = [], refetch: refetchDrivers } = useAllDrivers();
 
   useEffect(() => {
     refetchBranches();
-    refetchCustomers();
     refetchZones();
-    refetchDrivers();
   }, []);
 
   const handleSubmit = async (data: DeliverySheetSchema) => {
@@ -81,6 +75,7 @@ export default function DeliverySheetAddPage() {
 
       <DeliverySheetForm
         defaultValues={{
+          driver_id: "37",
           issue_date: format(new Date(), "yyyy-MM-dd"),
           delivery_date: format(new Date(), "yyyy-MM-dd"),
         }}
@@ -90,8 +85,6 @@ export default function DeliverySheetAddPage() {
         mode="create"
         branches={allBranches || []}
         zones={zones || []}
-        drivers={drivers || []}
-        customers={customers || []}
         availableSales={availableSales || []}
         onSearchSales={handleSearchSales}
         isLoadingAvailableSales={isLoadingAvailableSales}

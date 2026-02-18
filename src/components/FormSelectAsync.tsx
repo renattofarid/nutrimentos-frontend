@@ -49,7 +49,7 @@ interface FormSelectAsyncProps {
   // Props específicos para async
   useQueryHook: (params: {
     search?: string;
-    page?: number;
+    2?: number;
     per_page?: number;
     [key: string]: any;
   }) => {
@@ -63,6 +63,7 @@ interface FormSelectAsyncProps {
   defaultOption?: Option; // Opción inicial para mostrar cuando se edita
   additionalParams?: Record<string, any>; // Parámetros adicionales para el hook
   onValueChange?: (value: string, item?: any) => void; // Callback cuando cambia el valor
+  preloadItemId?: string; // ID del item a precargar buscando en todas las páginas
 }
 
 export function FormSelectAsync({
@@ -85,6 +86,7 @@ export function FormSelectAsync({
   defaultOption,
   additionalParams = {},
   onValueChange,
+  preloadItemId,
 }: FormSelectAsyncProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -100,6 +102,7 @@ export function FormSelectAsync({
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
+  const rawItemsMap = useRef<Map<string, any>>(new Map());
 
   // Hook de consulta con parámetros dinámicos
   const { data, isLoading, isFetching } = useQueryHook({
@@ -139,6 +142,12 @@ export function FormSelectAsync({
     if (data?.data) {
       const newOptions = data.data.map(mapOptionFn);
 
+      // Store raw items for reliable lookup in onValueChange
+      for (const item of data.data) {
+        const opt = mapOptionFn(item);
+        rawItemsMap.current.set(opt.value, item);
+      }
+
       if (page === 1) {
         setAllOptions(newOptions);
       } else {
@@ -153,6 +162,32 @@ export function FormSelectAsync({
       }
     }
   }, [data, page, mapOptionFn]);
+
+  // Precargar item específico buscando en todas las páginas
+  useEffect(() => {
+    if (
+      preloadItemId &&
+      !isLoading &&
+      !isFetching &&
+      data?.meta?.last_page &&
+      page < data.meta.last_page
+    ) {
+      // Verificar si el item ya está cargado
+      const itemFound = allOptions.some((opt) => opt.value === preloadItemId);
+
+      if (!itemFound) {
+        // Cargar siguiente página para buscar el item
+        setPage((prev) => prev + 1);
+      }
+    }
+  }, [
+    preloadItemId,
+    allOptions,
+    isLoading,
+    isFetching,
+    data?.meta?.last_page,
+    page,
+  ]);
 
   // Manejar scroll para cargar más
   const handleScroll = useCallback(
@@ -197,16 +232,6 @@ export function FormSelectAsync({
             ? selectedOption
             : null);
 
-        // Actualizar cache cuando se encuentra la opción seleccionada
-        if (field.value && selected && selected !== selectedOption) {
-          setSelectedOption(selected);
-        }
-
-        // Limpiar cache si no hay valor seleccionado
-        if (!field.value && selectedOption) {
-          setSelectedOption(null);
-        }
-
         return (
           <FormItem className="flex flex-col justify-between">
             {label && typeof label === "function"
@@ -240,7 +265,7 @@ export function FormSelectAsync({
                       role="combobox"
                       disabled={disabled}
                       className={cn(
-                        "w-full justify-between min-h-10 flex",
+                        "w-full justify-between min-h-7 flex min-w-0",
                         !field.value && "text-muted-foreground",
                         className,
                       )}
@@ -300,11 +325,12 @@ export function FormSelectAsync({
                                     ? ""
                                     : option.value;
                                 field.onChange(newValue);
+                                // Actualizar cache de la opción seleccionada
+                                setSelectedOption(newValue ? option : null);
                                 // Llamar onValueChange si existe, pasando el item completo
                                 if (onValueChange) {
-                                  const selectedItem = data?.data?.find(
-                                    (item) =>
-                                      mapOptionFn(item).value === option.value,
+                                  const selectedItem = rawItemsMap.current.get(
+                                    option.value,
                                   );
                                   onValueChange(newValue, selectedItem);
                                 }

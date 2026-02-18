@@ -37,8 +37,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
+import { FormSelectAsync } from "@/components/FormSelectAsync";
+import { useDrivers } from "@/pages/driver/lib/driver.hook";
+import { useClients } from "@/pages/client/lib/client.hook";
 
 interface DeliverySheetFormProps {
   defaultValues: Partial<DeliverySheetSchema>;
@@ -48,8 +50,6 @@ interface DeliverySheetFormProps {
   mode?: "create" | "update";
   branches: BranchResource[];
   zones: ZoneResource[];
-  drivers: PersonResource[];
-  customers: PersonResource[];
   availableSales: AvailableSale[];
   onSearchSales: (params: {
     payment_type: string;
@@ -70,8 +70,6 @@ export const DeliverySheetForm = ({
   mode = "create",
   branches,
   zones,
-  drivers,
-  customers,
   availableSales,
   onSearchSales,
   isLoadingAvailableSales,
@@ -91,7 +89,9 @@ export const DeliverySheetForm = ({
   const form = useForm<DeliverySheetSchema>({
     resolver: zodResolver(deliverySheetSchemaCreate) as any,
     defaultValues: {
-      branch_id: defaultValues.branch_id || (branches.length > 0 ? branches[0].id.toString() : ""),
+      branch_id:
+        defaultValues.branch_id ||
+        (branches.length > 0 ? branches[0].id.toString() : ""),
       zone_id: defaultValues.zone_id || "",
       driver_id: defaultValues.driver_id || "",
       customer_id: defaultValues.customer_id || "",
@@ -217,15 +217,17 @@ export const DeliverySheetForm = ({
             disabled={mode === "update"}
           />
 
-          <FormSelect
+          <FormSelectAsync
             control={form.control}
             name="driver_id"
             label="Conductor"
-            placeholder="Seleccione un conductor"
-            options={drivers.map((driver) => ({
+            useQueryHook={useDrivers}
+            mapOptionFn={(driver) => ({
               value: driver.id.toString(),
               label: driver.names ?? driver.business_name,
-            }))}
+            })}
+            placeholder="Seleccione un conductor"
+            preloadItemId={defaultValues.driver_id}
           />
 
           <FormSelect
@@ -241,15 +243,16 @@ export const DeliverySheetForm = ({
 
           {forSingleCustomer ? (
             <>
-              <FormSelect
+              <FormSelectAsync
                 control={form.control}
                 name="customer_id"
                 label="Cliente"
                 placeholder="Seleccione un cliente"
-                options={customers.map((customer) => ({
+                useQueryHook={useClients}
+                mapOptionFn={(customer) => ({
                   value: customer.id.toString(),
                   label: customer.names ?? customer.business_name,
-                }))}
+                })}
               />
             </>
           ) : (
@@ -411,13 +414,18 @@ export const DeliverySheetForm = ({
                         <TableCell>
                           <Badge variant="outline">
                             {format(
-                              parse(sale.issue_date.split("T")[0], "yyyy-MM-dd", new Date()),
+                              parse(
+                                sale.issue_date.split("T")[0],
+                                "yyyy-MM-dd",
+                                new Date(),
+                              ),
                               "dd/MM/yyyy",
                             )}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right font-semibold">
-                          S/. {parseFormattedNumber(sale.total_amount).toFixed(2)}
+                          S/.{" "}
+                          {parseFormattedNumber(sale.total_amount).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     ))}

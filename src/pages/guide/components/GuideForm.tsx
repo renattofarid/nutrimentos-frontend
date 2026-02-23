@@ -284,7 +284,7 @@ export const GuideForm = ({
     const formattedDate = format(today, "yyyy-MM-dd");
     form.setValue("issue_date", formattedDate);
     form.setValue("transfer_date", formattedDate);
-    form.setValue("motive_id", "1");
+    form.setValue("motive_id", "3");
     form.setValue("carrier_document_type", "RUC");
   }, [form]);
 

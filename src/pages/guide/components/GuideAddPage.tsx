@@ -115,14 +115,14 @@ export default function GuideAddPage() {
     vehiclesLoading;
 
   const getDefaultValues = (): Partial<GuideSchema> => ({
-    branch_id: "",
-    warehouse_id: "",
+    branch_id: "1",
+    warehouse_id: "1",
     sale_ids: [],
     customer_id: "",
     issue_date: "",
     transfer_date: "",
     modality: "PRIVADO",
-    motive_id: "",
+    motive_id: "3",
     sale_document_number: "-",
     carrier_document_type: "RUC",
     carrier_document_number: "",

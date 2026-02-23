@@ -8,7 +8,15 @@ import {
   deliverySheetSchemaCreate,
   type DeliverySheetSchema,
 } from "../lib/deliverysheet.schema";
-import { Loader, Search, Info, List } from "lucide-react";
+import {
+  Loader,
+  Search,
+  Info,
+  List,
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+} from "lucide-react";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
 import { FormSelect } from "@/components/FormSelect";
@@ -70,6 +78,8 @@ export const DeliverySheetForm = ({
   const [selectedSaleIds, setSelectedSaleIds] = useState<number[]>(
     defaultValues.sale_ids || [],
   );
+  const [showMoreFields, setShowMoreFields] = useState(false);
+  const [showDateFilter, setShowDateFilter] = useState(false);
   const [searchParams, setSearchParams] = useState({
     payment_type: "",
     zone_id: "",
@@ -204,39 +214,10 @@ export const DeliverySheetForm = ({
           icon={Info}
           cols={{
             sm: 1,
-            md: 3,
-            lg: 4,
-            xl: 6,
+            md: 2,
+            lg: 3,
           }}
         >
-          <FormSelect
-            control={form.control}
-            name="branch_id"
-            label="Tienda"
-            placeholder="Seleccione una tienda"
-            options={
-              branches?.map((branch) => ({
-                value: branch.id.toString(),
-                label: branch.name,
-                description: branch.address,
-              })) || []
-            }
-            disabled={mode === "update"}
-          />
-
-          <FormSelectAsync
-            control={form.control}
-            name="driver_id"
-            label="Conductor"
-            useQueryHook={useDrivers}
-            mapOptionFn={(driver) => ({
-              value: driver.id.toString(),
-              label: driver.names ?? driver.business_name,
-            })}
-            placeholder="Seleccione un conductor"
-            preloadItemId={defaultValues.driver_id}
-          />
-
           <FormSelect
             control={form.control}
             name="type"
@@ -249,19 +230,17 @@ export const DeliverySheetForm = ({
           />
 
           {forSingleCustomer ? (
-            <>
-              <FormSelectAsync
-                control={form.control}
-                name="customer_id"
-                label="Cliente"
-                placeholder="Seleccione un cliente"
-                useQueryHook={useClients}
-                mapOptionFn={(customer) => ({
-                  value: customer.id.toString(),
-                  label: customer.names ?? customer.business_name,
-                })}
-              />
-            </>
+            <FormSelectAsync
+              control={form.control}
+              name="customer_id"
+              label="Cliente"
+              placeholder="Seleccione un cliente"
+              useQueryHook={useClients}
+              mapOptionFn={(customer) => ({
+                value: customer.id.toString(),
+                label: customer.names ?? customer.business_name,
+              })}
+            />
           ) : (
             <FormSelect
               control={form.control}
@@ -275,30 +254,79 @@ export const DeliverySheetForm = ({
             />
           )}
 
-          <DatePickerFormField
-            control={form.control}
-            name="issue_date"
-            label="Fecha de Emisión"
-            placeholder="Seleccione la fecha de emisión"
-            dateFormat="dd/MM/yyyy"
-          />
-
-          <DatePickerFormField
-            control={form.control}
-            name="delivery_date"
-            label="Fecha de Entrega"
-            placeholder="Seleccione la fecha de entrega"
-            dateFormat="dd/MM/yyyy"
-          />
-
           <div className="col-span-full">
-            <FormTextArea
-              control={form.control}
-              name="observations"
-              label="Observaciones"
-              placeholder="Ingrese observaciones (opcional)"
-            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground gap-1 px-0 hover:bg-transparent"
+              onClick={() => setShowMoreFields(!showMoreFields)}
+            >
+              {showMoreFields ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+              {showMoreFields ? "Menos opciones" : "Más opciones"}
+            </Button>
           </div>
+
+          {showMoreFields && (
+            <>
+              <FormSelect
+                control={form.control}
+                name="branch_id"
+                label="Tienda"
+                placeholder="Seleccione una tienda"
+                options={
+                  branches?.map((branch) => ({
+                    value: branch.id.toString(),
+                    label: branch.name,
+                    description: branch.address,
+                  })) || []
+                }
+                disabled={mode === "update"}
+              />
+
+              <FormSelectAsync
+                control={form.control}
+                name="driver_id"
+                label="Conductor"
+                useQueryHook={useDrivers}
+                mapOptionFn={(driver) => ({
+                  value: driver.id.toString(),
+                  label: driver.names ?? driver.business_name,
+                })}
+                placeholder="Seleccione un conductor"
+                preloadItemId={defaultValues.driver_id}
+              />
+
+              <DatePickerFormField
+                control={form.control}
+                name="issue_date"
+                label="Fecha de Emisión"
+                placeholder="Seleccione la fecha de emisión"
+                dateFormat="dd/MM/yyyy"
+              />
+
+              <DatePickerFormField
+                control={form.control}
+                name="delivery_date"
+                label="Fecha de Entrega"
+                placeholder="Seleccione la fecha de entrega"
+                dateFormat="dd/MM/yyyy"
+              />
+
+              <div className="col-span-full">
+                <FormTextArea
+                  control={form.control}
+                  name="observations"
+                  label="Observaciones"
+                  placeholder="Ingrese observaciones (opcional)"
+                />
+              </div>
+            </>
+          )}
         </GroupFormSection>
 
         <GroupFormSection
@@ -306,27 +334,13 @@ export const DeliverySheetForm = ({
           icon={Search}
           cols={{ sm: 1 }}
         >
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-              <div className="flex-1 w-full">
-                <DateRangePickerFilter
-                  dateFrom={searchParams.date_from}
-                  dateTo={searchParams.date_to}
-                  onDateChange={(dateFrom, dateTo) =>
-                    setSearchParams((prev) => ({
-                      ...prev,
-                      date_from: dateFrom,
-                      date_to: dateTo,
-                    }))
-                  }
-                />
-              </div>
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2 items-center">
               <Button
                 type="button"
                 onClick={handleSearchSales}
                 disabled={!searchParams.payment_type || isLoadingAvailableSales}
-                className="w-full sm:w-auto"
-                size={"sm"}
+                size="sm"
               >
                 {isLoadingAvailableSales ? (
                   <Loader className="mr-2 h-4 w-4 animate-spin" />
@@ -335,7 +349,35 @@ export const DeliverySheetForm = ({
                 )}
                 Buscar Ventas
               </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground gap-1"
+                onClick={() => setShowDateFilter(!showDateFilter)}
+              >
+                <Calendar className="h-4 w-4" />
+                Filtrar por fecha
+                {showDateFilter ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
             </div>
+            {showDateFilter && (
+              <DateRangePickerFilter
+                dateFrom={searchParams.date_from}
+                dateTo={searchParams.date_to}
+                onDateChange={(dateFrom, dateTo) =>
+                  setSearchParams((prev) => ({
+                    ...prev,
+                    date_from: dateFrom,
+                    date_to: dateTo,
+                  }))
+                }
+              />
+            )}
           </div>
         </GroupFormSection>
 
@@ -444,7 +486,12 @@ export const DeliverySheetForm = ({
 
         <div className="flex justify-end gap-4">
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onCancel}
+            >
               Cancelar
             </Button>
           )}

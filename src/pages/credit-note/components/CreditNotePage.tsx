@@ -21,14 +21,40 @@ const { MODEL, ICON } = CREDIT_NOTE;
 
 export default function CreditNotePage() {
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [motive_id, setMotiveId] = useState("");
+  const [customer_id, setCustomerId] = useState("");
+  const [issue_date_from, setIssueDateFrom] = useState<Date | undefined>();
+  const [issue_date_to, setIssueDateTo] = useState<Date | undefined>();
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const { data, meta, isLoading, refetch } = useCreditNote();
 
+  const buildParams = () => ({
+    page,
+    per_page,
+    full_document_number: search || undefined,
+    status: status || undefined,
+    credit_note_motive_id: motive_id ? Number(motive_id) : undefined,
+    customer_id: customer_id ? Number(customer_id) : undefined,
+    "issue_date[0]": issue_date_from
+      ? issue_date_from.toISOString().split("T")[0]
+      : undefined,
+    "issue_date[1]": issue_date_to
+      ? issue_date_to.toISOString().split("T")[0]
+      : undefined,
+  });
+
+  // Reset page when filters change
   useEffect(() => {
-    refetch({ page, search, per_page });
-  }, [page, search, per_page]);
+    if (page !== 1) setPage(1);
+  }, [search, status, motive_id, customer_id, issue_date_from, issue_date_to, per_page]);
+
+  // Refetch when any filter or page changes
+  useEffect(() => {
+    refetch(buildParams());
+  }, [page, per_page, search, status, motive_id, customer_id, issue_date_from, issue_date_to]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -57,6 +83,19 @@ export default function CreditNotePage() {
     }
   };
 
+  const exportFilters = {
+    full_document_number: search || undefined,
+    status: status || undefined,
+    credit_note_motive_id: motive_id ? Number(motive_id) : undefined,
+    customer_id: customer_id ? Number(customer_id) : undefined,
+    "issue_date[0]": issue_date_from
+      ? issue_date_from.toISOString().split("T")[0]
+      : undefined,
+    "issue_date[1]": issue_date_to
+      ? issue_date_to.toISOString().split("T")[0]
+      : undefined,
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -65,7 +104,7 @@ export default function CreditNotePage() {
           subtitle={MODEL.description}
           icon={ICON}
         />
-        <CreditNoteActions />
+        <CreditNoteActions filters={exportFilters} />
       </div>
 
       <CreditNoteTable
@@ -76,7 +115,22 @@ export default function CreditNotePage() {
         })}
         data={data || []}
       >
-        <CreditNoteOptions search={search} setSearch={setSearch} />
+        <CreditNoteOptions
+          search={search}
+          setSearch={setSearch}
+          status={status}
+          setStatus={setStatus}
+          motive_id={motive_id}
+          setMotiveId={setMotiveId}
+          customer_id={customer_id}
+          setCustomerId={setCustomerId}
+          issue_date_from={issue_date_from}
+          issue_date_to={issue_date_to}
+          onDateChange={(from, to) => {
+            setIssueDateFrom(from);
+            setIssueDateTo(to);
+          }}
+        />
       </CreditNoteTable>
 
       <DataTablePagination

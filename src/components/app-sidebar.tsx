@@ -56,6 +56,8 @@ import { DELIVERY_SHEET } from "@/pages/deliverysheet/lib/deliverysheet.interfac
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import {
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+  INVENTORY_REPORT_ROUTE,
+  KARDEX_REPORT_ROUTE,
   REPORTS,
 } from "@/pages/reports/lib/reports.interface";
 import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-credit-note.interface";
@@ -500,9 +502,14 @@ const data = {
           url: CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
           icon: ReportsIcon,
         },
-         {
-          title: "Reportes",
-          url: '/reportes',
+        {
+          title: "Inventario",
+          url: INVENTORY_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: "Kardex",
+          url: KARDEX_REPORT_ROUTE,
           icon: ReportsIcon,
         },
       ],

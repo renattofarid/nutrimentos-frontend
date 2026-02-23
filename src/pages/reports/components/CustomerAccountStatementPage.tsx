@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import { useAllClients } from "@/pages/client/lib/client.hook";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FileSpreadsheet, Search, Filter, DollarSign } from "lucide-react";
@@ -56,43 +55,28 @@ const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
         case "zone":
           content = (
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                ZONA
-              </Badge>
+              <Badge color="blue">ZONA</Badge>
               <span className="font-bold text-base">{item.zone_name}</span>
             </div>
           );
-          className = "bg-blue-50";
           break;
 
         case "vendor":
           content = (
             <div className="flex items-center gap-2">
-              <Badge
-                variant="secondary"
-                className="bg-purple-100 text-purple-700"
-              >
-                VENDEDOR
-              </Badge>
+              <Badge color="purple">VENDEDOR</Badge>
               <span className="font-semibold">{item.vendedor_name}</span>
             </div>
           );
-          className = "bg-purple-50";
           break;
 
         case "customer":
           content = (
             <div className="flex items-center gap-2">
-              <Badge
-                variant="secondary"
-                className="bg-green-100 text-green-700"
-              >
-                CLIENTE
-              </Badge>
+              <Badge color="green">CLIENTE</Badge>
               <span className="font-medium">{item.customer_name}</span>
             </div>
           );
-          className = "bg-green-50";
           break;
 
         case "sale":
@@ -342,7 +326,7 @@ export default function CustomerAccountStatementPage() {
       window.URL.revokeObjectURL(url);
 
       toast.success(
-        `Reporte exportado exitosamente en formato ${exportType.toUpperCase()}`
+        `Reporte exportado exitosamente en formato ${exportType.toUpperCase()}`,
       );
     } catch (error) {
       toast.error("Error al exportar el reporte");
@@ -366,7 +350,7 @@ export default function CustomerAccountStatementPage() {
             title="Filtros de Búsqueda"
             icon={Filter}
             gap="gap-2"
-            cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
+            cols={{ sm: 1, md: 2, lg: 3, xl: 5 }}
             headerExtra={
               <div className="flex gap-2">
                 <Button type="submit" disabled={isLoading} size="sm">
@@ -434,14 +418,14 @@ export default function CustomerAccountStatementPage() {
               placeholder="Seleccionar tipo"
               options={queryTypeOptions}
             />
-
-            <FormSwitch
-              control={form.control}
-              name="show_old"
-              label="Mostrar antiguos"
-              text="Incluir registros antiguos en la consulta"
-              size="lg"
-            />
+            <div className="col-span-2">
+              <FormSwitch
+                control={form.control}
+                name="show_old"
+                label="Mostrar antiguos"
+                text="Incluir registros antiguos en la consulta"
+              />
+            </div>
           </GroupFormSection>
 
           {meta && (
@@ -475,15 +459,7 @@ export default function CustomerAccountStatementPage() {
             </GroupFormSection>
           )}
 
-          <Card>
-            <CardContent className="pt-6">
-              <DataTable
-                columns={columns}
-                data={tableData}
-                isLoading={isLoading}
-              />
-            </CardContent>
-          </Card>
+          <DataTable columns={columns} data={tableData} isLoading={isLoading} />
         </form>
       </Form>
     </PageWrapper>

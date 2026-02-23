@@ -1,5 +1,9 @@
 import { useReportsStore } from "./reports.store";
-import type { CustomerAccountStatementParams } from "./reports.interface";
+import type {
+  CustomerAccountStatementParams,
+  InventoryReportParams,
+  KardexReportParams,
+} from "./reports.interface";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   downloadReport,
@@ -24,6 +28,39 @@ export function useCustomerAccountStatement(
     error,
     refetch: () => fetchCustomerAccountStatement(params || {}),
     fetch: fetchCustomerAccountStatement,
+  };
+}
+
+export function useInventoryReport() {
+  const {
+    inventoryReport,
+    inventoryLoading,
+    inventoryError,
+    fetchInventoryReport,
+  } = useReportsStore();
+
+  return {
+    data: inventoryReport,
+    isLoading: inventoryLoading,
+    error: inventoryError,
+    fetch: fetchInventoryReport,
+  };
+}
+
+export function useKardexReport(params?: KardexReportParams) {
+  const {
+    kardexReport,
+    kardexLoading,
+    kardexError,
+    fetchKardexReport,
+  } = useReportsStore();
+
+  return {
+    data: kardexReport,
+    isLoading: kardexLoading,
+    error: kardexError,
+    refetch: () => fetchKardexReport(params || {}),
+    fetch: fetchKardexReport,
   };
 }
 

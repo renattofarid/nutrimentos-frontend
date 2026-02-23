@@ -49,12 +49,29 @@ export default function CreditNotePage() {
   // Reset page when filters change
   useEffect(() => {
     if (page !== 1) setPage(1);
-  }, [search, status, motive_id, customer_id, issue_date_from, issue_date_to, per_page]);
+  }, [
+    search,
+    status,
+    motive_id,
+    customer_id,
+    issue_date_from,
+    issue_date_to,
+    per_page,
+  ]);
 
   // Refetch when any filter or page changes
   useEffect(() => {
     refetch(buildParams());
-  }, [page, per_page, search, status, motive_id, customer_id, issue_date_from, issue_date_to]);
+  }, [
+    page,
+    per_page,
+    search,
+    status,
+    motive_id,
+    customer_id,
+    issue_date_from,
+    issue_date_to,
+  ]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -70,16 +87,6 @@ export default function CreditNotePage() {
       errorToast(message);
     } finally {
       setDeleteId(null);
-    }
-  };
-
-  const handleGeneratePdf = async (id: number) => {
-    try {
-      const url = `https://develop.garzasoft.com:82/nutrimentos/public/api/credit-notes/${id}/pdf`;
-      window.open(url, "_blank");
-      successToast("PDF generado correctamente");
-    } catch (error: any) {
-      errorToast("Error al generar el PDF");
     }
   };
 
@@ -111,7 +118,6 @@ export default function CreditNotePage() {
         isLoading={isLoading}
         columns={CreditNoteColumns({
           onDelete: setDeleteId,
-          onGeneratePdf: handleGeneratePdf,
         })}
         data={data || []}
       >

@@ -22,6 +22,8 @@ import { useEffect } from "react";
 import type { DeliverySheetStatusSchema } from "../lib/deliverysheet.schema";
 import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import DeliverySheetOptions from "./DeliverySheetOptions";
+import { useDeliverySheets } from "../lib/deliverysheet.hook";
 
 export default function DeliverySheetPage() {
   const navigate = useNavigate();
@@ -38,18 +40,26 @@ export default function DeliverySheetPage() {
     useState<DeliverySheetResource | null>(null);
   const [openStatusDialog, setOpenStatusDialog] = useState(false);
 
-  const {
-    deliverySheets,
-    meta,
-    isLoading,
-    fetchDeliverySheets,
-    removeDeliverySheet,
-    updateStatus,
-  } = useDeliverySheetStore();
+  const [search, setSearch] = useState("");
+
+  const [start_date, setStartDate] = useState<Date | undefined>();
+  const [end_date, setEndDate] = useState<Date | undefined>();
+
+  const { removeDeliverySheet, updateStatus } = useDeliverySheetStore();
+
+  const { data, refetch, isLoading } = useDeliverySheets({
+    page,
+    per_page: perPage,
+    search,
+    issue_date: [
+      start_date ? start_date.toISOString().split("T")[0] : undefined,
+      end_date ? end_date.toISOString().split("T")[0] : undefined,
+    ],
+  });
 
   useEffect(() => {
-    fetchDeliverySheets({ page, per_page: perPage });
-  }, [page, perPage, fetchDeliverySheets]);
+    setPage(1); // Reset to first page on filter change
+  }, [page, perPage, search, start_date, end_date]);
 
   const handleDelete = (id: number) => {
     setDeliverySheetToDelete(id);
@@ -75,7 +85,7 @@ export default function DeliverySheetPage() {
     if (deliverySheetToDelete) {
       try {
         await removeDeliverySheet(deliverySheetToDelete);
-        fetchDeliverySheets({ page, per_page: perPage });
+        refetch();
         setOpenDelete(false);
         setDeliverySheetToDelete(null);
       } catch (error) {
@@ -88,7 +98,7 @@ export default function DeliverySheetPage() {
     if (selectedDeliverySheetForStatus) {
       try {
         await updateStatus(selectedDeliverySheetForStatus.id, data);
-        fetchDeliverySheets({ page, per_page: perPage });
+        refetch();
         setOpenStatusDialog(false);
         setSelectedDeliverySheetForStatus(null);
       } catch (error) {
@@ -121,17 +131,28 @@ export default function DeliverySheetPage() {
 
       <DeliverySheetTable
         columns={columns}
-        data={deliverySheets || []}
+        data={data?.data || []}
         isLoading={isLoading}
-      />
+      >
+        <DeliverySheetOptions
+          search={search}
+          setSearch={setSearch}
+          start_date={start_date}
+          end_date={end_date}
+          onDateChange={(from, to) => {
+            setStartDate(from);
+            setEndDate(to);
+          }}
+        />
+      </DeliverySheetTable>
 
       <DataTablePagination
         page={page}
-        totalPages={meta?.last_page || 1}
+        totalPages={data?.meta?.last_page || 1}
         per_page={perPage}
         onPageChange={setPage}
         setPerPage={setPerPage}
-        totalData={meta?.total || 0}
+        totalData={data?.meta?.total || 0}
       />
 
       <SimpleDeleteDialog

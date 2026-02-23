@@ -5,6 +5,7 @@
 import type { ModelComplete } from "@/lib/core.interface";
 import type { DeliverySheetSchema } from "./deliverysheet.schema";
 import { FileText } from "lucide-react";
+import type { CreditNoteResource } from "@/pages/credit-note/lib/credit-note.interface";
 
 // ===== API RESOURCES =====
 
@@ -342,6 +343,7 @@ export interface AvailableSale {
   created_at: string;
   customer: AvailableSaleCustomer;
   details: AvailableSaleDetail[];
+  credit_notes?: CreditNoteResource[];
 }
 
 export interface AvailableSalesResponse {

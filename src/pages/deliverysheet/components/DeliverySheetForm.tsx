@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronUp,
   Calendar,
+  Eye,
 } from "lucide-react";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
@@ -28,6 +29,8 @@ import { DELIVERY_SHEET_TYPES } from "../lib/deliverysheet.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import type { AvailableSale } from "../lib/deliverysheet.interface";
+import type { CreditNoteResource } from "@/pages/credit-note/lib/credit-note.interface";
+import { GeneralModal } from "@/components/GeneralModal";
 import { parseFormattedNumber } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -83,6 +86,11 @@ export const DeliverySheetForm = ({
   const [hasSearched, setHasSearched] = useState(false);
   const [showMoreFields, setShowMoreFields] = useState(false);
   const [showDateFilter, setShowDateFilter] = useState(false);
+  const [creditNotesModal, setCreditNotesModal] = useState<{
+    open: boolean;
+    creditNotes: CreditNoteResource[];
+    saleName: string;
+  }>({ open: false, creditNotes: [], saleName: "" });
   const [searchParams, setSearchParams] = useState({
     payment_type: "",
     zone_id: "",
@@ -385,13 +393,15 @@ export const DeliverySheetForm = ({
           </div>
         </GroupFormSection>
 
-        {hasSearched && !isLoadingAvailableSales && availableSales.length === 0 && (
-          <EmptyState
-            icon={SearchX}
-            title="Sin resultados"
-            description="No se encontraron ventas disponibles con los filtros seleccionados."
-          />
-        )}
+        {hasSearched &&
+          !isLoadingAvailableSales &&
+          availableSales.length === 0 && (
+            <EmptyState
+              icon={SearchX}
+              title="Sin resultados"
+              description="No se encontraron ventas disponibles con los filtros seleccionados."
+            />
+          )}
 
         {availableSales.length > 0 && (
           <GroupFormSection
@@ -436,7 +446,7 @@ export const DeliverySheetForm = ({
                       <TableHead>Documento</TableHead>
                       <TableHead>Cliente</TableHead>
                       <TableHead>Fecha</TableHead>
-                      {/* <TableHead>Nota de Crédito</TableHead> */}
+                      <TableHead>Nota de Crédito</TableHead>
                       <TableHead className="text-right">Monto</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -476,13 +486,40 @@ export const DeliverySheetForm = ({
                           </Badge>
                         </TableCell>
 
-                        {/* <TableCell>
-                          {sale.has_credit_note ? (
-                            <Badge variant="destructive">CON NOTA</Badge>
+                        <TableCell>
+                          {sale.credit_notes && sale.credit_notes.length > 0 ? (
+                            <div className="flex flex-col gap-1">
+                              <Badge variant="destructive">
+                                S/.{" "}
+                                {sale.credit_notes
+                                  .reduce(
+                                    (sum, cn) =>
+                                      sum + parseFormattedNumber(cn.total_amount),
+                                    0,
+                                  )
+                                  .toFixed(2)}
+                              </Badge>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-xs"
+                                onClick={() =>
+                                  setCreditNotesModal({
+                                    open: true,
+                                    creditNotes: sale.credit_notes!,
+                                    saleName: `${sale.serie}-${sale.numero}`,
+                                  })
+                                }
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                Ver más
+                              </Button>
+                            </div>
                           ) : (
                             <Badge variant="default">SIN NOTA</Badge>
                           )}
-                        </TableCell> */}
+                        </TableCell>
                         <TableCell className="text-right font-semibold">
                           S/.{" "}
                           {parseFormattedNumber(sale.total_amount).toFixed(2)}

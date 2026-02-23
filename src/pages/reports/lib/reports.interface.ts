@@ -1,4 +1,5 @@
 import type { ModelComplete } from "@/lib/core.interface";
+import type { Links, Meta } from "@/lib/pagination.interface";
 import { FileText } from "lucide-react";
 
 const ROUTE = "/reportes";
@@ -38,6 +39,12 @@ export const REPORTS: ModelComplete<any> = {
 // Customer Account Statement Report
 export const CUSTOMER_ACCOUNT_STATEMENT_ROUTE = `${ROUTE}/estado-cuenta-clientes`;
 
+// Inventory Report
+export const INVENTORY_REPORT_ROUTE = `${ROUTE}/inventario`;
+
+// Kardex Report
+export const KARDEX_REPORT_ROUTE = `${ROUTE}/kardex`;
+
 export interface CustomerAccountStatementParams {
   zone_id?: number | null;
   customer_id?: number | null;
@@ -51,7 +58,7 @@ export interface CustomerAccountStatementParams {
 }
 
 // Estructura de venta individual
-export interface Sale {
+export interface Sale1 {
   id: number;
   date: string;
   document_number: string;
@@ -70,7 +77,7 @@ export interface Customer {
   customer_name: string;
   customer_zone: string;
   total_debt: number;
-  sales: Sale[];
+  sales: Sale1[];
 }
 
 // Estructura de vendedor con sus clientes
@@ -103,6 +110,123 @@ export interface CustomerAccountStatementResponse {
     query_type: string;
     show_old: boolean;
   };
+}
+
+// ─── Inventory Report ───────────────────────────────────────────────────────
+
+export interface InventoryReportParams {
+  product_id?: number | null;
+  warehouse_id?: number | null;
+  export?: "excel" | null;
+}
+
+export interface InventoryItem {
+  id: number;
+  product_id: number;
+  product_name: string;
+  product_code: string;
+  category_name: string;
+  warehouse_id: number;
+  warehouse_name: string;
+  current_stock: number;
+  min_stock: number;
+  unit_name: string;
+}
+
+export interface InventoryReportResponse {
+  message: string;
+  data: InventoryItem[];
+}
+
+// ─── Kardex Report ──────────────────────────────────────────────────────────
+export interface KardexReportResponse {
+  data: KardexItem[];
+  links: Links;
+  meta: Meta;
+}
+
+export interface KardexItem {
+  id: number;
+  movement_type: string;
+  document_type: string;
+  document_number: string;
+  movement_date: string;
+  movement_date_formatted: string;
+  product_id: number;
+  product: Product;
+  warehouse_id: number;
+  warehouse: Warehouse;
+  quantity_in: number;
+  unit_cost_in: number;
+  total_cost_in: number;
+  quantity_out: number;
+  unit_cost_out: number;
+  total_cost_out: number;
+  balance_quantity: number;
+  balance_unit_cost: number;
+  balance_total_cost: number;
+  warehouse_document_id: null | number;
+  warehouse_document?: Warehousedocument;
+  sale_id: null | number;
+  user_id: number;
+  user: User;
+  observations: null | string;
+  created_at: string;
+  created_at_formatted: string;
+  sale?: Sale;
+}
+
+interface Sale {
+  id: number;
+  serie: string;
+  numero: string;
+  document_type: string;
+  total_amount: number;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: null;
+}
+
+interface Warehousedocument {
+  id: number;
+  document_number: string;
+  document_type: string;
+  motive: string;
+}
+
+interface Warehouse {
+  id: number;
+  name: string;
+  code: null;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  code: null;
+  sku: null;
+  unit: Unit;
+}
+
+interface Unit {
+  id: number;
+  name: string;
+  code: string;
+  created_at: string;
+}
+
+/**
+ * ---------
+ */
+export interface KardexReportParams {
+  product_id?: number | null;
+  warehouse_id?: number | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  export?: "excel" | null;
 }
 
 // Item plano para la tabla con información de jerarquía

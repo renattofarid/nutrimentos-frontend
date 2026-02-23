@@ -32,6 +32,8 @@ export interface ProductOption {
   id: string;
   codigo: string;
   name: string;
+  weight?: string;
+  price_per_kg?: string;
 }
 
 interface ExcelGridProps<T> {
@@ -42,6 +44,7 @@ interface ExcelGridProps<T> {
   onCellChange: (index: number, field: string, value: string) => void;
   productOptions?: ProductOption[];
   onProductSelect?: (index: number, product: ProductOption) => void;
+  onProductCodeTab?: (rowIndex: number, code: string, advance: () => void, setError: (msg: string) => void) => void;
   className?: string;
   emptyMessage?: string;
   disabled?: boolean;
@@ -55,6 +58,7 @@ export function ExcelGrid<T extends Record<string, any>>({
   onCellChange,
   productOptions = [],
   onProductSelect,
+  onProductCodeTab,
   className,
   emptyMessage = "No hay datos. Agregue una nueva fila para comenzar.",
   disabled = false,
@@ -130,50 +134,73 @@ export function ExcelGrid<T extends Record<string, any>>({
     if (e.key === "Tab") {
       e.preventDefault();
 
-      // Si es un campo de código de producto, validar antes de avanzar
+      // Si es un campo de código de producto
       if (column.type === "product-code") {
-        const currentValue = data[rowIndex][column.accessor as string];
+        // Si hay callback async, delegarle toda la lógica
+        if (onProductCodeTab) {
+          const code = (data[rowIndex][column.accessor as string] || "").toString();
+          const inputEl = e.target as HTMLInputElement;
+          const isShift = e.shiftKey;
 
+          const advance = () => {
+            const nextCell = isShift
+              ? getPreviousEditableCell(rowIndex, colIndex)
+              : getNextEditableCell(rowIndex, colIndex);
+
+            if (nextCell) {
+              setFocusedCell(nextCell);
+              setTimeout(() => {
+                const key = `${nextCell.row}-${nextCell.col}`;
+                const input = inputRefs.current[key];
+                if (input) { input.focus(); input.select(); }
+              }, 0);
+            } else if (!isShift && rowIndex === data.length - 1 && !disabled) {
+              onAddRow();
+              setTimeout(() => {
+                const firstEditableCol = columns.findIndex(col => col.type !== "readonly");
+                if (firstEditableCol !== -1) {
+                  const key = `${data.length}-${firstEditableCol}`;
+                  const input = inputRefs.current[key];
+                  if (input) { input.focus(); input.select(); }
+                  setFocusedCell({ row: data.length, col: firstEditableCol });
+                }
+              }, 50);
+            }
+          };
+
+          const setError = (msg: string) => {
+            inputEl.setCustomValidity(msg);
+            inputEl.reportValidity();
+            setTimeout(() => inputEl.setCustomValidity(""), 2500);
+          };
+
+          onProductCodeTab(rowIndex, code, advance, setError);
+          return;
+        }
+
+        // Fallback: búsqueda local en productOptions
+        const currentValue = data[rowIndex][column.accessor as string];
         if (currentValue && currentValue.trim() !== "") {
           const searchValue = currentValue.toString().toLowerCase();
-
-          // Buscar coincidencias: exactas o parciales
-          const exactMatch = productOptions.find(p =>
-            p.codigo.toLowerCase() === searchValue
-          );
-
-          const partialMatches = productOptions.filter(p =>
-            p.codigo.toLowerCase().includes(searchValue)
-          );
+          const exactMatch = productOptions.find(p => p.codigo.toLowerCase() === searchValue);
+          const partialMatches = productOptions.filter(p => p.codigo.toLowerCase().includes(searchValue));
 
           if (exactMatch) {
-            // Si hay coincidencia exacta, seleccionarla
-            if (onProductSelect) {
-              onProductSelect(rowIndex, exactMatch);
-            }
+            if (onProductSelect) onProductSelect(rowIndex, exactMatch);
           } else if (partialMatches.length === 1) {
-            // Si hay solo UNA coincidencia parcial, seleccionarla automáticamente
-            if (onProductSelect) {
-              onProductSelect(rowIndex, partialMatches[0]);
-            }
+            if (onProductSelect) onProductSelect(rowIndex, partialMatches[0]);
           } else if (partialMatches.length > 1) {
-            // Si hay múltiples coincidencias, mostrar error indicando que hay varias opciones
             const input = e.target as HTMLInputElement;
-            input.setCustomValidity(`Se encontraron ${partialMatches.length} productos con ese código. Sea más específico.`);
+            input.setCustomValidity(`Se encontraron ${partialMatches.length} productos. Sea más específico.`);
             input.reportValidity();
-            setTimeout(() => {
-              input.setCustomValidity("");
-            }, 3000);
-            return; // No avanzar a la siguiente celda
+            setTimeout(() => input.setCustomValidity(""), 3000);
+            return;
           } else {
-            // Si no hay ninguna coincidencia, mostrar error
             const input = e.target as HTMLInputElement;
             input.setCustomValidity("Código de producto no encontrado");
             input.reportValidity();
-            setTimeout(() => {
-              input.setCustomValidity("");
-            }, 2000);
-            return; // No avanzar a la siguiente celda
+            setTimeout(() => input.setCustomValidity(""), 2000);
+            return;
           }
         }
       }

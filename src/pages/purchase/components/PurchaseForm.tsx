@@ -17,10 +17,10 @@ import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
-import type { ProductResource } from "@/pages/product/lib/product.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { CompanyResource } from "@/pages/company/lib/company.interface";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useProduct } from "@/pages/product/lib/product.hook";
 import { Badge } from "@/components/ui/badge";
 import { SupplierDialog } from "@/pages/supplier/components/SupplierDialog";
 import {
@@ -62,11 +62,11 @@ interface PurchaseFormProps {
   mode?: "create" | "update";
   suppliers: PersonResource[];
   warehouses: WarehouseResource[];
-  products: ProductResource[];
   purchase?: PurchaseResource;
   companies?: CompanyResource[];
   branches: BranchResource[];
   onRefreshSuppliers?: () => void;
+  // products prop eliminado: se busca por código vía useProduct (TanStack Query)
 }
 
 interface DetailRow {
@@ -96,10 +96,26 @@ export const PurchaseForm = ({
   mode = "create",
   suppliers,
   warehouses,
-  products,
   branches,
   onRefreshSuppliers,
 }: PurchaseFormProps) => {
+  // Estado para búsqueda async de producto por código (al dar Tab)
+  const [productCodeSearch, setProductCodeSearch] = useState<{
+    rowIndex: number;
+    code: string;
+  } | null>(null);
+  const productCodeCallbacksRef = useRef<{
+    advance: () => void;
+    setError: (msg: string) => void;
+  } | null>(null);
+
+  const { data: productSearchResult, isFetching: isSearchingProduct } =
+    useProduct(
+      productCodeSearch
+        ? { codigo: productCodeSearch.code, direction: "asc" }
+        : undefined
+    );
+
   const [filteredWarehouses, setFilteredWarehouses] = useState<
     WarehouseResource[]
   >([]);
@@ -269,31 +285,24 @@ export const PurchaseForm = ({
   // Inicializar details e installments desde defaultValues cuando se carga el formulario
   useEffect(() => {
     if (defaultValues.details && defaultValues.details.length > 0) {
-      const mappedDetails = defaultValues.details.map((detail) => {
-        const product = products.find(
-          (p) => p.id.toString() === detail.product_id
-        );
-        const productWeight = product?.weight ? parseFloat(product.weight) : 0;
+      const mappedDetails = (defaultValues.details as any[]).map((detail) => {
+        // En modo edición, el backend envía product_code y product_name en el detalle
+        const productWeight = 0; // El peso no viene del API; se actualiza al seleccionar producto nuevo
         const quantityKg = parseFloat(detail.quantity_kg) || 0;
         const quantitySacks = parseFloat(detail.quantity_sacks) || 0;
         const unitPrice = parseFloat(detail.unit_price);
         const tax = parseFloat(detail.tax);
 
-        // Determinar si está en modo saco o kg
-        // Si quantity_sacks > 0, entonces está en modo saco
         const isBySack = quantitySacks > 0;
-
-        // La cantidad a mostrar depende del modo
         const quantity = isBySack ? quantitySacks : quantityKg;
 
-        // El subtotal se calcula con la cantidad mostrada (sacos o kg)
         const subtotal = quantity * unitPrice;
         const total = subtotal + tax;
 
         return {
           product_id: detail.product_id,
-          product_code: product?.codigo,
-          product_name: product?.name,
+          product_code: detail.product_code || "",
+          product_name: detail.product_name || "",
           product_weight: productWeight,
           quantity: quantity > 0 ? quantity.toString() : "",
           quantity_kg: quantityKg > 0 ? quantityKg.toString() : "",
@@ -398,26 +407,66 @@ export const PurchaseForm = ({
     form.setValue("details", updatedDetails);
   };
 
-  const handleProductSelect = (index: number, product: ProductOption) => {
-    const selectedProduct = products.find(
-      (p) => p.id.toString() === product.id
-    );
-    if (!selectedProduct) return;
+  const handleProductSelect = useCallback((index: number, product: ProductOption) => {
+    const productWeight = product.weight ? parseFloat(product.weight) : 0;
 
-    const productWeight = selectedProduct.weight ? parseFloat(selectedProduct.weight) : 0;
+    setDetails((prev) => {
+      const updatedDetails = [...prev];
+      updatedDetails[index] = {
+        ...updatedDetails[index],
+        product_id: product.id,
+        product_code: product.codigo,
+        product_name: product.name,
+        product_weight: productWeight,
+      };
+      form.setValue("details", updatedDetails);
+      return updatedDetails;
+    });
+  }, [form]);
 
-    const updatedDetails = [...details];
-    updatedDetails[index] = {
-      ...updatedDetails[index],
-      product_id: product.id,
-      product_code: product.codigo,
-      product_name: product.name,
-      product_weight: productWeight,
-    };
+  // Búsqueda async de producto por código al presionar Tab
+  // Cuando useProduct retorna resultado, auto-seleccionar primer producto y avanzar celda
+  useEffect(() => {
+    if (!productCodeSearch || isSearchingProduct) return;
+    const callbacks = productCodeCallbacksRef.current;
+    if (!callbacks) return;
 
-    setDetails(updatedDetails);
-    form.setValue("details", updatedDetails);
-  };
+    if (productSearchResult?.data && productSearchResult.data.length > 0) {
+      const product = productSearchResult.data[0];
+      handleProductSelect(productCodeSearch.rowIndex, {
+        id: product.id.toString(),
+        codigo: product.codigo,
+        name: product.name,
+        weight: product.weight,
+      });
+      callbacks.advance();
+    } else if (productSearchResult !== undefined) {
+      callbacks.setError(
+        `No se encontró ningún producto con código "${productCodeSearch.code}"`
+      );
+    }
+
+    productCodeCallbacksRef.current = null;
+    setProductCodeSearch(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productSearchResult, isSearchingProduct]);
+
+  const handleProductCodeTab = useCallback(
+    (
+      rowIndex: number,
+      code: string,
+      advance: () => void,
+      setError: (msg: string) => void
+    ) => {
+      if (!code.trim()) {
+        advance();
+        return;
+      }
+      productCodeCallbacksRef.current = { advance, setError };
+      setProductCodeSearch({ rowIndex, code });
+    },
+    []
+  );
 
   // Nueva función para cambiar el modo de compra (saco/kg)
   const handleTogglePurchaseMode = (index: number, checked: boolean) => {
@@ -590,12 +639,8 @@ export const PurchaseForm = ({
     },
   ];
 
-  // Preparar opciones de productos para el grid
-  const productOptions: ProductOption[] = products.map((product) => ({
-    id: product.id.toString(),
-    codigo: product.codigo,
-    name: product.name,
-  }));
+  // Sin lista estática de productos: la búsqueda es async por código (handleProductCodeTab)
+  const productOptions: ProductOption[] = [];
 
   // Funciones para cuotas
   const handleAddInstallment = () => {
@@ -749,7 +794,7 @@ export const PurchaseForm = ({
           title="Información General"
           icon={Users2}
           gap="gap-2"
-          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
+          cols={{ sm: 1, md: 2, lg: 4, xl: 5 }}
         >
           {/* Proveedor y Almacén */}
           <div className="flex gap-2 items-end">
@@ -1033,6 +1078,7 @@ export const PurchaseForm = ({
             onCellChange={handleCellChange}
             productOptions={productOptions}
             onProductSelect={handleProductSelect}
+            onProductCodeTab={handleProductCodeTab}
             emptyMessage="Agregue productos a la compra"
             disabled={!selectedWarehouseId}
           />

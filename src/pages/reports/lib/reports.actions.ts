@@ -2,6 +2,10 @@ import { api } from "@/lib/config";
 import type {
   CustomerAccountStatementParams,
   CustomerAccountStatementResponse,
+  InventoryReportParams,
+  InventoryReportResponse,
+  KardexReportParams,
+  KardexReportResponse,
 } from "./reports.interface";
 
 const REPORTS_ENDPOINT = "/reports";
@@ -34,6 +38,42 @@ export async function exportCustomerAccountStatement(
     },
   );
 
+  return data;
+}
+
+export async function getInventoryReport(
+  params: InventoryReportParams,
+): Promise<InventoryReportResponse> {
+  const { data } = await api.get<InventoryReportResponse>("/inventory", {
+    params,
+  });
+  return data;
+}
+
+export async function exportInventoryReport(
+  params: InventoryReportParams,
+): Promise<Blob> {
+  const { data } = await api.get<Blob>("/inventory/export", {
+    params,
+    responseType: "blob",
+  });
+  return data;
+}
+
+export async function getKardexReport(
+  params: KardexReportParams,
+): Promise<KardexReportResponse> {
+  const { data } = await api.get<KardexReportResponse>("/kardex", { params });
+  return data;
+}
+
+export async function exportKardexReport(
+  params: KardexReportParams,
+): Promise<Blob> {
+  const { data } = await api.get<Blob>("/kardex/export", {
+    params,
+    responseType: "blob",
+  });
   return data;
 }
 

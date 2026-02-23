@@ -66,3 +66,14 @@ export async function deleteCreditNote(id: number): Promise<any> {
   const { data } = await api.delete<any>(`${ENDPOINT}/${id}`);
   return data;
 }
+
+// Exportar (excel | pdf)
+export async function exportCreditNotes(
+  params: Record<string, any>
+): Promise<Blob> {
+  const response = await api.get(`${ENDPOINT}/export`, {
+    params,
+    responseType: "blob",
+  });
+  return response.data;
+}

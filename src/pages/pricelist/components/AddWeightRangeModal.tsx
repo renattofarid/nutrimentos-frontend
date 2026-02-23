@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { GeneralModal } from "@/components/GeneralModal";
+import { useEffect } from "react";
 
 const weightRangeSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
@@ -54,6 +55,17 @@ export const AddWeightRangeModal = ({
     onClose();
   };
 
+  const { watch, setValue } = form;
+  const minWeight = watch("min_weight");
+  const maxWeight = watch("max_weight");
+
+  useEffect(() => {
+    setValue(
+      "name",
+      maxWeight ? `${minWeight}-${maxWeight}kg` : `+${minWeight}kg`,
+    );
+  }, [minWeight, maxWeight]);
+
   return (
     <GeneralModal
       open={open}
@@ -64,20 +76,6 @@ export const AddWeightRangeModal = ({
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nombre del Rango *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ej: 0-300kg" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
           <FormField
             control={form.control}
             name="min_weight"
@@ -92,7 +90,7 @@ export const AddWeightRangeModal = ({
                     {...field}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === "" ? 0 : parseFloat(e.target.value)
+                        e.target.value === "" ? 0 : parseFloat(e.target.value),
                       )
                     }
                   />
@@ -118,10 +116,24 @@ export const AddWeightRangeModal = ({
                       field.onChange(
                         e.target.value === ""
                           ? null
-                          : parseFloat(e.target.value)
+                          : parseFloat(e.target.value),
                       )
                     }
                   />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nombre del Rango *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Ej: 0-300kg" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

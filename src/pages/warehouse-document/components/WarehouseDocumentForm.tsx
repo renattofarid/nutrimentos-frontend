@@ -20,10 +20,9 @@ import {
 } from "../lib/warehouse-document.constants";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
-import type { ProductResource } from "@/pages/product/lib/product.interface";
 import { Package, FileText, AlertCircle } from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   ExcelGrid,
   type ExcelGridColumn,
@@ -32,6 +31,7 @@ import {
 import { formatNumber } from "@/lib/formatCurrency";
 import type { PurchaseResource } from "@/pages/purchase/lib/purchase.interface";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useProduct } from "@/pages/product/lib/product.hook";
 
 interface WarehouseDocumentFormProps {
   onSubmit: (data: WarehouseDocumentSchema) => void;
@@ -40,7 +40,6 @@ interface WarehouseDocumentFormProps {
   mode: "create" | "update";
   warehouses: WarehouseResource[];
   persons: PersonResource[];
-  products: ProductResource[];
   purchases?: PurchaseResource[];
   onCancel?: () => void;
 }
@@ -63,11 +62,27 @@ export default function WarehouseDocumentForm({
   mode,
   warehouses,
   persons,
-  products,
   purchases = [],
   onCancel,
 }: WarehouseDocumentFormProps) {
   const [details, setDetails] = useState<DetailRow[]>([]);
+
+  // Estado para búsqueda async de producto por código (al dar Tab)
+  const [productCodeSearch, setProductCodeSearch] = useState<{
+    rowIndex: number;
+    code: string;
+  } | null>(null);
+  const productCodeCallbacksRef = useRef<{
+    advance: () => void;
+    setError: (msg: string) => void;
+  } | null>(null);
+
+  const { data: productSearchResult, isFetching: isSearchingProduct } =
+    useProduct(
+      productCodeSearch
+        ? { codigo: productCodeSearch.code, direction: "asc" }
+        : undefined
+    );
 
   const form = useForm({
     resolver: zodResolver(warehouseDocumentSchemaCreate) as any,
@@ -97,17 +112,14 @@ export default function WarehouseDocumentForm({
       defaultValues.details.length > 0
     ) {
       const mappedDetails = defaultValues.details.map((detail: any) => {
-        const product = products.find(
-          (p) => p.id.toString() === detail.product_id
-        );
         const quantityKg = parseFloat(detail.quantity_kg || "0");
         const unitPrice = parseFloat(detail.unit_price || "0");
         const total = quantityKg * unitPrice;
 
         return {
           product_id: detail.product_id,
-          product_code: product?.codigo,
-          product_name: product?.name,
+          product_code: detail.product_code || "",
+          product_name: detail.product_name || "",
           quantity_sacks: detail.quantity_sacks?.toString() || "",
           quantity_kg: detail.quantity_kg?.toString() || "",
           unit_price: detail.unit_price?.toString() || "",
@@ -141,15 +153,14 @@ export default function WarehouseDocumentForm({
         if (selectedPurchase.details) {
           const mappedDetails: DetailRow[] = selectedPurchase.details.map(
             (detail) => {
-              const product = products.find((p) => p.id === detail.product.id);
               const quantityKg = detail.quantity_kg;
               const unitPrice = detail.unit_price;
               const total = quantityKg * unitPrice;
 
               return {
                 product_id: detail.product.id.toString(),
-                product_code: product?.codigo || detail.product.codigo,
-                product_name: product?.name || detail.product.name,
+                product_code: detail.product.codigo,
+                product_name: detail.product.name,
                 quantity_sacks: detail.quantity_sacks.toString(),
                 quantity_kg: detail.quantity_kg.toString(),
                 unit_price: detail.unit_price.toString(),
@@ -244,25 +255,63 @@ export default function WarehouseDocumentForm({
     form.clearErrors("details");
   };
 
-  const handleProductSelect = (index: number, product: ProductOption) => {
-    const selectedProduct = products.find(
-      (p) => p.id.toString() === product.id
-    );
-    if (!selectedProduct) return;
+  const handleProductSelect = useCallback((index: number, product: ProductOption) => {
+    setDetails((prev) => {
+      const updatedDetails = [...prev];
+      updatedDetails[index] = {
+        ...updatedDetails[index],
+        product_id: product.id,
+        product_code: product.codigo,
+        product_name: product.name,
+      };
+      form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
+      form.clearErrors("details");
+      return updatedDetails;
+    });
+  }, [form]);
 
-    const updatedDetails = [...details];
-    updatedDetails[index] = {
-      ...updatedDetails[index],
-      product_id: product.id,
-      product_code: product.codigo,
-      product_name: product.name,
-    };
+  // Cuando useProduct retorna resultado, auto-seleccionar primer producto y avanzar celda
+  useEffect(() => {
+    if (!productCodeSearch || isSearchingProduct) return;
+    const callbacks = productCodeCallbacksRef.current;
+    if (!callbacks) return;
 
-    setDetails(updatedDetails);
-    // Actualizar el campo details del formulario
-    form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
-    form.clearErrors("details");
-  };
+    if (productSearchResult?.data && productSearchResult.data.length > 0) {
+      const p = productSearchResult.data[0];
+      handleProductSelect(productCodeSearch.rowIndex, {
+        id: p.id.toString(),
+        codigo: p.codigo,
+        name: p.name,
+        weight: p.weight,
+      });
+      callbacks.advance();
+    } else if (productSearchResult !== undefined) {
+      callbacks.setError(
+        `No se encontró ningún producto con código "${productCodeSearch.code}"`
+      );
+    }
+
+    productCodeCallbacksRef.current = null;
+    setProductCodeSearch(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productSearchResult, isSearchingProduct]);
+
+  const handleProductCodeTab = useCallback(
+    (
+      rowIndex: number,
+      code: string,
+      advance: () => void,
+      setError: (msg: string) => void
+    ) => {
+      if (!code.trim()) {
+        advance();
+        return;
+      }
+      productCodeCallbacksRef.current = { advance, setError };
+      setProductCodeSearch({ rowIndex, code });
+    },
+    []
+  );
 
   const calculateDetailsTotal = () => {
     return details.reduce((sum, detail) => sum + (detail.total || 0), 0);
@@ -325,12 +374,8 @@ export default function WarehouseDocumentForm({
     },
   ];
 
-  // Preparar opciones de productos para el grid
-  const productOptions: ProductOption[] = products.map((product) => ({
-    id: product.id.toString(),
-    codigo: product.codigo,
-    name: product.name,
-  }));
+  // Sin lista estática: la búsqueda es async por código (handleProductCodeTab)
+  const productOptions: ProductOption[] = [];
 
   // Validar detalles antes del submit
   const validateDetails = () => {
@@ -519,6 +564,7 @@ export default function WarehouseDocumentForm({
             onCellChange={handleCellChange}
             productOptions={productOptions}
             onProductSelect={handleProductSelect}
+            onProductCodeTab={handleProductCodeTab}
             emptyMessage="Agregue productos al documento"
           />
 

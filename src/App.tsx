@@ -108,13 +108,20 @@ import { DRIVER } from "./pages/driver/lib/driver.interface";
 import DriverPage from "./pages/driver/components/DriverPage";
 import DriverAddPage from "./pages/driver/components/DriverAddPage";
 import DriverEditPage from "./pages/driver/components/DriverEditPage";
-import { CustomerAccountStatementPage } from "./pages/reports/components";
-import { CUSTOMER_ACCOUNT_STATEMENT_ROUTE } from "./pages/reports/lib/reports.interface";
+import {
+  CustomerAccountStatementPage,
+  InventoryReportPage,
+  KardexReportPage,
+} from "./pages/reports/components";
+import {
+  CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+  INVENTORY_REPORT_ROUTE,
+  KARDEX_REPORT_ROUTE,
+} from "./pages/reports/lib/reports.interface";
 import { PURCHASE_CREDIT_NOTE } from "./pages/purchase-credit-note/lib/purchase-credit-note.interface";
 import PurchaseCreditNotePage from "./pages/purchase-credit-note/components/PurchaseCreditNotePage";
 import PurchaseCreditNoteAddPage from "./pages/purchase-credit-note/components/PurchaseCreditNoteAddPage";
 import PurchaseCreditNoteEditPage from "./pages/purchase-credit-note/components/PurchaseCreditNoteEditPage";
-import ReportsPage from "./pages/reportes/page";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -860,12 +867,19 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          {/* Reportes */}
           <Route
-            path="reportes"
+            path={INVENTORY_REPORT_ROUTE}
             element={
-              <ProtectedRoute path="reportes">
-                <ReportsPage />
+              <ProtectedRoute path={INVENTORY_REPORT_ROUTE}>
+                <InventoryReportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={KARDEX_REPORT_ROUTE}
+            element={
+              <ProtectedRoute path={KARDEX_REPORT_ROUTE}>
+                <KardexReportPage />
               </ProtectedRoute>
             }
           />

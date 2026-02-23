@@ -7,7 +7,6 @@ import { PurchaseForm } from "./PurchaseForm";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
-import { useAllProducts } from "@/pages/product/lib/product.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { usePurchaseStore } from "../lib/purchase.store";
@@ -39,18 +38,12 @@ export default function PurchaseAddPage() {
   } = useAllBranches({
     company_id: user?.company_id.toString(),
   });
-  const {
-    data: products,
-    isLoading: productsLoading,
-    refetch: refetchProducts,
-  } = useAllProducts();
   const { createPurchase } = usePurchaseStore();
 
   useEffect(() => {
     refetchSuppliers();
     refetchWarehouses();
     refetchBranches();
-    refetchProducts();
   }, []);
 
   useEffect(() => {
@@ -58,8 +51,7 @@ export default function PurchaseAddPage() {
     setOpenMobile(false);
   }, []);
 
-  const isLoading =
-    !suppliers || warehousesLoading || productsLoading || branchesLoading;
+  const isLoading = !suppliers || warehousesLoading || branchesLoading;
 
   const getDefaultValues = (): Partial<PurchaseSchema> => ({
     supplier_id: "",
@@ -112,9 +104,7 @@ export default function PurchaseAddPage() {
       {suppliers &&
         suppliers.length > 0 &&
         warehouses &&
-        warehouses.length > 0 &&
-        products &&
-        products.length > 0 && (
+        warehouses.length > 0 && (
           <PurchaseForm
             defaultValues={getDefaultValues()}
             onSubmit={handleSubmit}
@@ -122,7 +112,6 @@ export default function PurchaseAddPage() {
             mode="create"
             suppliers={suppliers}
             warehouses={warehouses}
-            products={products}
             branches={branches ?? []}
             onCancel={() => navigate("/compras")}
             onRefreshSuppliers={refetchSuppliers}

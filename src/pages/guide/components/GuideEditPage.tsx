@@ -6,7 +6,6 @@ import TitleFormComponent from "@/components/TitleFormComponent";
 import { GuideForm } from "./GuideForm";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
-import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { useGuideMotives } from "../lib/guide.hook";
 import { useAllCategories } from "@/pages/category/lib/category.hook";
@@ -41,11 +40,6 @@ export default function GuideEditPage() {
     isLoading: warehousesLoading,
     refetch: refetchWarehouses,
   } = useAllWarehouses();
-  const {
-    data: products,
-    isLoading: productsLoading,
-    refetch: refetchProducts,
-  } = useAllProducts();
   const { data: customers, refetch: refetchCustomers } = useAllPersons({
     role_names: [CLIENT_ROLE_CODE],
   });
@@ -87,7 +81,6 @@ export default function GuideEditPage() {
   useEffect(() => {
     refetchBranches();
     refetchWarehouses();
-    refetchProducts();
     refetchCustomers();
     refetchSuppliers();
     refetchMotives();
@@ -107,7 +100,6 @@ export default function GuideEditPage() {
   const isLoading =
     branchesLoading ||
     warehousesLoading ||
-    productsLoading ||
     !customers ||
     !suppliers ||
     motivesLoading ||
@@ -199,8 +191,6 @@ export default function GuideEditPage() {
         branches.length > 0 &&
         warehouses &&
         warehouses.length > 0 &&
-        products &&
-        products.length > 0 &&
         customers &&
         customers.length > 0 &&
         motives &&
@@ -227,7 +217,6 @@ export default function GuideEditPage() {
             mode="update"
             branches={branches}
             warehouses={warehouses}
-            products={products}
             customers={customers}
             motives={motives}
             vehicles={vehicles}

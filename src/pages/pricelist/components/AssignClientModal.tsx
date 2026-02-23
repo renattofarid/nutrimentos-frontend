@@ -7,12 +7,11 @@ import {
 } from "../lib/pricelist.schema";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { successToast, errorToast } from "@/lib/core.function";
-import { GeneralModal } from "@/components/GeneralModal";
-import { FormSelect } from "@/components/FormSelect";
-import { CLIENT_ROLE_CODE } from "@/pages/client/lib/client.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
+import { FormSelectAsync } from "@/components/FormSelectAsync";
+import { useClients } from "@/pages/client/lib/client.hook";
+import { GeneralModal } from "@/components/GeneralModal";
 
 interface AssignClientModalProps {
   priceListId: number;
@@ -25,7 +24,6 @@ export default function AssignClientModal({
   open,
   onClose,
 }: AssignClientModalProps) {
-  const { data: persons } = useAllPersons({ role_names: [CLIENT_ROLE_CODE] }); // Filtrar solo clientes
   const { assignClient, isSubmitting } = usePriceListStore();
 
   const form = useForm<AssignClientSchema>({
@@ -45,7 +43,7 @@ export default function AssignClientModal({
     } catch (error: any) {
       errorToast(
         error.response?.data?.message || "Error al asignar cliente",
-        "No se pudo asignar el cliente a la lista de precios"
+        "No se pudo asignar el cliente a la lista de precios",
       );
     }
   };
@@ -60,22 +58,19 @@ export default function AssignClientModal({
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <FormSelect
+          <FormSelectAsync
             label={"Cliente"}
             control={form.control}
             name="person_id"
             placeholder="Seleccionar cliente"
-            options={
-              persons && persons.length > 0
-                ? persons.map((person: PersonResource) => ({
-                    label:
-                      person.business_name ??
-                      `${person.names} ${person.father_surname} ${person.mother_surname}`,
-                    value: person.id.toString(),
-                    description: person.number_document ?? undefined,
-                  }))
-                : []
-            }
+            useQueryHook={useClients}
+            mapOptionFn={(person: PersonResource) => ({
+              label:
+                person.business_name ??
+                `${person.names} ${person.father_surname} ${person.mother_surname}`,
+              value: person.id.toString(),
+              description: person.number_document ?? undefined,
+            })}
           />
 
           <div className="flex gap-4 justify-end mt-6">

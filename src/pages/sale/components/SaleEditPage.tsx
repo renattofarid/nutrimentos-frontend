@@ -7,7 +7,6 @@ import { SaleForm } from "./SaleForm";
 import { type SaleUpdateSchema } from "../lib/sale.schema";
 import { useSaleStore } from "../lib/sales.store";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
-import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { SALE, type SaleResource } from "../lib/sale.interface";
@@ -28,24 +27,14 @@ export const SaleEditPage = () => {
     isLoading: warehousesLoading,
     refetch: onRefreshWarehouses,
   } = useAllWarehouses();
-  const {
-    data: products,
-    isLoading: productsLoading,
-    refetch: onRefreshProducts,
-  } = useAllProducts();
 
   const { updateSale, fetchSale, sale, isFinding } = useSaleStore();
 
   const isLoading =
-    companiesLoading ||
-    branchesLoading ||
-    warehousesLoading ||
-    productsLoading ||
-    isFinding;
+    companiesLoading || branchesLoading || warehousesLoading || isFinding;
 
   useEffect(() => {
     onRefreshWarehouses();
-    onRefreshProducts();
   }, []);
 
   useEffect(() => {
@@ -86,8 +75,11 @@ export const SaleEditPage = () => {
     details:
       data.details?.map((detail) => ({
         product_id: detail.product_id.toString(),
-        quantity_sacks: detail.quantity_sacks.toString(), // Por ahora usar quantity como quantity_sacks
-        quantity_kg: "0", // Por defecto 0 si no viene del backend
+        product_code: detail.product?.codigo || "",
+        product_name: detail.product?.name || "",
+        product_weight: (detail.product?.weight ?? 0).toString(),
+        quantity_sacks: detail.quantity_sacks.toString(),
+        quantity_kg: "0",
         unit_price: detail.unit_price.toString(),
       })) ?? [],
     installments:
@@ -156,9 +148,7 @@ export const SaleEditPage = () => {
           branches &&
           branches.length > 0 &&
           warehouses &&
-          warehouses.length > 0 &&
-          products &&
-          products.length > 0 && (
+          warehouses.length > 0 && (
             <SaleForm
               defaultValues={mapSaleToForm(sale)}
               onSubmit={handleSubmit}
@@ -166,7 +156,6 @@ export const SaleEditPage = () => {
               mode="update"
               branches={branches}
               warehouses={warehouses}
-              products={products}
               sale={sale}
               onCancel={() => navigate("/ventas")}
             />

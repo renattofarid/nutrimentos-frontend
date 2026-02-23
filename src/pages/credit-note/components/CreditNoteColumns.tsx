@@ -1,16 +1,13 @@
 import type { CreditNoteResource } from "../lib/credit-note.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { FileText } from "lucide-react";
-import { ButtonAction } from "@/components/ButtonAction";
 import { DeleteButton } from "@/components/SimpleDeleteDialog";
+import ExportButtons from "@/components/ExportButtons";
 
 export const CreditNoteColumns = ({
   onDelete,
-  onGeneratePdf,
 }: {
   onDelete: (id: number) => void;
-  onGeneratePdf: (id: number) => void;
 }): ColumnDef<CreditNoteResource>[] => [
   {
     accessorKey: "full_document_number",
@@ -141,11 +138,11 @@ export const CreditNoteColumns = ({
       const id = row.original.id;
 
       return (
-        <div className="flex gap-2">
-          <ButtonAction
-            onClick={() => onGeneratePdf(id)}
-            icon={FileText}
-            tooltip="Generar PDF"
+        <div className="flex items-center gap-2">
+          <ExportButtons
+            pdfEndpoint={`/credit-notes/${id}/pdf`}
+            variant="separate"
+
           />
           <DeleteButton onClick={() => onDelete(id)} />
         </div>

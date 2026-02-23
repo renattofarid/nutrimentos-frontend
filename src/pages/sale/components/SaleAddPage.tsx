@@ -7,7 +7,6 @@ import { SaleForm } from "./SaleForm";
 import { type SaleSchema } from "../lib/sale.schema";
 import { useSaleStore } from "../lib/sales.store";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
-import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
@@ -33,15 +32,9 @@ export const SaleAddPage = () => {
     isLoading: warehousesLoading,
     refetch: onRefreshWarehouses,
   } = useAllWarehouses();
-  const {
-    data: products,
-    isLoading: productsLoading,
-    refetch: onRefreshProducts,
-  } = useAllProducts();
 
   useEffect(() => {
     onRefreshWarehouses();
-    onRefreshProducts();
   }, []);
 
   useEffect(() => {
@@ -51,7 +44,7 @@ export const SaleAddPage = () => {
 
   const { createSale } = useSaleStore();
 
-  const isLoading = branchesLoading || warehousesLoading || productsLoading;
+  const isLoading = branchesLoading || warehousesLoading;
 
   const getDefaultValues = (): Partial<SaleSchema> => ({
     branch_id: "",
@@ -98,7 +91,6 @@ export const SaleAddPage = () => {
     missingDependencies.push("Sucursales");
   if (!warehouses || warehouses.length === 0)
     missingDependencies.push("Almacenes");
-  if (!products || products.length === 0) missingDependencies.push("Productos");
 
   const canShowForm = missingDependencies.length === 0;
 
@@ -133,7 +125,6 @@ export const SaleAddPage = () => {
           mode="create"
           branches={branches!}
           warehouses={warehouses!}
-          products={products!}
           onCancel={() => navigate("/ventas")}
         />
       )}

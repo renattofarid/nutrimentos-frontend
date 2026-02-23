@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { ButtonAction } from "@/components/ButtonAction";
 import { Eye, Pencil } from "lucide-react";
 import { DeleteButton } from "@/components/SimpleDeleteDialog";
+import ExportButtons from "@/components/ExportButtons";
 
 interface GuideColumnsProps {
   onEdit: (id: number) => void;
@@ -121,7 +122,11 @@ export const GuideColumns = ({
     id: "actions",
     header: "Acciones",
     cell: ({ row }) => (
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
+        <ExportButtons
+          variant="separate"
+          pdfEndpoint={`/sale-shipping-guides/${row.original.id}/pdf`}
+        />
         <ButtonAction
           onClick={() => onView(row.original.id)}
           icon={Eye}

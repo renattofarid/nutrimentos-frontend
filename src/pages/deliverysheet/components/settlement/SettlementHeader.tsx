@@ -7,15 +7,22 @@ interface SettlementHeaderProps {
   onBack: () => void;
 }
 
-export function SettlementHeader({ sheetNumber, onBack }: SettlementHeaderProps) {
+export function SettlementHeader({
+  sheetNumber,
+  onBack,
+}: SettlementHeaderProps) {
   return (
     <div className="flex items-center gap-4">
-      <Button variant="ghost" size="icon" onClick={onBack}>
+      <Button variant="outline" size="icon" onClick={onBack}>
         <ArrowLeft className="h-4 w-4" />
       </Button>
       <TitleComponent
         title="Rendición de Planilla"
-        subtitle={`Planilla ${sheetNumber} - Registre el estado y cobro de cada boleta`}
+        subtitle={
+          sheetNumber
+            ? `Planilla ${sheetNumber} - Registre el estado y cobro de cada boleta`
+            : "Seleccione una planilla para comenzar la rendición"
+        }
         icon="Receipt"
       />
     </div>

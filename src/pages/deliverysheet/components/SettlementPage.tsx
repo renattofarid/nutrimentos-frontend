@@ -1,20 +1,23 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Loader, ArrowLeft, Save, AlertCircle } from "lucide-react";
+import { Loader, Save, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import PageWrapper from "@/components/PageWrapper";
 import { DataTable } from "@/components/DataTable";
+import { SearchableSelectAsync } from "@/components/SearchableSelectAsync";
 import { findDeliverySheetById } from "../lib/deliverysheet.actions";
 import { useDeliverySheetStore } from "../lib/deliverysheet.store";
+import { useDeliverySheets } from "../lib/deliverysheet.hook";
 import type {
   DeliverySheetById,
+  DeliverySheetResource,
   SheetSale,
 } from "../lib/deliverysheet.interface";
 import { DELIVERY_SHEET } from "../lib/deliverysheet.interface";
@@ -30,12 +33,12 @@ import {
 } from "./settlement";
 
 export default function SettlementPage() {
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [selectedId, setSelectedId] = useState<string>("");
   const [deliverySheet, setDeliverySheet] = useState<DeliverySheetById | null>(
     null,
   );
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const { submitSettlement } = useDeliverySheetStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,17 +54,17 @@ export default function SettlementPage() {
   });
 
   useEffect(() => {
-    const loadDeliverySheet = async () => {
-      if (!id) {
-        setErrors(["No se proporcionó un ID de planilla válido"]);
-        setIsLoading(false);
-        return;
-      }
+    if (!selectedId) {
+      setDeliverySheet(null);
+      setErrors([]);
+      return;
+    }
 
+    const loadDeliverySheet = async () => {
       try {
         setIsLoading(true);
         setErrors([]);
-        const response = await findDeliverySheetById(Number(id));
+        const response = await findDeliverySheetById(Number(selectedId));
 
         if (!response.data) {
           setErrors(["No se encontró la planilla de reparto"]);
@@ -90,8 +93,8 @@ export default function SettlementPage() {
       } catch (error: any) {
         console.error("Error al cargar la planilla:", error);
         setErrors([
-          error.response.data.message ||
-            error.response.data.error ||
+          error.response?.data?.message ||
+            error.response?.data?.error ||
             "Error al cargar la planilla de reparto",
         ]);
         toast.error("Error al cargar la planilla");
@@ -101,7 +104,7 @@ export default function SettlementPage() {
     };
 
     loadDeliverySheet();
-  }, [id, form]);
+  }, [selectedId]);
 
   const handleSubmit = async (data: SettlementFormSchema) => {
     if (!deliverySheet) {
@@ -184,47 +187,39 @@ export default function SettlementPage() {
     <SaleMobileCard sale={sale} form={form as any} />
   );
 
-  if (isLoading) {
-    return (
-      <PageWrapper>
-        <div className="flex items-center justify-center h-64">
-          <Loader className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  if (!deliverySheet || errors.length > 0) {
-    return (
-      <PageWrapper>
-        <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertCircle className="h-12 w-12 text-destructive" />
-          <div className="text-center space-y-2">
-            <p className="font-semibold">Error al cargar la planilla</p>
-            {errors.map((error, index) => (
-              <p key={index} className="text-sm text-muted-foreground">
-                {error}
-              </p>
-            ))}
-          </div>
-          <Button onClick={() => navigate(DELIVERY_SHEET.ROUTE)}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver a Planillas
-          </Button>
-        </div>
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper>
       <div className="space-y-6">
         <SettlementHeader
-          sheetNumber={deliverySheet.sheet_number}
+          sheetNumber={deliverySheet?.sheet_number}
           onBack={() => navigate(DELIVERY_SHEET.ROUTE)}
         />
 
-        {errors.length > 0 && (
+        <SearchableSelectAsync
+          label="Planilla de Reparto"
+          placeholder="Buscar planilla..."
+          value={selectedId}
+          onChange={(val) => {
+            setSelectedId(val);
+            setDeliverySheet(null);
+            setErrors([]);
+          }}
+          useQueryHook={useDeliverySheets}
+          mapOptionFn={(item: DeliverySheetResource) => ({
+            value: item.id.toString(),
+            label: item.sheet_number,
+            description: `${item.driver?.full_name ?? "Sin conductor"} · ${item.delivery_date}`,
+          })}
+          withValue={false}
+        />
+
+        {selectedId && isLoading && (
+          <div className="flex items-center justify-center h-48">
+            <Loader className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+
+        {selectedId && !isLoading && errors.length > 0 && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -237,63 +232,65 @@ export default function SettlementPage() {
           </Alert>
         )}
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
-          >
-            <DeliverySheetInfo
-              form={form as any}
-              deliverySheet={deliverySheet}
-            />
-
-            <SaleTableWithNotes
-              sales={salesWithIndex}
-              form={form as any}
-              expandedNotes={expandedNotes}
+        {selectedId && !isLoading && deliverySheet && errors.length === 0 && (
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-6"
             >
-              <DataTable
-                columns={columns}
-                data={salesWithIndex}
-                isLoading={isLoading}
-                mobileCardRender={mobileCardRender}
-                variant="outline"
-                isVisibleColumnFilter={false}
+              <DeliverySheetInfo
+                form={form as any}
+                deliverySheet={deliverySheet}
               />
-            </SaleTableWithNotes>
 
-            <SettlementSummary deliverySheet={deliverySheet} />
+              <SaleTableWithNotes
+                sales={salesWithIndex}
+                form={form as any}
+                expandedNotes={expandedNotes}
+              >
+                <DataTable
+                  columns={columns}
+                  data={salesWithIndex}
+                  isLoading={isLoading}
+                  mobileCardRender={mobileCardRender}
+                  variant="outline"
+                  isVisibleColumnFilter={false}
+                />
+              </SaleTableWithNotes>
 
-            <div className="flex flex-col sm:flex-row justify-end gap-3 sticky bottom-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4 rounded-lg border shadow-lg">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate(DELIVERY_SHEET.ROUTE)}
-                disabled={isSubmitting}
-                className="w-full sm:w-auto"
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full sm:w-auto"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    Guardando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Guardar Rendición
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </Form>
+              <SettlementSummary deliverySheet={deliverySheet} />
+
+              <div className="flex flex-col sm:flex-row justify-end gap-3 sticky bottom-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4 rounded-lg border shadow-lg">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate(DELIVERY_SHEET.ROUTE)}
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Guardar Rendición
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        )}
       </div>
     </PageWrapper>
   );

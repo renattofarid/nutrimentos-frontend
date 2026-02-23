@@ -74,12 +74,14 @@ export default function PriceListEditPage() {
         })),
         product_prices: priceList.product_prices.map((price) => ({
           product_id: price.product_id,
+          product_name: price.product.name,
+          product_code: price.product.codigo,
           weight_range_index: priceList.weight_ranges.findIndex(
             (r) => r.id === price.weight_range_id
           ),
           price: parseFloat(price.price as string),
           currency: price.currency,
-        })),
+        })) as any,
       };
     }
     return undefined;

@@ -9,7 +9,6 @@ import type { WarehouseDocumentSchema } from "../lib/warehouse-document.schema";
 import { useWarehouseDocumentById } from "../lib/warehouse-document.hook";
 import { useWarehouseDocumentStore } from "../lib/warehouse-document.store";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
-import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { successToast, errorToast } from "@/lib/core.function";
 import PageSkeleton from "@/components/PageSkeleton";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
@@ -24,7 +23,6 @@ export default function WarehouseDocumentEditPage() {
 
   const { data: warehouses } = useAllWarehouses();
   const { data: persons = [] } = useAllWorkers();
-  const { data: products } = useAllProducts();
   const { data: purchases = [] } = useAllPurchases();
 
   const { data: document, isFinding } = useWarehouseDocumentById(parseInt(id!));
@@ -111,11 +109,13 @@ export default function WarehouseDocumentEditPage() {
     details: document.details?.map((detail) => ({
       id: detail.id,
       product_id: detail.product.id.toString(),
+      product_code: detail.product.codigo,
+      product_name: detail.product.name,
       quantity_sacks: detail.quantity_sacks,
       quantity_kg: detail.quantity_kg,
       unit_price: detail.unit_price,
       observations: "",
-    })),
+    })) as any,
   };
 
   return (
@@ -130,7 +130,7 @@ export default function WarehouseDocumentEditPage() {
           />
         </div>
 
-        {warehouses && persons && products && (
+        {warehouses && persons &&  (
           <WarehouseDocumentForm
             onSubmit={handleSubmit}
             defaultValues={defaultValues}
@@ -138,7 +138,6 @@ export default function WarehouseDocumentEditPage() {
             mode="update"
             warehouses={warehouses}
             persons={persons}
-            products={products}
             purchases={purchases || []}
           />
         )}

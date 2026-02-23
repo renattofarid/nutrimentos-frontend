@@ -6,6 +6,7 @@ import {
   Package,
   ShoppingBag,
   DollarSign,
+  ClipboardCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -52,10 +53,15 @@ import { BOX_SHIFT } from "@/pages/box-shift/lib/box-shift.interface";
 import { AccountsReceivableRoute } from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
 import { ACCOUNTS_PAYABLE } from "@/pages/accounts-payable/lib/accounts-payable.interface";
 import { WAREHOUSE_DOCUMENT } from "@/pages/warehouse-document/lib/warehouse-document.interface";
-import { DELIVERY_SHEET } from "@/pages/deliverysheet/lib/deliverysheet.interface";
+import {
+  DELIVERY_SHEET,
+  DeliverySheetSettlementRoute,
+} from "@/pages/deliverysheet/lib/deliverysheet.interface";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import {
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+  INVENTORY_REPORT_ROUTE,
+  KARDEX_REPORT_ROUTE,
   REPORTS,
 } from "@/pages/reports/lib/reports.interface";
 import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-credit-note.interface";
@@ -290,6 +296,11 @@ const data = {
           icon: DeliverySheetIcon,
         },
         {
+          title: "Rendiciones",
+          url: DeliverySheetSettlementRoute,
+          icon: ClipboardCheck,
+        },
+        {
           title: GuideTitle,
           url: GuideRoute,
           icon: GuideIcon,
@@ -500,9 +511,14 @@ const data = {
           url: CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
           icon: ReportsIcon,
         },
-         {
-          title: "Reportes",
-          url: '/reportes',
+        {
+          title: "Inventario",
+          url: INVENTORY_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: "Kardex",
+          url: KARDEX_REPORT_ROUTE,
           icon: ReportsIcon,
         },
       ],

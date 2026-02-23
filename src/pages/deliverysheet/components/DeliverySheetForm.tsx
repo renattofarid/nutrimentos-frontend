@@ -382,6 +382,7 @@ export const DeliverySheetForm = ({
                       <TableHead>Documento</TableHead>
                       <TableHead>Cliente</TableHead>
                       <TableHead>Fecha</TableHead>
+                      {/* <TableHead>Nota de Crédito</TableHead> */}
                       <TableHead className="text-right">Monto</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -405,10 +406,8 @@ export const DeliverySheetForm = ({
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="max-w-[200px] truncate">
-                            {sale.customer.business_name ??
-                              `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`}
-                          </div>
+                          {sale.customer.business_name ??
+                            `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
@@ -422,6 +421,14 @@ export const DeliverySheetForm = ({
                             )}
                           </Badge>
                         </TableCell>
+
+                        {/* <TableCell>
+                          {sale.has_credit_note ? (
+                            <Badge variant="destructive">CON NOTA</Badge>
+                          ) : (
+                            <Badge variant="default">SIN NOTA</Badge>
+                          )}
+                        </TableCell> */}
                         <TableCell className="text-right font-semibold">
                           S/.{" "}
                           {parseFormattedNumber(sale.total_amount).toFixed(2)}

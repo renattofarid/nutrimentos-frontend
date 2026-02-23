@@ -74,7 +74,7 @@ export const getDeliverySheetColumns = ({
     accessorKey: "customer",
     header: "Cliente",
     cell: ({ row }) => (
-      <div className="max-w-[180px] truncate">
+      <div className="text-wrap!">
         {row.original.customer?.full_name}
       </div>
     ),

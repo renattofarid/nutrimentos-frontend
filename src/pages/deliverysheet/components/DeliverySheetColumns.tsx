@@ -35,9 +35,7 @@ export const getDeliverySheetColumns = ({
     accessorKey: "type",
     header: "Tipo",
     cell: ({ row }) => (
-      <Badge
-        variant={row.original.type === "CONTADO" ? "default" : "secondary"}
-      >
+      <Badge color={row.original.type === "CONTADO" ? "default" : "secondary"}>
         {row.original.type}
       </Badge>
     ),
@@ -47,15 +45,15 @@ export const getDeliverySheetColumns = ({
     header: "Estado",
     cell: ({ row }) => {
       const status = row.original.status;
-      let variant: "default" | "secondary" | "destructive" | "outline" =
-        "outline";
+      let variant: "default" | "secondary" | "destructive" | "green" | "muted" =
+        "muted";
 
       if (status === "PENDIENTE") variant = "secondary";
       if (status === "EN_REPARTO") variant = "default";
-      if (status === "COMPLETADO") variant = "outline";
+      if (status === "COMPLETADO") variant = "green";
       if (status === "CANCELADO") variant = "destructive";
 
-      return <Badge variant={variant}>{status.replace("_", " ")}</Badge>;
+      return <Badge color={variant}>{status.replace("_", " ")}</Badge>;
     },
   },
   {
@@ -74,9 +72,7 @@ export const getDeliverySheetColumns = ({
     accessorKey: "customer",
     header: "Cliente",
     cell: ({ row }) => (
-      <div className="text-wrap!">
-        {row.original.customer?.full_name}
-      </div>
+      <div className="text-wrap!">{row.original.customer?.full_name}</div>
     ),
   },
   {

@@ -57,7 +57,7 @@ export const PersonColumns = ({
     cell: ({ row }) => {
       const typePersona = row.original.type_person ?? "NATURAL";
       return (
-        <Badge variant={typePersona === "NATURAL" ? "default" : "secondary"}>
+        <Badge color={typePersona === "NATURAL" ? "default" : "secondary"}>
           {typePersona}
         </Badge>
       );

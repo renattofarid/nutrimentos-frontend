@@ -8,11 +8,19 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2, Trash2 } from "lucide-react";
-import { getUserBoxAssignmentsByBoxId, deleteUserBoxAssignment } from "@/pages/userboxassignment/lib/userboxassignment.actions";
+import {
+  getUserBoxAssignmentsByBoxId,
+  deleteUserBoxAssignment,
+} from "@/pages/userboxassignment/lib/userboxassignment.actions";
 import type { UserBoxAssignmentResource } from "@/pages/userboxassignment/lib/userboxassignment.interface";
 import { Badge } from "@/components/ui/badge";
 import UserBoxAssignmentModal from "@/pages/userboxassignment/components/UserBoxAssignmentModal";
-import { successToast, errorToast, SUCCESS_MESSAGE, ERROR_MESSAGE } from "@/lib/core.function";
+import {
+  successToast,
+  errorToast,
+  SUCCESS_MESSAGE,
+  ERROR_MESSAGE,
+} from "@/lib/core.function";
 import { USERBOXASSIGNMENT } from "@/pages/userboxassignment/lib/userboxassignment.interface";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 
@@ -31,7 +39,9 @@ export default function BoxAssignmentsSheet({
   boxId,
   boxName,
 }: BoxAssignmentsSheetProps) {
-  const [assignments, setAssignments] = useState<UserBoxAssignmentResource[]>([]);
+  const [assignments, setAssignments] = useState<UserBoxAssignmentResource[]>(
+    [],
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -62,7 +72,9 @@ export default function BoxAssignmentsSheet({
       await fetchAssignments();
       successToast(SUCCESS_MESSAGE(MODEL, "delete"));
     } catch (error: any) {
-      errorToast(error.response?.data?.message || ERROR_MESSAGE(MODEL, "delete"));
+      errorToast(
+        error.response?.data?.message || ERROR_MESSAGE(MODEL, "delete"),
+      );
     } finally {
       setDeleteId(null);
     }
@@ -79,9 +91,7 @@ export default function BoxAssignmentsSheet({
         <SheetContent className="sm:max-w-lg p-4">
           <SheetHeader>
             <SheetTitle>Asignaciones de {boxName}</SheetTitle>
-            <SheetDescription>
-              Usuarios asignados a esta caja
-            </SheetDescription>
+            <SheetDescription>Usuarios asignados a esta caja</SheetDescription>
           </SheetHeader>
 
           <div className="mt-6 space-y-4">
@@ -113,22 +123,34 @@ export default function BoxAssignmentsSheet({
                       <p className="font-semibold">{assignment.user_name}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge
-                          variant={assignment.status === "active" ? "default" : "destructive"}
+                          color={
+                            assignment.status === "active"
+                              ? "default"
+                              : "destructive"
+                          }
                           className="text-xs"
                         >
-                          {assignment.status === "active" ? "Activo" : "Inactivo"}
+                          {assignment.status === "active"
+                            ? "Activo"
+                            : "Inactivo"}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(assignment.assigned_at).toLocaleDateString('es-PE', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                          })}
+                          {new Date(assignment.assigned_at).toLocaleDateString(
+                            "es-PE",
+                            {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            },
+                          )}
                         </span>
                       </div>
                       {assignment.ended_at && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          Finalizado: {new Date(assignment.ended_at).toLocaleDateString('es-PE')}
+                          Finalizado:{" "}
+                          {new Date(assignment.ended_at).toLocaleDateString(
+                            "es-PE",
+                          )}
                         </p>
                       )}
                     </div>

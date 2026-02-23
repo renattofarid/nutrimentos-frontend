@@ -67,7 +67,7 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
                 S/. {parseFormattedNumber(sale.original_amount).toFixed(2)}
               </p>
             </Badge>
-            <Badge variant="secondary" className="text-right flex flex-col items-end">
+            <Badge color="secondary" className="text-right flex flex-col items-end">
               <p className="text-xs text-muted-foreground">Pendiente</p>
               <p className="font-semibold text-sm">
                 S/. {pendingAmount.toFixed(2)}
@@ -215,7 +215,7 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
                 <MessageSquarePlus className="h-4 w-4" />
                 Agregar Nota
                 {hasNote && (
-                  <Badge variant="secondary" className="ml-1">
+                  <Badge color="secondary" className="ml-1">
                     <MessageSquare className="h-3 w-3" />
                   </Badge>
                 )}

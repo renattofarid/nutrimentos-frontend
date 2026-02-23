@@ -105,13 +105,13 @@ export default function SaleManagePage() {
           />
         </div>
         <Badge
-          variant={
+          color={
             sale.status === "PAGADA"
               ? "default"
               : sale.status === "REGISTRADO"
                 ? "secondary"
                 : sale.status === "PARCIAL"
-                  ? "outline"
+                  ? "muted"
                   : "destructive"
           }
           className="text-sm px-3"
@@ -157,28 +157,42 @@ export default function SaleManagePage() {
           </div>
         </div>
 
-        <div className={`relative overflow-hidden rounded-xl border p-6 shadow-sm hover:shadow-md transition-all ${
-          sale.current_amount === 0
-            ? "border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20"
-            : "border-destructive/20 bg-gradient-to-br from-destructive/5 to-destructive/10 dark:from-destructive/10 dark:to-destructive/20"
-        }`}>
+        <div
+          className={`relative overflow-hidden rounded-xl border p-6 shadow-sm hover:shadow-md transition-all ${
+            sale.current_amount === 0
+              ? "border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20"
+              : "border-destructive/20 bg-gradient-to-br from-destructive/5 to-destructive/10 dark:from-destructive/10 dark:to-destructive/20"
+          }`}
+        >
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Pendiente
               </p>
-              <p className={`text-3xl font-bold ${
-                sale.current_amount === 0 ? "text-primary" : "text-destructive"
-              }`}>
+              <p
+                className={`text-3xl font-bold ${
+                  sale.current_amount === 0
+                    ? "text-primary"
+                    : "text-destructive"
+                }`}
+              >
                 {currency} {sale.current_amount.toFixed(2)}
               </p>
             </div>
-            <div className={`rounded-full p-3 ${
-              sale.current_amount === 0 ? "bg-primary/20" : "bg-destructive/20"
-            }`}>
-              <CreditCard className={`h-6 w-6 ${
-                sale.current_amount === 0 ? "text-primary" : "text-destructive"
-              }`} />
+            <div
+              className={`rounded-full p-3 ${
+                sale.current_amount === 0
+                  ? "bg-primary/20"
+                  : "bg-destructive/20"
+              }`}
+            >
+              <CreditCard
+                className={`h-6 w-6 ${
+                  sale.current_amount === 0
+                    ? "text-primary"
+                    : "text-destructive"
+                }`}
+              />
             </div>
           </div>
         </div>
@@ -196,12 +210,16 @@ export default function SaleManagePage() {
             {sale.company.social_reason && (
               <div className="space-y-1 md:col-span-2">
                 <p className="text-xs text-muted-foreground">Empresa</p>
-                <p className="text-lg font-bold text-primary">{sale.company.social_reason}</p>
+                <p className="text-lg font-bold text-primary">
+                  {sale.company.social_reason}
+                </p>
               </div>
             )}
             {sale.company.trade_name && (
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Nombre Comercial</p>
+                <p className="text-xs text-muted-foreground">
+                  Nombre Comercial
+                </p>
                 <p className="font-medium">{sale.company.trade_name}</p>
               </div>
             )}
@@ -218,7 +236,9 @@ export default function SaleManagePage() {
             )}
             {sale.branch.address && (
               <div className="space-y-1 md:col-span-2">
-                <p className="text-xs text-muted-foreground">Dirección Sucursal</p>
+                <p className="text-xs text-muted-foreground">
+                  Dirección Sucursal
+                </p>
                 <p className="text-sm">{sale.branch.address}</p>
               </div>
             )}
@@ -237,7 +257,9 @@ export default function SaleManagePage() {
           <p className="text-xs text-muted-foreground">Tipo de Documento</p>
           <div className="flex items-center gap-3">
             <p className="text-sm font-semibold">{sale.document_type}</p>
-            <p className="text-2xl font-bold font-mono text-primary">{sale.full_document_number}</p>
+            <p className="text-2xl font-bold font-mono text-primary">
+              {sale.full_document_number}
+            </p>
           </div>
         </div>
 
@@ -253,7 +275,9 @@ export default function SaleManagePage() {
 
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">Tipo de Pago</p>
-          <Badge variant={sale.payment_type === "CONTADO" ? "default" : "secondary"}>
+          <Badge
+            color={sale.payment_type === "CONTADO" ? "default" : "secondary"}
+          >
             {sale.payment_type}
           </Badge>
         </div>
@@ -310,8 +334,12 @@ export default function SaleManagePage() {
         )}
 
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">{sale.customer.document_type_name}</p>
-          <p className="font-mono font-semibold">{sale.customer.number_document}</p>
+          <p className="text-xs text-muted-foreground">
+            {sale.customer.document_type_name}
+          </p>
+          <p className="font-mono font-semibold">
+            {sale.customer.number_document}
+          </p>
         </div>
 
         {sale.customer.phone && (
@@ -366,7 +394,9 @@ export default function SaleManagePage() {
             {sale.vendedor.number_document && (
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Documento</p>
-                <p className="font-mono font-medium">{sale.vendedor.number_document}</p>
+                <p className="font-mono font-medium">
+                  {sale.vendedor.number_document}
+                </p>
               </div>
             )}
             {sale.vendedor.phone && (
@@ -377,7 +407,7 @@ export default function SaleManagePage() {
             )}
           </>
         )}
-      </GroupFormSection> 
+      </GroupFormSection>
 
       {/* Productos */}
       {sale.details && sale.details.length > 0 && (
@@ -387,7 +417,8 @@ export default function SaleManagePage() {
           cols={{ sm: 1 }}
           headerExtra={
             <Badge variant="outline">
-              {sale.details.length} {sale.details.length === 1 ? 'producto' : 'productos'}
+              {sale.details.length}{" "}
+              {sale.details.length === 1 ? "producto" : "productos"}
             </Badge>
           }
         >
@@ -407,7 +438,9 @@ export default function SaleManagePage() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-x-4 gap-y-2 text-sm">
                     <div>
                       <p className="text-xs text-muted-foreground">Código</p>
-                      <p className="font-mono font-semibold">{detail.product.codigo}</p>
+                      <p className="font-mono font-semibold">
+                        {detail.product.codigo}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Marca</p>
@@ -420,28 +453,37 @@ export default function SaleManagePage() {
                     <div>
                       <p className="text-xs text-muted-foreground">Cantidad</p>
                       <p className="font-semibold">
-                        {detail.quantity_sacks} sacos ({detail.quantity_kg.toFixed(2)} kg)
+                        {detail.quantity_sacks} sacos (
+                        {detail.quantity_kg.toFixed(2)} kg)
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">P. Unitario</p>
-                      <p className="font-semibold">{currency} {detail.unit_price.toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        P. Unitario
+                      </p>
+                      <p className="font-semibold">
+                        {currency} {detail.unit_price.toFixed(2)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Total</p>
-                      <p className="font-bold text-primary">{currency} {detail.total.toFixed(2)}</p>
+                      <p className="font-bold text-primary">
+                        {currency} {detail.total.toFixed(2)}
+                      </p>
                     </div>
                   </div>
                   {(detail.discount > 0 || detail.profit > 0) && (
                     <div className="flex gap-6 pt-1 text-xs">
                       {detail.discount > 0 && (
                         <p className="text-destructive font-medium">
-                          Descuento: -{currency} {detail.discount.toFixed(2)} ({detail.discount_percentage}%)
+                          Descuento: -{currency} {detail.discount.toFixed(2)} (
+                          {detail.discount_percentage}%)
                         </p>
                       )}
                       {detail.profit > 0 && (
                         <p className="text-green-600 font-semibold">
-                          Ganancia: {currency} {detail.profit.toFixed(2)} ({detail.profit_percentage.toFixed(1)}%)
+                          Ganancia: {currency} {detail.profit.toFixed(2)} (
+                          {detail.profit_percentage.toFixed(1)}%)
                         </p>
                       )}
                     </div>
@@ -462,73 +504,95 @@ export default function SaleManagePage() {
         {/* Totales */}
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">Subtotal</p>
-          <p className="font-semibold">{currency} {sale.subtotal.toFixed(2)}</p>
+          <p className="font-semibold">
+            {currency} {sale.subtotal.toFixed(2)}
+          </p>
         </div>
 
         {sale.discount_global > 0 && (
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Descuento Global</p>
-            <p className="font-semibold text-destructive">-{currency} {sale.discount_global.toFixed(2)}</p>
+            <p className="font-semibold text-destructive">
+              -{currency} {sale.discount_global.toFixed(2)}
+            </p>
           </div>
         )}
 
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">IGV</p>
-          <p className="font-semibold">{currency} {sale.tax_amount.toFixed(2)}</p>
+          <p className="font-semibold">
+            {currency} {sale.tax_amount.toFixed(2)}
+          </p>
         </div>
 
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">TOTAL</p>
-          <p className="font-bold text-xl text-primary">{currency} {sale.total_amount.toFixed(2)}</p>
+          <p className="font-bold text-xl text-primary">
+            {currency} {sale.total_amount.toFixed(2)}
+          </p>
         </div>
 
         {/* Métodos de Pago */}
         {sale.amount_cash > 0 && (
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Efectivo</p>
-            <p className="font-semibold">{currency} {sale.amount_cash.toFixed(2)}</p>
+            <p className="font-semibold">
+              {currency} {sale.amount_cash.toFixed(2)}
+            </p>
           </div>
         )}
 
         {sale.amount_card > 0 && (
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Tarjeta</p>
-            <p className="font-semibold">{currency} {sale.amount_card.toFixed(2)}</p>
+            <p className="font-semibold">
+              {currency} {sale.amount_card.toFixed(2)}
+            </p>
           </div>
         )}
 
         {sale.amount_yape > 0 && (
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Yape</p>
-            <p className="font-semibold">{currency} {sale.amount_yape.toFixed(2)}</p>
+            <p className="font-semibold">
+              {currency} {sale.amount_yape.toFixed(2)}
+            </p>
           </div>
         )}
 
         {sale.amount_plin > 0 && (
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Plin</p>
-            <p className="font-semibold">{currency} {sale.amount_plin.toFixed(2)}</p>
+            <p className="font-semibold">
+              {currency} {sale.amount_plin.toFixed(2)}
+            </p>
           </div>
         )}
 
         {sale.amount_deposit > 0 && (
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Depósito</p>
-            <p className="font-semibold">{currency} {sale.amount_deposit.toFixed(2)}</p>
+            <p className="font-semibold">
+              {currency} {sale.amount_deposit.toFixed(2)}
+            </p>
           </div>
         )}
 
         {sale.amount_transfer > 0 && (
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Transferencia</p>
-            <p className="font-semibold">{currency} {sale.amount_transfer.toFixed(2)}</p>
+            <p className="font-semibold">
+              {currency} {sale.amount_transfer.toFixed(2)}
+            </p>
           </div>
         )}
 
         {sale.amount_other > 0 && (
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Otro</p>
-            <p className="font-semibold">{currency} {sale.amount_other.toFixed(2)}</p>
+            <p className="font-semibold">
+              {currency} {sale.amount_other.toFixed(2)}
+            </p>
           </div>
         )}
 
@@ -536,30 +600,38 @@ export default function SaleManagePage() {
         {sale.observations && (
           <div className="space-y-1 md:col-span-2 lg:col-span-4">
             <p className="text-xs text-muted-foreground">Observaciones</p>
-            <p className="text-sm whitespace-pre-wrap bg-muted/40 p-3 rounded-lg">{sale.observations}</p>
+            <p className="text-sm whitespace-pre-wrap bg-muted/40 p-3 rounded-lg">
+              {sale.observations}
+            </p>
           </div>
         )}
 
-        {sale.has_credit_notes && sale.credit_note_ids && sale.credit_note_ids.length > 0 && (
-          <>
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Notas de Crédito</p>
-              <p className="font-semibold">{sale.credit_note_ids.length}</p>
-            </div>
-            {sale.total_credit_notes_amount !== undefined && (
+        {sale.has_credit_notes &&
+          sale.credit_note_ids &&
+          sale.credit_note_ids.length > 0 && (
+            <>
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Monto NC</p>
-                <p className="font-bold text-destructive">
-                  {currency} {sale.total_credit_notes_amount.toFixed(2)}
+                <p className="text-xs text-muted-foreground">
+                  Notas de Crédito
+                </p>
+                <p className="font-semibold">{sale.credit_note_ids.length}</p>
+              </div>
+              {sale.total_credit_notes_amount !== undefined && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Monto NC</p>
+                  <p className="font-bold text-destructive">
+                    {currency} {sale.total_credit_notes_amount.toFixed(2)}
+                  </p>
+                </div>
+              )}
+              <div className="space-y-1 md:col-span-2">
+                <p className="text-xs text-muted-foreground">IDs</p>
+                <p className="font-mono text-xs">
+                  {sale.credit_note_ids.join(", ")}
                 </p>
               </div>
-            )}
-            <div className="space-y-1 md:col-span-2">
-              <p className="text-xs text-muted-foreground">IDs</p>
-              <p className="font-mono text-xs">{sale.credit_note_ids.join(", ")}</p>
-            </div>
-          </>
-        )}
+            </>
+          )}
       </GroupFormSection>
 
       {/* Cuotas */}
@@ -617,13 +689,13 @@ export default function SaleManagePage() {
                             Cuota {installment.installment_number}
                           </Badge>
                           <Badge
-                            variant={
+                            color={
                               installment.status === "PAGADA"
                                 ? "default"
                                 : installment.status === "REGISTRADO"
                                   ? "secondary"
                                   : installment.status === "PARCIAL"
-                                    ? "outline"
+                                    ? "muted"
                                     : "destructive"
                             }
                           >
@@ -654,13 +726,10 @@ export default function SaleManagePage() {
                             </p>
                             <p
                               className={`font-bold text-lg ${
-                                isPending
-                                  ? "text-destructive"
-                                  : "text-primary"
+                                isPending ? "text-destructive" : "text-primary"
                               }`}
                             >
-                              {currency}{" "}
-                              {installment.pending_amount.toFixed(2)}
+                              {currency} {installment.pending_amount.toFixed(2)}
                             </p>
                           </div>
                         </div>

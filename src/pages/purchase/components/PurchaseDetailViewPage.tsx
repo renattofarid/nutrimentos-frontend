@@ -197,7 +197,7 @@ export const PurchaseDetailViewPage = () => {
             <span className="text-sm text-muted-foreground">Tipo de Pago</span>
             <div className="mt-1">
               <Badge
-                variant={
+                color={
                   purchase.payment_type === "CONTADO" ? "default" : "secondary"
                 }
               >
@@ -243,7 +243,7 @@ export const PurchaseDetailViewPage = () => {
             <span className="text-sm text-muted-foreground">Estado</span>
             <div className="mt-1">
               <Badge
-                variant={
+                color={
                   purchase.status === "PAGADA"
                     ? "default"
                     : purchase.status === "CANCELADO"
@@ -359,7 +359,7 @@ export const PurchaseDetailViewPage = () => {
                               {installment.correlativo}
                             </p>
                             <Badge
-                              variant={
+                              color={
                                 installment.status === "PAGADO"
                                   ? "default"
                                   : installment.status === "VENCIDO"

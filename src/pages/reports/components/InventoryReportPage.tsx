@@ -52,7 +52,7 @@ const columns: ColumnDef<InventoryItem>[] = [
   //   header: "Categoría",
   //   size: 150,
   //   cell: ({ row }) => (
-  //     <Badge variant="secondary">{row.original.category_name}</Badge>
+  //     <Badge color="secondary">{row.original.category_name}</Badge>
   //   ),
   // },
   {
@@ -111,7 +111,7 @@ const columns: ColumnDef<InventoryItem>[] = [
       const min = Number(row.original.min_stock);
 
       if (stock === 0) {
-        return <Badge variant="destructive">Sin stock</Badge>;
+        return <Badge color="destructive">Sin stock</Badge>;
       }
       if (stock <= min) {
         return (

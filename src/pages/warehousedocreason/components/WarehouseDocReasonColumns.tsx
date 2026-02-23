@@ -26,7 +26,7 @@ export const WarehouseDocReasonColumns = ({
       const type = getValue() as string;
       return (
         <Badge
-          variant={type === "INGRESO" ? "default" : "destructive"}
+          color={type === "INGRESO" ? "default" : "destructive"}
           className="capitalize"
         >
           {type.toLowerCase()}

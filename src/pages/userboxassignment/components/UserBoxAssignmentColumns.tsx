@@ -23,7 +23,7 @@ export const UserBoxAssignmentColumns = ({
     accessorKey: "box_name",
     header: "Caja",
     cell: ({ getValue }) => (
-      <Badge variant="secondary">{getValue() as string}</Badge>
+      <Badge color="secondary">{getValue() as string}</Badge>
     ),
   },
   {
@@ -33,7 +33,7 @@ export const UserBoxAssignmentColumns = ({
       const status = getValue() as string;
       return (
         <Badge
-          variant={status === "active" ? "default" : "destructive"}
+          color={status === "active" ? "default" : "destructive"}
           className="font-semibold"
         >
           {status === "active" ? "Activo" : "Inactivo"}

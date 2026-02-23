@@ -206,7 +206,7 @@ export const CreditNoteForm = ({
                 <div>
                   <p className="text-sm text-muted-foreground">Estado</p>
                   <Badge
-                    variant={
+                    color={
                       selectedSale.status === "PAGADA" ? "default" : "secondary"
                     }
                   >
@@ -238,7 +238,7 @@ export const CreditNoteForm = ({
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Tipo de Pago</p>
-                  <Badge variant="outline">{selectedSale.payment_type}</Badge>
+                  <Badge color="secondary">{selectedSale.payment_type}</Badge>
                 </div>
               </div>
             </CardContent>

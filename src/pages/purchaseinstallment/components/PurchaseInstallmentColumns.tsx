@@ -72,7 +72,7 @@ export const PurchaseInstallmentColumns = ({
         PAGADA: "default",
         VENCIDA: "destructive",
       };
-      return <Badge variant={variants[status] || "default"}>{status}</Badge>;
+      return <Badge color={variants[status] || "default"}>{status}</Badge>;
     },
   },
   {

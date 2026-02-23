@@ -123,7 +123,7 @@ export const getSaleColumns = ({
     header: "Tipo Pago",
     cell: ({ row }) => (
       <Badge
-        variant={
+        color={
           row.original.payment_type === "CONTADO" ? "default" : "secondary"
         }
       >
@@ -185,7 +185,7 @@ export const getSaleColumns = ({
       if (status === "PAGADA") variant = "default";
       if (status === "CANCELADO") variant = "destructive";
 
-      return <Badge variant={variant}>{status}</Badge>;
+      return <Badge color={variant}>{status}</Badge>;
     },
   },
   {

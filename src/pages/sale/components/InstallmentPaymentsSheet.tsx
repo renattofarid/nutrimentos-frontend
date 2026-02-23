@@ -113,7 +113,7 @@ export default function InstallmentPaymentsSheet({
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Estado</span>
             <Badge
-              variant={
+              color={
                 installment.status === "PAGADO"
                   ? "default"
                   : installment.status === "PENDIENTE"

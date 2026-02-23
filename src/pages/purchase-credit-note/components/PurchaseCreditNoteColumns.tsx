@@ -93,7 +93,7 @@ export const PurchaseCreditNoteColumns = ({
     cell: ({ row }) => {
       const isDetailed = row.original.is_detailed;
       return (
-        <Badge variant={isDetailed ? "default" : "secondary"}>
+        <Badge color={isDetailed ? "default" : "secondary"}>
           {isDetailed ? "Detallada" : "Consolidada"}
         </Badge>
       );
@@ -110,7 +110,7 @@ export const PurchaseCreditNoteColumns = ({
           : status === "ANULADO"
             ? "destructive"
             : "secondary";
-      return <Badge variant={variant}>{status}</Badge>;
+      return <Badge color={variant}>{status}</Badge>;
     },
   },
   {

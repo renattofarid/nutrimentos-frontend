@@ -93,7 +93,7 @@ export default function PurchaseDetailPage() {
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Estado</p>
-            <Badge variant={statusVariants[purchase.status] || "default"}>
+            <Badge color={statusVariants[purchase.status] || "default"}>
               {purchase.status}
             </Badge>
           </div>
@@ -132,7 +132,7 @@ export default function PurchaseDetailPage() {
           <div>
             <p className="text-sm text-muted-foreground">Tipo de Pago</p>
             <Badge
-              variant={
+              color={
                 purchase.payment_type === "CONTADO" ? "default" : "secondary"
               }
             >
@@ -237,7 +237,7 @@ export default function PurchaseDetailPage() {
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={
+                      color={
                         installment.status === "PENDIENTE"
                           ? "secondary"
                           : "default"

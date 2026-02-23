@@ -17,7 +17,7 @@ import {
   ChevronDown,
   ChevronUp,
   Calendar,
-  Eye,
+  ListX,
 } from "lucide-react";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
@@ -422,7 +422,7 @@ export const DeliverySheetForm = ({
                     : "Seleccionar Todas"}
                 </Button>
                 <Badge
-                  variant="green"
+                  color="green"
                   className="text-lg flex flex-col items-end"
                 >
                   <span className="text-green-950 text-xs">TOTAL</span>
@@ -488,22 +488,23 @@ export const DeliverySheetForm = ({
 
                         <TableCell>
                           {sale.credit_notes && sale.credit_notes.length > 0 ? (
-                            <div className="flex flex-col gap-1">
-                              <Badge variant="destructive">
+                            <div className="flex gap-1">
+                              <Badge size="default" color="orange">
                                 S/.{" "}
                                 {sale.credit_notes
                                   .reduce(
                                     (sum, cn) =>
-                                      sum + parseFormattedNumber(cn.total_amount),
+                                      sum +
+                                      parseFormattedNumber(cn.total_amount),
                                     0,
                                   )
                                   .toFixed(2)}
                               </Badge>
                               <Button
                                 type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 px-2 text-xs"
+                                variant="outline"
+                                size="xs"
+                                color="orange"
                                 onClick={() =>
                                   setCreditNotesModal({
                                     open: true,
@@ -512,12 +513,14 @@ export const DeliverySheetForm = ({
                                   })
                                 }
                               >
-                                <Eye className="h-3 w-3 mr-1" />
-                                Ver más
+                                <ListX className="h-3 w-3 mr-1" />
+                                Detalles
                               </Button>
                             </div>
                           ) : (
-                            <Badge variant="default">SIN NOTA</Badge>
+                            <Badge variant="default" color="muted">
+                              SIN NOTA
+                            </Badge>
                           )}
                         </TableCell>
                         <TableCell className="text-right font-semibold">
@@ -554,6 +557,76 @@ export const DeliverySheetForm = ({
           </Button>
         </div>
       </form>
+
+      <GeneralModal
+        open={creditNotesModal.open}
+        onClose={() =>
+          setCreditNotesModal((prev) => ({ ...prev, open: false }))
+        }
+        title="Notas de Crédito"
+        subtitle={`Venta: ${creditNotesModal.saleName}`}
+        icon="FileText"
+        size="2xl"
+      >
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <Badge color="destructive" className="text-base">
+              Total: S/.{" "}
+              {creditNotesModal.creditNotes
+                .reduce(
+                  (sum, cn) => sum + parseFormattedNumber(cn.total_amount),
+                  0,
+                )
+                .toFixed(2)}
+            </Badge>
+          </div>
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Documento</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Motivo</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Monto</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {creditNotesModal.creditNotes.map((cn) => (
+                  <TableRow key={cn.id}>
+                    <TableCell>
+                      <span className="font-mono font-semibold">
+                        {cn.full_document_number}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {format(
+                          parse(
+                            cn.issue_date.split("T")[0],
+                            "yyyy-MM-dd",
+                            new Date(),
+                          ),
+                          "dd/MM/yyyy",
+                        )}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
+                      {cn.reason}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{cn.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      S/. {parseFormattedNumber(cn.total_amount).toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </GeneralModal>
     </Form>
   );
 };

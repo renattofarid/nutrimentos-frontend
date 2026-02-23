@@ -52,7 +52,7 @@ const kardexColumns: ColumnDef<WarehouseKardexResource>[] = [
     cell: ({ row }) => {
       const type = row.original.document_type;
       return (
-        <Badge variant="secondary" className="font-medium">
+        <Badge color="secondary" className="font-medium">
           {getDocumentTypeLabel(type)}
         </Badge>
       );
@@ -71,7 +71,7 @@ const kardexColumns: ColumnDef<WarehouseKardexResource>[] = [
     cell: ({ row }) => {
       const type = row.original.movement_type;
       return (
-        <Badge variant={type === "ENTRADA" ? "default" : "destructive"}>
+        <Badge color={type === "ENTRADA" ? "default" : "destructive"}>
           {type}
         </Badge>
       );

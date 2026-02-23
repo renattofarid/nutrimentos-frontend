@@ -26,7 +26,7 @@ export const PaymentConceptColumns = ({
       const type = getValue() as string;
       return (
         <Badge
-          variant={type === "INGRESO" ? "default" : "destructive"}
+          color={type === "INGRESO" ? "default" : "destructive"}
           className="font-mono"
         >
           {type}

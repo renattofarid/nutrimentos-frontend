@@ -36,7 +36,7 @@ const inventoryColumns: ColumnDef<ValuatedInventoryItem>[] = [
       const variant =
         stock <= 0 ? "destructive" : stock < 10 ? "secondary" : "default";
       return (
-        <Badge variant={variant} className="font-bold">
+        <Badge color={variant} className="font-bold">
           {stock}
         </Badge>
       );

@@ -57,22 +57,22 @@ export default function DeliverySheetDetailSheet({
 
   const getStatusVariant = (
     status: string,
-  ): "default" | "secondary" | "destructive" | "outline" => {
+  ): "default" | "secondary" | "destructive" | "green" | "muted" => {
     if (status === "PENDIENTE") return "secondary";
     if (status === "EN_REPARTO") return "default";
-    if (status === "COMPLETADO") return "outline";
+    if (status === "COMPLETADO") return "green";
     if (status === "CANCELADO") return "destructive";
-    return "outline";
+    return "muted";
   };
 
   const getDeliveryStatusVariant = (
     status: string,
-  ): "default" | "secondary" | "destructive" | "outline" => {
+  ): "default" | "secondary" | "destructive" | "orange" | "muted" => {
     if (status === "ENTREGADO") return "default";
     if (status === "PENDIENTE") return "secondary";
     if (status === "NO_ENTREGADO") return "destructive";
-    if (status === "DEVUELTO") return "outline";
-    return "outline";
+    if (status === "DEVUELTO") return "orange";
+    return "muted";
   };
 
   const salesColumns: ColumnDef<DeliverySheetSale>[] = [
@@ -128,7 +128,7 @@ export default function DeliverySheetDetailSheet({
       accessorKey: "delivery_status",
       header: "Estado",
       cell: ({ row }) => (
-        <Badge variant={getDeliveryStatusVariant(row.original.delivery_status)}>
+        <Badge color={getDeliveryStatusVariant(row.original.delivery_status)}>
           {row.original.delivery_status.replace("_", " ")}
         </Badge>
       ),
@@ -287,7 +287,7 @@ export default function DeliverySheetDetailSheet({
             <span className="text-sm text-muted-foreground">Tipo</span>
             <div className="mt-1">
               <Badge
-                variant={
+                color={
                   deliverySheet.type === "CONTADO" ? "default" : "secondary"
                 }
               >
@@ -298,7 +298,7 @@ export default function DeliverySheetDetailSheet({
           <div>
             <span className="text-sm text-muted-foreground">Estado</span>
             <div className="mt-1">
-              <Badge variant={getStatusVariant(deliverySheet.status)}>
+              <Badge color={getStatusVariant(deliverySheet.status)}>
                 {deliverySheet.status.replace("_", " ")}
               </Badge>
             </div>

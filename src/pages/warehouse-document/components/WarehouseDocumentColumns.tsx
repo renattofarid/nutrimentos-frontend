@@ -49,7 +49,7 @@ export const WarehouseDocumentColumns = ({
       return (
         type && (
           <Badge
-            variant={isEntry ? "default" : "secondary"}
+            color={isEntry ? "default" : "secondary"}
             className="font-medium"
           >
             {getDocumentTypeLabel(type)}
@@ -96,7 +96,7 @@ export const WarehouseDocumentColumns = ({
       const status = row.original.status;
       const variant = getDocumentStatusVariant(status);
       return (
-        <Badge variant={variant} className="font-semibold">
+        <Badge color={variant} className="font-semibold">
           {status}
         </Badge>
       );

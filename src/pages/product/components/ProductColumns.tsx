@@ -41,7 +41,7 @@ export const ProductColumns = ({
     accessorKey: "brand_name",
     header: "Marca",
     cell: ({ getValue }) => (
-      <Badge variant="secondary" className="font-medium">
+      <Badge color="secondary" className="font-medium">
         {getValue() as string}
       </Badge>
     ),
@@ -53,7 +53,7 @@ export const ProductColumns = ({
       const type = getValue() as string;
       const getVariant = (
         type: string
-      ): "default" | "destructive" | "secondary" | "outline" => {
+      ): "default" | "destructive" | "secondary" | "muted" => {
         switch (type) {
           case "Normal":
             return "default";
@@ -62,11 +62,11 @@ export const ProductColumns = ({
           case "Servicio":
             return "secondary";
           default:
-            return "outline";
+            return "muted";
         }
       };
       return (
-        <Badge variant={getVariant(type)} className="font-semibold">
+        <Badge color={getVariant(type)} className="font-semibold">
           {type}
         </Badge>
       );

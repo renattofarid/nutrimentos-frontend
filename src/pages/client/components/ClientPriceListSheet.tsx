@@ -48,7 +48,8 @@ export default function ClientPriceListSheet({
       // Solo mostrar toast si no es un error 404 o 500 (que manejaremos en la UI)
       if (status !== 404 && status !== 500) {
         errorToast(
-          error.response?.data?.message || "Error al cargar la lista de precios"
+          error.response?.data?.message ||
+            "Error al cargar la lista de precios",
         );
       }
     } finally {
@@ -85,179 +86,192 @@ export default function ClientPriceListSheet({
       size="4xl"
     >
       <div className="space-y-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="size-8 animate-spin text-muted-foreground" />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="size-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : hasError || !priceListData ? (
+          <div className="text-center py-12 space-y-4">
+            <AlertCircle className="size-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <div className="space-y-2">
+              <p className="text-lg font-semibold">
+                {errorStatus === 404 || errorStatus === 500
+                  ? "Este cliente no tiene una lista de precios asignada"
+                  : "No se pudo cargar la lista de precios"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {errorStatus === 404 || errorStatus === 500
+                  ? "Puedes asignar una lista de precios para este cliente haciendo clic en el botón de abajo"
+                  : "Ocurrió un error al intentar cargar la información"}
+              </p>
             </div>
-          ) : hasError || !priceListData ? (
-            <div className="text-center py-12 space-y-4">
-              <AlertCircle className="size-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <div className="space-y-2">
-                <p className="text-lg font-semibold">
-                  {errorStatus === 404 || errorStatus === 500
-                    ? "Este cliente no tiene una lista de precios asignada"
-                    : "No se pudo cargar la lista de precios"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {errorStatus === 404 || errorStatus === 500
-                    ? "Puedes asignar una lista de precios para este cliente haciendo clic en el botón de abajo"
-                    : "Ocurrió un error al intentar cargar la información"}
-                </p>
+            {(errorStatus === 404 || errorStatus === 500) && (
+              <Button onClick={() => setShowAssignModal(true)} className="mt-4">
+                Asignar Lista de Precios
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Información de la lista de precios */}
+            <div className="bg-sidebar p-4 rounded-lg border space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-lg">
+                  {priceListData.price_list.name}
+                </h3>
+                <Badge
+                  color={
+                    priceListData.price_list.is_active ? "default" : "secondary"
+                  }
+                >
+                  {priceListData.price_list.is_active ? "Activa" : "Inactiva"}
+                </Badge>
               </div>
-              {(errorStatus === 404 || errorStatus === 500) && (
-                <Button onClick={() => setShowAssignModal(true)} className="mt-4">
-                  Asignar Lista de Precios
-                </Button>
-              )}
+              <p className="text-sm text-muted-foreground">
+                {priceListData.price_list.description}
+              </p>
+              <div className="text-xs text-muted-foreground">
+                Código: {priceListData.price_list.code}
+              </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Información de la lista de precios */}
-              <div className="bg-sidebar p-4 rounded-lg border space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-lg">
-                    {priceListData.price_list.name}
-                  </h3>
-                  <Badge
-                    variant={
-                      priceListData.price_list.is_active ? "default" : "secondary"
-                    }
-                  >
-                    {priceListData.price_list.is_active ? "Activa" : "Inactiva"}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {priceListData.price_list.description}
-                </p>
-                <div className="text-xs text-muted-foreground">
-                  Código: {priceListData.price_list.code}
-                </div>
-              </div>
 
-              {/* Rangos de peso */}
-              {priceListData.price_list.weight_ranges.length > 0 && (
-                <div className="bg-sidebar p-4 rounded-lg border">
-                  <h4 className="font-semibold mb-3 text-sm">
-                    Rangos de Peso
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {priceListData.price_list.weight_ranges.map((range) => (
-                      <Badge key={range.id} variant="outline">
-                        {range.name}: {range.min_weight} -{" "}
-                        {range.max_weight || "∞"} kg
-                      </Badge>
-                    ))}
+            {/* Rangos de peso */}
+            {priceListData.price_list.weight_ranges.length > 0 && (
+              <div className="bg-sidebar p-4 rounded-lg border">
+                <h4 className="font-semibold mb-3 text-sm">Rangos de Peso</h4>
+                <div className="flex flex-wrap gap-2">
+                  {priceListData.price_list.weight_ranges.map((range) => (
+                    <Badge key={range.id} variant="outline">
+                      {range.name}: {range.min_weight} -{" "}
+                      {range.max_weight || "∞"} kg
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Matriz de Precios */}
+            <div className="border rounded-lg">
+              <div className="bg-sidebar px-4 py-3 border-b">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <Package className="size-4" />
+                  Matriz de Precios ({priceListData.total_products} productos)
+                </h4>
+              </div>
+              <div className="max-h-[calc(100vh-28rem)] overflow-auto">
+                {priceListData.products.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No hay productos en esta lista de precios</p>
                   </div>
-                </div>
-              )}
-
-              {/* Matriz de Precios */}
-              <div className="border rounded-lg">
-                <div className="bg-sidebar px-4 py-3 border-b">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Package className="size-4" />
-                    Matriz de Precios ({priceListData.total_products} productos)
-                  </h4>
-                </div>
-                <div className="max-h-[calc(100vh-28rem)] overflow-auto">
-                  {priceListData.products.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No hay productos en esta lista de precios</p>
-                    </div>
-                  ) : (
-                    <div className="p-4">
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr className="bg-muted/50">
-                            <th className="border p-3 text-left font-semibold sticky left-0 bg-muted/50 z-10 min-w-[200px]">
-                              Producto
+                ) : (
+                  <div className="p-4">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-muted/50">
+                          <th className="border p-3 text-left font-semibold sticky left-0 bg-muted/50 z-10 min-w-[200px]">
+                            Producto
+                          </th>
+                          {priceListData.price_list.weight_ranges.length ===
+                          0 ? (
+                            <th className="border p-3 text-center text-muted-foreground italic">
+                              Sin rangos de peso
                             </th>
-                            {priceListData.price_list.weight_ranges.length === 0 ? (
-                              <th className="border p-3 text-center text-muted-foreground italic">
-                                Sin rangos de peso
-                              </th>
-                            ) : (
-                              priceListData.price_list.weight_ranges.map((range) => (
+                          ) : (
+                            priceListData.price_list.weight_ranges.map(
+                              (range) => (
                                 <th
                                   key={range.id}
                                   className="border p-3 text-center font-semibold min-w-[140px]"
                                 >
                                   <div className="space-y-1">
-                                    <Badge variant="secondary" className="font-mono text-xs">
+                                    <Badge
+                                      color="secondary"
+                                      className="font-mono text-xs"
+                                    >
                                       {range.name}
                                     </Badge>
                                     <div className="text-xs text-muted-foreground font-normal">
                                       {range.min_weight}kg -{" "}
-                                      {range.max_weight && range.max_weight !== "null"
+                                      {range.max_weight &&
+                                      range.max_weight !== "null"
                                         ? `${range.max_weight}kg`
                                         : "Sin límite"}
                                     </div>
                                   </div>
                                 </th>
-                              ))
-                            )}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(() => {
-                            // Agrupar productos por product_id
-                            const productMap = new Map<
-                              number,
-                              {
-                                product: ClientPriceProduct;
-                                prices: Map<number, ClientProductPrice>;
-                              }
-                            >();
+                              ),
+                            )
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(() => {
+                          // Agrupar productos por product_id
+                          const productMap = new Map<
+                            number,
+                            {
+                              product: ClientPriceProduct;
+                              prices: Map<number, ClientProductPrice>;
+                            }
+                          >();
 
-                            priceListData.products.forEach((item) => {
-                              if (!productMap.has(item.product_id)) {
-                                productMap.set(item.product_id, {
-                                  product: item.product,
-                                  prices: new Map(),
-                                });
-                              }
-                              productMap
-                                .get(item.product_id)!
-                                .prices.set(item.weight_range_id, item);
-                            });
+                          priceListData.products.forEach((item) => {
+                            if (!productMap.has(item.product_id)) {
+                              productMap.set(item.product_id, {
+                                product: item.product,
+                                prices: new Map(),
+                              });
+                            }
+                            productMap
+                              .get(item.product_id)!
+                              .prices.set(item.weight_range_id, item);
+                          });
 
-                            return Array.from(productMap.values()).map(
-                              ({ product, prices }) => (
-                                <tr key={product.id} className="hover:bg-muted/20">
-                                  <td className="border p-3 sticky left-0 bg-background z-10">
-                                    <div>
-                                      <div className="font-semibold text-sm">
-                                        {product.name}
-                                      </div>
-                                      <div className="text-xs text-muted-foreground font-mono">
-                                        {product.codigo}
-                                      </div>
-                                      {product.comment && (
-                                        <div className="text-xs text-muted-foreground mt-1">
-                                          {product.comment}
-                                        </div>
-                                      )}
+                          return Array.from(productMap.values()).map(
+                            ({ product, prices }) => (
+                              <tr
+                                key={product.id}
+                                className="hover:bg-muted/20"
+                              >
+                                <td className="border p-3 sticky left-0 bg-background z-10">
+                                  <div>
+                                    <div className="font-semibold text-sm">
+                                      {product.name}
                                     </div>
+                                    <div className="text-xs text-muted-foreground font-mono">
+                                      {product.codigo}
+                                    </div>
+                                    {product.comment && (
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        {product.comment}
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                                {priceListData.price_list.weight_ranges
+                                  .length === 0 ? (
+                                  <td className="border p-3 text-center text-muted-foreground italic">
+                                    Sin rangos de peso
                                   </td>
-                                  {priceListData.price_list.weight_ranges.length === 0 ? (
-                                    <td className="border p-3 text-center text-muted-foreground italic">
-                                      Sin rangos de peso
-                                    </td>
-                                  ) : (
-                                    priceListData.price_list.weight_ranges.map((range) => {
+                                ) : (
+                                  priceListData.price_list.weight_ranges.map(
+                                    (range) => {
                                       const priceItem = prices.get(range.id);
                                       return (
-                                        <td key={range.id} className="border p-2">
+                                        <td
+                                          key={range.id}
+                                          className="border p-2"
+                                        >
                                           {priceItem ? (
                                             <div className="text-center space-y-1">
                                               <div className="font-semibold text-sm">
                                                 {formatPrice(
                                                   priceItem.price,
-                                                  priceItem.currency
+                                                  priceItem.currency,
                                                 )}
                                               </div>
                                               <Badge
-                                                variant={
+                                                color={
                                                   priceItem.is_active
                                                     ? "default"
                                                     : "secondary"
@@ -276,20 +290,21 @@ export default function ClientPriceListSheet({
                                           )}
                                         </td>
                                       );
-                                    })
-                                  )}
-                                </tr>
-                              )
-                            );
-                          })()}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
+                                    },
+                                  )
+                                )}
+                              </tr>
+                            ),
+                          );
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
-          )}
+          </div>
+        )}
       </div>
 
       {showAssignModal && (

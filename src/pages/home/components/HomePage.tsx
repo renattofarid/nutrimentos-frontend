@@ -247,7 +247,7 @@ export default function HomePage() {
                 <span className="text-sm text-muted-foreground">
                   Compras Pendientes
                 </span>
-                <Badge variant="secondary">{stats.pendingPurchases}</Badge>
+                <Badge color="secondary">{stats.pendingPurchases}</Badge>
               </div>
             </div>
           </CardContent>

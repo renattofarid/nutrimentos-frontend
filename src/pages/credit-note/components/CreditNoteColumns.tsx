@@ -97,7 +97,7 @@ export const CreditNoteColumns = ({
     cell: ({ getValue }) => {
       const affectsStock = getValue() as boolean;
       return (
-        <Badge variant={affectsStock ? "default" : "secondary"}>
+        <Badge color={affectsStock ? "default" : "secondary"}>
           {affectsStock ? "Sí" : "No"}
         </Badge>
       );
@@ -114,7 +114,7 @@ export const CreditNoteColumns = ({
           : status === "ANULADO"
             ? "destructive"
             : "secondary";
-      return <Badge variant={variant}>{status}</Badge>;
+      return <Badge color={variant}>{status}</Badge>;
     },
   },
   {
@@ -142,7 +142,6 @@ export const CreditNoteColumns = ({
           <ExportButtons
             pdfEndpoint={`/credit-notes/${id}/pdf`}
             variant="separate"
-
           />
           <DeleteButton onClick={() => onDelete(id)} />
         </div>

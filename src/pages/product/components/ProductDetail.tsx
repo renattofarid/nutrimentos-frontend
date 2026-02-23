@@ -112,7 +112,7 @@ export default function ProductDetail() {
                         {warehouse.warehouse_name}
                       </span>
                       <Badge
-                        variant="secondary"
+                        color="secondary"
                         className="text-sm font-semibold"
                       >
                         {warehouse.stock} Kg

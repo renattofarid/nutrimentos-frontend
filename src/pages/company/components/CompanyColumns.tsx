@@ -26,7 +26,7 @@ export const CompanyColumns = ({
       const ruc = getValue() as string;
       return (
         ruc && (
-          <Badge variant={"secondary"} className="font-mono">
+          <Badge color={"secondary"} className="font-mono">
             {ruc}
           </Badge>
         )

@@ -28,7 +28,7 @@ export const TypeUserColumns = ({
       const status = getValue() as string;
       return (
         <Badge
-          variant={status === "Activo" ? "default" : "destructive"}
+          color={status === "Activo" ? "default" : "destructive"}
           className={`font-semibold`}
         >
           {status}

@@ -12,16 +12,8 @@ import { Loader, Search, Info, List } from "lucide-react";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
 import { FormSelect } from "@/components/FormSelect";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
-import { format, parse, startOfMonth } from "date-fns";
+import { format, parse } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { DELIVERY_SHEET_TYPES } from "../lib/deliverysheet.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
@@ -41,6 +33,7 @@ import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useDrivers } from "@/pages/driver/lib/driver.hook";
 import { useClients } from "@/pages/client/lib/client.hook";
+import { FormTextArea } from "@/components/FormTextArea";
 
 interface DeliverySheetFormProps {
   defaultValues: Partial<DeliverySheetSchema>;
@@ -82,7 +75,7 @@ export const DeliverySheetForm = ({
     zone_id: "",
     customer_id: "",
     person_zone_id: "",
-    date_from: startOfMonth(new Date()) as Date | undefined,
+    date_from: new Date() as Date | undefined,
     date_to: new Date() as Date | undefined,
   });
 
@@ -154,6 +147,12 @@ export const DeliverySheetForm = ({
   }, [selectedSaleIds, form]);
 
   useEffect(() => {
+    if (availableSales.length > 0) {
+      setSelectedSaleIds(availableSales.map((sale) => sale.id));
+    }
+  }, [availableSales]);
+
+  useEffect(() => {
     if (branches.length > 0 && !form.getValues("branch_id")) {
       form.setValue("branch_id", branches[0].id.toString());
     }
@@ -206,6 +205,8 @@ export const DeliverySheetForm = ({
           cols={{
             sm: 1,
             md: 3,
+            lg: 4,
+            xl: 6,
           }}
         >
           <FormSelect
@@ -290,22 +291,14 @@ export const DeliverySheetForm = ({
             dateFormat="dd/MM/yyyy"
           />
 
-          <FormField
-            control={form.control}
-            name="observations"
-            render={({ field }) => (
-              <FormItem className="md:col-span-3">
-                <FormLabel>Observaciones</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Ingrese observaciones (opcional)"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="col-span-full">
+            <FormTextArea
+              control={form.control}
+              name="observations"
+              label="Observaciones"
+              placeholder="Ingrese observaciones (opcional)"
+            />
+          </div>
         </GroupFormSection>
 
         <GroupFormSection

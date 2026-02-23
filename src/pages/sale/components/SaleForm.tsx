@@ -1027,6 +1027,7 @@ export const SaleForm = ({
               })) || []
             }
             disabled={mode === "update"}
+            autoSelectSingle
           />
 
           <FormSelect
@@ -1039,6 +1040,7 @@ export const SaleForm = ({
               label: warehouse.name,
             }))}
             disabled={mode === "update" || !selectedBranchId}
+            autoSelectSingle
           />
 
           <FormSelect

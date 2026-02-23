@@ -8,9 +8,9 @@ import { DELIVERY_SHEET } from "../lib/deliverysheet.interface";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
-import FormWrapper from "@/components/FormWrapper";
 import { useEffect } from "react";
 import { format } from "date-fns";
+import PageWrapper from "@/components/PageWrapper";
 
 export default function DeliverySheetAddPage() {
   const navigate = useNavigate();
@@ -64,7 +64,7 @@ export default function DeliverySheetAddPage() {
   const { TITLES, ICON } = DELIVERY_SHEET;
 
   return (
-    <FormWrapper>
+    <PageWrapper>
       <div className="flex items-center justify-between mb-6">
         <TitleFormComponent
           title={TITLES.create.title}
@@ -89,6 +89,6 @@ export default function DeliverySheetAddPage() {
         onSearchSales={handleSearchSales}
         isLoadingAvailableSales={isLoadingAvailableSales}
       />
-    </FormWrapper>
+    </PageWrapper>
   );
 }

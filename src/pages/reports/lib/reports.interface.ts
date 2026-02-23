@@ -122,20 +122,20 @@ export interface InventoryReportParams {
 
 export interface InventoryItem {
   id: number;
-  product_id: number;
-  product_name: string;
-  product_code: string;
-  category_name: string;
   warehouse_id: number;
   warehouse_name: string;
-  current_stock: number;
-  min_stock: number;
-  unit_name: string;
+  product_id: number;
+  product_name: string;
+  stock: string;
+  min_stock: string;
+  max_stock: string;
+  created_at: string;
 }
 
 export interface InventoryReportResponse {
-  message: string;
   data: InventoryItem[];
+  links: Links;
+  meta: Meta;
 }
 
 // ─── Kardex Report ──────────────────────────────────────────────────────────

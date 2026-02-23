@@ -11,6 +11,7 @@ import {
 import {
   Loader,
   Search,
+  SearchX,
   Info,
   List,
   ChevronDown,
@@ -42,6 +43,7 @@ import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useDrivers } from "@/pages/driver/lib/driver.hook";
 import { useClients } from "@/pages/client/lib/client.hook";
 import { FormTextArea } from "@/components/FormTextArea";
+import { EmptyState } from "@/components/EmptyState";
 
 interface DeliverySheetFormProps {
   defaultValues: Partial<DeliverySheetSchema>;
@@ -78,6 +80,7 @@ export const DeliverySheetForm = ({
   const [selectedSaleIds, setSelectedSaleIds] = useState<number[]>(
     defaultValues.sale_ids || [],
   );
+  const [hasSearched, setHasSearched] = useState(false);
   const [showMoreFields, setShowMoreFields] = useState(false);
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [searchParams, setSearchParams] = useState({
@@ -117,6 +120,7 @@ export const DeliverySheetForm = ({
       return;
     }
 
+    setHasSearched(true);
     onSearchSales({
       payment_type: searchParams.payment_type,
       zone_id: searchParams.zone_id ? Number(searchParams.zone_id) : undefined,
@@ -335,20 +339,7 @@ export const DeliverySheetForm = ({
           cols={{ sm: 1 }}
         >
           <div className="space-y-3">
-            <div className="flex flex-wrap gap-2 items-center">
-              <Button
-                type="button"
-                onClick={handleSearchSales}
-                disabled={!searchParams.payment_type || isLoadingAvailableSales}
-                size="sm"
-              >
-                {isLoadingAvailableSales ? (
-                  <Loader className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Search className="mr-2 h-4 w-4" />
-                )}
-                Buscar Ventas
-              </Button>
+            <div className="flex flex-wrap gap-2 items-center justify-end">
               <Button
                 type="button"
                 variant="ghost"
@@ -363,6 +354,19 @@ export const DeliverySheetForm = ({
                 ) : (
                   <ChevronDown className="h-4 w-4" />
                 )}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSearchSales}
+                disabled={!searchParams.payment_type || isLoadingAvailableSales}
+                size="sm"
+              >
+                {isLoadingAvailableSales ? (
+                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Search className="mr-2 h-4 w-4" />
+                )}
+                Buscar Ventas
               </Button>
             </div>
             {showDateFilter && (
@@ -380,6 +384,14 @@ export const DeliverySheetForm = ({
             )}
           </div>
         </GroupFormSection>
+
+        {hasSearched && !isLoadingAvailableSales && availableSales.length === 0 && (
+          <EmptyState
+            icon={SearchX}
+            title="Sin resultados"
+            description="No se encontraron ventas disponibles con los filtros seleccionados."
+          />
+        )}
 
         {availableSales.length > 0 && (
           <GroupFormSection

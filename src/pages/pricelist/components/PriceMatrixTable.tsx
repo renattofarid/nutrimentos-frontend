@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash2, DollarSign, Weight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { ProductResource } from "@/pages/product/lib/product.interface";
 import { AddWeightRangeModal } from "./AddWeightRangeModal";
 import {
   Select,
@@ -14,18 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Command,
-  CommandInput,
-  CommandEmpty,
-  CommandList,
-  CommandItem,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
+import { Form } from "@/components/ui/form";
+import { FormSelectAsync } from "@/components/FormSelectAsync";
+import { useProduct } from "@/pages/product/lib/product.hook";
+import type { ProductResource } from "@/pages/product/lib/product.interface";
 
 interface WeightRangeData {
   name: string;
@@ -48,7 +40,6 @@ interface PriceCell {
 interface PriceMatrixTableProps {
   weightRanges: WeightRangeData[];
   onWeightRangesChange: (ranges: WeightRangeData[]) => void;
-  products: ProductResource[];
   selectedProducts: ProductInMatrix[];
   onSelectedProductsChange: (products: ProductInMatrix[]) => void;
   priceMatrix: Record<string, PriceCell>; // key: "productId_rangeIndex"
@@ -58,33 +49,46 @@ interface PriceMatrixTableProps {
 export const PriceMatrixTable = ({
   weightRanges,
   onWeightRangesChange,
-  products,
   selectedProducts,
   onSelectedProductsChange,
   priceMatrix,
   onPriceMatrixChange,
 }: PriceMatrixTableProps) => {
   const [showWeightRangeModal, setShowWeightRangeModal] = useState(false);
-  const [openProductCombobox, setOpenProductCombobox] = useState(false);
-  const [searchProduct, setSearchProduct] = useState("");
+
+  const productSearchForm = useForm<{ product_id: string }>({
+    defaultValues: { product_id: "" },
+  });
+
+  const handleAddProduct = (value: string, item?: ProductResource) => {
+    if (!value || !item) return;
+    if (!selectedProducts.some((p) => p.product_id === item.id)) {
+      onSelectedProductsChange([
+        ...selectedProducts,
+        {
+          product_id: item.id,
+          product_name: item.name,
+          product_code: item.codigo,
+        },
+      ]);
+    }
+    setTimeout(() => productSearchForm.reset(), 0);
+  };
 
   const handleAddWeightRange = (data: {
     name: string;
     min_weight: number;
     max_weight: number | null;
   }) => {
-    const newRange: WeightRangeData = {
-      ...data,
-      order: weightRanges.length + 1,
-    };
-    onWeightRangesChange([...weightRanges, newRange]);
+    onWeightRangesChange([
+      ...weightRanges,
+      { ...data, order: weightRanges.length + 1 },
+    ]);
   };
 
   const handleRemoveWeightRange = (index: number) => {
-    const newRanges = weightRanges.filter((_, i) => i !== index);
-    onWeightRangesChange(newRanges);
+    onWeightRangesChange(weightRanges.filter((_, i) => i !== index));
 
-    // Limpiar precios asociados a este rango
     const newMatrix = { ...priceMatrix };
     selectedProducts.forEach((product) => {
       delete newMatrix[`${product.product_id}_${index}`];
@@ -92,47 +96,11 @@ export const PriceMatrixTable = ({
     onPriceMatrixChange(newMatrix);
   };
 
-  const handleAddProduct = (productId: number) => {
-    const product = products.find((p) => p.id === productId);
-    if (!product) return;
-
-    // Verificar si el producto ya está agregado
-    if (selectedProducts.some((p) => p.product_id === productId)) {
-      return;
-    }
-
-    const newProduct: ProductInMatrix = {
-      product_id: product.id,
-      product_name: product.name,
-      product_code: product.codigo,
-    };
-    onSelectedProductsChange([...selectedProducts, newProduct]);
-    setSearchProduct("");
-    setOpenProductCombobox(false);
-  };
-
-  // Filtrar productos disponibles (que no estén ya seleccionados)
-  const availableProducts = products.filter(
-    (p) => !selectedProducts.some((sp) => sp.product_id === p.id)
-  );
-
-  // Filtrar productos por búsqueda (código o nombre)
-  const filteredProducts = availableProducts.filter((product) => {
-    if (!searchProduct) return true;
-    const searchLower = searchProduct.toLowerCase();
-    return (
-      product.codigo.toLowerCase().includes(searchLower) ||
-      product.name.toLowerCase().includes(searchLower)
-    );
-  });
-
   const handleRemoveProduct = (productId: number) => {
-    const newProducts = selectedProducts.filter(
-      (p) => p.product_id !== productId
+    onSelectedProductsChange(
+      selectedProducts.filter((p) => p.product_id !== productId)
     );
-    onSelectedProductsChange(newProducts);
 
-    // Limpiar precios asociados a este producto
     const newMatrix = { ...priceMatrix };
     weightRanges.forEach((_, rangeIndex) => {
       delete newMatrix[`${productId}_${rangeIndex}`];
@@ -147,13 +115,9 @@ export const PriceMatrixTable = ({
   ) => {
     const key = `${productId}_${rangeIndex}`;
     const currentCell = priceMatrix[key] || { price: 0, currency: "PEN" };
-
     onPriceMatrixChange({
       ...priceMatrix,
-      [key]: {
-        ...currentCell,
-        price: value === "" ? 0 : parseFloat(value),
-      },
+      [key]: { ...currentCell, price: value === "" ? 0 : parseFloat(value) },
     });
   };
 
@@ -164,30 +128,23 @@ export const PriceMatrixTable = ({
   ) => {
     const key = `${productId}_${rangeIndex}`;
     const currentCell = priceMatrix[key] || { price: 0, currency: "PEN" };
-
     onPriceMatrixChange({
       ...priceMatrix,
-      [key]: {
-        ...currentCell,
-        currency,
-      },
+      [key]: { ...currentCell, currency },
     });
   };
 
   const getPriceValue = (productId: number, rangeIndex: number): string => {
-    const key = `${productId}_${rangeIndex}`;
-    const price = priceMatrix[key]?.price;
+    const price = priceMatrix[`${productId}_${rangeIndex}`]?.price;
     return price && price > 0 ? price.toString() : "";
   };
 
-  const getCurrencyValue = (productId: number, rangeIndex: number): string => {
-    const key = `${productId}_${rangeIndex}`;
-    return priceMatrix[key]?.currency || "PEN";
-  };
+  const getCurrencyValue = (productId: number, rangeIndex: number): string =>
+    priceMatrix[`${productId}_${rangeIndex}`]?.currency || "PEN";
 
   return (
     <div className="space-y-4">
-      {/* Header con botones */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <DollarSign className="h-5 w-5 text-primary" />
@@ -198,74 +155,36 @@ export const PriceMatrixTable = ({
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowWeightRangeModal(true)}
-          >
-            <Weight className="h-4 w-4 mr-2" />
-            Agregar Rango
-          </Button>
-        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setShowWeightRangeModal(true)}
+        >
+          <Weight className="h-4 w-4 mr-2" />
+          Agregar Rango
+        </Button>
       </div>
 
-      {/* Input de búsqueda de productos */}
-      <div className="flex gap-2 items-end">
-        <div className="flex-1">
-          <label className="text-sm font-medium mb-1.5 block">
-            Agregar Producto
-          </label>
-          <Popover open={openProductCombobox} onOpenChange={setOpenProductCombobox}>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                role="combobox"
-                className="w-full justify-start text-left font-normal"
-                disabled={!products || products.length === 0}
-              >
-                <span className="text-muted-foreground">
-                  Buscar por código o nombre del producto...
-                </span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0" align="start">
-              <Command shouldFilter={false}>
-                <CommandInput
-                  placeholder="Escribe el código o nombre..."
-                  value={searchProduct}
-                  onValueChange={setSearchProduct}
-                />
-                <CommandList className="max-h-60 overflow-y-auto">
-                  <CommandEmpty>
-                    {availableProducts.length === 0
-                      ? "Todos los productos ya fueron agregados"
-                      : "No se encontraron productos"}
-                  </CommandEmpty>
-                  {filteredProducts.slice(0, 50).map((product) => (
-                    <CommandItem
-                      key={product.id}
-                      onSelect={() => handleAddProduct(product.id)}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium">{product.name}</span>
-                        <span className="text-xs text-muted-foreground font-mono">
-                          {product.codigo}
-                        </span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
+      {/* Búsqueda de producto */}
+      <Form {...productSearchForm}>
+        <FormSelectAsync
+          name="product_id"
+          control={productSearchForm.control}
+          label="Agregar Producto"
+          placeholder="Buscar por código o nombre..."
+          useQueryHook={useProduct}
+          mapOptionFn={(item: ProductResource) => ({
+            value: String(item.id),
+            label: item.name,
+            description: item.codigo,
+          })}
+          onValueChange={handleAddProduct}
+          withValue={false}
+        />
+      </Form>
 
-      {/* Tabla de doble entrada */}
+      {/* Tabla */}
       {selectedProducts.length === 0 && weightRanges.length === 0 ? (
         <div className="text-center py-12 rounded-lg border-2 border-dashed border-muted bg-muted/20">
           <DollarSign className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
@@ -404,7 +323,6 @@ export const PriceMatrixTable = ({
         </div>
       )}
 
-      {/* Modales */}
       <AddWeightRangeModal
         open={showWeightRangeModal}
         onClose={() => setShowWeightRangeModal(false)}

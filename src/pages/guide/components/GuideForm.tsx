@@ -40,7 +40,6 @@ import {
   type GuideMotiveResource,
 } from "../lib/guide.interface";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
-import type { ProductResource } from "@/pages/product/lib/product.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import type { VehicleResource } from "@/pages/vehicle/lib/vehicle.interface";
@@ -63,7 +62,6 @@ interface GuideFormProps {
   mode?: "create" | "update";
   branches: BranchResource[];
   warehouses: WarehouseResource[];
-  products: ProductResource[];
   customers: PersonResource[];
   motives: GuideMotiveResource[];
   vehicles: VehicleResource[];

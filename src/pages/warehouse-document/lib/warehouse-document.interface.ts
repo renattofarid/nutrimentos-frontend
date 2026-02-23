@@ -5,13 +5,13 @@ import type { WarehouseDocumentSchema } from "./warehouse-document.schema";
 import { format } from "date-fns";
 
 const ROUTE = "/documentos-almacen";
-const NAME = "Documento de Almacén";
+const NAME = "Transferencia";
 
 export const WAREHOUSE_DOCUMENT: ModelComplete<WarehouseDocumentSchema> = {
   MODEL: {
     name: NAME,
-    description: "Gestión de documentos de entrada y salida de almacén.",
-    plural: "Documentos de Almacén",
+    description: "Gestión de transferencias",
+    plural: "Transferencias",
     gender: false,
   },
   ICON: "FileText",
@@ -24,15 +24,15 @@ export const WAREHOUSE_DOCUMENT: ModelComplete<WarehouseDocumentSchema> = {
   TITLES: {
     create: {
       title: `Crear ${NAME}`,
-      subtitle: `Complete los campos para crear un nuevo ${NAME.toLowerCase()}`,
+      subtitle: `Complete los campos para crear una nueva ${NAME.toLowerCase()}`,
     },
     update: {
       title: `Actualizar ${NAME}`,
-      subtitle: `Actualice los campos para modificar el ${NAME.toLowerCase()}`,
+      subtitle: `Actualice los campos para modificar la ${NAME.toLowerCase()}`,
     },
     delete: {
       title: `Eliminar ${NAME}`,
-      subtitle: `Confirme para eliminar el ${NAME.toLowerCase()}`,
+      subtitle: `Confirme para eliminar la ${NAME.toLowerCase()}`,
     },
   },
   EMPTY: {

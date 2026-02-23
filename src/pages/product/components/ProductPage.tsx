@@ -35,23 +35,13 @@ export default function ProductPage() {
   const [selectedCompany, setSelectedCompany] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const { data, meta, isLoading, refetch } = useProduct();
+  const { data, isLoading, refetch } = useProduct();
   const { data: categories } = useAllCategories();
   const { data: brands } = useAllBrands();
   const { data: companies } = useAllCompanies();
 
   useEffect(() => {
-    const filterParams = {
-      page,
-      search,
-      codigo: searchCode,
-      per_page,
-      ...(selectedCompany && { company_id: selectedCompany }),
-      ...(selectedCategory && { category_id: selectedCategory }),
-      ...(selectedBrand && { brand_id: selectedBrand }),
-      ...(selectedType && { product_type: selectedType }),
-    };
-    refetch(filterParams);
+    setPage(1);
   }, [
     page,
     search,
@@ -68,16 +58,7 @@ export default function ProductPage() {
     if (!deleteId) return;
     try {
       await deleteProduct(deleteId);
-      const filterParams = {
-        page,
-        search,
-        per_page,
-        ...(selectedCategory && { category_id: selectedCategory }),
-        ...(selectedBrand && { brand_id: selectedBrand }),
-        ...(selectedType && { product_type: selectedType }),
-        ...(selectedCompany && { company_id: selectedCompany }),
-      };
-      await refetch(filterParams);
+      await refetch();
       successToast(SUCCESS_MESSAGE(MODEL, "delete"));
     } catch (error: unknown) {
       const errorMessage =
@@ -118,7 +99,7 @@ export default function ProductPage() {
           onDelete: setDeleteId,
           onView: handleViewProduct,
         })}
-        data={data || []}
+        data={data?.data || []}
       >
         {categories && brands && companies && (
           <ProductOptions
@@ -143,11 +124,11 @@ export default function ProductPage() {
 
       <DataTablePagination
         page={page}
-        totalPages={meta?.last_page || 1}
+        totalPages={data?.meta?.last_page || 1}
         onPageChange={setPage}
         per_page={per_page}
         setPerPage={setPerPage}
-        totalData={meta?.total || 0}
+        totalData={data?.meta?.total || 0}
       />
 
       {deleteId !== null && (

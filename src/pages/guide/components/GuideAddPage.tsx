@@ -6,7 +6,6 @@ import TitleFormComponent from "@/components/TitleFormComponent";
 import { GuideForm } from "./GuideForm";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
-import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { useGuideMotives } from "../lib/guide.hook";
 import { useAllCategories } from "@/pages/category/lib/category.hook";
 import { useAllBrands } from "@/pages/brand/lib/brand.hook";
@@ -49,11 +48,6 @@ export default function GuideAddPage() {
     isLoading: warehousesLoading,
     refetch: refetchWarehouses,
   } = useAllWarehouses();
-  const {
-    data: products,
-    isLoading: productsLoading,
-    refetch: refetchProducts,
-  } = useAllProducts();
   const { data: customers, refetch: refetchCustomers } = useAllClients();
   const { data: suppliers, refetch: refetchSuppliers } = useAllSuppliers();
   const {
@@ -91,7 +85,6 @@ export default function GuideAddPage() {
   useEffect(() => {
     refetchBranches();
     refetchWarehouses();
-    refetchProducts();
     refetchCustomers();
     refetchSuppliers();
     refetchMotives();
@@ -111,7 +104,6 @@ export default function GuideAddPage() {
   const isLoading =
     branchesLoading ||
     warehousesLoading ||
-    productsLoading ||
     !customers ||
     !suppliers ||
     motivesLoading ||
@@ -190,8 +182,6 @@ export default function GuideAddPage() {
         branches.length > 0 &&
         warehouses &&
         warehouses.length > 0 &&
-        products &&
-        products.length > 0 &&
         customers &&
         customers.length > 0 &&
         motives &&
@@ -217,7 +207,6 @@ export default function GuideAddPage() {
             mode="create"
             branches={branches}
             warehouses={warehouses}
-            products={products}
             customers={customers}
             motives={motives}
             vehicles={vehicles}

@@ -5,7 +5,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { PurchaseForm } from "./PurchaseForm";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
-import { useAllProducts } from "@/pages/product/lib/product.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
@@ -34,11 +33,6 @@ export default function PurchaseEditPage() {
     refetch: refetchWarehouses,
   } = useAllWarehouses();
   const {
-    data: products,
-    isLoading: productsLoading,
-    refetch: refetchProducts,
-  } = useAllProducts();
-  const {
     data: branches,
     isLoading: branchesLoading,
     refetch: refetchBranches,
@@ -53,7 +47,6 @@ export default function PurchaseEditPage() {
     refetchSuppliers();
     refetchWarehouses();
     refetchBranches();
-    refetchProducts();
   }, []);
 
   useEffect(() => {
@@ -62,11 +55,7 @@ export default function PurchaseEditPage() {
   }, []);
 
   const isLoading =
-    !suppliers ||
-    warehousesLoading ||
-    productsLoading ||
-    branchesLoading ||
-    isFinding;
+    !suppliers || warehousesLoading || branchesLoading || isFinding;
 
   useEffect(() => {
     if (!id) {
@@ -77,7 +66,7 @@ export default function PurchaseEditPage() {
   }, [id, navigate, fetchPurchase]);
 
   const mapPurchaseToForm = (
-    data: PurchaseResource
+    data: PurchaseResource,
   ): Partial<PurchaseSchema> => {
     return {
       branch_id: data.branch_id?.toString(),
@@ -100,6 +89,8 @@ export default function PurchaseEditPage() {
       observations: data.observations || "",
       details: data.details.map((detail) => ({
         product_id: detail.product.id.toString(),
+        product_code: detail.product.codigo,
+        product_name: detail.product.name,
         quantity_kg: detail.quantity_kg.toString(),
         quantity_sacks: detail.quantity_sacks.toString(),
         unit_price: detail.unit_price.toString(),
@@ -164,9 +155,7 @@ export default function PurchaseEditPage() {
       {suppliers &&
         suppliers.length > 0 &&
         warehouses &&
-        warehouses.length > 0 &&
-        products &&
-        products.length > 0 && (
+        warehouses.length > 0 && (
           <PurchaseForm
             defaultValues={mapPurchaseToForm(purchase)}
             onSubmit={handleSubmit}
@@ -174,7 +163,6 @@ export default function PurchaseEditPage() {
             mode="update"
             suppliers={suppliers}
             warehouses={warehouses}
-            products={products}
             purchase={purchase}
             branches={branches ?? []}
             onCancel={() => navigate("/compras")}

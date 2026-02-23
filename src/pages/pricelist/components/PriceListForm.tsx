@@ -19,7 +19,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { FileText } from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { Separator } from "@/components/ui/separator";
-import { useAllProducts } from "@/pages/product/lib/product.hook";
 import { PriceMatrixTable } from "./PriceMatrixTable";
 import { FormSwitch } from "@/components/FormSwitch";
 import { useState, useEffect } from "react";
@@ -65,16 +64,10 @@ export default function PriceListForm({
   isSubmitting = false,
   mode,
 }: PriceListFormProps) {
-  const { data: products, refetch: refetchProducts } = useAllProducts();
-
-  useEffect(() => {
-    refetchProducts();
-  }, []);
-
   // Estados para la matriz de precios
   const [weightRanges, setWeightRanges] = useState<WeightRangeData[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<ProductInMatrix[]>(
-    []
+    [],
   );
   const [priceMatrix, setPriceMatrix] = useState<Record<string, PriceCell>>({});
 
@@ -127,29 +120,26 @@ export default function PriceListForm({
           min_weight: range.min_weight,
           max_weight: range.max_weight ?? null,
           order: index + 1,
-        }))
+        })),
       );
     }
 
     if (
       defaultValues?.product_prices &&
-      defaultValues.product_prices.length > 0 &&
-      products
+      defaultValues.product_prices.length > 0
     ) {
-      // Extraer productos únicos
+      // Extraer productos únicos — product_name y product_code vienen embebidos
+      // en los defaultValues por el edit page (desde ProductPrice.product)
       const uniqueProducts = new Map<number, ProductInMatrix>();
       const newMatrix: Record<string, PriceCell> = {};
 
-      defaultValues.product_prices.forEach((price) => {
-        if (!uniqueProducts.has(price.product_id)) {
-          const product = products.find((p) => p.id === price.product_id);
-          if (product) {
-            uniqueProducts.set(price.product_id, {
-              product_id: product.id,
-              product_name: product.name,
-              product_code: product.codigo,
-            });
-          }
+      (defaultValues.product_prices as any[]).forEach((price) => {
+        if (!uniqueProducts.has(price.product_id) && price.product_name) {
+          uniqueProducts.set(price.product_id, {
+            product_id: price.product_id,
+            product_name: price.product_name,
+            product_code: price.product_code ?? "",
+          });
         }
 
         // Agregar precio a la matriz
@@ -163,7 +153,7 @@ export default function PriceListForm({
       setSelectedProducts(Array.from(uniqueProducts.values()));
       setPriceMatrix(newMatrix);
     }
-  }, [defaultValues, products]);
+  }, [defaultValues]);
 
   const handleFormSubmit = async (data: any) => {
     const errors: string[] = [];
@@ -200,7 +190,7 @@ export default function PriceListForm({
       errors.push(
         `Precios incompletos: ${missingPrices.slice(0, 5).join(", ")}${
           missingPrices.length > 5 ? ` y ${missingPrices.length - 5} más` : ""
-        }`
+        }`,
       );
     }
 
@@ -319,7 +309,6 @@ export default function PriceListForm({
         <PriceMatrixTable
           weightRanges={weightRanges}
           onWeightRangesChange={handleWeightRangesChange}
-          products={products || []}
           selectedProducts={selectedProducts}
           onSelectedProductsChange={setSelectedProducts}
           priceMatrix={priceMatrix}
@@ -356,12 +345,12 @@ export default function PriceListForm({
           <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" size="sm" disabled={isSubmitting}>
             {isSubmitting
               ? "Guardando..."
               : mode === "create"
-              ? "Crear Lista de Precio"
-              : "Actualizar Lista de Precio"}
+                ? "Crear Lista de Precio"
+                : "Actualizar Lista de Precio"}
           </Button>
         </div>
       </form>

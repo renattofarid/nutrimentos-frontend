@@ -16,7 +16,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { usePurchase } from "@/pages/purchase/lib/purchase.hook";
-import { useAllProducts } from "@/pages/product/lib/product.hook";
+import { useHomeProducts } from "@/pages/product/lib/product.hook";
 import { Badge } from "@/components/ui/badge";
 import {
   PurchaseStatusChart,
@@ -29,7 +29,7 @@ import formatCurrency from "@/lib/formatCurrency";
 
 export default function HomePage() {
   const { data: purchases, isLoading: purchasesLoading } = usePurchase();
-  const { data: products, isLoading: productsLoading } = useAllProducts();
+  const { data: products, isLoading: productsLoading } = useHomeProducts();
 
   // Estados para las estadísticas
   const [stats, setStats] = useState({
@@ -44,7 +44,7 @@ export default function HomePage() {
   const [purchasesByMonth, setPurchasesByMonth] = useState<any[]>([]);
   const [purchasesByStatus, setPurchasesByStatus] = useState<any[]>([]);
   const [purchasesByPaymentType, setPurchasesByPaymentType] = useState<any[]>(
-    []
+    [],
   );
 
   useEffect(() => {
@@ -52,15 +52,15 @@ export default function HomePage() {
       // Calcular estadísticas
       const totalAmount = purchases.reduce(
         (sum, p) => sum + parseFloat(p.total_amount),
-        0
+        0,
       );
       const pendingAmount = purchases.reduce(
         (sum, p) => sum + parseFloat(p.current_amount),
-        0
+        0,
       );
       const paidCount = purchases.filter((p) => p.status === "PAGADA").length;
       const pendingCount = purchases.filter(
-        (p) => p.status === "REGISTRADO" || p.status === "PENDIENTE"
+        (p) => p.status === "REGISTRADO" || p.status === "PENDIENTE",
       ).length;
 
       setStats({
@@ -100,7 +100,7 @@ export default function HomePage() {
         ([status, count]) => ({
           name: status,
           value: count,
-        })
+        }),
       );
 
       setPurchasesByStatus(statusData);
@@ -116,7 +116,7 @@ export default function HomePage() {
         ([type, count]) => ({
           name: type,
           value: count,
-        })
+        }),
       );
 
       setPurchasesByPaymentType(paymentData);

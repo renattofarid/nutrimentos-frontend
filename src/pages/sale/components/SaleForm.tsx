@@ -22,14 +22,14 @@ import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import type { SaleResource } from "../lib/sale.interface";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
-import type { ProductResource } from "@/pages/product/lib/product.interface";
+import { useProduct } from "@/pages/product/lib/product.hook";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import { useClients } from "@/pages/client/lib/client.hook";
 import { CLIENT } from "@/pages/client/lib/client.interface";
 import { getPersonZones } from "@/pages/client/lib/personzone.actions";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { formatDecimalTrunc, parseFormattedNumber } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatCurrency";
 import {
@@ -59,7 +59,6 @@ interface SaleFormProps {
   mode?: "create" | "update";
   branches: BranchResource[];
   warehouses: WarehouseResource[];
-  products: ProductResource[];
   sale?: SaleResource;
 }
 
@@ -67,6 +66,8 @@ interface DetailRow {
   product_id: string;
   product_code?: string;
   product_name?: string;
+  product_weight?: string; // Peso por saco del producto (kg)
+  product_price_per_kg?: string; // Precio por kg del producto
   quantity: string; // Cantidad total en decimal (ej: 1.02) - SE ENVÍA AL BACKEND
   quantity_sacks: string; // Cantidad de sacos ingresada por el usuario (ej: 1)
   quantity_kg: string; // Kg sueltos ingresados por el usuario (ej: 25)
@@ -92,16 +93,28 @@ export const SaleForm = ({
   mode = "create",
   branches,
   warehouses,
-  products,
   sale,
 }: SaleFormProps) => {
   const [filteredWarehouses, setFilteredWarehouses] = useState<
     WarehouseResource[]
   >([]);
 
-  const [filteredProducts, setFilteredProducts] = useState<ProductResource[]>(
-    [],
-  );
+  // Estado para búsqueda async de producto por código (al dar Tab)
+  const [productCodeSearch, setProductCodeSearch] = useState<{
+    rowIndex: number;
+    code: string;
+  } | null>(null);
+  const productCodeCallbacksRef = useRef<{
+    advance: () => void;
+    setError: (msg: string) => void;
+  } | null>(null);
+
+  const { data: productSearchResult, isFetching: isSearchingProduct } =
+    useProduct(
+      productCodeSearch
+        ? { codigo: productCodeSearch.code, direction: "asc" }
+        : undefined,
+    );
 
   // Estado para las direcciones del cliente seleccionado
   const [customerAddresses, setCustomerAddresses] = useState<
@@ -152,24 +165,9 @@ export const SaleForm = ({
         setFilteredWarehouses(filtered);
       }
 
-      if (defaultValues.warehouse_id) {
-        const filtered = products.filter((product) => {
-          const stockInWarehouse = product.stock_warehouse?.find(
-            (stock) =>
-              stock.warehouse_id.toString() === defaultValues.warehouse_id,
-          );
-          return stockInWarehouse && stockInWarehouse.stock > 0;
-        });
-        setFilteredProducts(filtered);
-      }
-
       // Inicializar detalles
       if (defaultValues.details && defaultValues.details.length > 0) {
         const initialDetails = defaultValues.details.map((detail: any) => {
-          const product = products.find(
-            (p) => p.id.toString() === detail.product_id,
-          );
-
           // Determinar el modo de venta basado en los valores recibidos
           const qtySacks = parseFloat(detail.quantity_sacks || "0");
           const qtyKg = parseFloat(detail.quantity_kg || "0");
@@ -177,9 +175,7 @@ export const SaleForm = ({
             qtySacks > 0 ? "sacks" : qtyKg > 0 ? "kg" : undefined;
 
           const unitPrice = parseFormattedNumber(detail.unit_price);
-          const productWeight = product?.weight
-            ? parseFloat(product.weight)
-            : 0;
+          const productWeight = parseFloat(detail.product_weight || "0");
 
           // Calcular totales según el modo de venta
           let subtotal = 0;
@@ -197,12 +193,13 @@ export const SaleForm = ({
           // El IGV se extrae en el resumen total, no por fila
           const total = subtotal;
           const igv = 0;
-          // subtotal ya está calculado arriba
 
           return {
             product_id: detail.product_id,
-            product_code: product?.codigo,
-            product_name: product?.name,
+            product_code: detail.product_code || "",
+            product_name: detail.product_name || "",
+            product_weight: detail.product_weight || "0",
+            product_price_per_kg: detail.product_price_per_kg || "0",
             quantity: detail.quantity,
             quantity_sacks: detail.quantity_sacks || "",
             quantity_kg: detail.quantity_kg || "",
@@ -316,24 +313,6 @@ export const SaleForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBranchId, warehouses]);
 
-  // Efecto para filtrar productos cuando cambia warehouse
-  useEffect(() => {
-    if (selectedWarehouseId) {
-      const filtered = products.filter((product) => {
-        // Buscar si el producto tiene stock en el warehouse seleccionado
-        const stockInWarehouse = product.stock_warehouse?.find(
-          (stock) => stock.warehouse_id.toString() === selectedWarehouseId,
-        );
-        // Solo incluir productos que tienen stock mayor a 0 en ese warehouse
-        return stockInWarehouse && stockInWarehouse.stock > 0;
-      });
-      setFilteredProducts(filtered);
-    } else {
-      setFilteredProducts([]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedWarehouseId, products]);
-
   // Actualizar direcciones al seleccionar un cliente en el FormSelectAsync
   const handleCustomerChange = (_value: string, item?: PersonResource) => {
     if (item && item.person_zones && item.person_zones.length > 0) {
@@ -401,6 +380,8 @@ export const SaleForm = ({
       product_id: "",
       product_code: "",
       product_name: "",
+      product_weight: "0",
+      product_price_per_kg: "0",
       quantity: "",
       quantity_sacks: "",
       quantity_kg: "",
@@ -461,15 +442,11 @@ export const SaleForm = ({
 
     // Procesar cuando cambian las cantidades
     if (field === "quantity_sacks" || field === "quantity_kg") {
-      const product = filteredProducts.find(
-        (p) => p.id.toString() === detail.product_id,
-      );
-
-      if (product && detail.product_id) {
+      if (detail.product_id) {
         const qtySacks = parseFloat(detail.quantity_sacks) || 0;
         const qtyKg = parseFloat(detail.quantity_kg) || 0;
-        const productWeight = parseFloat(product.weight || "0");
-        const pricePerKg = parseFloat(product.price_per_kg || "0");
+        const productWeight = parseFloat(detail.product_weight || "0");
+        const pricePerKg = parseFloat(detail.product_price_per_kg || "0");
 
         // Modo de venta por SACOS
         if (detail.sale_mode === "sacks" && qtySacks > 0) {
@@ -560,13 +537,10 @@ export const SaleForm = ({
       // Cuando se edita el precio manualmente, es una multiplicación simple
       // cantidad × precio = subtotal (sin importar si es por sacos o kg)
       const unitPrice = parseFloat(value) || 0;
-      const product = filteredProducts.find(
-        (p) => p.id.toString() === detail.product_id,
-      );
 
       if (detail.sale_mode === "sacks") {
         const qtySacks = parseFloat(detail.quantity_sacks) || 0;
-        const productWeight = parseFloat(product?.weight || "0");
+        const productWeight = parseFloat(detail.product_weight || "0");
         const totalWeightKg = roundTo6Decimals(productWeight * qtySacks);
 
         // El subtotal es la multiplicación simple (precio ya incluye IGV)
@@ -609,31 +583,32 @@ export const SaleForm = ({
     }
   };
 
-  const handleProductSelect = async (index: number, product: ProductOption) => {
-    const selectedProduct = filteredProducts.find(
-      (p) => p.id.toString() === product.id,
-    );
-    if (!selectedProduct) return;
-
-    const updatedDetails = [...details];
-    updatedDetails[index] = {
-      ...updatedDetails[index],
-      product_id: product.id,
-      product_code: product.codigo,
-      product_name: product.name,
-      quantity_sacks: "",
-      quantity_kg: "",
-      unit_price: "",
-      subtotal: 0,
-      igv: 0,
-      total: 0,
-      total_kg: 0,
-      sale_mode: undefined,
-    };
-
-    setDetails(updatedDetails);
-    form.setValue("details", updatedDetails);
-  };
+  const handleProductSelect = useCallback(
+    (index: number, product: ProductOption) => {
+      setDetails((prev) => {
+        const updatedDetails = [...prev];
+        updatedDetails[index] = {
+          ...updatedDetails[index],
+          product_id: product.id,
+          product_code: product.codigo,
+          product_name: product.name,
+          product_weight: product.weight || "0",
+          product_price_per_kg: product.price_per_kg || "0",
+          quantity_sacks: "",
+          quantity_kg: "",
+          unit_price: "",
+          subtotal: 0,
+          igv: 0,
+          total: 0,
+          total_kg: 0,
+          sale_mode: undefined,
+        };
+        form.setValue("details", updatedDetails);
+        return updatedDetails;
+      });
+    },
+    [form],
+  );
 
   // Configuración de columnas para ExcelGrid de Detalles
   const gridColumns: ExcelGridColumn<DetailRow>[] = [
@@ -690,12 +665,50 @@ export const SaleForm = ({
     },
   ];
 
-  // Preparar opciones de productos para el grid
-  const productOptions: ProductOption[] = filteredProducts.map((product) => ({
-    id: product.id.toString(),
-    codigo: product.codigo,
-    name: product.name,
-  }));
+  // Búsqueda async de producto por código al presionar Tab
+  // Cuando useProduct retorna resultado, auto-seleccionar primer producto y avanzar celda
+  useEffect(() => {
+    if (!productCodeSearch || isSearchingProduct) return;
+    const callbacks = productCodeCallbacksRef.current;
+    if (!callbacks) return;
+
+    if (productSearchResult?.data && productSearchResult.data.length > 0) {
+      const product = productSearchResult.data[0];
+      handleProductSelect(productCodeSearch.rowIndex, {
+        id: product.id.toString(),
+        codigo: product.codigo,
+        name: product.name,
+        weight: product.weight,
+        price_per_kg: product.price_per_kg || "0",
+      });
+      callbacks.advance();
+    } else if (productSearchResult !== undefined) {
+      callbacks.setError(
+        `No se encontró ningún producto con código "${productCodeSearch.code}"`,
+      );
+    }
+
+    productCodeCallbacksRef.current = null;
+    setProductCodeSearch(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productSearchResult, isSearchingProduct]);
+
+  const handleProductCodeTab = useCallback(
+    (
+      rowIndex: number,
+      code: string,
+      advance: () => void,
+      setError: (msg: string) => void,
+    ) => {
+      if (!code.trim()) {
+        advance();
+        return;
+      }
+      productCodeCallbacksRef.current = { advance, setError };
+      setProductCodeSearch({ rowIndex, code });
+    },
+    [],
+  );
 
   // El total es la suma de los subtotales (precio ya incluye IGV)
   const calculateDetailsTotal = () => {
@@ -1101,8 +1114,8 @@ export const SaleForm = ({
                 onAddRow={handleAddRow}
                 onRemoveRow={handleRemoveRow}
                 onCellChange={handleCellChange}
-                productOptions={productOptions}
                 onProductSelect={handleProductSelect}
+                onProductCodeTab={handleProductCodeTab}
                 emptyMessage="Seleccione un almacén y cliente para comenzar."
                 disabled={!selectedWarehouseId || !form.watch("customer_id")}
               />

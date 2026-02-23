@@ -1,7 +1,6 @@
 import { useReportsStore } from "./reports.store";
 import type {
   CustomerAccountStatementParams,
-  InventoryReportParams,
   KardexReportParams,
 } from "./reports.interface";
 import { useMutation, useQuery } from "@tanstack/react-query";

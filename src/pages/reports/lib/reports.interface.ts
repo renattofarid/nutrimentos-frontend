@@ -58,13 +58,26 @@ export interface CustomerAccountStatementParams {
 }
 
 // Estructura de venta individual
+export interface Sale1 {
+  id: number;
+  date: string;
+  document_number: string;
+  document_type: string;
+  payment_type: string;
+  total_amount: number;
+  paid_amount: number;
+  debt_amount: number;
+  days_overdue: number;
+  reference: string;
+}
+
 // Estructura de cliente con sus ventas
 export interface Customer {
   customer_id: number;
   customer_name: string;
   customer_zone: string;
   total_debt: number;
-  sales: Sale[];
+  sales: Sale1[];
 }
 
 // Estructura de vendedor con sus clientes

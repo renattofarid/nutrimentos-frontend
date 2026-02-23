@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { ButtonAction } from "@/components/ButtonAction";
-import { Trash2, Eye, RefreshCcw, ClipboardCheck } from "lucide-react";
+import { Trash2, Eye, RefreshCcw } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { DeliverySheetResource } from "../lib/deliverysheet.interface";
 
@@ -8,14 +8,12 @@ interface DeliverySheetColumnsProps {
   onDelete: (id: number) => void;
   onViewDetails: (deliverySheet: DeliverySheetResource) => void;
   onUpdateStatus: (deliverySheet: DeliverySheetResource) => void;
-  onSettlement: (deliverySheet: DeliverySheetResource) => void;
 }
 
 export const getDeliverySheetColumns = ({
   onDelete,
   onViewDetails,
   onUpdateStatus,
-  onSettlement,
 }: DeliverySheetColumnsProps): ColumnDef<DeliverySheetResource>[] => [
   {
     accessorKey: "id",
@@ -162,7 +160,6 @@ export const getDeliverySheetColumns = ({
       // const canUpdateStatus =
       //   row.original.status === "PENDIENTE" ||
       //   row.original.status === "EN_REPARTO";
-      const canSettlement = row.original.status !== "RENDIDA";
 
       return (
         <div className="flex items-center gap-1">
@@ -176,12 +173,6 @@ export const getDeliverySheetColumns = ({
             onClick={() => onUpdateStatus(row.original)}
             canRender={false}
             tooltip="Cambiar Estado"
-          />
-          <ButtonAction
-            icon={ClipboardCheck}
-            onClick={() => onSettlement(row.original)}
-            canRender={canSettlement}
-            tooltip="Rendición"
           />
           <ButtonAction
             icon={Trash2}

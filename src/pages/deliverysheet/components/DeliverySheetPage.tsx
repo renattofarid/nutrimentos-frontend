@@ -19,9 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import type {
-  DeliverySheetStatusSchema,
-} from "../lib/deliverysheet.schema";
+import type { DeliverySheetStatusSchema } from "../lib/deliverysheet.schema";
 import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
@@ -73,10 +71,6 @@ export default function DeliverySheetPage() {
     setOpenStatusDialog(true);
   };
 
-  const handleSettlement = (deliverySheet: DeliverySheetResource) => {
-    navigate(`/planillas/rendicion/${deliverySheet.id}`);
-  };
-
   const confirmDelete = async () => {
     if (deliverySheetToDelete) {
       try {
@@ -109,7 +103,6 @@ export default function DeliverySheetPage() {
     onDelete: handleDelete,
     onViewDetails: handleViewDetails,
     onUpdateStatus: handleUpdateStatus,
-    onSettlement: handleSettlement,
   });
 
   return (

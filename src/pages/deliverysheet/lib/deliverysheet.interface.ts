@@ -396,7 +396,7 @@ export const DELIVERY_SHEET_QUERY_KEY = "delivery-sheets";
 export const DeliverySheetRoute = "/planillas";
 export const DeliverySheetAddRoute = "/planillas/agregar";
 export const DeliverySheetEditRoute = "/planillas/actualizar/:id";
-export const DeliverySheetSettlementRoute = "/planillas/rendicion/:id";
+export const DeliverySheetSettlementRoute = "/planillas/rendicion";
 
 // ===== STATUS & TYPE OPTIONS =====
 

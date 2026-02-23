@@ -6,6 +6,7 @@ import {
   Package,
   ShoppingBag,
   DollarSign,
+  ClipboardCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -52,7 +53,10 @@ import { BOX_SHIFT } from "@/pages/box-shift/lib/box-shift.interface";
 import { AccountsReceivableRoute } from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
 import { ACCOUNTS_PAYABLE } from "@/pages/accounts-payable/lib/accounts-payable.interface";
 import { WAREHOUSE_DOCUMENT } from "@/pages/warehouse-document/lib/warehouse-document.interface";
-import { DELIVERY_SHEET } from "@/pages/deliverysheet/lib/deliverysheet.interface";
+import {
+  DELIVERY_SHEET,
+  DeliverySheetSettlementRoute,
+} from "@/pages/deliverysheet/lib/deliverysheet.interface";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import {
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
@@ -290,6 +294,11 @@ const data = {
           title: DeliverySheetTitle,
           url: DeliverySheetRoute,
           icon: DeliverySheetIcon,
+        },
+        {
+          title: "Rendiciones",
+          url: DeliverySheetSettlementRoute,
+          icon: ClipboardCheck,
         },
         {
           title: GuideTitle,

@@ -35,7 +35,16 @@ export default function ProductPage() {
   const [selectedCompany, setSelectedCompany] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const { data, isLoading, refetch } = useProduct();
+  const { data, isLoading, refetch } = useProduct({
+    page,
+    per_page,
+    search,
+    code: searchCode,
+    category_id: selectedCategory,
+    brand_id: selectedBrand,
+    type: selectedType,
+    company_id: selectedCompany,
+  });
   const { data: categories } = useAllCategories();
   const { data: brands } = useAllBrands();
   const { data: companies } = useAllCompanies();

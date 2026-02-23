@@ -22,7 +22,7 @@ import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interfac
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import { Package, FileText, AlertCircle } from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   ExcelGrid,
   type ExcelGridColumn,
@@ -31,9 +31,7 @@ import {
 import { formatNumber } from "@/lib/formatCurrency";
 import type { PurchaseResource } from "@/pages/purchase/lib/purchase.interface";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useQueryClient } from "@tanstack/react-query";
-import { getProduct } from "@/pages/product/lib/product.actions";
-import { PRODUCT } from "@/pages/product/lib/product.interface";
+import { useProduct } from "@/pages/product/lib/product.hook";
 
 interface WarehouseDocumentFormProps {
   onSubmit: (data: WarehouseDocumentSchema) => void;
@@ -67,8 +65,24 @@ export default function WarehouseDocumentForm({
   purchases = [],
   onCancel,
 }: WarehouseDocumentFormProps) {
-  const queryClient = useQueryClient();
   const [details, setDetails] = useState<DetailRow[]>([]);
+
+  // Estado para búsqueda async de producto por código (al dar Tab)
+  const [productCodeSearch, setProductCodeSearch] = useState<{
+    rowIndex: number;
+    code: string;
+  } | null>(null);
+  const productCodeCallbacksRef = useRef<{
+    advance: () => void;
+    setError: (msg: string) => void;
+  } | null>(null);
+
+  const { data: productSearchResult, isFetching: isSearchingProduct } =
+    useProduct(
+      productCodeSearch
+        ? { codigo: productCodeSearch.code, direction: "asc" }
+        : undefined
+    );
 
   const form = useForm({
     resolver: zodResolver(warehouseDocumentSchemaCreate) as any,
@@ -256,8 +270,34 @@ export default function WarehouseDocumentForm({
     });
   }, [form]);
 
+  // Cuando useProduct retorna resultado, auto-seleccionar primer producto y avanzar celda
+  useEffect(() => {
+    if (!productCodeSearch || isSearchingProduct) return;
+    const callbacks = productCodeCallbacksRef.current;
+    if (!callbacks) return;
+
+    if (productSearchResult?.data && productSearchResult.data.length > 0) {
+      const p = productSearchResult.data[0];
+      handleProductSelect(productCodeSearch.rowIndex, {
+        id: p.id.toString(),
+        codigo: p.codigo,
+        name: p.name,
+        weight: p.weight,
+      });
+      callbacks.advance();
+    } else if (productSearchResult !== undefined) {
+      callbacks.setError(
+        `No se encontró ningún producto con código "${productCodeSearch.code}"`
+      );
+    }
+
+    productCodeCallbacksRef.current = null;
+    setProductCodeSearch(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productSearchResult, isSearchingProduct]);
+
   const handleProductCodeTab = useCallback(
-    async (
+    (
       rowIndex: number,
       code: string,
       advance: () => void,
@@ -267,31 +307,10 @@ export default function WarehouseDocumentForm({
         advance();
         return;
       }
-
-      try {
-        const result = await queryClient.fetchQuery({
-          queryKey: [PRODUCT.QUERY_KEY, { codigo: code }],
-          queryFn: () => getProduct({ params: { codigo: code } }),
-          staleTime: 30_000,
-        });
-
-        if (result.data && result.data.length > 0) {
-          const p = result.data[0];
-          handleProductSelect(rowIndex, {
-            id: p.id.toString(),
-            codigo: p.codigo,
-            name: p.name,
-            weight: p.weight,
-          });
-          advance();
-        } else {
-          setError(`No se encontró ningún producto con código "${code}"`);
-        }
-      } catch {
-        setError("Error al buscar el producto. Intente de nuevo.");
-      }
+      productCodeCallbacksRef.current = { advance, setError };
+      setProductCodeSearch({ rowIndex, code });
     },
-    [queryClient, handleProductSelect]
+    []
   );
 
   const calculateDetailsTotal = () => {

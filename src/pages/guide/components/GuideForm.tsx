@@ -21,7 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader, Truck, MapPin, Search, Plus } from "lucide-react";
+import { Loader, Truck, Search, Plus, Eye, EyeOff } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import { FormSelect } from "@/components/FormSelect";
@@ -82,6 +83,7 @@ export const GuideForm = ({
   const [filteredWarehouses, setFilteredWarehouses] = useState<
     WarehouseResource[]
   >([]);
+  const [showAdvancedFields, setShowAdvancedFields] = useState(false);
 
   // Estados para búsqueda de ventas por rango
   const [salesByRange, setSalesByRange] = useState<SaleResource[]>([]);
@@ -143,9 +145,12 @@ export const GuideForm = ({
         }
       }
 
-      // Si solo hay un almacén, seleccionarlo automáticamente
+      // Si solo hay un almacén, seleccionarlo automáticamente y pre-rellenar dirección origen
       if (filtered.length === 1) {
         form.setValue("warehouse_id", filtered[0].id.toString());
+        if (filtered[0].address) {
+          form.setValue("origin_address", filtered[0].address);
+        }
       }
     } else {
       setFilteredWarehouses([]);
@@ -400,31 +405,53 @@ export const GuideForm = ({
         <GroupFormSection
           title="Información de la Guía"
           icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 3 }}
+          cols={{ sm: 1, md: 2, lg: 4, xl: 6 }}
+          className="col-span-full"
+          headerExtra={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAdvancedFields((v) => !v)}
+            >
+              {showAdvancedFields ? (
+                <EyeOff className="h-4 w-4 mr-2" />
+              ) : (
+                <Eye className="h-4 w-4 mr-2" />
+              )}
+              {showAdvancedFields
+                ? "Ocultar campos adicionales"
+                : "Mostrar campos adicionales"}
+            </Button>
+          }
         >
-          <FormSelect
-            control={form.control}
-            name="branch_id"
-            label="Tienda"
-            placeholder="Seleccione una tienda"
-            options={branches.map((branch) => ({
-              value: branch.id.toString(),
-              label: branch.name,
-              description: branch.address,
-            }))}
-          />
+          {showAdvancedFields && (
+            <FormSelect
+              control={form.control}
+              name="branch_id"
+              label="Tienda"
+              placeholder="Seleccione una tienda"
+              options={branches.map((branch) => ({
+                value: branch.id.toString(),
+                label: branch.name,
+                description: branch.address,
+              }))}
+            />
+          )}
 
-          <FormSelect
-            control={form.control}
-            name="warehouse_id"
-            label="Almacén"
-            placeholder="Seleccione un almacén"
-            options={filteredWarehouses.map((warehouse) => ({
-              value: warehouse.id.toString(),
-              label: warehouse.name,
-              description: warehouse.address,
-            }))}
-          />
+          {showAdvancedFields && (
+            <FormSelect
+              control={form.control}
+              name="warehouse_id"
+              label="Almacén"
+              placeholder="Seleccione un almacén"
+              options={filteredWarehouses.map((warehouse) => ({
+                value: warehouse.id.toString(),
+                label: warehouse.name,
+                description: warehouse.address,
+              }))}
+            />
+          )}
 
           <FormSelect
             control={form.control}
@@ -566,14 +593,9 @@ export const GuideForm = ({
               </FormItem>
             )}
           />
-        </GroupFormSection>
 
-        {/* Información del Transporte, Direcciones y Carga */}
-        <GroupFormSection
-          title="Información del Transporte, Direcciones y Carga"
-          icon={MapPin}
-          cols={{ sm: 1, md: 2, lg: 3 }}
-        >
+          <Separator className="col-span-full my-1" />
+
           {modalityValue !== "PRIVADO" && (
             <FormField
               control={form.control}
@@ -652,55 +674,33 @@ export const GuideForm = ({
             />
           )}
 
-          {/* Selector de Conductor */}
-          <div className="md:col-span-2">
-            <FormSelectAsync
-              name="driver_id"
-              label="Conductor"
-              control={form.control}
-              placeholder="Buscar conductor..."
-              useQueryHook={useDrivers}
-              mapOptionFn={(driver) => ({
-                value: driver.id.toString(),
-                label:
-                  driver.business_name ||
-                  `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
-                description: driver.number_document || "",
-              })}
-              onValueChange={(_value, driver) => {
-                if (driver) {
-                  const docType =
-                    driver.document_type_name ||
-                    (driver.number_document?.length === 8 ? "DNI" : "CE");
-                  form.setValue("driver_document_type", docType);
-                  form.setValue(
-                    "driver_document_number",
-                    driver.number_document || "",
-                  );
-                  const fullName =
-                    driver.business_name ||
-                    `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
-                  form.setValue("driver_name", fullName);
-                }
-              }}
-              preloadItemId={"37"}
-            >
-              <Button type="button" variant="outline" size="icon" asChild>
-                <Link to={DRIVER.ROUTE_ADD} target="_blank">
-                  <Plus className="h-4 w-4" />
-                </Link>
-              </Button>
-            </FormSelectAsync>
-          </div>
+          <FormField
+            control={form.control}
+            name="total_weight"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Peso Total (kg)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    variant="default"
+                    placeholder="0.00"
+                    {...field}
+                    className="bg-muted"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}
             name="vehicle_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  Vehículo{modalityValue === "PUBLICO" ? "" : " "}
-                </FormLabel>
+                <FormLabel>Vehículo</FormLabel>
                 <FormControl>
                   <SearchableSelect
                     className="md:w-full"
@@ -728,152 +728,177 @@ export const GuideForm = ({
             )}
           />
 
-          <FormSelect
-            control={form.control}
-            name="driver_document_type"
-            label={`Tipo de Documento del Conductor${modalityValue === "PUBLICO" ? "" : " "}`}
-            placeholder="Seleccione tipo"
-            options={[
-              { value: "DNI", label: "DNI" },
-              { value: "CE", label: "Carnet de Extranjería" },
-              { value: "PASAPORTE", label: "Pasaporte" },
-            ]}
-          />
+          {/* Campos adicionales (ocultos por defecto) */}
+          {showAdvancedFields && (
+            <>
+              {/* Selector de Conductor */}
+              <div className="md:col-span-2">
+                <FormSelectAsync
+                  name="driver_id"
+                  label="Conductor"
+                  control={form.control}
+                  placeholder="Buscar conductor..."
+                  useQueryHook={useDrivers}
+                  mapOptionFn={(driver) => ({
+                    value: driver.id.toString(),
+                    label:
+                      driver.business_name ||
+                      `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
+                    description: driver.number_document || "",
+                  })}
+                  onValueChange={(_value, driver) => {
+                    if (driver) {
+                      const docType =
+                        driver.document_type_name ||
+                        (driver.number_document?.length === 8 ? "DNI" : "CE");
+                      form.setValue("driver_document_type", docType);
+                      form.setValue(
+                        "driver_document_number",
+                        driver.number_document || "",
+                      );
+                      const fullName =
+                        driver.business_name ||
+                        `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
+                      form.setValue("driver_name", fullName);
+                    }
+                  }}
+                  preloadItemId={"37"}
+                >
+                  <Button type="button" variant="outline" size="icon" asChild>
+                    <Link to={DRIVER.ROUTE_ADD} target="_blank">
+                      <Plus className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </FormSelectAsync>
+              </div>
 
-          <FormField
-            control={form.control}
-            name="driver_document_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Número de Documento del Conductor
-                  {modalityValue === "PUBLICO" ? "" : " "}
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: 12345678"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormSelect
+                control={form.control}
+                name="driver_document_type"
+                label={`Tipo de Documento del Conductor${modalityValue === "PUBLICO" ? "" : " "}`}
+                placeholder="Seleccione tipo"
+                options={[
+                  { value: "DNI", label: "DNI" },
+                  { value: "CE", label: "Carnet de Extranjería" },
+                  { value: "PASAPORTE", label: "Pasaporte" },
+                ]}
+              />
 
-          <FormField
-            control={form.control}
-            name="driver_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Nombre Completo del Conductor
-                  {modalityValue === "PUBLICO" ? "" : " "}
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Juan Pérez García"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="driver_document_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Número de Documento del Conductor
+                      {modalityValue === "PUBLICO" ? "" : " "}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        variant="default"
+                        placeholder="Ej: 12345678"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="driver_license"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Licencia de Conducir
-                  {modalityValue === "PUBLICO" ? "" : " "}
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Q12345678"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="driver_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Nombre Completo del Conductor
+                      {modalityValue === "PUBLICO" ? "" : " "}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        variant="default"
+                        placeholder="Ej: Juan Pérez García"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="carrier_mtc_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Número MTC{modalityValue === "PUBLICO" ? "" : " "}
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: MTC-123456"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="driver_license"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Licencia de Conducir
+                      {modalityValue === "PUBLICO" ? "" : " "}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        variant="default"
+                        placeholder="Ej: Q12345678"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormSelect
-            control={form.control}
-            name="unit_measurement"
-            label="Unidad de Medida"
-            placeholder="Seleccione"
-            options={UNIT_MEASUREMENTS.map((um) => ({
-              value: um.value,
-              label: um.label,
-            }))}
-          />
+              <FormField
+                control={form.control}
+                name="carrier_mtc_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Número MTC{modalityValue === "PUBLICO" ? "" : " "}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        variant="default"
+                        placeholder="Ej: MTC-123456"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="total_weight"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Peso Total (kg)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    variant="default"
-                    placeholder="0.00"
-                    {...field}
-                    className="bg-muted"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormSelect
+                control={form.control}
+                name="unit_measurement"
+                label="Unidad de Medida"
+                placeholder="Seleccione"
+                options={UNIT_MEASUREMENTS.map((um) => ({
+                  value: um.value,
+                  label: um.label,
+                }))}
+              />
 
-          <FormField
-            control={form.control}
-            name="total_packages"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Total de Bultos (sacos)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    variant="default"
-                    placeholder="0"
-                    {...field}
-                    className="bg-muted"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="total_packages"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Total de Bultos (sacos)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        variant="default"
+                        placeholder="0"
+                        {...field}
+                        className="bg-muted"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
         </GroupFormSection>
 
         {/* Búsqueda de Ventas por Rango */}

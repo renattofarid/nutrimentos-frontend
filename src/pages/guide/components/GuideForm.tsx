@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader, Truck, Search, Plus, Eye, EyeOff } from "lucide-react";
+import { Loader, Truck, Search, Plus, Eye, EyeOff, Trash2, Package, ShoppingCart } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
@@ -54,6 +54,10 @@ import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
 import { successToast } from "@/lib/core.function";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useUbigeosFrom, useUbigeosTo } from "../lib/ubigeo.hook";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useHomeProducts } from "@/pages/product/lib/product.hook";
+import type { ProductResource } from "@/pages/product/lib/product.interface";
 
 interface GuideFormProps {
   defaultValues: Partial<GuideSchema>;
@@ -103,6 +107,23 @@ export const GuideForm = ({
   useEffect(() => {
     refetchCarriers();
   }, []);
+
+  // Estado para modo de detalle: false = por ventas, true = por productos
+  const [useCustomDetails, setUseCustomDetails] = useState(false);
+
+  // Detalle de productos (modo "por productos")
+  const [customDetails, setCustomDetails] = useState<
+    {
+      product_id: string;
+      description: string;
+      quantity_sacks: string;
+      quantity_kg: string;
+      unit_code: string;
+    }[]
+  >([{ product_id: "", description: "", quantity_sacks: "", quantity_kg: "", unit_code: "KGM" }]);
+
+  // Cargar todos los productos para el selector
+  const { data: allProducts } = useHomeProducts();
 
   // Estado para búsqueda de transportista
   const [isSearchingCarrier, setIsSearchingCarrier] = useState(false);
@@ -293,8 +314,46 @@ export const GuideForm = ({
     form.setValue("carrier_document_type", "RUC");
   }, [form]);
 
+  // Helpers para manejar filas de productos personalizados
+  const handleAddDetail = () => {
+    setCustomDetails((prev) => [
+      ...prev,
+      { product_id: "", description: "", quantity_sacks: "", quantity_kg: "", unit_code: "KGM" },
+    ]);
+  };
+
+  const handleRemoveDetail = (index: number) => {
+    setCustomDetails((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDetailChange = (
+    index: number,
+    field: string,
+    value: string,
+  ) => {
+    setCustomDetails((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
+    );
+  };
+
+  // Auto-calcular totales cuando cambian los productos personalizados
+  useEffect(() => {
+    if (!useCustomDetails) return;
+    const totalWeight = customDetails.reduce(
+      (sum, d) => sum + (parseFloat(d.quantity_kg) || 0),
+      0,
+    );
+    const totalPackages = customDetails.reduce(
+      (sum, d) => sum + (parseFloat(d.quantity_sacks) || 0),
+      0,
+    );
+    form.setValue("total_weight", totalWeight as any);
+    form.setValue("total_packages", totalPackages as any);
+  }, [customDetails, useCustomDetails, form]);
+
   // Calcular peso total y total de bultos automáticamente cuando cambian las ventas seleccionadas
   useEffect(() => {
+    if (useCustomDetails) return;
     if (selectedSales.length > 0 && salesByRange.length > 0) {
       const selectedSalesData = salesByRange.filter((sale) =>
         selectedSales.includes(sale.id),
@@ -327,31 +386,36 @@ export const GuideForm = ({
   }, [selectedSales, salesByRange, form]);
 
   const handleFormSubmit = (data: any) => {
-    // Validar que se hayan seleccionado ventas
-    if (selectedSales.length === 0) {
+    if (!useCustomDetails && selectedSales.length === 0) {
       toast.error("Debe seleccionar al menos una venta");
       return;
     }
 
-    // Crear payload con los campos parseados correctamente
-    // NOTA: carrier_id y driver_id NO se envían al backend, solo se usan
-    // para llenar automáticamente los campos del formulario cuando se
-    // encuentra un transportista o conductor registrado en el sistema
-    const payload = {
+    if (useCustomDetails) {
+      const validDetails = customDetails.filter((d) => d.product_id);
+      if (validDetails.length === 0) {
+        toast.error("Debe agregar al menos un producto");
+        return;
+      }
+    }
+
+    const base = {
+      use_custom_details: useCustomDetails,
       branch_id: parseInt(data.branch_id),
       warehouse_id: parseInt(data.warehouse_id),
-      sale_ids: selectedSales,
       customer_id: parseInt(data.customer_id),
       issue_date: data.issue_date,
       transfer_date: data.transfer_date,
       modality: data.modality,
       motive_id: parseInt(data.motive_id),
-      sale_document_number: "-",
-      carrier_document_type: "RUC",
-      carrier_document_number: data.carrier_document_number,
-      carrier_name: data.carrier_name,
-      carrier_ruc: data.carrier_document_number,
-      carrier_mtc_number: data.carrier_mtc_number,
+      sale_document_number: useCustomDetails
+        ? data.sale_document_number || null
+        : null,
+      carrier_document_type: data.carrier_document_type || null,
+      carrier_document_number: data.carrier_document_number || null,
+      carrier_name: data.carrier_name || null,
+      carrier_ruc: data.carrier_document_number || null,
+      carrier_mtc_number: data.carrier_mtc_number || null,
       vehicle_id: data.vehicle_id ? parseInt(data.vehicle_id) : null,
       driver_document_type: data.driver_document_type || null,
       driver_document_number: data.driver_document_number || null,
@@ -364,8 +428,26 @@ export const GuideForm = ({
       unit_measurement: data.unit_measurement,
       total_weight: data.total_weight,
       total_packages: data.total_packages,
-      observations: data.observations || "",
+      observations: data.observations || null,
     };
+
+    const payload = useCustomDetails
+      ? {
+          ...base,
+          details: customDetails
+            .filter((d) => d.product_id)
+            .map((d) => ({
+              product_id: parseInt(d.product_id),
+              description: d.description,
+              quantity_sacks: parseFloat(d.quantity_sacks) || 0,
+              quantity_kg: parseFloat(d.quantity_kg) || 0,
+              unit_code: d.unit_code,
+            })),
+        }
+      : {
+          ...base,
+          sale_ids: selectedSales,
+        };
 
     console.log("✅ Payload final siendo enviado:", payload);
     onSubmit(payload);
@@ -901,224 +983,244 @@ export const GuideForm = ({
           )}
         </GroupFormSection>
 
-        {/* Búsqueda de Ventas por Rango */}
-        <GroupFormSection
-          className="col-span-full"
-          title="Búsqueda de Ventas por Rango"
-          icon={Search}
-          cols={{ sm: 1 }}
-        >
-          <div className="space-y-4">
-            {/* Filtros de búsqueda */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-sidebar rounded-lg">
-              <SearchableSelect
-                buttonSize="default"
-                label="Tipo de Documento"
-                options={[
-                  { value: "FACTURA", label: "FACTURA" },
-                  { value: "BOLETA", label: "BOLETA" },
-                ]}
-                value={searchParams.document_type}
-                onChange={(value) =>
-                  setSearchParams({ ...searchParams, document_type: value })
-                }
-                placeholder="Seleccione tipo"
-                className="md:w-full"
-              />
+        {/* Switch: Por Ventas / Por Productos */}
+        <div className="col-span-full flex items-center gap-3 p-4 bg-sidebar rounded-lg border">
+          <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+          <Label htmlFor="detail-mode" className="text-sm font-medium">
+            Por Ventas
+          </Label>
+          <Switch
+            id="detail-mode"
+            checked={useCustomDetails}
+            onCheckedChange={(checked) => {
+              setUseCustomDetails(checked);
+              form.setValue("total_weight", 0 as any);
+              form.setValue("total_packages", 0 as any);
+            }}
+          />
+          <Label htmlFor="detail-mode" className="text-sm font-medium">
+            Por Productos
+          </Label>
+          <Package className="h-4 w-4 text-muted-foreground" />
+        </div>
 
-              <div className="space-y-2">
+        {/* Detalle por Ventas */}
+        {!useCustomDetails && (
+          <GroupFormSection
+            className="col-span-full"
+            title="Búsqueda de Ventas por Rango"
+            icon={Search}
+            cols={{ sm: 1 }}
+          >
+            <div className="space-y-4">
+              {/* Filtros de búsqueda */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-sidebar rounded-lg">
                 <SearchableSelect
                   buttonSize="default"
-                  label="Dirección del Cliente"
-                  placeholder="Seleccione una dirección"
-                  disabled={
-                    !customerValue || selectedCustomerAddresses.length === 0
+                  label="Tipo de Documento"
+                  options={[
+                    { value: "FACTURA", label: "FACTURA" },
+                    { value: "BOLETA", label: "BOLETA" },
+                  ]}
+                  value={searchParams.document_type}
+                  onChange={(value) =>
+                    setSearchParams({ ...searchParams, document_type: value })
                   }
-                  value={searchParams.person_zone_id}
-                  onChange={(value) => {
-                    setSearchParams((prev) => ({
-                      ...prev,
-                      person_zone_id: value,
-                    }));
-                  }}
-                  options={selectedCustomerAddresses.map((address) => ({
-                    value: address.id.toString(),
-                    label: `${address.address}${address.is_primary ? " (Principal)" : ""}`,
-                    description: address.zone_name,
-                  }))}
-                  withValue={false}
+                  placeholder="Seleccione tipo"
                   className="md:w-full"
                 />
-                {customerValue && selectedCustomerAddresses.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    El cliente no tiene direcciones registradas
-                  </p>
-                )}
-              </div>
 
-              <FormInput
-                name="serie"
-                label="Serie"
-                placeholder="Ej: F001"
-                value={searchParams.serie}
-                onChange={(e) =>
-                  setSearchParams({ ...searchParams, serie: e.target.value })
-                }
-              />
-
-              <FormInput
-                name="numero_inicio"
-                label="Número Inicio"
-                type="number"
-                placeholder="Ej: 1"
-                value={searchParams.numero_inicio}
-                onChange={(e) =>
-                  setSearchParams({
-                    ...searchParams,
-                    numero_inicio: e.target.value,
-                  })
-                }
-              />
-
-              <FormInput
-                name="numero_fin"
-                label="Número Fin"
-                placeholder="Ej: 100"
-                type="number"
-                value={searchParams.numero_fin}
-                onChange={(e) =>
-                  setSearchParams({
-                    ...searchParams,
-                    numero_fin: e.target.value,
-                  })
-                }
-              />
-
-              <div className="md:col-span-full flex justify-end">
-                <Button
-                  type="button"
-                  variant="default"
-                  onClick={handleSearchSalesByRange}
-                  disabled={isSearchingSales}
-                >
-                  {isSearchingSales ? (
-                    <>
-                      <Loader className="mr-2 h-4 w-4 animate-spin" />
-                      Buscando...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="mr-2 h-4 w-4" />
-                      Buscar Ventas
-                    </>
+                <div className="space-y-2">
+                  <SearchableSelect
+                    buttonSize="default"
+                    label="Dirección del Cliente"
+                    placeholder="Seleccione una dirección"
+                    disabled={
+                      !customerValue || selectedCustomerAddresses.length === 0
+                    }
+                    value={searchParams.person_zone_id}
+                    onChange={(value) => {
+                      setSearchParams((prev) => ({
+                        ...prev,
+                        person_zone_id: value,
+                      }));
+                    }}
+                    options={selectedCustomerAddresses.map((address) => ({
+                      value: address.id.toString(),
+                      label: `${address.address}${address.is_primary ? " (Principal)" : ""}`,
+                      description: address.zone_name,
+                    }))}
+                    withValue={false}
+                    className="md:w-full"
+                  />
+                  {customerValue && selectedCustomerAddresses.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      El cliente no tiene direcciones registradas
+                    </p>
                   )}
-                </Button>
-              </div>
-            </div>
+                </div>
 
-            {/* Lista de ventas encontradas */}
-            {salesByRange.length > 0 && (
-              <div className="border rounded-lg overflow-hidden">
-                <div className="p-4 bg-sidebar border-b flex justify-between items-center">
-                  <h3 className="font-semibold">
-                    Ventas encontradas ({salesByRange.length})
-                  </h3>
+                <FormInput
+                  name="serie"
+                  label="Serie"
+                  placeholder="Ej: F001"
+                  value={searchParams.serie}
+                  onChange={(e) =>
+                    setSearchParams({ ...searchParams, serie: e.target.value })
+                  }
+                />
+
+                <FormInput
+                  name="numero_inicio"
+                  label="Número Inicio"
+                  type="number"
+                  placeholder="Ej: 1"
+                  value={searchParams.numero_inicio}
+                  onChange={(e) =>
+                    setSearchParams({
+                      ...searchParams,
+                      numero_inicio: e.target.value,
+                    })
+                  }
+                />
+
+                <FormInput
+                  name="numero_fin"
+                  label="Número Fin"
+                  placeholder="Ej: 100"
+                  type="number"
+                  value={searchParams.numero_fin}
+                  onChange={(e) =>
+                    setSearchParams({
+                      ...searchParams,
+                      numero_fin: e.target.value,
+                    })
+                  }
+                />
+
+                <div className="md:col-span-full flex justify-end">
                   <Button
                     type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSelectAllSales}
+                    variant="default"
+                    onClick={handleSearchSalesByRange}
+                    disabled={isSearchingSales}
                   >
-                    {selectedSales.length === salesByRange.length
-                      ? "Deseleccionar Todas"
-                      : "Seleccionar Todas"}
+                    {isSearchingSales ? (
+                      <>
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
+                        Buscando...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="mr-2 h-4 w-4" />
+                        Buscar Ventas
+                      </>
+                    )}
                   </Button>
                 </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <Checkbox
-                          checked={
-                            salesByRange.length > 0 &&
-                            selectedSales.length === salesByRange.length
-                          }
-                          onCheckedChange={handleSelectAllSales}
-                          className="cursor-pointer"
-                        />
-                      </TableHead>
-                      <TableHead>Documento</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead className="text-right">Peso (kg)</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {salesByRange.map((sale) => (
-                      <TableRow
-                        key={sale.id}
-                        className={`cursor-pointer hover:bg-muted/30 ${
-                          selectedSales.includes(sale.id) ? "bg-muted/50" : ""
-                        }`}
-                        onClick={() => handleToggleSale(sale.id)}
-                      >
-                        <TableCell onClick={(e) => e.stopPropagation()}>
+              </div>
+
+              {/* Lista de ventas encontradas */}
+              {salesByRange.length > 0 && (
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="p-4 bg-sidebar border-b flex justify-between items-center">
+                    <h3 className="font-semibold">
+                      Ventas encontradas ({salesByRange.length})
+                    </h3>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAllSales}
+                    >
+                      {selectedSales.length === salesByRange.length
+                        ? "Deseleccionar Todas"
+                        : "Seleccionar Todas"}
+                    </Button>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">
                           <Checkbox
-                            checked={selectedSales.includes(sale.id)}
-                            onCheckedChange={() => handleToggleSale(sale.id)}
+                            checked={
+                              salesByRange.length > 0 &&
+                              selectedSales.length === salesByRange.length
+                            }
+                            onCheckedChange={handleSelectAllSales}
                             className="cursor-pointer"
                           />
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {sale.full_document_number}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {sale.document_type}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {sale.customer.business_name ||
-                            `${sale.customer.names} ${sale.customer.father_surname}`}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(sale.issue_date).toLocaleDateString(
-                            "es-PE",
-                            {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                            },
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {sale.currency} {sale.total_amount.toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {sale.total_weight}
-                        </TableCell>
+                        </TableHead>
+                        <TableHead>Documento</TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Fecha</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead className="text-right">Peso (kg)</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+                    </TableHeader>
+                    <TableBody>
+                      {salesByRange.map((sale) => (
+                        <TableRow
+                          key={sale.id}
+                          className={`cursor-pointer hover:bg-muted/30 ${
+                            selectedSales.includes(sale.id) ? "bg-muted/50" : ""
+                          }`}
+                          onClick={() => handleToggleSale(sale.id)}
+                        >
+                          <TableCell onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              checked={selectedSales.includes(sale.id)}
+                              onCheckedChange={() => handleToggleSale(sale.id)}
+                              className="cursor-pointer"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">
+                                {sale.full_document_number}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {sale.document_type}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {sale.customer.business_name ||
+                              `${sale.customer.names} ${sale.customer.father_surname}`}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(sale.issue_date).toLocaleDateString(
+                              "es-PE",
+                              {
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                              },
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {sale.currency} {sale.total_amount.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {sale.total_weight}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
 
-            {/* Resumen de ventas seleccionadas */}
-            {selectedSales.length > 0 && (
-              <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-                <p className="text-sm font-medium text-green-900 dark:text-green-100">
-                  {selectedSales.length} venta(s) seleccionada(s) para la guía
-                </p>
-              </div>
-            )}
+              {/* Resumen de ventas seleccionadas */}
+              {selectedSales.length > 0 && (
+                <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                  <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                    {selectedSales.length} venta(s) seleccionada(s) para la guía
+                  </p>
+                </div>
+              )}
 
-            {
-              /* Descripcion de los mensajes de errores del form */
-              form.formState.errors &&
+              {form.formState.errors &&
                 Object.keys(form.formState.errors).length > 0 && (
                   <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
                     <ul className="list-disc list-inside text-sm text-red-900 dark:text-red-100">
@@ -1129,10 +1231,189 @@ export const GuideForm = ({
                       )}
                     </ul>
                   </div>
-                )
+                )}
+            </div>
+          </GroupFormSection>
+        )}
+
+        {/* Detalle por Productos */}
+        {useCustomDetails && (
+          <GroupFormSection
+            className="col-span-full"
+            title="Detalle de Productos"
+            icon={Package}
+            cols={{ sm: 1 }}
+            headerExtra={
+              <div className="flex items-center gap-2">
+                <FormField
+                  control={form.control}
+                  name="sale_document_number"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-2 mb-0">
+                      <FormLabel className="whitespace-nowrap text-sm">
+                        N° Documento de Venta
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          variant="default"
+                          placeholder="Ej: F001-00000123"
+                          className="w-44"
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
             }
-          </div>
-        </GroupFormSection>
+          >
+            <div className="space-y-3">
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Producto</TableHead>
+                      <TableHead>Descripción</TableHead>
+                      <TableHead className="w-28">Sacos</TableHead>
+                      <TableHead className="w-28">Peso (kg)</TableHead>
+                      <TableHead className="w-28">Unidad</TableHead>
+                      <TableHead className="w-10" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {customDetails.map((row, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <SearchableSelect
+                            buttonSize="default"
+                            options={(allProducts ?? []).map(
+                              (p: ProductResource) => ({
+                                value: p.id.toString(),
+                                label: p.name,
+                                description: p.codigo,
+                              }),
+                            )}
+                            value={row.product_id}
+                            onChange={(value) => {
+                              const product = (allProducts ?? []).find(
+                                (p: ProductResource) =>
+                                  p.id.toString() === value,
+                              );
+                              handleDetailChange(index, "product_id", value);
+                              if (product) {
+                                handleDetailChange(
+                                  index,
+                                  "description",
+                                  product.name,
+                                );
+                              }
+                            }}
+                            placeholder="Seleccionar..."
+                            className="w-full min-w-[160px]"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            variant="default"
+                            placeholder="Descripción"
+                            value={row.description}
+                            onChange={(e) =>
+                              handleDetailChange(
+                                index,
+                                "description",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            variant="default"
+                            placeholder="0"
+                            value={row.quantity_sacks}
+                            onChange={(e) =>
+                              handleDetailChange(
+                                index,
+                                "quantity_sacks",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            variant="default"
+                            placeholder="0.00"
+                            value={row.quantity_kg}
+                            onChange={(e) =>
+                              handleDetailChange(
+                                index,
+                                "quantity_kg",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <SearchableSelect
+                            buttonSize="default"
+                            options={UNIT_MEASUREMENTS.map((um) => ({
+                              value: um.value,
+                              label: um.label,
+                            }))}
+                            value={row.unit_code}
+                            onChange={(value) =>
+                              handleDetailChange(index, "unit_code", value)
+                            }
+                            placeholder="Unidad"
+                            className="w-full"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            disabled={customDetails.length === 1}
+                            onClick={() => handleRemoveDetail(index)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddDetail}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar producto
+              </Button>
+
+              {form.formState.errors &&
+                Object.keys(form.formState.errors).length > 0 && (
+                  <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
+                    <ul className="list-disc list-inside text-sm text-red-900 dark:text-red-100">
+                      {Object.entries(form.formState.errors).map(
+                        ([fieldName, error]) => (
+                          <li key={fieldName}>{error?.message as string}</li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                )}
+            </div>
+          </GroupFormSection>
+        )}
 
         {/* Botones */}
         <div className="flex gap-4 w-full justify-end col-span-full">
@@ -1143,7 +1424,11 @@ export const GuideForm = ({
           <Button
             size="sm"
             type="submit"
-            disabled={isSubmitting || selectedSales.length === 0}
+            disabled={
+              isSubmitting ||
+              (!useCustomDetails && selectedSales.length === 0) ||
+              (useCustomDetails && customDetails.every((d) => !d.product_id))
+            }
           >
             <Loader
               className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`}

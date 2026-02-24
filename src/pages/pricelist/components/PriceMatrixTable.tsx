@@ -212,7 +212,7 @@ export const PriceMatrixTable = ({
                     >
                       <div className="space-y-2">
                         <div className="flex items-center justify-center gap-2">
-                          <Badge variant="secondary" className="font-mono text-xs">
+                          <Badge color="secondary" className="font-mono text-xs">
                             {range.name}
                           </Badge>
                           <Button

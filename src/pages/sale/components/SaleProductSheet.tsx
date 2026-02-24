@@ -494,13 +494,13 @@ export const SaleProductSheet = ({
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Categoría Cliente:</span>
-                <Badge variant="secondary">
+                <Badge color="secondary">
                   {priceData.client_category.name}
                 </Badge>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Rango de Peso:</span>
-                <Badge variant="secondary">
+                <Badge color="secondary">
                   {priceData.weight_range.formatted_range}
                 </Badge>
               </div>

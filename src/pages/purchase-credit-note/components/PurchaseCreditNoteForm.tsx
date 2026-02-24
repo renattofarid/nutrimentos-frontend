@@ -414,7 +414,7 @@ export const PurchaseCreditNoteForm = ({
                 <div>
                   <p className="text-sm text-muted-foreground">Estado</p>
                   <Badge
-                    variant={
+                    color={
                       selectedPurchase.status === "PAGADA"
                         ? "default"
                         : "secondary"

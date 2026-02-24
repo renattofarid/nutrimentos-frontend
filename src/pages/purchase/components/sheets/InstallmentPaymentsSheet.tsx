@@ -163,7 +163,7 @@ export function InstallmentPaymentsSheet({
                 <span className="text-muted-foreground">Estado:</span>
                 <div className="mt-1">
                   <Badge
-                    variant={
+                    color={
                       currentInstallment.status === "PAGADO"
                         ? "default"
                         : currentInstallment.status === "VENCIDO"

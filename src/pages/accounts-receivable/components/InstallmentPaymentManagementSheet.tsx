@@ -212,7 +212,7 @@ export default function InstallmentPaymentManagementSheet({
                 </p>
               </div>
               <Badge
-                variant={
+                color={
                   installment.status === "PAGADO"
                     ? "default"
                     : installment.status === "VENCIDO"

@@ -176,7 +176,7 @@ export default function SaleDetailSheet({
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Estado</p>
                 <Badge
-                  variant={
+                  color={
                     sale.status === "PAGADA"
                       ? "default"
                       : sale.status === "REGISTRADO"
@@ -194,7 +194,7 @@ export default function SaleDetailSheet({
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Tipo de Pago</p>
                 <Badge
-                  variant={
+                  color={
                     sale.payment_type === "CONTADO" ? "default" : "secondary"
                   }
                   className="text-sm"
@@ -446,7 +446,7 @@ export default function SaleDetailSheet({
                             Cuota {installment.installment_number}
                           </Badge>
                           <Badge
-                            variant={
+                            color={
                               installment.status === "PAGADO"
                                 ? "default"
                                 : installment.status === "PENDIENTE"

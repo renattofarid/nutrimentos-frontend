@@ -25,7 +25,7 @@ export function NotificationBell() {
           <Bell className="h-5 w-5" />
           {alertCount > 0 && (
             <Badge
-              variant="destructive"
+              color="destructive"
               className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
             >
               {alertCount}
@@ -37,7 +37,7 @@ export function NotificationBell() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h4 className="font-semibold text-sm">Cuotas por Vencer</h4>
-            {alertCount > 0 && <Badge variant="secondary">{alertCount}</Badge>}
+            {alertCount > 0 && <Badge color="secondary">{alertCount}</Badge>}
           </div>
           <Separator />
           {isLoading ? (

@@ -42,7 +42,7 @@ export const BoxMovementColumns = ({
       const isIncome = type === "INGRESO";
       return (
         <Badge
-          variant={isIncome ? "default" : "secondary"}
+          color={isIncome ? "default" : "secondary"}
           className={isIncome ? "bg-green-600" : "bg-red-600"}
         >
           {type}

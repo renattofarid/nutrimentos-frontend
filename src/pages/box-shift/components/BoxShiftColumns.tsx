@@ -75,10 +75,7 @@ export const BoxShiftColumns = ({
       const status = row.original.status;
       const isOpen = status === "ABIERTO";
       return (
-        <Badge
-          variant={isOpen ? "default" : "secondary"}
-          className="font-medium"
-        >
+        <Badge color={isOpen ? "default" : "secondary"} className="font-medium">
           {status}
         </Badge>
       );

@@ -23,7 +23,7 @@ export const JobPositionColumns = ({
     accessorKey: "code",
     header: "Código",
     cell: ({ getValue }) => (
-      <Badge variant="secondary" className="font-mono">
+      <Badge color="secondary" className="font-mono">
         {getValue() as string}
       </Badge>
     ),

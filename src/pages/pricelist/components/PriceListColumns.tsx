@@ -50,7 +50,7 @@ export const PriceListColumns = ({
     cell: ({ getValue }) => {
       const ranges = getValue() as PriceList["weight_ranges"];
       return (
-        <Badge variant="secondary" className="font-mono">
+        <Badge color="secondary" className="font-mono">
           {ranges?.length || 0} rangos
         </Badge>
       );
@@ -74,7 +74,7 @@ export const PriceListColumns = ({
     cell: ({ getValue }) => {
       const isActive = getValue() as boolean;
       return (
-        <Badge variant={isActive ? "default" : "destructive"}>
+        <Badge color={isActive ? "default" : "destructive"}>
           {isActive ? "Activo" : "Inactivo"}
         </Badge>
       );

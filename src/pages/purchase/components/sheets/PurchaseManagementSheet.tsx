@@ -175,7 +175,7 @@ export function PurchaseManagementSheet({
                 <span className="text-muted-foreground">Estado:</span>
                 <div className="mt-1">
                   <Badge
-                    variant={
+                    color={
                       currentPurchase.status === "PAGADA"
                         ? "default"
                         : currentPurchase.status === "CANCELADO"
@@ -191,7 +191,7 @@ export function PurchaseManagementSheet({
                 <span className="text-muted-foreground">Tipo de Pago:</span>
                 <div className="mt-1">
                   <Badge
-                    variant={
+                    color={
                       currentPurchase.payment_type === "CONTADO"
                         ? "default"
                         : "secondary"

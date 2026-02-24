@@ -292,7 +292,7 @@ export default function WarehouseDocumentDetailPage() {
               Tipo de Documento
             </span>
             <div className="mt-1">
-              <Badge variant={isEntry ? "default" : "secondary"}>
+              <Badge color={isEntry ? "default" : "secondary"}>
                 {getDocumentTypeLabel(document.document_type)}
               </Badge>
             </div>
@@ -317,7 +317,7 @@ export default function WarehouseDocumentDetailPage() {
             <span className="text-sm text-muted-foreground">Estado</span>
             <div className="mt-1">
               <Badge
-                variant={getDocumentStatusVariant(document.status)}
+                color={getDocumentStatusVariant(document.status)}
                 className="font-semibold"
               >
                 {document.status}

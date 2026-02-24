@@ -11,11 +11,13 @@ import {
 import {
   Loader,
   Search,
+  SearchX,
   Info,
   List,
   ChevronDown,
   ChevronUp,
   Calendar,
+  ListX,
 } from "lucide-react";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
@@ -27,6 +29,8 @@ import { DELIVERY_SHEET_TYPES } from "../lib/deliverysheet.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import type { AvailableSale } from "../lib/deliverysheet.interface";
+import type { CreditNoteResource } from "@/pages/credit-note/lib/credit-note.interface";
+import { GeneralModal } from "@/components/GeneralModal";
 import { parseFormattedNumber } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -42,6 +46,7 @@ import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useDrivers } from "@/pages/driver/lib/driver.hook";
 import { useClients } from "@/pages/client/lib/client.hook";
 import { FormTextArea } from "@/components/FormTextArea";
+import { EmptyState } from "@/components/EmptyState";
 
 interface DeliverySheetFormProps {
   defaultValues: Partial<DeliverySheetSchema>;
@@ -78,8 +83,14 @@ export const DeliverySheetForm = ({
   const [selectedSaleIds, setSelectedSaleIds] = useState<number[]>(
     defaultValues.sale_ids || [],
   );
+  const [hasSearched, setHasSearched] = useState(false);
   const [showMoreFields, setShowMoreFields] = useState(false);
   const [showDateFilter, setShowDateFilter] = useState(false);
+  const [creditNotesModal, setCreditNotesModal] = useState<{
+    open: boolean;
+    creditNotes: CreditNoteResource[];
+    saleName: string;
+  }>({ open: false, creditNotes: [], saleName: "" });
   const [searchParams, setSearchParams] = useState({
     payment_type: "",
     zone_id: "",
@@ -117,6 +128,7 @@ export const DeliverySheetForm = ({
       return;
     }
 
+    setHasSearched(true);
     onSearchSales({
       payment_type: searchParams.payment_type,
       zone_id: searchParams.zone_id ? Number(searchParams.zone_id) : undefined,
@@ -335,20 +347,7 @@ export const DeliverySheetForm = ({
           cols={{ sm: 1 }}
         >
           <div className="space-y-3">
-            <div className="flex flex-wrap gap-2 items-center">
-              <Button
-                type="button"
-                onClick={handleSearchSales}
-                disabled={!searchParams.payment_type || isLoadingAvailableSales}
-                size="sm"
-              >
-                {isLoadingAvailableSales ? (
-                  <Loader className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Search className="mr-2 h-4 w-4" />
-                )}
-                Buscar Ventas
-              </Button>
+            <div className="flex flex-wrap gap-2 items-center justify-end">
               <Button
                 type="button"
                 variant="ghost"
@@ -363,6 +362,19 @@ export const DeliverySheetForm = ({
                 ) : (
                   <ChevronDown className="h-4 w-4" />
                 )}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSearchSales}
+                disabled={!searchParams.payment_type || isLoadingAvailableSales}
+                size="sm"
+              >
+                {isLoadingAvailableSales ? (
+                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Search className="mr-2 h-4 w-4" />
+                )}
+                Buscar Ventas
               </Button>
             </div>
             {showDateFilter && (
@@ -380,6 +392,16 @@ export const DeliverySheetForm = ({
             )}
           </div>
         </GroupFormSection>
+
+        {hasSearched &&
+          !isLoadingAvailableSales &&
+          availableSales.length === 0 && (
+            <EmptyState
+              icon={SearchX}
+              title="Sin resultados"
+              description="No se encontraron ventas disponibles con los filtros seleccionados."
+            />
+          )}
 
         {availableSales.length > 0 && (
           <GroupFormSection
@@ -400,7 +422,7 @@ export const DeliverySheetForm = ({
                     : "Seleccionar Todas"}
                 </Button>
                 <Badge
-                  variant="green"
+                  color="green"
                   className="text-lg flex flex-col items-end"
                 >
                   <span className="text-green-950 text-xs">TOTAL</span>
@@ -424,7 +446,7 @@ export const DeliverySheetForm = ({
                       <TableHead>Documento</TableHead>
                       <TableHead>Cliente</TableHead>
                       <TableHead>Fecha</TableHead>
-                      {/* <TableHead>Nota de Crédito</TableHead> */}
+                      <TableHead>Nota de Crédito</TableHead>
                       <TableHead className="text-right">Monto</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -464,13 +486,43 @@ export const DeliverySheetForm = ({
                           </Badge>
                         </TableCell>
 
-                        {/* <TableCell>
-                          {sale.has_credit_note ? (
-                            <Badge variant="destructive">CON NOTA</Badge>
+                        <TableCell>
+                          {sale.credit_notes && sale.credit_notes.length > 0 ? (
+                            <div className="flex gap-1">
+                              <Badge size="default" color="orange">
+                                S/.{" "}
+                                {sale.credit_notes
+                                  .reduce(
+                                    (sum, cn) =>
+                                      sum +
+                                      parseFormattedNumber(cn.total_amount),
+                                    0,
+                                  )
+                                  .toFixed(2)}
+                              </Badge>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="xs"
+                                color="orange"
+                                onClick={() =>
+                                  setCreditNotesModal({
+                                    open: true,
+                                    creditNotes: sale.credit_notes!,
+                                    saleName: `${sale.serie}-${sale.numero}`,
+                                  })
+                                }
+                              >
+                                <ListX className="h-3 w-3 mr-1" />
+                                Detalles
+                              </Button>
+                            </div>
                           ) : (
-                            <Badge variant="default">SIN NOTA</Badge>
+                            <Badge variant="default" color="muted">
+                              SIN NOTA
+                            </Badge>
                           )}
-                        </TableCell> */}
+                        </TableCell>
                         <TableCell className="text-right font-semibold">
                           S/.{" "}
                           {parseFormattedNumber(sale.total_amount).toFixed(2)}
@@ -505,6 +557,76 @@ export const DeliverySheetForm = ({
           </Button>
         </div>
       </form>
+
+      <GeneralModal
+        open={creditNotesModal.open}
+        onClose={() =>
+          setCreditNotesModal((prev) => ({ ...prev, open: false }))
+        }
+        title="Notas de Crédito"
+        subtitle={`Venta: ${creditNotesModal.saleName}`}
+        icon="FileText"
+        size="2xl"
+      >
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <Badge color="destructive" className="text-base">
+              Total: S/.{" "}
+              {creditNotesModal.creditNotes
+                .reduce(
+                  (sum, cn) => sum + parseFormattedNumber(cn.total_amount),
+                  0,
+                )
+                .toFixed(2)}
+            </Badge>
+          </div>
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Documento</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Motivo</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Monto</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {creditNotesModal.creditNotes.map((cn) => (
+                  <TableRow key={cn.id}>
+                    <TableCell>
+                      <span className="font-mono font-semibold">
+                        {cn.full_document_number}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {format(
+                          parse(
+                            cn.issue_date.split("T")[0],
+                            "yyyy-MM-dd",
+                            new Date(),
+                          ),
+                          "dd/MM/yyyy",
+                        )}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
+                      {cn.reason}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{cn.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      S/. {parseFormattedNumber(cn.total_amount).toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </GeneralModal>
     </Form>
   );
 };

@@ -64,7 +64,7 @@ export function getSaleTableColumns(
         const currentAmount = parseFormattedNumber(row.original.current_amount);
         const pendingAmount = currentAmount - creditNotesTotal;
         return (
-          <Badge variant="secondary" className="text-xs font-semibold">
+          <Badge color="secondary" className="text-xs font-semibold">
             S/. {pendingAmount.toFixed(2)}
           </Badge>
         );
@@ -289,7 +289,7 @@ export function getSaleTableColumns(
               )}
               {hasNote && !isExpanded && (
                 <Badge
-                  variant="secondary"
+                  color="secondary"
                   className="h-4 w-4 p-0 flex items-center justify-center rounded-full"
                 >
                   !

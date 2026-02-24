@@ -38,7 +38,7 @@ export const VehicleColumns = ({
     accessorKey: "vehicle_type",
     header: "Tipo",
     cell: ({ getValue }) => (
-      <Badge variant="secondary">{getValue() as string}</Badge>
+      <Badge color="secondary">{getValue() as string}</Badge>
     ),
   },
   {
@@ -56,7 +56,7 @@ export const VehicleColumns = ({
     cell: ({ getValue }) => {
       const status = getValue() as string;
       return (
-        <Badge variant={status === "Activo" ? "default" : "destructive"}>
+        <Badge color={status === "Activo" ? "default" : "destructive"}>
           {status}
         </Badge>
       );

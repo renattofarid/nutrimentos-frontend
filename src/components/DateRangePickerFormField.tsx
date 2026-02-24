@@ -94,7 +94,7 @@ export function DateRangePickerFormField<T extends FieldValues>({
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Badge
-                            variant="tertiary"
+                            color="tertiary"
                             className="ml-2 p-0 aspect-square w-4 h-4 text-center justify-center"
                           >
                             ?

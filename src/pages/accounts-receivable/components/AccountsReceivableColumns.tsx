@@ -38,10 +38,10 @@ export const getStatusBadge = (installment: SaleInstallmentResource) => {
   }
 
   if (installment.status === "VENCIDO") {
-    return <Badge variant="destructive">VENCIDO</Badge>;
+    return <Badge color="destructive">VENCIDO</Badge>;
   }
 
-  return <Badge variant="secondary">PENDIENTE</Badge>;
+  return <Badge color="secondary">PENDIENTE</Badge>;
 };
 
 export const getAccountsReceivableColumns = (

@@ -68,7 +68,7 @@ export default function BoxShiftDetailPage() {
           />
         </div>
         <Badge
-          variant={shift.is_open ? "default" : "secondary"}
+          color={shift.is_open ? "default" : "secondary"}
           className="text-lg px-4 py-2"
         >
           {shift.status}

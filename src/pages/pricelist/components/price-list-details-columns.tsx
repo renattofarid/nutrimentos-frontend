@@ -57,7 +57,7 @@ export const getPriceListDetailsColumns = (
       }
 
       return (
-        <Badge variant="secondary" className="font-mono">
+        <Badge color="secondary" className="font-mono">
           {weightRange.formatted_range ||
             `${weightRange.min_weight}kg - ${weightRange.max_weight}kg`}
         </Badge>
@@ -97,7 +97,7 @@ export const getPriceListDetailsColumns = (
     cell: ({ row }) => {
       const isActive = row.original.is_active;
       return (
-        <Badge variant={isActive ? "default" : "destructive"}>
+        <Badge color={isActive ? "default" : "destructive"}>
           {isActive ? "Activo" : "Inactivo"}
         </Badge>
       );

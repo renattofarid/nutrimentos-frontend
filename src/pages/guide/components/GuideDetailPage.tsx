@@ -113,7 +113,7 @@ export default function GuideDetailPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Estado</p>
-                <Badge variant={statusVariants[guide.status] || "default"}>
+                <Badge color={statusVariants[guide.status] || "default"}>
                   {guide.status}
                 </Badge>
               </div>
@@ -149,7 +149,7 @@ export default function GuideDetailPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Modalidad</p>
-                <Badge variant={guide.modality === "PUBLICO" ? "default" : "secondary"}>
+                <Badge color={guide.modality === "PUBLICO" ? "default" : "secondary"}>
                   {guide.modality === "PUBLICO" ? "Público" : "Privado"}
                 </Badge>
               </div>
@@ -183,7 +183,7 @@ export default function GuideDetailPage() {
           <div>
             <span className="text-sm text-muted-foreground">Electrónico</span>
             <div className="mt-1">
-              <Badge variant={guide.is_electronic ? "default" : "secondary"}>
+              <Badge color={guide.is_electronic ? "default" : "secondary"}>
                 {guide.is_electronic ? "Sí" : "No"}
               </Badge>
             </div>
@@ -436,17 +436,17 @@ export default function GuideDetailPage() {
                     <tr key={sale.id} className="border-b last:border-0 hover:bg-muted/30">
                       <td className="py-1.5 px-2 font-mono text-xs">{sale.full_document_number}</td>
                       <td className="py-1.5 px-2">
-                        <Badge variant="secondary" className="text-xs">{sale.document_type}</Badge>
+                        <Badge color="secondary" className="text-xs">{sale.document_type}</Badge>
                       </td>
                       <td className="py-1.5 px-2 text-muted-foreground">{formatDate(sale.issue_date)}</td>
                       <td className="py-1.5 px-2">
-                        <Badge variant={paymentTypeVariants[sale.payment_type] || "secondary"} className="text-xs">
+                        <Badge color={paymentTypeVariants[sale.payment_type] || "secondary"} className="text-xs">
                           {sale.payment_type}
                         </Badge>
                       </td>
                       <td className="py-1.5 px-2">
                         <Badge
-                          variant={
+                          color={
                             sale.status === "PAGADA"
                               ? "default"
                               : sale.status === "ANULADA"
@@ -501,7 +501,7 @@ export default function GuideDetailPage() {
                         {parseFloat(detail.quantity_kg) > 0 ? parseFloat(detail.quantity_kg) : "-"}
                       </td>
                       <td className="py-1.5 px-2 text-center">
-                        <Badge variant="secondary" className="text-xs">{detail.unit_code}</Badge>
+                        <Badge color="secondary" className="text-xs">{detail.unit_code}</Badge>
                       </td>
                     </tr>
                   ))}

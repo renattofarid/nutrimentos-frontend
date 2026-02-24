@@ -35,7 +35,7 @@ const columns: ColumnDef<InventoryItem>[] = [
     size: 110,
     cell: ({ row }) => (
       <span className="font-mono text-sm font-medium">
-        {row.original.product_code}
+        {row.original.product_id}
       </span>
     ),
   },
@@ -47,14 +47,14 @@ const columns: ColumnDef<InventoryItem>[] = [
       <span className="font-medium">{row.original.product_name}</span>
     ),
   },
-  {
-    accessorKey: "category_name",
-    header: "Categoría",
-    size: 150,
-    cell: ({ row }) => (
-      <Badge variant="secondary">{row.original.category_name}</Badge>
-    ),
-  },
+  // {
+  //   accessorKey: "category_name",
+  //   header: "Categoría",
+  //   size: 150,
+  //   cell: ({ row }) => (
+  //     <Badge color="secondary">{row.original.category_name}</Badge>
+  //   ),
+  // },
   {
     accessorKey: "warehouse_name",
     header: "Almacén",
@@ -63,23 +63,23 @@ const columns: ColumnDef<InventoryItem>[] = [
       <span className="text-sm">{row.original.warehouse_name}</span>
     ),
   },
-  {
-    accessorKey: "unit_name",
-    header: "Unidad",
-    size: 90,
-    cell: ({ row }) => (
-      <span className="text-sm text-muted-foreground">
-        {row.original.unit_name}
-      </span>
-    ),
-  },
+  // {
+  //   accessorKey: "unit_name",
+  //   header: "Unidad",
+  //   size: 90,
+  //   cell: ({ row }) => (
+  //     <span className="text-sm text-muted-foreground">
+  //       {row.original.unit_name}
+  //     </span>
+  //   ),
+  // },
   {
     accessorKey: "current_stock",
     header: "Stock Actual",
     size: 120,
     cell: ({ row }) => {
-      const stock = row.original.current_stock;
-      const min = row.original.min_stock;
+      const stock = Number(row.original.stock);
+      const min = Number(row.original.min_stock);
       const isLow = stock <= min;
       return (
         <span
@@ -107,11 +107,11 @@ const columns: ColumnDef<InventoryItem>[] = [
     header: "Estado",
     size: 110,
     cell: ({ row }) => {
-      const stock = row.original.current_stock;
-      const min = row.original.min_stock;
+      const stock = Number(row.original.stock);
+      const min = Number(row.original.min_stock);
 
       if (stock === 0) {
-        return <Badge variant="destructive">Sin stock</Badge>;
+        return <Badge color="destructive">Sin stock</Badge>;
       }
       if (stock <= min) {
         return (
@@ -185,11 +185,11 @@ export default function InventoryReportPage() {
   const tableData = rawData?.data ?? [];
 
   const totalProducts = tableData.length;
-  const withStock = tableData.filter((i) => i.current_stock > 0).length;
+  const withStock = tableData.filter((i) => Number(i.stock) > 0).length;
   const lowStock = tableData.filter(
-    (i) => i.current_stock > 0 && i.current_stock <= i.min_stock,
+    (i) => Number(i.stock) > 0 && Number(i.stock) <= Number(i.min_stock),
   ).length;
-  const noStock = tableData.filter((i) => i.current_stock === 0).length;
+  const noStock = tableData.filter((i) => Number(i.stock) === 0).length;
 
   return (
     <PageWrapper size="3xl">

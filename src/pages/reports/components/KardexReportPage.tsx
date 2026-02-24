@@ -50,7 +50,7 @@ const columns: ColumnDef<KardexItem>[] = [
 
       if (isAdjust) {
         return (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+          <Badge color="secondary" className="bg-blue-100 text-blue-700">
             {type}
           </Badge>
         );
@@ -58,7 +58,7 @@ const columns: ColumnDef<KardexItem>[] = [
 
       return (
         <Badge
-          variant={isEntry ? "default" : "destructive"}
+          color={isEntry ? "default" : "destructive"}
           className={isEntry ? "bg-green-600" : ""}
         >
           {type}

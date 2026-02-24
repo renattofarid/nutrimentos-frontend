@@ -83,7 +83,7 @@ export const PriceListDetailsSheet = ({
             )}
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Estado:</span>
-              <Badge variant={priceList.is_active ? "default" : "destructive"}>
+              <Badge color={priceList.is_active ? "default" : "destructive"}>
                 {priceList.is_active ? "Activo" : "Inactivo"}
               </Badge>
             </div>
@@ -97,7 +97,7 @@ export const PriceListDetailsSheet = ({
                 {priceList.weight_ranges.map((range) => (
                   <Badge
                     key={range.id}
-                    variant="secondary"
+                    color="secondary"
                     className="font-mono"
                   >
                     {range.name}:{" "}

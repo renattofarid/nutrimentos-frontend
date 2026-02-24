@@ -115,7 +115,7 @@ export const GuideColumns = ({
         ANULADA: "destructive",
       }[status] as "secondary" | "default" | "destructive";
 
-      return <Badge variant={statusVariant}>{status}</Badge>;
+      return <Badge color={statusVariant}>{status}</Badge>;
     },
   },
   {

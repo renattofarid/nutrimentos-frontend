@@ -32,7 +32,7 @@ export const BoxColumns = ({
     accessorKey: "serie",
     header: "Serie",
     cell: ({ getValue }) => (
-      <Badge variant="secondary" className="font-mono">
+      <Badge color="secondary" className="font-mono">
         {getValue() as string}
       </Badge>
     ),
@@ -52,7 +52,7 @@ export const BoxColumns = ({
             disabled={isUpdating}
           />
           <Badge
-            variant={status === "Activo" ? "default" : "destructive"}
+            color={status === "Activo" ? "default" : "destructive"}
             className={`font-semibold`}
           >
             {status}

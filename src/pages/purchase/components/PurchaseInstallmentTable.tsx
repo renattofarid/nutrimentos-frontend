@@ -42,7 +42,7 @@ export function PurchaseInstallmentTable({
     if (status === "PAGADO") variant = "default";
     if (status === "VENCIDO") variant = "destructive";
 
-    return <Badge variant={variant}>{status}</Badge>;
+    return <Badge color={variant}>{status}</Badge>;
   };
 
   if (!installments || installments.length === 0) {

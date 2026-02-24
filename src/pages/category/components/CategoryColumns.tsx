@@ -28,7 +28,7 @@ export const CategoryColumns = ({
     accessorKey: "code",
     header: "Código",
     cell: ({ getValue }) => (
-      <Badge variant="secondary" className="font-mono">
+      <Badge color="secondary" className="font-mono">
         {getValue() as string}
       </Badge>
     ),
@@ -49,7 +49,7 @@ export const CategoryColumns = ({
     accessorKey: "level",
     header: "Nivel",
     cell: ({ getValue }) => (
-      <Badge variant="secondary" className="font-semibold">
+      <Badge color="secondary" className="font-semibold">
         Nivel {getValue() as number}
       </Badge>
     ),

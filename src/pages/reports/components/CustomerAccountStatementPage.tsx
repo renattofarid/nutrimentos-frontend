@@ -114,7 +114,7 @@ const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
         item.payment_type === "CREDITO" ? "destructive" : "default";
 
       return (
-        <Badge variant={variant} className="text-xs">
+        <Badge color={variant} className="text-xs">
           {item.payment_type}
         </Badge>
       );
@@ -202,7 +202,7 @@ const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
         days > 30 ? "destructive" : days > 15 ? "default" : "secondary";
 
       return (
-        <Badge variant={variant}>
+        <Badge color={variant}>
           {days} {days === 1 ? "día" : "días"}
         </Badge>
       );

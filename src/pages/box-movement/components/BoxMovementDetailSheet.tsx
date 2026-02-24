@@ -45,7 +45,7 @@ function BoxMovementDetailSheet({
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Tipo:</span>
               <Badge
-                variant={isIncome ? "default" : "secondary"}
+                color={isIncome ? "default" : "secondary"}
                 className={isIncome ? "bg-green-600" : "bg-red-600"}
               >
                 {movement.type}

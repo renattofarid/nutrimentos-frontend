@@ -241,6 +241,7 @@ export interface CreateGuideDetailRequest {
 }
 
 export interface CreateGuideRequest {
+  use_custom_details: boolean;
   branch_id: number;
   warehouse_id: number;
   sale_ids?: number[];
@@ -249,13 +250,14 @@ export interface CreateGuideRequest {
   transfer_date: string;
   modality: string;
   motive_id: number;
-  sale_document_number: string;
-  carrier_document_type: string;
-  carrier_document_number: string;
-  carrier_name: string;
-  carrier_ruc: string;
-  carrier_mtc_number: string;
+  sale_document_number?: string | null;
+  carrier_document_type?: string | null;
+  carrier_document_number?: string | null;
+  carrier_name?: string | null;
+  carrier_ruc?: string | null;
+  carrier_mtc_number?: string | null;
   vehicle_id?: number | null;
+  vehicle_plate?: string | null;
   driver_document_type?: string | null;
   driver_document_number?: string | null;
   driver_name?: string | null;
@@ -267,7 +269,7 @@ export interface CreateGuideRequest {
   unit_measurement: string;
   total_weight: number;
   total_packages: number;
-  observations?: string;
+  observations?: string | null;
   details?: CreateGuideDetailRequest[];
 }
 

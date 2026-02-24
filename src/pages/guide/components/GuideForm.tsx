@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader, Truck, Search, Plus, Eye, EyeOff, Trash2, Package, ShoppingCart } from "lucide-react";
+import { Loader, Truck, Search, Plus, Eye, EyeOff, Package, ShoppingCart } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
@@ -44,7 +44,7 @@ import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interfac
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import type { VehicleResource } from "@/pages/vehicle/lib/vehicle.interface";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { format } from "date-fns";
 import { getSalesByRange } from "@/pages/sale/lib/sale.actions";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
@@ -56,8 +56,12 @@ import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useUbigeosFrom, useUbigeosTo } from "../lib/ubigeo.hook";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { useHomeProducts } from "@/pages/product/lib/product.hook";
-import type { ProductResource } from "@/pages/product/lib/product.interface";
+import { useProduct } from "@/pages/product/lib/product.hook";
+import {
+  ExcelGrid,
+  type ExcelGridColumn,
+  type ProductOption,
+} from "@/components/ExcelGrid";
 
 interface GuideFormProps {
   defaultValues: Partial<GuideSchema>;
@@ -115,15 +119,28 @@ export const GuideForm = ({
   const [customDetails, setCustomDetails] = useState<
     {
       product_id: string;
+      product_code: string;
+      product_name: string;
       description: string;
       quantity_sacks: string;
       quantity_kg: string;
       unit_code: string;
     }[]
-  >([{ product_id: "", description: "", quantity_sacks: "", quantity_kg: "", unit_code: "KGM" }]);
+  >([{ product_id: "", product_code: "", product_name: "", description: "", quantity_sacks: "", quantity_kg: "", unit_code: "KGM" }]);
 
-  // Cargar todos los productos para el selector
-  const { data: allProducts } = useHomeProducts();
+  // Búsqueda async de producto por código (al dar Tab en la grilla)
+  const [productCodeSearch, setProductCodeSearch] = useState<{
+    rowIndex: number;
+    code: string;
+  } | null>(null);
+  const productCodeCallbacksRef = useRef<{
+    advance: () => void;
+    setError: (msg: string) => void;
+  } | null>(null);
+
+  const { data: productSearchResult, isFetching: isSearchingProduct } = useProduct(
+    productCodeSearch ? { codigo: productCodeSearch.code, direction: "asc" } : undefined
+  );
 
   // Estado para búsqueda de transportista
   const [isSearchingCarrier, setIsSearchingCarrier] = useState(false);
@@ -318,7 +335,7 @@ export const GuideForm = ({
   const handleAddDetail = () => {
     setCustomDetails((prev) => [
       ...prev,
-      { product_id: "", description: "", quantity_sacks: "", quantity_kg: "", unit_code: "KGM" },
+      { product_id: "", product_code: "", product_name: "", description: "", quantity_sacks: "", quantity_kg: "", unit_code: "KGM" },
     ]);
   };
 
@@ -335,6 +352,58 @@ export const GuideForm = ({
       prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
     );
   };
+
+  const handleProductSelect = useCallback((index: number, product: ProductOption) => {
+    setCustomDetails((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        product_id: product.id,
+        product_code: product.codigo,
+        product_name: product.name,
+        description: product.name,
+      };
+      return updated;
+    });
+  }, []);
+
+  // Cuando useProduct retorna resultado, auto-seleccionar primer producto y avanzar celda
+  useEffect(() => {
+    if (!productCodeSearch || isSearchingProduct) return;
+    const callbacks = productCodeCallbacksRef.current;
+    if (!callbacks) return;
+
+    if (productSearchResult?.data && productSearchResult.data.length > 0) {
+      const p = productSearchResult.data[0];
+      handleProductSelect(productCodeSearch.rowIndex, {
+        id: p.id.toString(),
+        codigo: p.codigo,
+        name: p.name,
+        weight: p.weight,
+      });
+      callbacks.advance();
+    } else if (productSearchResult !== undefined) {
+      callbacks.setError(
+        `No se encontró ningún producto con código "${productCodeSearch.code}"`
+      );
+    }
+
+    productCodeCallbacksRef.current = null;
+    setProductCodeSearch(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productSearchResult, isSearchingProduct]);
+
+  const handleProductCodeTab = useCallback(
+    (rowIndex: number, code: string, advance: () => void, setError: (msg: string) => void) => {
+      if (!code.trim()) {
+        advance();
+        return;
+      }
+      productCodeCallbacksRef.current = { advance, setError };
+      setProductCodeSearch({ rowIndex, code });
+    },
+    []
+  );
 
   // Auto-calcular totales cuando cambian los productos personalizados
   useEffect(() => {
@@ -417,6 +486,7 @@ export const GuideForm = ({
       carrier_ruc: data.carrier_document_number || null,
       carrier_mtc_number: data.carrier_mtc_number || null,
       vehicle_id: data.vehicle_id ? parseInt(data.vehicle_id) : null,
+      vehicle_plate: null,
       driver_document_type: data.driver_document_type || null,
       driver_document_number: data.driver_document_number || null,
       driver_name: data.driver_name || null,
@@ -452,6 +522,63 @@ export const GuideForm = ({
     console.log("✅ Payload final siendo enviado:", payload);
     onSubmit(payload);
   };
+
+  // Sin lista estática: la búsqueda es async por código (handleProductCodeTab)
+  const productOptions: ProductOption[] = [];
+
+  const gridColumns: ExcelGridColumn<typeof customDetails[0]>[] = [
+    {
+      id: "product_code",
+      header: "Código",
+      type: "product-code",
+      width: "120px",
+      accessor: "product_code",
+    },
+    {
+      id: "product",
+      header: "Producto",
+      type: "product-search",
+      width: "250px",
+      accessor: "product_name",
+    },
+    {
+      id: "description",
+      header: "Descripción",
+      type: "text",
+      width: "200px",
+      accessor: "description",
+    },
+    {
+      id: "quantity_sacks",
+      header: "Sacos",
+      type: "number",
+      width: "100px",
+      accessor: "quantity_sacks",
+    },
+    {
+      id: "quantity_kg",
+      header: "Peso (kg)",
+      type: "number",
+      width: "120px",
+      accessor: "quantity_kg",
+    },
+    {
+      id: "unit_code",
+      header: "Unidad",
+      type: "readonly",
+      width: "150px",
+      render: (row, index) => (
+        <SearchableSelect
+          buttonSize="default"
+          options={UNIT_MEASUREMENTS.map((um) => ({ value: um.value, label: um.label }))}
+          value={row.unit_code}
+          onChange={(value) => handleDetailChange(index, "unit_code", value)}
+          placeholder="Unidad"
+          className="w-full"
+        />
+      ),
+    },
+  ];
 
   const customerValue = form.watch("customer_id");
 
@@ -1268,136 +1395,17 @@ export const GuideForm = ({
             }
           >
             <div className="space-y-3">
-              <div className="border rounded-lg overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Producto</TableHead>
-                      <TableHead>Descripción</TableHead>
-                      <TableHead className="w-28">Sacos</TableHead>
-                      <TableHead className="w-28">Peso (kg)</TableHead>
-                      <TableHead className="w-28">Unidad</TableHead>
-                      <TableHead className="w-10" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {customDetails.map((row, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <SearchableSelect
-                            buttonSize="default"
-                            options={(allProducts ?? []).map(
-                              (p: ProductResource) => ({
-                                value: p.id.toString(),
-                                label: p.name,
-                                description: p.codigo,
-                              }),
-                            )}
-                            value={row.product_id}
-                            onChange={(value) => {
-                              const product = (allProducts ?? []).find(
-                                (p: ProductResource) =>
-                                  p.id.toString() === value,
-                              );
-                              handleDetailChange(index, "product_id", value);
-                              if (product) {
-                                handleDetailChange(
-                                  index,
-                                  "description",
-                                  product.name,
-                                );
-                              }
-                            }}
-                            placeholder="Seleccionar..."
-                            className="w-full min-w-[160px]"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            variant="default"
-                            placeholder="Descripción"
-                            value={row.description}
-                            onChange={(e) =>
-                              handleDetailChange(
-                                index,
-                                "description",
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            variant="default"
-                            placeholder="0"
-                            value={row.quantity_sacks}
-                            onChange={(e) =>
-                              handleDetailChange(
-                                index,
-                                "quantity_sacks",
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            variant="default"
-                            placeholder="0.00"
-                            value={row.quantity_kg}
-                            onChange={(e) =>
-                              handleDetailChange(
-                                index,
-                                "quantity_kg",
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <SearchableSelect
-                            buttonSize="default"
-                            options={UNIT_MEASUREMENTS.map((um) => ({
-                              value: um.value,
-                              label: um.label,
-                            }))}
-                            value={row.unit_code}
-                            onChange={(value) =>
-                              handleDetailChange(index, "unit_code", value)
-                            }
-                            placeholder="Unidad"
-                            className="w-full"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            disabled={customDetails.length === 1}
-                            onClick={() => handleRemoveDetail(index)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddDetail}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Agregar producto
-              </Button>
+              <ExcelGrid
+                columns={gridColumns}
+                data={customDetails}
+                onAddRow={handleAddDetail}
+                onRemoveRow={handleRemoveDetail}
+                onCellChange={handleDetailChange}
+                productOptions={productOptions}
+                onProductSelect={handleProductSelect}
+                onProductCodeTab={handleProductCodeTab}
+                emptyMessage="Agregue productos al detalle"
+              />
 
               {form.formState.errors &&
                 Object.keys(form.formState.errors).length > 0 && (

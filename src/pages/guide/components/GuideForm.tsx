@@ -634,7 +634,7 @@ export const GuideForm = ({
             </Button>
           }
         >
-          {showAdvancedFields && (
+          <div className={showAdvancedFields ? "" : "hidden"}>
             <FormSelect
               control={form.control}
               name="branch_id"
@@ -646,9 +646,9 @@ export const GuideForm = ({
                 description: branch.address,
               }))}
             />
-          )}
+          </div>
 
-          {showAdvancedFields && (
+          <div className={showAdvancedFields ? "" : "hidden"}>
             <FormSelect
               control={form.control}
               name="warehouse_id"
@@ -660,7 +660,7 @@ export const GuideForm = ({
                 description: warehouse.address,
               }))}
             />
-          )}
+          </div>
 
           <FormSelect
             control={form.control}
@@ -938,8 +938,7 @@ export const GuideForm = ({
           />
 
           {/* Campos adicionales (ocultos por defecto) */}
-          {showAdvancedFields && (
-            <>
+          <div className={showAdvancedFields ? "contents" : "hidden"}>
               {/* Selector de Conductor */}
               <div className="md:col-span-2">
                 <FormSelectAsync
@@ -1106,8 +1105,7 @@ export const GuideForm = ({
                   </FormItem>
                 )}
               />
-            </>
-          )}
+          </div>
         </GroupFormSection>
 
         {/* Switch: Por Ventas / Por Productos */}

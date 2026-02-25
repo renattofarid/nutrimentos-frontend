@@ -45,6 +45,15 @@ export const INVENTORY_REPORT_ROUTE = `${ROUTE}/inventario`;
 // Kardex Report
 export const KARDEX_REPORT_ROUTE = `${ROUTE}/kardex`;
 
+// Sale By Seller Report
+export const SALE_BY_SELLER_REPORT_ROUTE = `${ROUTE}/venta-por-vendedor`;
+
+// Delivery Sheet Report
+export const DELIVERY_SHEET_REPORT_ROUTE = `${ROUTE}/planilla-reparto`;
+
+// Commissions Report
+export const COMMISSIONS_REPORT_ROUTE = `${ROUTE}/comisiones`;
+
 export interface CustomerAccountStatementParams {
   zone_id?: number | null;
   customer_id?: number | null;
@@ -219,7 +228,7 @@ interface Unit {
 }
 
 /**
- * ---------
+ * --------- KARDEX REPORT PARAMETERS
  */
 export interface KardexReportParams {
   product_id?: number | null;
@@ -254,4 +263,238 @@ export interface CustomerAccountStatementTableItem {
   total_debt: number;
   parentId?: string;
   hasChildren: boolean;
+}
+
+/**
+ * SALE BY WORKER REPORT
+ */
+
+export interface SaleBySellerReportParams {
+  document_type?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  format?: "excel" | "pdf" | null;
+  status?: string | null;
+  user_id?: number | null;
+  warehouse_id?: number | null;
+}
+
+export interface SaleBySellerReportResponse {
+  summary: Summary;
+  by_seller: Byseller[];
+  data: SaleWorkerReportResource[];
+}
+
+export interface SaleWorkerReportResource {
+  sale_id: number;
+  issue_date: string;
+  document_type: string;
+  document_number: string;
+  seller: Seller;
+  customer: Seller;
+  warehouse: Seller;
+  payment_type: string;
+  products: Product[];
+  subtotal: string;
+  tax_amount: string;
+  total_amount: string;
+  cost_total: number;
+  profit: number;
+  margin: number;
+  status: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  quantity: null;
+  price: string;
+  total: string;
+}
+
+interface Byseller {
+  seller: Seller;
+  total_sales: number;
+  total_amount: number;
+  total_cost: number;
+  total_profit: number;
+  avg_margin: number;
+}
+
+interface Seller {
+  id: number;
+  name: string;
+}
+
+interface Summary {
+  total_sales: number;
+  total_amount: number;
+  total_cost: number;
+  total_profit: number;
+}
+
+/**
+ * DELIVERY SHEET REPORT
+ */
+
+export interface DeliverySheetReportParams {
+  customer_id?: number | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  format?: "excel" | "pdf" | null;
+  modality?: "PUBLICO" | "PRIVADO" | null;
+  status?:
+    | "REGISTRADA"
+    | "ENVIADA"
+    | "ACEPTADA"
+    | "RECHAZADA"
+    | "EN_TRANSITO"
+    | "ENTREGADA"
+    | "ANULADA"
+    | null;
+  transfer_date?: string | null;
+  vehicle_id?: number | null;
+  warehouse_id?: number | null;
+}
+
+export interface DeliverySheetReportResponse {
+  summary: DeliverySheetSummary;
+  data: DeliverySheetDatum[];
+}
+
+export interface DeliverySheetSummary {
+  total_guides: number;
+  total_weight: number;
+  total_packages: number;
+  by_vehicle: DeliverySheetByVehicle[];
+}
+
+export interface DeliverySheetByVehicle {
+  plate: string;
+  total_guides: number;
+  total_weight: number;
+  total_packages: number;
+}
+
+export interface DeliverySheetDatum {
+  guide_id: number;
+  guide_number: string;
+  issue_date: string;
+  transfer_date: string;
+  modality: string;
+  motive: string;
+  status: string;
+  vehicle: DeliverySheetVehicle;
+  driver: DeliverySheetDriver | null;
+  carrier: DeliverySheetCarrier | null;
+  origin: DeliverySheetOrigin;
+  destination: DeliverySheetDestination;
+  customer: DeliverySheetNamedEntity;
+  sale_document_number: string;
+  total_weight: string;
+  total_packages: number;
+  unit_measurement: string;
+  registered_by: string;
+  details: DeliverySheetDetail[];
+}
+
+export interface DeliverySheetDetail {
+  product: DeliverySheetNamedEntity;
+  quantity_sacks: string;
+  quantity_kg: string;
+  unit_code: string;
+  description: string;
+}
+
+export interface DeliverySheetNamedEntity {
+  id: number;
+  name: string;
+}
+
+export interface DeliverySheetDestination {
+  address: string;
+  ubigeo: string;
+}
+
+export interface DeliverySheetOrigin {
+  warehouse: string;
+  address: string;
+  ubigeo: string;
+}
+
+export interface DeliverySheetCarrier {
+  name: string;
+  document_number: string;
+  mtc_number: string;
+}
+
+export interface DeliverySheetDriver {
+  name: string;
+  document_number: string;
+  license: string;
+}
+
+export interface DeliverySheetVehicle {
+  id: number | null;
+  plate: string | null;
+}
+
+/**
+ * COMMISSIONS REPORT
+ */
+
+export interface CommissionsReportParams {
+  document_type?: "FACTURA" | "BOLETA" | "TICKET" | null;
+  end_date?: string | null;
+  format?: "excel" | "pdf" | null;
+  payment_type?: "CONTADO" | "CREDITO" | null;
+  start_date?: string | null;
+  user_id?: number | null;
+  warehouse_id?: number | null;
+}
+
+export interface CommissionsReportResponse {
+  summary: CommissionSummary;
+  by_seller: CommissionBySeller[];
+  data: CommissionDatum[];
+}
+
+export interface CommissionSummary {
+  total_sales: number;
+  total_amount: number;
+  total_cost: number;
+  total_profit: number;
+  total_commissions: number;
+}
+
+export interface CommissionBySeller {
+  seller: CommissionSeller;
+  total_sales: number;
+  total_amount: number;
+  total_profit: number;
+  total_commissions: number;
+}
+
+export interface CommissionDatum {
+  sale_id: number;
+  issue_date: string;
+  document_type: string;
+  document_number: string;
+  seller: CommissionSeller;
+  customer: CommissionSeller;
+  warehouse: CommissionSeller;
+  payment_type: string;
+  subtotal: string;
+  tax_amount: string;
+  total_amount: string;
+  cost_total: number;
+  gross_profit: number;
+  commission_rate: string;
+  commission: number;
+  status: string;
+}
+
+export interface CommissionSeller {
+  id: number;
+  name: string;
 }

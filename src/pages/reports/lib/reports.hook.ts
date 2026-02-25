@@ -1,7 +1,10 @@
 import { useReportsStore } from "./reports.store";
 import type {
+  CommissionsReportParams,
   CustomerAccountStatementParams,
+  DeliverySheetReportParams,
   KardexReportParams,
+  SaleBySellerReportParams,
 } from "./reports.interface";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -10,6 +13,8 @@ import {
   fetchSearchEndpoint,
 } from "./reports.actions";
 import { errorToast, successToast } from "@/lib/core.function";
+import { VEHICLE } from "@/pages/vehicle/lib/vehicle.interface";
+import { CLIENT } from "@/pages/client/lib/client.interface";
 
 export function useCustomerAccountStatement(
   params?: CustomerAccountStatementParams,
@@ -47,12 +52,8 @@ export function useInventoryReport() {
 }
 
 export function useKardexReport(params?: KardexReportParams) {
-  const {
-    kardexReport,
-    kardexLoading,
-    kardexError,
-    fetchKardexReport,
-  } = useReportsStore();
+  const { kardexReport, kardexLoading, kardexError, fetchKardexReport } =
+    useReportsStore();
 
   return {
     data: kardexReport,
@@ -60,6 +61,23 @@ export function useKardexReport(params?: KardexReportParams) {
     error: kardexError,
     refetch: () => fetchKardexReport(params || {}),
     fetch: fetchKardexReport,
+  };
+}
+
+export function useSaleBySellerReport(params?: SaleBySellerReportParams) {
+  const {
+    saleBySellerReport,
+    saleBySellerLoading,
+    saleBySellerError,
+    fetchSaleBySellerReport,
+  } = useReportsStore();
+
+  return {
+    data: saleBySellerReport,
+    isLoading: saleBySellerLoading,
+    error: saleBySellerError,
+    refetch: () => fetchSaleBySellerReport(params || {}),
+    fetch: fetchSaleBySellerReport,
   };
 }
 
@@ -123,3 +141,79 @@ export const useWarehouseAsyncSearch = (params: {
     refetchOnWindowFocus: false,
   });
 };
+
+export const useCustomerAsyncSearch = (params: {
+  search?: string;
+  page?: number;
+  per_page?: number;
+  [key: string]: any;
+}) => {
+  return useQuery({
+    queryKey: ["customers-async-search", params],
+    queryFn: () => fetchSearchEndpoint(CLIENT.ENDPOINT, params),
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useVehicleAsyncSearch = (params: {
+  search?: string;
+  page?: number;
+  per_page?: number;
+  [key: string]: any;
+}) => {
+  return useQuery({
+    queryKey: ["vehicles-async-search", params],
+    queryFn: () => fetchSearchEndpoint(VEHICLE.ENDPOINT, params),
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useUserAsyncSearch = (params: {
+  search?: string;
+  page?: number;
+  per_page?: number;
+  [key: string]: any;
+}) => {
+  return useQuery({
+    queryKey: ["users-async-search", params],
+    queryFn: () => fetchSearchEndpoint("/users", params),
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export function useDeliverySheetReport(params?: DeliverySheetReportParams) {
+  const {
+    deliverySheetReport,
+    deliverySheetLoading,
+    deliverySheetError,
+    fetchDeliverySheetReport,
+  } = useReportsStore();
+
+  return {
+    data: deliverySheetReport,
+    isLoading: deliverySheetLoading,
+    error: deliverySheetError,
+    refetch: () => fetchDeliverySheetReport(params || {}),
+    fetch: fetchDeliverySheetReport,
+  };
+}
+
+export function useCommissionsReport(params?: CommissionsReportParams) {
+  const {
+    commissionsReport,
+    commissionsLoading,
+    commissionsError,
+    fetchCommissionsReport,
+  } = useReportsStore();
+
+  return {
+    data: commissionsReport,
+    isLoading: commissionsLoading,
+    error: commissionsError,
+    refetch: () => fetchCommissionsReport(params || {}),
+    fetch: fetchCommissionsReport,
+  };
+}

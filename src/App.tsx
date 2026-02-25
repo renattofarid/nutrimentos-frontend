@@ -114,14 +114,20 @@ import {
   KardexReportPage,
 } from "./pages/reports/components";
 import {
+  COMMISSIONS_REPORT_ROUTE,
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+  DELIVERY_SHEET_REPORT_ROUTE,
   INVENTORY_REPORT_ROUTE,
   KARDEX_REPORT_ROUTE,
+  SALE_BY_SELLER_REPORT_ROUTE,
 } from "./pages/reports/lib/reports.interface";
 import { PURCHASE_CREDIT_NOTE } from "./pages/purchase-credit-note/lib/purchase-credit-note.interface";
 import PurchaseCreditNotePage from "./pages/purchase-credit-note/components/PurchaseCreditNotePage";
 import PurchaseCreditNoteAddPage from "./pages/purchase-credit-note/components/PurchaseCreditNoteAddPage";
 import PurchaseCreditNoteEditPage from "./pages/purchase-credit-note/components/PurchaseCreditNoteEditPage";
+import SaleBySellerReportPage from "./pages/reports/components/SaleBySellerReportPage";
+import DeliverySheetReportPage from "./pages/reports/components/DeliverySheetReportPage";
+import CommissionsReportPage from "./pages/reports/components/CommissionsReportPage";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -880,6 +886,30 @@ export default function App() {
             element={
               <ProtectedRoute path={KARDEX_REPORT_ROUTE}>
                 <KardexReportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={SALE_BY_SELLER_REPORT_ROUTE}
+            element={
+              <ProtectedRoute path={SALE_BY_SELLER_REPORT_ROUTE}>
+                <SaleBySellerReportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={DELIVERY_SHEET_REPORT_ROUTE}
+            element={
+              <ProtectedRoute path={DELIVERY_SHEET_REPORT_ROUTE}>
+                <DeliverySheetReportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={COMMISSIONS_REPORT_ROUTE}
+            element={
+              <ProtectedRoute path={COMMISSIONS_REPORT_ROUTE}>
+                <CommissionsReportPage />
               </ProtectedRoute>
             }
           />

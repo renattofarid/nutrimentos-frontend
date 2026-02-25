@@ -59,10 +59,13 @@ import {
 } from "@/pages/deliverysheet/lib/deliverysheet.interface";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import {
+  COMMISSIONS_REPORT_ROUTE,
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+  DELIVERY_SHEET_REPORT_ROUTE,
   INVENTORY_REPORT_ROUTE,
   KARDEX_REPORT_ROUTE,
   REPORTS,
+  SALE_BY_SELLER_REPORT_ROUTE,
 } from "@/pages/reports/lib/reports.interface";
 import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-credit-note.interface";
 
@@ -519,6 +522,21 @@ const data = {
         {
           title: "Kardex",
           url: KARDEX_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: "Ventas por Vendedor",
+          url: SALE_BY_SELLER_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: "Planilla de Reparto",
+          url: DELIVERY_SHEET_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: "Comisiones",
+          url: COMMISSIONS_REPORT_ROUTE,
           icon: ReportsIcon,
         },
       ],

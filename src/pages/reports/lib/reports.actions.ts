@@ -1,11 +1,17 @@
 import { api } from "@/lib/config";
 import type {
+  CommissionsReportParams,
+  CommissionsReportResponse,
   CustomerAccountStatementParams,
   CustomerAccountStatementResponse,
+  DeliverySheetReportParams,
+  DeliverySheetReportResponse,
   InventoryReportParams,
   InventoryReportResponse,
   KardexReportParams,
   KardexReportResponse,
+  SaleBySellerReportParams,
+  SaleBySellerReportResponse,
 } from "./reports.interface";
 
 const REPORTS_ENDPOINT = "/reports";
@@ -67,11 +73,54 @@ export async function getKardexReport(
   return data;
 }
 
+export async function getSaleBySellerReport(
+  params: SaleBySellerReportParams,
+): Promise<SaleBySellerReportResponse> {
+  const { data } = await api.get<SaleBySellerReportResponse>(
+    "/reports/sales-by-seller",
+    {
+      params,
+    },
+  );
+  return data;
+}
+
 export async function exportKardexReport(
   params: KardexReportParams,
 ): Promise<Blob> {
   const { data } = await api.get<Blob>("/kardex/export", {
     params,
+    responseType: "blob",
+  });
+  return data;
+}
+
+export async function exportSaleBySellerReport(
+  params: SaleBySellerReportParams,
+): Promise<Blob> {
+  const { data } = await api.get<Blob>("/reports/sales-by-seller", {
+    params,
+    responseType: "blob",
+  });
+  return data;
+}
+
+export async function getDeliverySheetReport(
+  params: DeliverySheetReportParams,
+): Promise<DeliverySheetReportResponse> {
+  const { data } = await api.get<DeliverySheetReportResponse>(
+    "/reports/delivery-sheet",
+    { params },
+  );
+  return data;
+}
+
+export async function exportDeliverySheetReport(
+  params: DeliverySheetReportParams,
+  format: "excel" | "pdf",
+): Promise<Blob> {
+  const { data } = await api.get<Blob>("/reports/delivery-sheet", {
+    params: { ...params, format },
     responseType: "blob",
   });
   return data;
@@ -136,3 +185,24 @@ export const fetchSearchEndpoint = async (
   const response = await api.get(endpoint, { params });
   return response.data;
 };
+
+export async function getCommissionsReport(
+  params: CommissionsReportParams,
+): Promise<CommissionsReportResponse> {
+  const { data } = await api.get<CommissionsReportResponse>(
+    "/reports/commissions",
+    { params },
+  );
+  return data;
+}
+
+export async function exportCommissionsReport(
+  params: CommissionsReportParams,
+  format: "excel" | "pdf",
+): Promise<Blob> {
+  const { data } = await api.get<Blob>("/reports/commissions", {
+    params: { ...params, format },
+    responseType: "blob",
+  });
+  return data;
+}

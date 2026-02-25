@@ -179,7 +179,6 @@ export default function DeliverySheetPage() {
           }}
           onSubmit={handleStatusSubmit}
           currentStatus={selectedDeliverySheetForStatus.status}
-          currentDeliveryDate={selectedDeliverySheetForStatus.delivery_date}
         />
       )}
     </PageWrapper>

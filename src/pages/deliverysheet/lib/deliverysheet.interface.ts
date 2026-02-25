@@ -223,11 +223,9 @@ export interface DeliverySheetResourceById {
 export interface CreateDeliverySheetRequest {
   branch_id: number;
   zone_id?: number;
-  driver_id: number;
   customer_id?: number;
   type: "CONTADO" | "CREDITO";
   issue_date: string;
-  delivery_date: string;
   sale_ids: number[];
   observations?: string;
 }
@@ -237,7 +235,6 @@ export interface UpdateDeliverySheetRequest {
   customer_id?: number;
   type?: "CONTADO" | "CREDITO";
   issue_date?: string;
-  delivery_date?: string;
   sale_ids?: number[];
   observations?: string;
 }
@@ -355,7 +352,6 @@ export interface AvailableSalesResponse {
 
 export interface UpdateDeliverySheetStatusRequest {
   status: "EN_REPARTO" | "PENDIENTE";
-  delivery_date?: string;
   observations?: string;
 }
 

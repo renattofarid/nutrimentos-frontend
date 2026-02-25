@@ -35,7 +35,8 @@ export default function DeliverySheetDetailSheet({
 }: DeliverySheetDetailSheetProps) {
   if (!deliverySheet) return null;
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "-";
     const date = parse(dateString, "yyyy-MM-dd", new Date());
     return date.toLocaleDateString("es-ES", {
       day: "2-digit",
@@ -44,7 +45,8 @@ export default function DeliverySheetDetailSheet({
     });
   };
 
-  const formatDateTime = (dateString: string) => {
+  const formatDateTime = (dateString?: string) => {
+    if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleString("es-ES", {
       day: "2-digit",
@@ -187,9 +189,9 @@ export default function DeliverySheetDetailSheet({
       title={`Planilla #${deliverySheet.sheet_number}`}
       icon="FileText"
       size="4xl"
-      className="overflow-y-auto p-2 !gap-0 w-full"
+      className="overflow-y-auto !gap-0 w-full"
     >
-      <div className="space-y-6 p-4">
+      <div className="flex flex-col gap-4">
         {/* Totales */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <Card className="border-none bg-muted-foreground/5 hover:bg-muted-foreground/10 transition-colors !p-0">
@@ -312,85 +314,95 @@ export default function DeliverySheetDetailSheet({
               {formatDate(deliverySheet.issue_date)}
             </p>
           </div>
-          <div>
-            <span className="text-sm text-muted-foreground flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              Fecha de Entrega
-            </span>
-            <p className="font-semibold">
-              {formatDate(deliverySheet.delivery_date)}
-            </p>
-          </div>
+          {deliverySheet.delivery_date && (
+            <div>
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                Fecha de Entrega
+              </span>
+              <p className="font-semibold">
+                {formatDate(deliverySheet.delivery_date)}
+              </p>
+            </div>
+          )}
         </GroupFormSection>
 
         {/* Zona, Conductor, Cliente */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {deliverySheet?.zone && (
-            <GroupFormSection
-              title="Zona"
-              icon={MapPin}
-              cols={{ sm: 1 }}
-              className="h-full"
-            >
-              <div>
-                <span className="text-sm text-muted-foreground">Nombre</span>
-                <p className="font-semibold">{deliverySheet.zone.name}</p>
-              </div>
-              <div>
-                <span className="text-sm text-muted-foreground">Código</span>
-                <p className="font-semibold">{deliverySheet.zone.code}</p>
-              </div>
-            </GroupFormSection>
-          )}
-
-          <GroupFormSection
-            title="Conductor"
-            icon={Truck}
-            cols={{ sm: 1 }}
-            className="h-full"
-          >
-            <div>
-              <span className="text-sm text-muted-foreground">Nombre</span>
-              <p className="font-semibold">
-                {deliverySheet?.driver?.full_name}
-              </p>
-            </div>
-            {deliverySheet?.driver?.document_number && (
-              <div>
-                <span className="text-sm text-muted-foreground">Documento</span>
-                <p className="font-semibold">
-                  {deliverySheet?.driver?.document_number}
-                </p>
-              </div>
-            )}
-          </GroupFormSection>
-
-          {deliverySheet.customer && (
-            <GroupFormSection
-              title="Cliente Cobrador"
-              icon={User}
-              cols={{ sm: 1 }}
-              className="h-full"
-            >
-              <div>
-                <span className="text-sm text-muted-foreground">Nombre</span>
-                <p className="font-semibold">
-                  {deliverySheet.customer.full_name}
-                </p>
-              </div>
-              {deliverySheet.customer.document_number && (
+        {(deliverySheet?.zone ||
+          deliverySheet?.driver ||
+          deliverySheet?.customer) && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {deliverySheet?.zone && (
+              <GroupFormSection
+                title="Zona"
+                icon={MapPin}
+                cols={{ sm: 1 }}
+                className="h-full"
+              >
                 <div>
-                  <span className="text-sm text-muted-foreground">
-                    Documento
-                  </span>
+                  <span className="text-sm text-muted-foreground">Nombre</span>
+                  <p className="font-semibold">{deliverySheet.zone.name}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">Código</span>
+                  <p className="font-semibold">{deliverySheet.zone.code}</p>
+                </div>
+              </GroupFormSection>
+            )}
+
+            {deliverySheet?.driver && (
+              <GroupFormSection
+                title="Conductor"
+                icon={Truck}
+                cols={{ sm: 1 }}
+                className="h-full"
+              >
+                <div>
+                  <span className="text-sm text-muted-foreground">Nombre</span>
                   <p className="font-semibold">
-                    {deliverySheet.customer.document_number}
+                    {deliverySheet?.driver?.full_name}
                   </p>
                 </div>
-              )}
-            </GroupFormSection>
-          )}
-        </div>
+                {deliverySheet?.driver?.document_number && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">
+                      Documento
+                    </span>
+                    <p className="font-semibold">
+                      {deliverySheet?.driver?.document_number}
+                    </p>
+                  </div>
+                )}
+              </GroupFormSection>
+            )}
+
+            {deliverySheet.customer && (
+              <GroupFormSection
+                title="Cliente Cobrador"
+                icon={User}
+                cols={{ sm: 1 }}
+                className="h-full"
+              >
+                <div>
+                  <span className="text-sm text-muted-foreground">Nombre</span>
+                  <p className="font-semibold">
+                    {deliverySheet.customer.full_name}
+                  </p>
+                </div>
+                {deliverySheet.customer.document_number && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">
+                      Documento
+                    </span>
+                    <p className="font-semibold">
+                      {deliverySheet.customer.document_number}
+                    </p>
+                  </div>
+                )}
+              </GroupFormSection>
+            )}
+          </div>
+        )}
 
         {/* Ventas */}
         <GroupFormSection

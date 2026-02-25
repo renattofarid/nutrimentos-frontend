@@ -164,11 +164,9 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
       const request: CreateDeliverySheetRequest = {
         branch_id: Number(data.branch_id),
         zone_id: data.zone_id ? Number(data.zone_id) : undefined,
-        driver_id: Number(data.driver_id),
         customer_id: data.customer_id ? Number(data.customer_id) : undefined,
         type: data.type as "CONTADO" | "CREDITO",
         issue_date: data.issue_date,
-        delivery_date: data.delivery_date,
         sale_ids: data.sale_ids,
         observations: data.observations,
       };
@@ -194,7 +192,6 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
         ...(data.customer_id && { customer_id: Number(data.customer_id) }),
         ...(data.type && { type: data.type as "CONTADO" | "CREDITO" }),
         ...(data.issue_date && { issue_date: data.issue_date }),
-        ...(data.delivery_date && { delivery_date: data.delivery_date }),
         ...(data.sale_ids && { sale_ids: data.sale_ids }),
         ...(data.observations !== undefined && {
           observations: data.observations,
@@ -231,7 +228,6 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
     try {
       const request: UpdateDeliverySheetStatusRequest = {
         status: data.status as "EN_REPARTO" | "PENDIENTE",
-        delivery_date: data.delivery_date,
         observations: data.observations,
       };
 

@@ -43,7 +43,6 @@ import {
 } from "@/components/ui/table";
 import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
-import { useDrivers } from "@/pages/driver/lib/driver.hook";
 import { useClients } from "@/pages/client/lib/client.hook";
 import { FormTextArea } from "@/components/FormTextArea";
 import { EmptyState } from "@/components/EmptyState";
@@ -107,11 +106,9 @@ export const DeliverySheetForm = ({
         defaultValues.branch_id ||
         (branches.length > 0 ? branches[0].id.toString() : ""),
       zone_id: defaultValues.zone_id || "",
-      driver_id: defaultValues.driver_id || "",
       customer_id: defaultValues.customer_id || "",
       type: defaultValues.type || "CONTADO",
       issue_date: defaultValues.issue_date,
-      delivery_date: defaultValues.delivery_date,
       sale_ids: defaultValues.sale_ids || [],
       observations: defaultValues.observations || "",
       for_single_customer: defaultValues.for_single_customer ?? false,
@@ -300,32 +297,11 @@ export const DeliverySheetForm = ({
                 disabled={mode === "update"}
               />
 
-              <FormSelectAsync
-                control={form.control}
-                name="driver_id"
-                label="Conductor"
-                useQueryHook={useDrivers}
-                mapOptionFn={(driver) => ({
-                  value: driver.id.toString(),
-                  label: driver.names ?? driver.business_name,
-                })}
-                placeholder="Seleccione un conductor"
-                preloadItemId={defaultValues.driver_id}
-              />
-
               <DatePickerFormField
                 control={form.control}
                 name="issue_date"
                 label="Fecha de Emisión"
                 placeholder="Seleccione la fecha de emisión"
-                dateFormat="dd/MM/yyyy"
-              />
-
-              <DatePickerFormField
-                control={form.control}
-                name="delivery_date"
-                label="Fecha de Entrega"
-                placeholder="Seleccione la fecha de entrega"
                 dateFormat="dd/MM/yyyy"
               />
 

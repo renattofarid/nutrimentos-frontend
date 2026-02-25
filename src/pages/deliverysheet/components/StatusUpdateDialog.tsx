@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
-import { DatePickerFormField } from "@/components/DatePickerFormField";
 import {
   deliverySheetStatusSchema,
   type DeliverySheetStatusSchema,
@@ -32,7 +31,6 @@ interface StatusUpdateDialogProps {
   onSubmit: (data: DeliverySheetStatusSchema) => void;
   isSubmitting?: boolean;
   currentStatus: string;
-  currentDeliveryDate: string;
 }
 
 const STATUS_OPTIONS = [
@@ -46,7 +44,6 @@ export function StatusUpdateDialog({
   onSubmit,
   isSubmitting = false,
   currentStatus,
-  currentDeliveryDate,
 }: StatusUpdateDialogProps) {
   const form = useForm<DeliverySheetStatusSchema>({
     resolver: zodResolver(deliverySheetStatusSchema),
@@ -54,7 +51,6 @@ export function StatusUpdateDialog({
       status: currentStatus === "PENDIENTE" || currentStatus === "EN_REPARTO"
         ? currentStatus
         : "PENDIENTE",
-      delivery_date: currentDeliveryDate,
       observations: "",
     },
   });
@@ -81,13 +77,6 @@ export function StatusUpdateDialog({
               label="Estado"
               placeholder="Seleccione un estado"
               options={STATUS_OPTIONS}
-            />
-
-            <DatePickerFormField
-              control={form.control}
-              name="delivery_date"
-              label="Fecha de Entrega"
-              placeholder="Seleccione la fecha de entrega"
             />
 
             <FormField

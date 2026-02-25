@@ -75,9 +75,7 @@ export default function DeliverySheetAddPage() {
 
       <DeliverySheetForm
         defaultValues={{
-          driver_id: "37",
           issue_date: format(new Date(), "yyyy-MM-dd"),
-          delivery_date: format(new Date(), "yyyy-MM-dd"),
         }}
         onSubmit={handleSubmit}
         onCancel={handleCancel}

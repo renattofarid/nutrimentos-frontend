@@ -92,23 +92,28 @@ function DetailsModal({
       onClose={onClose}
       title={`Detalle de Productos (${details.length})`}
       icon="Package"
-      size="3xl"
+      size="4xl"
     >
-      <div className="overflow-x-auto">
-        <Table>
+      <div className="w-full min-w-0 overflow-x-auto">
+        <Table className="table-fixed w-full">
           <TableHeader>
             <TableRow>
-              <TableHead>Producto</TableHead>
-              <TableHead className="text-right">Sacos</TableHead>
-              <TableHead className="text-right">Kg</TableHead>
-              <TableHead>Unidad</TableHead>
-              <TableHead>Descripción</TableHead>
+              <TableHead className="w-[40%]">Producto</TableHead>
+              <TableHead className="w-[10%] text-right">Sacos</TableHead>
+              <TableHead className="w-[10%] text-right">Kg</TableHead>
+              <TableHead className="w-[10%]">Unidad</TableHead>
+              <TableHead className="w-[30%]">Descripción</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {details.map((d, i) => (
               <TableRow key={i}>
-                <TableCell className="font-medium">{d.product.name}</TableCell>
+                <TableCell
+                  className="font-medium truncate max-w-0"
+                  title={d.product.name}
+                >
+                  {d.product.name}
+                </TableCell>
                 <TableCell className="text-right font-mono">
                   {d.quantity_sacks}
                 </TableCell>
@@ -116,7 +121,10 @@ function DetailsModal({
                   {d.quantity_kg}
                 </TableCell>
                 <TableCell>{d.unit_code}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">
+                <TableCell
+                  className="text-muted-foreground text-sm truncate max-w-0"
+                  title={d.description || ""}
+                >
                   {d.description || "—"}
                 </TableCell>
               </TableRow>

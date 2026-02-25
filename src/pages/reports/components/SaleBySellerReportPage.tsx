@@ -75,7 +75,7 @@ function ProductsModal({
         <TableBody>
           {products.map((p) => (
             <TableRow key={p.id}>
-              <TableCell className="font-medium">{p.name}</TableCell>
+              <TableCell className="font-medium truncate">{p.name}</TableCell>
               <TableCell className="text-right font-mono">
                 {p.quantity ?? "—"}
               </TableCell>
@@ -93,17 +93,15 @@ function ProductsCell({ products }: { products: Product[] }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
         onClick={() => setOpen(true)}
-        className="text-left hover:underline focus:outline-none"
       >
-        <p className="font-medium text-sm line-clamp-1">
-          {products.map((p) => p.name).join(", ")}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {products.length} {products.length === 1 ? "producto" : "productos"}
-        </p>
-      </button>
+        <Package className="mr-1 h-3 w-3" />
+        {products.length} {products.length === 1 ? "producto" : "productos"}
+      </Button>
       <ProductsModal
         products={products}
         open={open}

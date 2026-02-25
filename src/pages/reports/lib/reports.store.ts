@@ -1,16 +1,25 @@
 import { create } from "zustand";
 import {
+  getCommissionsReport,
   getCustomerAccountStatement,
+  getDeliverySheetReport,
   getInventoryReport,
   getKardexReport,
+  getSaleBySellerReport,
 } from "./reports.actions";
 import type {
+  CommissionsReportParams,
+  CommissionsReportResponse,
   CustomerAccountStatementResponse,
   CustomerAccountStatementParams,
+  DeliverySheetReportParams,
+  DeliverySheetReportResponse,
   InventoryReportResponse,
   InventoryReportParams,
   KardexReportResponse,
   KardexReportParams,
+  SaleBySellerReportParams,
+  SaleBySellerReportResponse,
 } from "./reports.interface";
 
 interface ReportsStore {
@@ -19,7 +28,7 @@ interface ReportsStore {
   isLoading: boolean;
   error: string | null;
   fetchCustomerAccountStatement: (
-    params: CustomerAccountStatementParams
+    params: CustomerAccountStatementParams,
   ) => Promise<void>;
 
   // Inventory
@@ -33,6 +42,24 @@ interface ReportsStore {
   kardexLoading: boolean;
   kardexError: string | null;
   fetchKardexReport: (params: KardexReportParams) => Promise<void>;
+
+  // Sale By Seller
+  saleBySellerReport: SaleBySellerReportResponse | null;
+  saleBySellerLoading: boolean;
+  saleBySellerError: string | null;
+  fetchSaleBySellerReport: (params: SaleBySellerReportParams) => Promise<void>;
+
+  // Delivery Sheet
+  deliverySheetReport: DeliverySheetReportResponse | null;
+  deliverySheetLoading: boolean;
+  deliverySheetError: string | null;
+  fetchDeliverySheetReport: (params: DeliverySheetReportParams) => Promise<void>;
+
+  // Commissions
+  commissionsReport: CommissionsReportResponse | null;
+  commissionsLoading: boolean;
+  commissionsError: string | null;
+  fetchCommissionsReport: (params: CommissionsReportParams) => Promise<void>;
 }
 
 export const useReportsStore = create<ReportsStore>((set) => ({
@@ -42,7 +69,7 @@ export const useReportsStore = create<ReportsStore>((set) => ({
   error: null,
 
   fetchCustomerAccountStatement: async (
-    params: CustomerAccountStatementParams
+    params: CustomerAccountStatementParams,
   ) => {
     set({ isLoading: true, error: null });
     try {
@@ -88,6 +115,60 @@ export const useReportsStore = create<ReportsStore>((set) => ({
       set({
         kardexError: "Error al cargar el reporte de kardex",
         kardexLoading: false,
+      });
+    }
+  },
+
+  // ─── Sale By Seller ─────────────────────────────────────────────────────
+  saleBySellerReport: null,
+  saleBySellerLoading: false,
+  saleBySellerError: null,
+
+  fetchSaleBySellerReport: async (params: SaleBySellerReportParams) => {
+    set({ saleBySellerLoading: true, saleBySellerError: null });
+    try {
+      const response = await getSaleBySellerReport(params);
+      set({ saleBySellerReport: response, saleBySellerLoading: false });
+    } catch (error) {
+      set({
+        saleBySellerError: "Error al cargar el reporte de ventas por vendedor",
+        saleBySellerLoading: false,
+      });
+    }
+  },
+
+  // ─── Delivery Sheet ──────────────────────────────────────────────────────
+  deliverySheetReport: null,
+  deliverySheetLoading: false,
+  deliverySheetError: null,
+
+  fetchDeliverySheetReport: async (params: DeliverySheetReportParams) => {
+    set({ deliverySheetLoading: true, deliverySheetError: null });
+    try {
+      const response = await getDeliverySheetReport(params);
+      set({ deliverySheetReport: response, deliverySheetLoading: false });
+    } catch {
+      set({
+        deliverySheetError: "Error al cargar el reporte de planilla de reparto",
+        deliverySheetLoading: false,
+      });
+    }
+  },
+
+  // ─── Commissions ─────────────────────────────────────────────────────────
+  commissionsReport: null,
+  commissionsLoading: false,
+  commissionsError: null,
+
+  fetchCommissionsReport: async (params: CommissionsReportParams) => {
+    set({ commissionsLoading: true, commissionsError: null });
+    try {
+      const response = await getCommissionsReport(params);
+      set({ commissionsReport: response, commissionsLoading: false });
+    } catch {
+      set({
+        commissionsError: "Error al cargar el reporte de comisiones",
+        commissionsLoading: false,
       });
     }
   },

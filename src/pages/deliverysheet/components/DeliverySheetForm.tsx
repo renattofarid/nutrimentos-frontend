@@ -205,7 +205,7 @@ export const DeliverySheetForm = ({
 
   const totalAmount = selectedSaleIds.reduce((sum, saleId) => {
     const sale = availableSales.find((s) => s.id === saleId);
-    return sum + (sale ? parseFormattedNumber(sale.total_amount) : 0);
+    return sum + (sale ? parseFormattedNumber(sale.current_amount) : 0);
   }, 0);
 
   const handleFormSubmit = (data: DeliverySheetSchema) => {
@@ -216,7 +216,7 @@ export const DeliverySheetForm = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleFormSubmit)}
-        className="space-y-6"
+        className="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
         <GroupFormSection
           title="Información General"
@@ -224,7 +224,6 @@ export const DeliverySheetForm = ({
           cols={{
             sm: 1,
             md: 2,
-            lg: 3,
           }}
         >
           <FormSelect
@@ -376,11 +375,13 @@ export const DeliverySheetForm = ({
               icon={SearchX}
               title="Sin resultados"
               description="No se encontraron ventas disponibles con los filtros seleccionados."
+              className="col-span-full"
             />
           )}
 
         {availableSales.length > 0 && (
           <GroupFormSection
+            className="col-span-full"
             title={`Ventas Disponibles (${selectedSaleIds.length} seleccionadas)`}
             icon={List}
             cols={{ sm: 1 }}
@@ -401,7 +402,7 @@ export const DeliverySheetForm = ({
                   color="green"
                   className="text-lg flex flex-col items-end"
                 >
-                  <span className="text-green-950 text-xs">TOTAL</span>
+                  <span className="text-xs">TOTAL</span>
                   <span>S/. {totalAmount.toFixed(2)}</span>
                 </Badge>
               </div>
@@ -423,7 +424,10 @@ export const DeliverySheetForm = ({
                       <TableHead>Cliente</TableHead>
                       <TableHead>Fecha</TableHead>
                       <TableHead>Nota de Crédito</TableHead>
-                      <TableHead className="text-right">Monto</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="text-right">
+                        Monto Pendiente
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -499,9 +503,13 @@ export const DeliverySheetForm = ({
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-right font-semibold">
+                        <TableCell className="text-right text-muted-foreground">
                           S/.{" "}
                           {parseFormattedNumber(sale.total_amount).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right font-bold">
+                          S/.{" "}
+                          {parseFormattedNumber(sale.current_amount).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -512,7 +520,7 @@ export const DeliverySheetForm = ({
           </GroupFormSection>
         )}
 
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-4 col-span-full">
           {onCancel && (
             <Button
               type="button"

@@ -412,10 +412,7 @@ export const GuideForm = ({
       (sum, d) => sum + (parseFloat(d.quantity_kg) || 0),
       0,
     );
-    const totalPackages = customDetails.reduce(
-      (sum, d) => sum + (parseFloat(d.quantity_sacks) || 0),
-      0,
-    );
+    const totalPackages = customDetails.filter((d) => d.product_id).length;
     form.setValue("total_weight", totalWeight as any);
     form.setValue("total_packages", totalPackages as any);
   }, [customDetails, useCustomDetails, form]);

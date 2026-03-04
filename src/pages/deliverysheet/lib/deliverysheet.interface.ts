@@ -419,13 +419,13 @@ export const DELIVERY_STATUSES = [
 
 // ===== MODEL COMPLETE =====
 
-const NAME = "Planilla de Reparto";
+const NAME = "Planilla de Cobranza";
 
 export const DELIVERY_SHEET: ModelComplete<DeliverySheetSchema> = {
   MODEL: {
     name: NAME,
-    description: "Gestión de planillas de reparto del sistema.",
-    plural: "Planillas de Reparto",
+    description: "Gestión de planillas de cobranza del sistema.",
+    plural: "Planillas de Cobranza",
     gender: false,
   },
   ICON: "FileText",

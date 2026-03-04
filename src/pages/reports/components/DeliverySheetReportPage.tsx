@@ -326,9 +326,9 @@ export default function DeliverySheetReportPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast.success("Reporte de Planilla de Reparto exportado exitosamente");
+      toast.success("Reporte de Planilla de Cobranza exportado exitosamente");
     } catch {
-      toast.error("Error al exportar el reporte de Planilla de Reparto");
+      toast.error("Error al exportar el reporte de Planilla de Cobranza");
     } finally {
       setIsExportingExcel(false);
       setIsExportingPdf(false);
@@ -341,7 +341,7 @@ export default function DeliverySheetReportPage() {
   return (
     <PageWrapper size="3xl">
       <TitleComponent
-        title="Reporte de Planilla de Reparto"
+        title="Reporte de Planilla de Cobranza"
         subtitle="Consulta las guías de remisión por vehículo, cliente y estado"
         icon="BookOpen"
       />

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import PageWrapper from "@/components/PageWrapper";
 import { DataTable } from "@/components/DataTable";
 import { SearchableSelectAsync } from "@/components/SearchableSelectAsync";
+import { parseFormattedNumber } from "@/lib/utils";
 import { findDeliverySheetById } from "../lib/deliverysheet.actions";
 import { useDeliverySheetStore } from "../lib/deliverysheet.store";
 import { useDeliverySheets } from "../lib/deliverysheet.hook";
@@ -82,7 +83,10 @@ export default function SettlementPage() {
                   ? "ENTREGADO"
                   : sheetSale.delivery_status,
               delivery_notes: sheetSale.delivery_notes || "",
-              payment_amount: "0",
+              payment_amount: (
+                parseFormattedNumber(sheetSale.current_amount) -
+                (sheetSale.sale.credit_notes_total_raw || 0)
+              ).toFixed(2),
             })),
             payment_date: new Date().toISOString().split("T")[0],
             observations: "",
@@ -196,7 +200,7 @@ export default function SettlementPage() {
         />
 
         <SearchableSelectAsync
-          label="Planilla de Reparto"
+          label="Planilla de Cobranza"
           placeholder="Buscar planilla..."
           value={selectedId}
           onChange={(val) => {
@@ -208,7 +212,7 @@ export default function SettlementPage() {
           mapOptionFn={(item: DeliverySheetResource) => ({
             value: item.id.toString(),
             label: item.sheet_number,
-            description: `${item.driver?.full_name ?? "Sin conductor"} · ${item.delivery_date}`,
+            description: `${item.issue_date} > Total: ${item.collected_amount}`,
           })}
           withValue={false}
         />

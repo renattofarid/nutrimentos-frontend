@@ -45,7 +45,8 @@ const columns: ColumnDef<KardexItem>[] = [
     size: 140,
     cell: ({ row }) => {
       const type = row.original.movement_type;
-      const isEntry = type === "ENTRADA" || type === "IN";
+      const isEntry = type === "ENTRADA" || type === "INGRESO";
+      const isExit = type === "SALIDA" || type === "EGRESO";
       const isAdjust = type === "AJUSTE" || type === "ADJUST";
 
       if (isAdjust) {
@@ -57,10 +58,7 @@ const columns: ColumnDef<KardexItem>[] = [
       }
 
       return (
-        <Badge
-          color={isEntry ? "default" : "destructive"}
-          className={isEntry ? "bg-green-600" : ""}
-        >
+        <Badge color={isEntry ? "green" : isExit ? "red" : "gray"}>
           {type}
         </Badge>
       );

@@ -208,6 +208,11 @@ export const DeliverySheetForm = ({
     return sum + (sale ? parseFormattedNumber(sale.current_amount) : 0);
   }, 0);
 
+  const totalWeight = selectedSaleIds.reduce((sum, saleId) => {
+    const sale = availableSales.find((s) => s.id === saleId);
+    return sum + (sale ? parseFormattedNumber(sale.total_weight) : 0);
+  }, 0);
+
   const handleFormSubmit = (data: DeliverySheetSchema) => {
     onSubmit(data);
   };
@@ -407,9 +412,9 @@ export const DeliverySheetForm = ({
                 </Badge>
               </div>
 
-              <div className="border rounded-lg overflow-hidden">
+              <div className="border rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 z-10 bg-background">
                     <TableRow>
                       <TableHead className="w-12">
                         <Checkbox
@@ -515,6 +520,17 @@ export const DeliverySheetForm = ({
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+              <div className="flex justify-end gap-4 pt-2 text-sm">
+                <span className="text-muted-foreground">
+                  {selectedSaleIds.length} ventas
+                </span>
+                <span className="font-semibold">
+                  Peso: <span className="font-bold">{totalWeight.toFixed(2)} kg</span>
+                </span>
+                <span className="font-semibold">
+                  Total: <span className="font-bold">S/. {totalAmount.toFixed(2)}</span>
+                </span>
               </div>
             </div>
           </GroupFormSection>

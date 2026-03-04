@@ -13,6 +13,7 @@ import {
   type SaleResource,
   type SaleInstallmentResource,
 } from "../lib/sale.interface";
+import { CreditNoteAddRoute } from "@/pages/credit-note/lib/credit-note.interface";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import SaleDetailSheet from "./SaleDetailSheet";
 import { findSaleById, exportBulkTickets } from "../lib/sale.actions";
@@ -147,6 +148,10 @@ export default function SalePage() {
     navigate(`/ventas/gestionar/${sale.id}`);
   };
 
+  const handleCreateCreditNote = (sale: SaleResource) => {
+    navigate(CreditNoteAddRoute, { state: { sale } });
+  };
+
   const handleQuickPay = (sale: SaleResource) => {
     // Validar que la suma de cuotas sea igual al total de la venta
     const totalAmount = sale.total_amount;
@@ -236,6 +241,7 @@ export default function SalePage() {
     onViewDetails: handleViewDetails,
     onManage: handleManage,
     onQuickPay: handleQuickPay,
+    onCreateCreditNote: handleCreateCreditNote,
   });
 
   // Construir el endpoint con query params para exportación

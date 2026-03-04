@@ -35,6 +35,7 @@ interface CreditNoteFormProps {
   motives?: Array<{ value: string; label: string }>;
   selectedSale?: SaleResource | null;
   onSaleChange?: (saleId: number | null) => void;
+  readOnlySale?: boolean;
 }
 
 export const CreditNoteForm = ({
@@ -46,6 +47,7 @@ export const CreditNoteForm = ({
   motives = [],
   selectedSale,
   onSaleChange,
+  readOnlySale = false,
 }: CreditNoteFormProps) => {
   const form = useForm<CreditNoteSchema>({
     resolver: zodResolver(creditNoteSchemaCreate),
@@ -118,13 +120,24 @@ export const CreditNoteForm = ({
         className="space-y-4 w-full"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sidebar p-4 rounded-lg">
-          <FormSelect
-            control={form.control}
-            name="sale_id"
-            label="Venta"
-            placeholder="Seleccione una venta"
-            options={sales}
-          />
+          {readOnlySale ? (
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium">Venta</span>
+              <div className="flex items-center gap-2 h-9 px-3 rounded-md border bg-muted text-sm text-muted-foreground">
+                {selectedSale
+                  ? `${selectedSale.document_type} ${selectedSale.serie}-${selectedSale.numero}`
+                  : "—"}
+              </div>
+            </div>
+          ) : (
+            <FormSelect
+              control={form.control}
+              name="sale_id"
+              label="Venta"
+              placeholder="Seleccione una venta"
+              options={sales}
+            />
+          )}
 
           <DatePickerFormField
             control={form.control}

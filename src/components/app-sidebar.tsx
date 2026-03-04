@@ -240,7 +240,6 @@ const {
 const {
   ICON_REACT: AccountsPayableIcon,
   ROUTE: AccountsPayableRoute,
-  MODEL: { name: AccountsPayableTitle },
 } = ACCOUNTS_PAYABLE;
 
 const {
@@ -274,44 +273,49 @@ const data = {
       icon: LayoutGrid,
     },
     {
-      title: "Ventas",
+      title: "Mantenimiento",
       url: "#",
       icon: ShoppingBag,
       items: [
         {
-          title: "Ventas",
-          url: SaleRoute,
-          icon: ShoppingBag,
+          title: ClientTitle,
+          url: ClientRoute,
+          icon: ClientIcon,
         },
         {
-          title: CreditNoteTitle,
-          url: CreditNoteRoute,
-          icon: CreditNoteIcon,
+          title: SupplierTitle,
+          url: SupplierRoute,
+          icon: SupplierIcon,
         },
         {
-          title: "Cuentas por Cobrar",
-          url: AccountsReceivableRoute,
-          icon: DollarSign,
+          title: ProductTitle,
+          url: ProductRoute,
+          icon: ProductIcon,
         },
         {
-          title: DeliverySheetTitle,
-          url: DeliverySheetRoute,
-          icon: DeliverySheetIcon,
+          title: PriceListTitle,
+          url: PriceListRoute,
+          icon: PriceListIcon,
         },
         {
-          title: "Rendiciones",
-          url: DeliverySheetSettlementRoute,
-          icon: ClipboardCheck,
+          title: ZoneTitle,
+          url: ZoneRoute,
+          icon: ZoneIcon,
         },
         {
-          title: GuideTitle,
-          url: GuideRoute,
-          icon: GuideIcon,
+          title: DriverTitle,
+          url: DriverRoute,
+          icon: DriverIcon,
+        },
+        {
+          title: WorkerTitle,
+          url: WorkerRoute,
+          icon: WorkerIcon,
         },
       ],
     },
     {
-      title: "Compras",
+      title: "Ing. Facturas",
       url: "#",
       icon: DollarSign,
       items: [
@@ -326,21 +330,130 @@ const data = {
           icon: PurchaseCreditNoteIcon,
         },
         {
-          title: AccountsPayableTitle,
+          title: "Registro de Ventas",
+          url: AccountsReceivableRoute,
+          icon: DollarSign,
+        },
+        {
+          title: "Registro de Compras",
           url: AccountsPayableRoute,
           icon: AccountsPayableIcon,
         },
       ],
     },
     {
-      title: "Productos",
+      title: "Transacciones",
       url: "#",
       icon: Package,
       items: [
         {
-          title: ProductTitle,
-          url: ProductRoute,
-          icon: ProductIcon,
+          title: "Ventas",
+          url: SaleRoute,
+          icon: ShoppingBag,
+        },
+        {
+          title: CreditNoteTitle,
+          url: CreditNoteRoute,
+          icon: CreditNoteIcon,
+        },
+        {
+          title: WarehouseDocumentTitle,
+          url: WarehouseDocumentRoute,
+          icon: WarehouseDocumentIcon,
+        },
+        {
+          title: GuideTitle,
+          url: GuideRoute,
+          icon: GuideIcon,
+        },
+        {
+          title: DeliverySheetTitle,
+          url: DeliverySheetRoute,
+          icon: DeliverySheetIcon,
+        },
+        {
+          title: "Pago Planillas Cobranza",
+          url: DeliverySheetSettlementRoute,
+          icon: ClipboardCheck,
+        },
+        {
+          title: "Reporte Planilla de Cobranza",
+          url: DELIVERY_SHEET_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: "Estado de Cuenta Clientes",
+          url: CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: BoxShiftTitle,
+          url: BoxShiftRoute,
+          icon: BoxShiftIcon,
+        },
+      ],
+    },
+    {
+      title: ReportsTitle,
+      url: "#",
+      icon: ReportsIcon,
+      items: [
+        {
+          title: "Inventario",
+          url: INVENTORY_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: "Kardex",
+          url: KARDEX_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: "Ventas por Vendedor",
+          url: SALE_BY_SELLER_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: "Comisiones",
+          url: COMMISSIONS_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+      ],
+    },
+    {
+      title: "Configuración",
+      url: "#",
+      icon: SettingIcon,
+      items: [
+        {
+          title: CompanyTitle,
+          url: CompanyRoute,
+          icon: CompanyIcon,
+        },
+        {
+          title: BranchTitle,
+          url: BranchRoute,
+          icon: BranchIcon,
+        },
+        {
+          title: WarehouseTitle,
+          url: WarehouseRoute,
+          icon: WarehouseIcon,
+        },
+        {
+          title: BoxTitle,
+          url: BoxRoute,
+          icon: BoxIcon,
+        },
+        {
+          title: PaymentConceptTitle,
+          url: PaymentConceptRoute,
+          icon: PaymentConceptIcon,
+        },
+        {
+          title: VehicleTitle,
+          url: VehicleRoute,
+          icon: VehicleIcon,
         },
         {
           title: CategoryTitle,
@@ -362,104 +475,6 @@ const data = {
           url: UnitRoute,
           icon: UnitIcon,
         },
-        {
-          title: PriceListTitle,
-          url: PriceListRoute,
-          icon: PriceListIcon,
-        },
-      ],
-    },
-    {
-      title: "Personas",
-      url: "#",
-      icon: ClientIcon,
-      items: [
-        {
-          title: ClientTitle,
-          url: ClientRoute,
-          icon: ClientIcon,
-        },
-        {
-          title: SupplierTitle,
-          url: SupplierRoute,
-          icon: SupplierIcon,
-        },
-        {
-          title: WorkerTitle,
-          url: WorkerRoute,
-          icon: WorkerIcon,
-        },
-        {
-          title: DriverTitle,
-          url: DriverRoute,
-          icon: DriverIcon,
-        },
-      ],
-    },
-    {
-      title: "Organización",
-      url: "#",
-      icon: CompanyIcon,
-      items: [
-        {
-          title: CompanyTitle,
-          url: CompanyRoute,
-          icon: CompanyIcon,
-        },
-        {
-          title: BranchTitle,
-          url: BranchRoute,
-          icon: BranchIcon,
-        },
-        {
-          title: WarehouseTitle,
-          url: WarehouseRoute,
-          icon: WarehouseIcon,
-        },
-        {
-          title: ZoneTitle,
-          url: ZoneRoute,
-          icon: ZoneIcon,
-        },
-      ],
-    },
-    {
-      title: "Operaciones",
-      url: "#",
-      icon: BoxIcon,
-      items: [
-        {
-          title: WarehouseDocumentTitle,
-          url: WarehouseDocumentRoute,
-          icon: WarehouseDocumentIcon,
-        },
-        {
-          title: BoxTitle,
-          url: BoxRoute,
-          icon: BoxIcon,
-        },
-        {
-          title: BoxShiftTitle,
-          url: BoxShiftRoute,
-          icon: BoxShiftIcon,
-        },
-        {
-          title: VehicleTitle,
-          url: VehicleRoute,
-          icon: VehicleIcon,
-        },
-        {
-          title: PaymentConceptTitle,
-          url: PaymentConceptRoute,
-          icon: PaymentConceptIcon,
-        },
-      ],
-    },
-    {
-      title: "Configuración",
-      url: "#",
-      icon: SettingIcon,
-      items: [
         {
           title: SettingTitle,
           url: SettingRoute,
@@ -501,43 +516,6 @@ const data = {
           title: TypeUserTitle,
           url: TypeUserRoute,
           icon: TypeUserIcon,
-        },
-      ],
-    },
-    {
-      title: ReportsTitle,
-      url: "#",
-      icon: ReportsIcon,
-      items: [
-        {
-          title: "Estado de Cuenta Clientes",
-          url: CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
-          icon: ReportsIcon,
-        },
-        {
-          title: "Inventario",
-          url: INVENTORY_REPORT_ROUTE,
-          icon: ReportsIcon,
-        },
-        {
-          title: "Kardex",
-          url: KARDEX_REPORT_ROUTE,
-          icon: ReportsIcon,
-        },
-        {
-          title: "Ventas por Vendedor",
-          url: SALE_BY_SELLER_REPORT_ROUTE,
-          icon: ReportsIcon,
-        },
-        {
-          title: "Planilla de Reparto",
-          url: DELIVERY_SHEET_REPORT_ROUTE,
-          icon: ReportsIcon,
-        },
-        {
-          title: "Comisiones",
-          url: COMMISSIONS_REPORT_ROUTE,
-          icon: ReportsIcon,
         },
       ],
     },

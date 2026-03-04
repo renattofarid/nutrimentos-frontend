@@ -147,7 +147,9 @@ const columns: ColumnDef<CommissionDatum>[] = [
     header: "Costo",
     size: 100,
     cell: ({ row }) => (
-      <span className="font-mono text-sm">{row.original.cost_total ?? "—"}</span>
+      <span className="font-mono text-sm">
+        {row.original.cost_total ?? "—"}
+      </span>
     ),
   },
   {
@@ -436,7 +438,14 @@ export default function CommissionsReportPage() {
             </GroupFormSection>
           )}
 
-          <DataTable columns={columns} data={tableData} isLoading={isLoading} />
+          <DataTable
+            columns={columns}
+            data={tableData}
+            isLoading={isLoading}
+            initialColumnVisibility={{
+              tax_amount: false,
+            }}
+          />
         </form>
       </Form>
     </PageWrapper>

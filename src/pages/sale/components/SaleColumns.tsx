@@ -14,6 +14,7 @@ import {
   Wallet,
   AlertTriangle,
   Pencil,
+  FileMinus,
 } from "lucide-react";
 import { ButtonAction } from "@/components/ButtonAction";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -25,6 +26,7 @@ interface SaleColumnsProps {
   onViewDetails: (sale: SaleResource) => void;
   onManage: (sale: SaleResource) => void;
   onQuickPay: (sale: SaleResource) => void;
+  onCreateCreditNote: (sale: SaleResource) => void;
 }
 
 export const getSaleColumns = ({
@@ -33,6 +35,7 @@ export const getSaleColumns = ({
   onViewDetails,
   onManage,
   onQuickPay,
+  onCreateCreditNote,
 }: SaleColumnsProps): ColumnDef<SaleResource>[] => [
   {
     id: "select",
@@ -314,21 +317,41 @@ export const getSaleColumns = ({
           <ButtonAction
             icon={Eye}
             onClick={() => onViewDetails(row.original)}
+            tooltip="Ver Detalles"
           />
           <ButtonAction
             icon={Settings}
             onClick={() => onManage(row.original)}
+            tooltip="Gestionar Venta"
           />
           <ButtonAction
             icon={Pencil}
             onClick={() => !hasPayments && onEdit(row.original)}
             disabled={hasPayments}
+            tooltip={
+              hasPayments
+                ? "No se puede editar una venta con pagos registrados"
+                : "Editar Venta"
+            }
+          />
+          <ButtonAction
+            icon={FileMinus}
+            color="purple"
+            onClick={() => onCreateCreditNote(row.original)}
+            tooltip="Crear Nota de Crédito"
           />
           <ButtonAction
             icon={Trash2}
             onClick={() => !isPaid && onDelete(row.original.id)}
             disabled={isPaid || hasPayments}
             variant="destructive"
+            tooltip={
+              isPaid
+                ? "No se puede eliminar una venta pagada"
+                : hasPayments
+                  ? "No se puede eliminar una venta con pagos registrados"
+                  : "Eliminar Venta"
+            }
           />
         </div>
       );

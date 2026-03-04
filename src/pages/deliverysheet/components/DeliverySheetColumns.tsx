@@ -69,33 +69,10 @@ export const getDeliverySheetColumns = ({
     ),
   },
   {
-    accessorKey: "customer",
-    header: "Cliente",
-    cell: ({ row }) => (
-      <div className="text-wrap!">{row.original.customer?.full_name}</div>
-    ),
-  },
-  {
     accessorKey: "issue_date",
     header: "F. Emisión",
     cell: ({ row }) => {
       const date = new Date(row.original.issue_date);
-      return (
-        <Badge variant="outline">
-          {date.toLocaleDateString("es-ES", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })}
-        </Badge>
-      );
-    },
-  },
-  {
-    accessorKey: "delivery_date",
-    header: "F. Entrega",
-    cell: ({ row }) => {
-      const date = new Date(row.original.delivery_date);
       return (
         <Badge variant="outline">
           {date.toLocaleDateString("es-ES", {

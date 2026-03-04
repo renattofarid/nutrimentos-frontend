@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { CreditNoteForm } from "./CreditNoteForm";
 import { type CreditNoteSchema } from "../lib/credit-note.schema";
@@ -22,38 +23,46 @@ const { MODEL, ROUTE, ICON } = CREDIT_NOTE;
 
 export default function CreditNoteAddPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const preselectedSale: SaleResource | undefined = location.state?.sale;
+  const isReadOnlySale = !!preselectedSale;
+
   const { createCreditNote } = useCreditNoteStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedSaleId, setSelectedSaleId] = useState<number | null>(null);
+  const [selectedSaleId, setSelectedSaleId] = useState<number | null>(
+    preselectedSale?.id || null,
+  );
 
-  // Obtener ventas y motivos
+  // Obtener ventas (solo necesario cuando no hay venta preseleccionada) y motivos
   const { data: sales, isLoading: isLoadingSales } = useAllSales();
   const { data: motives, isLoading: isLoadingMotives } =
     useAllCreditNoteMotives();
 
   // Obtener la venta seleccionada
   const selectedSale = useMemo(
-    () => sales?.find((sale) => sale.id === selectedSaleId) || null,
-    [sales, selectedSaleId],
+    () => preselectedSale || sales?.find((sale) => sale.id === selectedSaleId) || null,
+    [preselectedSale, sales, selectedSaleId],
   );
 
-  // Transformar datos para los selects
+  // Transformar datos para los selects (solo cuando no hay venta preseleccionada)
   const salesOptions = useMemo(
     () =>
-      sales?.map((sale) => {
-        const customer = sale.customer ?? {};
-        const name =
-          customer.names?.trim() ||
-          customer.business_name?.trim() ||
-          [customer.names, customer.father_surname, customer.mother_surname]
-            .filter((s) => typeof s === "string" && s.trim() !== "")
-            .join(" ");
-        return {
-          value: sale.id.toString(),
-          label: `${sale.serie}-${sale.numero} - ${name || ""}`,
-        };
-      }) || [],
-    [sales],
+      isReadOnlySale
+        ? []
+        : sales?.map((sale) => {
+            const customer = sale.customer ?? {};
+            const name =
+              customer.names?.trim() ||
+              customer.business_name?.trim() ||
+              [customer.names, customer.father_surname, customer.mother_surname]
+                .filter((s) => typeof s === "string" && s.trim() !== "")
+                .join(" ");
+            return {
+              value: sale.id.toString(),
+              label: `${sale.serie}-${sale.numero} - ${name || ""}`,
+            };
+          }) || [],
+    [isReadOnlySale, sales],
   );
 
   const motivesOptions = useMemo(
@@ -96,7 +105,7 @@ export default function CreditNoteAddPage() {
   };
 
   // Mostrar skeleton mientras cargan los datos
-  if (isLoadingSales || isLoadingMotives) {
+  if ((isReadOnlySale ? false : isLoadingSales) || isLoadingMotives) {
     return (
       <FormWrapper>
         <TitleFormComponent
@@ -113,7 +122,7 @@ export default function CreditNoteAddPage() {
       <TitleFormComponent title={CREDIT_NOTE.TITLES.create.title} icon={ICON} />
 
       <CreditNoteForm
-        defaultValues={{}}
+        defaultValues={preselectedSale ? { sale_id: preselectedSale.id.toString() } : {}}
         onSubmit={handleSubmit}
         onCancel={() => navigate(ROUTE)}
         isSubmitting={isSubmitting}
@@ -121,6 +130,7 @@ export default function CreditNoteAddPage() {
         motives={motivesOptions}
         selectedSale={selectedSale}
         onSaleChange={setSelectedSaleId}
+        readOnlySale={isReadOnlySale}
       />
     </FormWrapper>
   );

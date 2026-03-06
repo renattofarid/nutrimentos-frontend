@@ -213,7 +213,7 @@ export async function getCarLoadReport(
   params: CarLoadReportParams,
 ): Promise<CarLoadReportResponse> {
   const { zone_ids, ...rest } = params;
-  const { data } = await api.get<CarLoadReportResponse>("/reports/delivery-sheet", {
+  const { data } = await api.get<CarLoadReportResponse>("/reports/car-load", {
     params: {
       ...rest,
       "zone_ids[]": zone_ids,
@@ -227,7 +227,7 @@ export async function exportCarLoadReport(
   format: "pdf",
 ): Promise<Blob> {
   const { zone_ids, ...rest } = params;
-  const { data } = await api.get<Blob>("/reports/delivery-sheet", {
+  const { data } = await api.get<Blob>("/reports/car-load", {
     params: {
       ...rest,
       "zone_ids[]": zone_ids,

@@ -24,6 +24,7 @@ import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
 import { FormSelect } from "@/components/FormSelect";
 import { useState, useEffect } from "react";
 import { format, parse } from "date-fns";
+import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import { Badge } from "@/components/ui/badge";
 import { DELIVERY_SHEET_TYPES } from "../lib/deliverysheet.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
@@ -79,6 +80,14 @@ export const DeliverySheetForm = ({
   onSearchSales,
   isLoadingAvailableSales,
 }: DeliverySheetFormProps) => {
+  const user = useAuthStore((state) => state.user);
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const [selectedSaleIds, setSelectedSaleIds] = useState<number[]>(
     defaultValues.sale_ids || [],
   );
@@ -536,25 +545,32 @@ export const DeliverySheetForm = ({
           </GroupFormSection>
         )}
 
-        <div className="flex justify-end gap-4 col-span-full">
-          {onCancel && (
+        <div className="flex justify-between items-center gap-4 col-span-full">
+          <div className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{user?.name}</span>
+            <span className="mx-2">·</span>
+            <span>{format(now, "dd/MM/yyyy HH:mm:ss")}</span>
+          </div>
+          <div className="flex gap-4">
+            {onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onCancel}
+              >
+                Cancelar
+              </Button>
+            )}
             <Button
-              type="button"
-              variant="outline"
               size="sm"
-              onClick={onCancel}
+              type="submit"
+              disabled={isSubmitting || selectedSaleIds.length === 0}
             >
-              Cancelar
+              {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+              {mode === "create" ? "Crear Planilla" : "Actualizar Planilla"}
             </Button>
-          )}
-          <Button
-            size="sm"
-            type="submit"
-            disabled={isSubmitting || selectedSaleIds.length === 0}
-          >
-            {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-            {mode === "create" ? "Crear Planilla" : "Actualizar Planilla"}
-          </Button>
+          </div>
         </div>
       </form>
 

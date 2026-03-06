@@ -516,4 +516,47 @@ export interface CarLoadReportParams {
   format?: "json" | "pdf" | null;
 }
 
-export type CarLoadReportResponse = DeliverySheetReportResponse;
+export interface CarLoadKgGroup {
+  kg: number;
+  count: number;
+  label: string;
+}
+
+export interface CarLoadRow {
+  cod: string;
+  name: string;
+  unit: string;
+  sacos: number;
+  kg_total: number;
+  kg_grupos: CarLoadKgGroup[];
+  kg_label: string;
+  ton: number;
+  contado: number;
+  credito: number;
+  total: number;
+}
+
+export interface CarLoadTotals {
+  sacos: number;
+  kg_total: number;
+  ton: number;
+  contado: number;
+  credito: number;
+  total: number;
+}
+
+export interface CarLoadReportData {
+  company: string;
+  branch: string;
+  zones: string[];
+  date_from: string | null;
+  date_to: string | null;
+  rows: CarLoadRow[];
+  totals: CarLoadTotals;
+  sales_count: number;
+}
+
+export interface CarLoadReportResponse {
+  message: string;
+  data: CarLoadReportData;
+}

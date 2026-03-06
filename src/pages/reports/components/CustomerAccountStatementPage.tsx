@@ -28,6 +28,8 @@ import {
   calculateAccountStatementMetrics,
 } from "../lib/reports.utils";
 
+export const CustomerAccountStatementTitle = "Estado de Cuenta de Clientes";
+
 interface FilterFormValues {
   zone_id: string;
   customer_id: string;
@@ -339,7 +341,7 @@ export default function CustomerAccountStatementPage() {
   return (
     <PageWrapper size="3xl">
       <TitleComponent
-        title="Estado de Cuenta de Clientes"
+        title={CustomerAccountStatementTitle}
         subtitle="Consulta el estado de cuenta y deudas de los clientes"
         icon="FileBarChart2"
       />

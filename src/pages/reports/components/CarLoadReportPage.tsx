@@ -8,13 +8,7 @@ import {
 import TitleComponent from "@/components/TitleComponent";
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
-import type {
-  CarLoadReportParams,
-  DeliverySheetDatum,
-  DeliverySheetDetail,
-} from "../lib/reports.interface";
-import { Badge } from "@/components/ui/badge";
-import type { BadgeColor } from "@/components/ui/badge";
+import type { CarLoadReportParams, CarLoadRow } from "../lib/reports.interface";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import {
@@ -22,151 +16,39 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  FileText,
-  Search,
-  Filter,
-  Package,
-  Truck,
-  Receipt,
-} from "lucide-react";
+import { FileText, Search, Filter, Truck, Scale } from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportCarLoadReport } from "../lib/reports.actions";
 import { toast } from "sonner";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
+import { FilterMultiSelect } from "@/components/FilterMultiSelect";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
 import { useSidebar } from "@/components/ui/sidebar";
-import { GeneralModal } from "@/components/GeneralModal";
 
 interface FilterFormValues {
-  zone_id: string;
+  zone_ids: string[];
   branch_id: string;
   date_from: string;
   date_to: string;
 }
 
-const statusColor = (status: string): BadgeColor => {
-  const s = status?.toUpperCase();
-  if (s === "ENTREGADA" || s === "ACEPTADA") return "green";
-  if (s === "EN_TRANSITO" || s === "ENVIADA") return "yellow";
-  if (s === "RECHAZADA" || s === "ANULADA") return "destructive";
-  return "muted";
-};
-
-function DetailsModal({
-  details,
-  open,
-  onClose,
-}: {
-  details: DeliverySheetDetail[];
-  open: boolean;
-  onClose: () => void;
-}) {
-  return (
-    <GeneralModal
-      open={open}
-      onClose={onClose}
-      title={`Detalle de Productos (${details.length})`}
-      icon="Package"
-      size="4xl"
-    >
-      <div className="w-full min-w-0 overflow-x-auto">
-        <Table className="table-fixed w-full">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[40%]">Producto</TableHead>
-              <TableHead className="w-[10%] text-right">Sacos</TableHead>
-              <TableHead className="w-[10%] text-right">Kg</TableHead>
-              <TableHead className="w-[10%]">Unidad</TableHead>
-              <TableHead className="w-[30%]">Descripción</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {details.map((d, i) => (
-              <TableRow key={i}>
-                <TableCell
-                  className="font-medium truncate max-w-0"
-                  title={d.product.name}
-                >
-                  {d.product.name}
-                </TableCell>
-                <TableCell className="text-right font-mono">
-                  {d.quantity_sacks}
-                </TableCell>
-                <TableCell className="text-right font-mono">
-                  {d.quantity_kg}
-                </TableCell>
-                <TableCell>{d.unit_code}</TableCell>
-                <TableCell
-                  className="text-muted-foreground text-sm truncate max-w-0"
-                  title={d.description || ""}
-                >
-                  {d.description || "—"}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </GeneralModal>
-  );
-}
-
-function DetailsCell({ details }: { details: DeliverySheetDetail[] }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => setOpen(true)}
-      >
-        <Package className="mr-1 h-3 w-3" />
-        {details.length} {details.length === 1 ? "producto" : "productos"}
-      </Button>
-      <DetailsModal
-        details={details}
-        open={open}
-        onClose={() => setOpen(false)}
-      />
-    </>
-  );
-}
-
-function SaleDocumentsCell({ value }: { value: string }) {
-  if (!value || value === "-") {
+function KgGruposCell({ label, grupos }: { label: string; grupos: CarLoadRow["kg_grupos"] }) {
+  if (!label || grupos.length === 0) {
     return <span className="text-muted-foreground text-sm">—</span>;
   }
-  const documents = value
-    .split(",")
-    .map((d) => d.trim())
-    .filter(Boolean);
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" size="sm">
-          <Receipt className="mr-1 h-3 w-3" />
-          {documents.length} {documents.length === 1 ? "doc." : "docs."}
+        <Button type="button" variant="ghost" size="sm" className="h-auto py-0.5 px-1 font-mono text-xs text-left justify-start max-w-[180px] truncate">
+          {label}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-64 p-2 space-y-1">
-        {documents.map((doc, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/50"
-          >
-            <Receipt className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <span className="font-mono text-sm">{doc}</span>
+      <PopoverContent align="start" className="w-52 p-2 space-y-1">
+        {grupos.map((g, i) => (
+          <div key={i} className="flex justify-between items-center px-2 py-1 rounded bg-muted/50 text-sm">
+            <span className="font-mono">{g.label}</span>
+            <span className="text-muted-foreground font-mono">{g.kg} kg</span>
           </div>
         ))}
       </PopoverContent>
@@ -174,124 +56,86 @@ function SaleDocumentsCell({ value }: { value: string }) {
   );
 }
 
-const columns: ColumnDef<DeliverySheetDatum>[] = [
+const columns: ColumnDef<CarLoadRow>[] = [
   {
-    accessorKey: "guide_number",
-    header: "Nro. Guía",
-    size: 130,
+    accessorKey: "cod",
+    header: "Código",
+    size: 90,
     cell: ({ row }) => (
-      <span className="font-mono text-sm font-medium">
-        {row.original.guide_number}
-      </span>
+      <span className="font-mono text-sm">{row.original.cod}</span>
     ),
   },
   {
-    accessorKey: "issue_date",
-    header: "F. Emisión",
-    size: 110,
+    accessorKey: "name",
+    header: "Producto",
+    size: 220,
     cell: ({ row }) => (
-      <span className="text-sm font-mono">{row.original.issue_date}</span>
+      <span className="text-sm">{row.original.name}</span>
     ),
   },
   {
-    accessorKey: "transfer_date",
-    header: "F. Traslado",
-    size: 110,
-    cell: ({ row }) => (
-      <span className="text-sm font-mono">{row.original.transfer_date}</span>
-    ),
-  },
-  {
-    accessorKey: "modality",
-    header: "Modalidad",
-    size: 100,
-    cell: ({ row }) => <Badge variant="outline">{row.original.modality}</Badge>,
-  },
-  {
-    accessorKey: "status",
-    header: "Estado",
-    size: 120,
-    cell: ({ row }) => (
-      <Badge color={statusColor(row.original.status)}>
-        {row.original.status}
-      </Badge>
-    ),
-  },
-  {
-    accessorKey: "customer",
-    header: "Cliente",
-    size: 160,
-    cell: ({ row }) => (
-      <span className="text-sm">{row.original.customer.name}</span>
-    ),
-  },
-  {
-    accessorKey: "vehicle",
-    header: "Vehículo",
-    size: 110,
-    cell: ({ row }) => (
-      <span className="font-mono text-sm">
-        {row.original.vehicle.plate ?? "—"}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "driver",
-    header: "Conductor",
-    size: 150,
-    cell: ({ row }) => (
-      <span className="text-sm">{row.original.driver?.name ?? "—"}</span>
-    ),
-  },
-  {
-    accessorKey: "origin",
-    header: "Origen",
-    size: 140,
-    cell: ({ row }) => (
-      <span className="text-sm">{row.original.origin.warehouse}</span>
-    ),
-  },
-  {
-    accessorKey: "destination",
-    header: "Destino",
-    size: 150,
-    cell: ({ row }) => (
-      <span className="text-sm line-clamp-1">
-        {row.original.destination.address}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "sale_document_number",
-    header: "Doc. Venta",
-    size: 120,
-    cell: ({ row }) => (
-      <SaleDocumentsCell value={row.original.sale_document_number} />
-    ),
-  },
-  {
-    accessorKey: "total_weight",
-    header: "Peso Total",
-    size: 100,
-    cell: ({ row }) => (
-      <span className="font-mono text-sm">
-        {row.original.total_weight} {row.original.unit_measurement}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "total_packages",
-    header: "Bultos",
+    accessorKey: "unit",
+    header: "Unidad",
     size: 80,
     cell: ({ row }) => (
-      <span className="font-mono text-sm">{row.original.total_packages}</span>
+      <span className="text-sm font-mono">{row.original.unit}</span>
     ),
   },
   {
-    accessorKey: "details",
-    header: "Productos",
+    accessorKey: "sacos",
+    header: "Sacos",
+    size: 80,
+    cell: ({ row }) => (
+      <span className="font-mono text-sm text-right block">{row.original.sacos}</span>
+    ),
+  },
+  {
+    accessorKey: "kg_total",
+    header: "KG Total",
+    size: 90,
+    cell: ({ row }) => (
+      <span className="font-mono text-sm text-right block">{row.original.kg_total}</span>
+    ),
+  },
+  {
+    accessorKey: "kg_label",
+    header: "Detalle KG",
     size: 200,
-    cell: ({ row }) => <DetailsCell details={row.original.details} />,
+    cell: ({ row }) => (
+      <KgGruposCell label={row.original.kg_label} grupos={row.original.kg_grupos} />
+    ),
+  },
+  {
+    accessorKey: "ton",
+    header: "Ton",
+    size: 80,
+    cell: ({ row }) => (
+      <span className="font-mono text-sm text-right block">{row.original.ton}</span>
+    ),
+  },
+  {
+    accessorKey: "contado",
+    header: "Contado",
+    size: 90,
+    cell: ({ row }) => (
+      <span className="font-mono text-sm text-right block">{row.original.contado}</span>
+    ),
+  },
+  {
+    accessorKey: "credito",
+    header: "Crédito",
+    size: 90,
+    cell: ({ row }) => (
+      <span className="font-mono text-sm text-right block">{row.original.credito}</span>
+    ),
+  },
+  {
+    accessorKey: "total",
+    header: "Total",
+    size: 90,
+    cell: ({ row }) => (
+      <span className="font-mono text-sm font-medium text-right block">{row.original.total}</span>
+    ),
   },
 ];
 
@@ -300,6 +144,12 @@ export default function CarLoadReportPage() {
 
   const { setOpen, setOpenMobile } = useSidebar();
   const { data: rawData, isLoading, fetch } = useCarLoadReport();
+  const { data: zonesData } = useZoneAsyncSearch({ per_page: 100 });
+
+  const zoneOptions = ((zonesData?.data ?? []) as { id: number; name: string }[]).map((z) => ({
+    label: z.name,
+    value: String(z.id),
+  }));
 
   useEffect(() => {
     setOpen(false);
@@ -308,15 +158,22 @@ export default function CarLoadReportPage() {
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
-      zone_id: "",
+      zone_ids: [],
       branch_id: "",
       date_from: "",
       date_to: "",
     },
   });
 
+  // Pre-select all zones once they load
+  useEffect(() => {
+    if (zoneOptions.length > 0 && form.getValues("zone_ids").length === 0) {
+      form.setValue("zone_ids", zoneOptions.map((z) => z.value));
+    }
+  }, [zoneOptions.length]);
+
   const buildParams = (values: FilterFormValues): CarLoadReportParams => ({
-    zone_ids: values.zone_id ? [Number(values.zone_id)] : [],
+    zone_ids: values.zone_ids.map(Number),
     branch_id: values.branch_id ? Number(values.branch_id) : null,
     date_from: values.date_from || null,
     date_to: values.date_to || null,
@@ -347,14 +204,15 @@ export default function CarLoadReportPage() {
     }
   };
 
-  const tableData = rawData?.data ?? [];
-  const summary = rawData?.summary;
+  const reportData = rawData?.data;
+  const rows = reportData?.rows ?? [];
+  const totals = reportData?.totals;
 
   return (
     <PageWrapper size="3xl">
       <TitleComponent
-        title="Reporte de Llenado de Carros"
-        subtitle="Consulta las guías de remisión agrupadas por vehículo, zona y período"
+        title="Llenado de Carros"
+        subtitle="Consulta los productos cargados por zona y período"
         icon="BookOpen"
       />
 
@@ -376,7 +234,7 @@ export default function CarLoadReportPage() {
                   variant="outline"
                   size="sm"
                   onClick={handleExportPdf}
-                  disabled={isExportingPdf || tableData.length === 0}
+                  disabled={isExportingPdf || rows.length === 0}
                 >
                   <FileText className="mr-2 h-4 w-4" />
                   PDF
@@ -384,16 +242,12 @@ export default function CarLoadReportPage() {
               </div>
             }
           >
-            <FormSelectAsync
-              control={form.control}
-              name="zone_id"
-              label="Zona"
-              placeholder="Buscar zona..."
-              useQueryHook={useZoneAsyncSearch}
-              mapOptionFn={(item) => ({
-                label: item.name,
-                value: String(item.id),
-              })}
+            <FilterMultiSelect
+              label="Zonas"
+              placeholder="Seleccionar zonas..."
+              options={zoneOptions}
+              value={form.watch("zone_ids")}
+              onChange={(vals) => form.setValue("zone_ids", vals)}
             />
 
             <FormSelectAsync
@@ -417,68 +271,45 @@ export default function CarLoadReportPage() {
             />
           </GroupFormSection>
 
-          {summary && (
+          {totals && (
             <GroupFormSection
               title="Resumen"
               icon={Truck}
-              cols={{ sm: 1, md: 3 }}
+              cols={{ sm: 2, md: 3, lg: 6 }}
             >
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Guías</p>
-                <p className="text-2xl font-bold">{summary.total_guides}</p>
+                <p className="text-sm text-muted-foreground">Ventas</p>
+                <p className="text-2xl font-bold">{reportData?.sales_count ?? 0}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Peso Total (kg)</p>
-                <p className="text-2xl font-bold">{summary.total_weight}</p>
+                <p className="text-sm text-muted-foreground">Sacos</p>
+                <p className="text-2xl font-bold">{totals.sacos}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Bultos</p>
-                <p className="text-2xl font-bold">{summary.total_packages}</p>
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <Scale className="h-3 w-3" /> KG Total
+                </p>
+                <p className="text-2xl font-bold">{totals.kg_total}</p>
               </div>
-
-              {summary.by_vehicle.length > 0 && (
-                <div className="md:col-span-3">
-                  <p className="text-sm font-medium mb-2">Por Vehículo</p>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Placa</TableHead>
-                        <TableHead className="text-right">Guías</TableHead>
-                        <TableHead className="text-right">Peso (kg)</TableHead>
-                        <TableHead className="text-right">Bultos</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {summary.by_vehicle.map((v, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="font-mono font-medium">
-                            {v.plate || "—"}
-                          </TableCell>
-                          <TableCell className="text-right font-mono">
-                            {v.total_guides}
-                          </TableCell>
-                          <TableCell className="text-right font-mono">
-                            {v.total_weight}
-                          </TableCell>
-                          <TableCell className="text-right font-mono">
-                            {v.total_packages}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Ton</p>
+                <p className="text-2xl font-bold">{totals.ton}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Contado</p>
+                <p className="text-2xl font-bold">{totals.contado}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Crédito</p>
+                <p className="text-2xl font-bold">{totals.credito}</p>
+              </div>
             </GroupFormSection>
           )}
 
           <DataTable
             columns={columns}
-            data={tableData}
+            data={rows}
             isLoading={isLoading}
-            initialColumnVisibility={{
-              driver: false,
-            }}
           />
         </form>
       </Form>

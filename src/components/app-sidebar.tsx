@@ -47,10 +47,13 @@ import { GUIDE } from "@/pages/guide/lib/guide.interface";
 import { hasAccessToRoute } from "@/App";
 import { useEffect, useState } from "react";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
-import { SaleRoute } from "@/pages/sale/lib/sale.interface";
+import { SALE, SaleRoute } from "@/pages/sale/lib/sale.interface";
 import { CREDIT_NOTE } from "@/pages/credit-note/lib/credit-note.interface";
 import { BOX_SHIFT } from "@/pages/box-shift/lib/box-shift.interface";
-import { AccountsReceivableRoute } from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
+import {
+  ACCOUNTS_RECEIVABLE,
+  AccountsReceivableRoute,
+} from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
 import { ACCOUNTS_PAYABLE } from "@/pages/accounts-payable/lib/accounts-payable.interface";
 import { WAREHOUSE_DOCUMENT } from "@/pages/warehouse-document/lib/warehouse-document.interface";
 import {
@@ -62,13 +65,14 @@ import {
   CAR_LOAD_REPORT_ROUTE,
   COMMISSIONS_REPORT_ROUTE,
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
-  DELIVERY_SHEET_REPORT_ROUTE,
   INVENTORY_REPORT_ROUTE,
   KARDEX_REPORT_ROUTE,
   REPORTS,
   SALE_BY_SELLER_REPORT_ROUTE,
 } from "@/pages/reports/lib/reports.interface";
 import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-credit-note.interface";
+import { SettlementTitle } from "@/pages/deliverysheet/components/settlement/SettlementHeader";
+import { CustomerAccountStatementTitle } from "@/pages/reports/components/CustomerAccountStatementPage";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -238,10 +242,8 @@ const {
   MODEL: { plural: BoxShiftTitle },
 } = BOX_SHIFT;
 
-const {
-  ICON_REACT: AccountsPayableIcon,
-  ROUTE: AccountsPayableRoute,
-} = ACCOUNTS_PAYABLE;
+const { ICON_REACT: AccountsPayableIcon, ROUTE: AccountsPayableRoute } =
+  ACCOUNTS_PAYABLE;
 
 const {
   ICON_REACT: DeliverySheetIcon,
@@ -331,12 +333,12 @@ const data = {
           icon: PurchaseCreditNoteIcon,
         },
         {
-          title: "Registro de Ventas",
+          title: ACCOUNTS_RECEIVABLE.MODEL.plural,
           url: AccountsReceivableRoute,
           icon: DollarSign,
         },
         {
-          title: "Registro de Compras",
+          title: ACCOUNTS_PAYABLE.MODEL.plural,
           url: AccountsPayableRoute,
           icon: AccountsPayableIcon,
         },
@@ -348,7 +350,7 @@ const data = {
       icon: Package,
       items: [
         {
-          title: "Ventas",
+          title: SALE.MODEL.plural,
           url: SaleRoute,
           icon: ShoppingBag,
         },
@@ -373,17 +375,17 @@ const data = {
           icon: DeliverySheetIcon,
         },
         {
-          title: "Pago Planillas Cobranza",
+          title: SettlementTitle,
           url: DeliverySheetSettlementRoute,
           icon: ClipboardCheck,
         },
+        // {
+        //   title: "Reporte Planilla de Cobranza",
+        //   url: DELIVERY_SHEET_REPORT_ROUTE,
+        //   icon: ReportsIcon,
+        // },
         {
-          title: "Reporte Planilla de Cobranza",
-          url: DELIVERY_SHEET_REPORT_ROUTE,
-          icon: ReportsIcon,
-        },
-        {
-          title: "Estado de Cuenta Clientes",
+          title: CustomerAccountStatementTitle,
           url: CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
           icon: ReportsIcon,
         },

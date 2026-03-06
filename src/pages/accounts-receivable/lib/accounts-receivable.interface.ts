@@ -1,3 +1,5 @@
+import { DollarSign } from "lucide-react";
+
 // Reutilizamos las interfaces de sale para installments y payments
 export type {
   SaleInstallmentResource,
@@ -8,6 +10,16 @@ export const ACCOUNTS_RECEIVABLE_ENDPOINT = "/installments";
 export const ACCOUNTS_RECEIVABLE_QUERY_KEY = "accounts-receivable";
 
 export const AccountsReceivableRoute = "/cuentas-por-cobrar";
+
+export const ACCOUNTS_RECEIVABLE = {
+  ICON_REACT: DollarSign,
+  ROUTE: "/cuentas-por-cobrar",
+  MODEL: {
+    name: "Cuentas por Cobrar",
+    singular: "Cuenta por Cobrar",
+    plural: "Cuentas por Cobrar",
+  },
+};
 
 // Resumen de cuentas por cobrar
 export interface AccountsReceivableSummary {

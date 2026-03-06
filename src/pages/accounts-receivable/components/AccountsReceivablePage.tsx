@@ -10,10 +10,11 @@ import InstallmentPaymentsSheet from "@/pages/sale/components/InstallmentPayment
 import AccountsReceivableOptions from "./AccountsReceivableOptions";
 import { getAccountsReceivableColumns } from "./AccountsReceivableColumns";
 import PageWrapper from "@/components/PageWrapper";
+import { ACCOUNTS_RECEIVABLE } from "../lib/accounts-receivable.interface";
 
 export default function AccountsReceivablePage() {
   const [installments, setInstallments] = useState<SaleInstallmentResource[]>(
-    []
+    [],
   );
   const [filteredInstallments, setFilteredInstallments] = useState<
     SaleInstallmentResource[]
@@ -55,7 +56,7 @@ export default function AccountsReceivablePage() {
     const filtered = installments.filter((inst) =>
       // inst.sale_correlativo.toLowerCase().includes(searchLower) ||
       // inst.correlativo.toLowerCase().includes(searchLower) ||
-      inst.installment_number.toString().includes(searchLower)
+      inst.installment_number.toString().includes(searchLower),
     );
     setFilteredInstallments(filtered);
   };
@@ -131,14 +132,14 @@ export default function AccountsReceivablePage() {
 
   const columns = useMemo(
     () => getAccountsReceivableColumns(handleOpenPayment, handleOpenQuickView),
-    []
+    [],
   );
 
   return (
     <PageWrapper>
       {/* Header */}
       <TitleComponent
-        title="Cuentas por Cobrar"
+        title={ACCOUNTS_RECEIVABLE.MODEL.plural}
         subtitle="Gestión y seguimiento de cuotas pendientes"
         icon="DollarSign"
       />

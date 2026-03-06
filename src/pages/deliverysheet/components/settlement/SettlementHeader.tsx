@@ -7,6 +7,8 @@ interface SettlementHeaderProps {
   onBack: () => void;
 }
 
+export const SettlementTitle = "Pago Planilla Cobranza";
+
 export function SettlementHeader({
   sheetNumber,
   onBack,
@@ -17,7 +19,7 @@ export function SettlementHeader({
         <ArrowLeft className="h-4 w-4" />
       </Button>
       <TitleComponent
-        title="Rendición de Planilla"
+        title={SettlementTitle}
         subtitle={
           sheetNumber
             ? `Planilla ${sheetNumber} - Registre el estado y cobro de cada boleta`

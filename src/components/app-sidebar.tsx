@@ -59,6 +59,7 @@ import {
 } from "@/pages/deliverysheet/lib/deliverysheet.interface";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import {
+  CAR_LOAD_REPORT_ROUTE,
   COMMISSIONS_REPORT_ROUTE,
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
   DELIVERY_SHEET_REPORT_ROUTE,
@@ -416,6 +417,11 @@ const data = {
         {
           title: "Comisiones",
           url: COMMISSIONS_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: "Llenado de Carros",
+          url: CAR_LOAD_REPORT_ROUTE,
           icon: ReportsIcon,
         },
       ],

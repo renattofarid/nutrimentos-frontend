@@ -1,5 +1,7 @@
 import { api } from "@/lib/config";
 import type {
+  CarLoadReportParams,
+  CarLoadReportResponse,
   CommissionsReportParams,
   CommissionsReportResponse,
   CustomerAccountStatementParams,
@@ -202,6 +204,35 @@ export async function exportCommissionsReport(
 ): Promise<Blob> {
   const { data } = await api.get<Blob>("/reports/commissions", {
     params: { ...params, format },
+    responseType: "blob",
+  });
+  return data;
+}
+
+export async function getCarLoadReport(
+  params: CarLoadReportParams,
+): Promise<CarLoadReportResponse> {
+  const { zone_ids, ...rest } = params;
+  const { data } = await api.get<CarLoadReportResponse>("/reports/delivery-sheet", {
+    params: {
+      ...rest,
+      "zone_ids[]": zone_ids,
+    },
+  });
+  return data;
+}
+
+export async function exportCarLoadReport(
+  params: CarLoadReportParams,
+  format: "pdf",
+): Promise<Blob> {
+  const { zone_ids, ...rest } = params;
+  const { data } = await api.get<Blob>("/reports/delivery-sheet", {
+    params: {
+      ...rest,
+      "zone_ids[]": zone_ids,
+      format,
+    },
     responseType: "blob",
   });
   return data;

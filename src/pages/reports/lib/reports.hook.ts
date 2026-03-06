@@ -1,5 +1,6 @@
 import { useReportsStore } from "./reports.store";
 import type {
+  CarLoadReportParams,
   CommissionsReportParams,
   CustomerAccountStatementParams,
   DeliverySheetReportParams,
@@ -15,6 +16,8 @@ import {
 import { errorToast, successToast } from "@/lib/core.function";
 import { VEHICLE } from "@/pages/vehicle/lib/vehicle.interface";
 import { CLIENT } from "@/pages/client/lib/client.interface";
+import { ZONE } from "@/pages/zone/lib/zone.interface";
+import { BRANCH } from "@/pages/branch/lib/branch.interface";
 
 export function useCustomerAccountStatement(
   params?: CustomerAccountStatementParams,
@@ -217,3 +220,48 @@ export function useCommissionsReport(params?: CommissionsReportParams) {
     fetch: fetchCommissionsReport,
   };
 }
+
+export function useCarLoadReport(params?: CarLoadReportParams) {
+  const {
+    carLoadReport,
+    carLoadLoading,
+    carLoadError,
+    fetchCarLoadReport,
+  } = useReportsStore();
+
+  return {
+    data: carLoadReport,
+    isLoading: carLoadLoading,
+    error: carLoadError,
+    refetch: () => fetchCarLoadReport(params || {}),
+    fetch: fetchCarLoadReport,
+  };
+}
+
+export const useZoneAsyncSearch = (params: {
+  search?: string;
+  page?: number;
+  per_page?: number;
+  [key: string]: any;
+}) => {
+  return useQuery({
+    queryKey: ["zones-async-search", params],
+    queryFn: () => fetchSearchEndpoint(ZONE.ENDPOINT, params),
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useBranchAsyncSearch = (params: {
+  search?: string;
+  page?: number;
+  per_page?: number;
+  [key: string]: any;
+}) => {
+  return useQuery({
+    queryKey: ["branches-async-search", params],
+    queryFn: () => fetchSearchEndpoint(BRANCH.ENDPOINT, params),
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};

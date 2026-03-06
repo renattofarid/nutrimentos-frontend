@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import {
+  getCarLoadReport,
   getCommissionsReport,
   getCustomerAccountStatement,
   getDeliverySheetReport,
@@ -8,6 +9,8 @@ import {
   getSaleBySellerReport,
 } from "./reports.actions";
 import type {
+  CarLoadReportParams,
+  CarLoadReportResponse,
   CommissionsReportParams,
   CommissionsReportResponse,
   CustomerAccountStatementResponse,
@@ -60,6 +63,12 @@ interface ReportsStore {
   commissionsLoading: boolean;
   commissionsError: string | null;
   fetchCommissionsReport: (params: CommissionsReportParams) => Promise<void>;
+
+  // Car Load
+  carLoadReport: CarLoadReportResponse | null;
+  carLoadLoading: boolean;
+  carLoadError: string | null;
+  fetchCarLoadReport: (params: CarLoadReportParams) => Promise<void>;
 }
 
 export const useReportsStore = create<ReportsStore>((set) => ({
@@ -169,6 +178,24 @@ export const useReportsStore = create<ReportsStore>((set) => ({
       set({
         commissionsError: "Error al cargar el reporte de comisiones",
         commissionsLoading: false,
+      });
+    }
+  },
+
+  // ─── Car Load ────────────────────────────────────────────────────────────
+  carLoadReport: null,
+  carLoadLoading: false,
+  carLoadError: null,
+
+  fetchCarLoadReport: async (params: CarLoadReportParams) => {
+    set({ carLoadLoading: true, carLoadError: null });
+    try {
+      const response = await getCarLoadReport(params);
+      set({ carLoadReport: response, carLoadLoading: false });
+    } catch {
+      set({
+        carLoadError: "Error al cargar el reporte de llenado de carros",
+        carLoadLoading: false,
       });
     }
   },

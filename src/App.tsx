@@ -114,6 +114,7 @@ import {
   KardexReportPage,
 } from "./pages/reports/components";
 import {
+  CAR_LOAD_REPORT_ROUTE,
   COMMISSIONS_REPORT_ROUTE,
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
   DELIVERY_SHEET_REPORT_ROUTE,
@@ -128,6 +129,7 @@ import PurchaseCreditNoteEditPage from "./pages/purchase-credit-note/components/
 import SaleBySellerReportPage from "./pages/reports/components/SaleBySellerReportPage";
 import DeliverySheetReportPage from "./pages/reports/components/DeliverySheetReportPage";
 import CommissionsReportPage from "./pages/reports/components/CommissionsReportPage";
+import CarLoadReportPage from "./pages/reports/components/CarLoadReportPage";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
 const { ROUTE: UserRoute } = USER;
@@ -910,6 +912,14 @@ export default function App() {
             element={
               <ProtectedRoute path={COMMISSIONS_REPORT_ROUTE}>
                 <CommissionsReportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={CAR_LOAD_REPORT_ROUTE}
+            element={
+              <ProtectedRoute path={CAR_LOAD_REPORT_ROUTE}>
+                <CarLoadReportPage />
               </ProtectedRoute>
             }
           />

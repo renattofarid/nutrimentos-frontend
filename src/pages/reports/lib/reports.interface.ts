@@ -54,6 +54,9 @@ export const DELIVERY_SHEET_REPORT_ROUTE = `${ROUTE}/planilla-reparto`;
 // Commissions Report
 export const COMMISSIONS_REPORT_ROUTE = `${ROUTE}/comisiones`;
 
+// Car Load Report
+export const CAR_LOAD_REPORT_ROUTE = `${ROUTE}/llenado-carros`;
+
 export interface CustomerAccountStatementParams {
   zone_id?: number | null;
   customer_id?: number | null;
@@ -498,3 +501,18 @@ export interface CommissionSeller {
   id: number;
   name: string;
 }
+
+/**
+ * CAR LOAD REPORT
+ */
+
+export interface CarLoadReportParams {
+  zone_ids?: number[];
+  branch_id?: number | null;
+  company_id?: number | null;
+  date_from?: string | null;
+  date_to?: string | null;
+  format?: "json" | "pdf" | null;
+}
+
+export type CarLoadReportResponse = DeliverySheetReportResponse;

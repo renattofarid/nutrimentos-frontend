@@ -8,7 +8,6 @@ import {
   type ColumnDef,
   type SortingState,
   type OnChangeFn,
-  type RowSelectionState,
 } from "@tanstack/react-table";
 
 import {
@@ -20,8 +19,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { useState } from "react";
-import type { VisibilityState } from "@tanstack/react-table";
+import { useState, useRef, useEffect } from "react";
+import type { RowSelectionState, VisibilityState } from "@tanstack/react-table";
 import DataTableColumnFilter from "./DataTableColumnFilter";
 import FormSkeleton from "./FormSkeleton";
 import { cn } from "@/lib/utils";
@@ -57,7 +56,7 @@ const headerVariants = cva("sticky top-0 z-10", {
   },
 });
 
-const mobileCardVariants = cva("overflow-hidden transition-colors pb-0", {
+const mobileCardVariants = cva("overflow-hidden transition-colors py-0 gap-0", {
   variants: {
     variant: {
       default: "border-primary/10 hover:border-primary/30 border shadow-sm",
@@ -72,7 +71,7 @@ const mobileCardVariants = cva("overflow-hidden transition-colors pb-0", {
 });
 
 const mobileCardFooterVariants = cva(
-  "border-t px-3 py-1 flex justify-end gap-2 [.border-t]:pt-1",
+  "border-t px-3 py-1 [.border-t]:pt-1 flex justify-end gap-2",
   {
     variants: {
       variant: {
@@ -132,6 +131,23 @@ export function DataTable<TData, TValue>({
   );
   const [internalRowSelection, setInternalRowSelection] = useState({});
 
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (!e.target || !container.contains(e.target as Node)) return;
+      if (container.scrollWidth <= container.clientWidth) return;
+      e.preventDefault();
+      container.scrollLeft += e.deltaY;
+    };
+
+    document.addEventListener("wheel", handleWheel, { passive: false });
+    return () => document.removeEventListener("wheel", handleWheel);
+  }, []);
+
   const table = useReactTable({
     data,
     columns,
@@ -157,9 +173,25 @@ export function DataTable<TData, TValue>({
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     ...(onRowSelectionChange && { onRowSelectionChange }),
-    ...(onRowSelectionChange === undefined && { onRowSelectionChange: setInternalRowSelection }),
+    ...(onRowSelectionChange === undefined && {
+      onRowSelectionChange: setInternalRowSelection,
+    }),
     ...(onSortingChange && { onSortingChange }),
   });
+
+  const isActionsCol = (id: string) =>
+    id.toLowerCase().includes("action") || id.toLowerCase().includes("accion");
+
+  const hasActionsColumn = table
+    .getAllColumns()
+    .some((col) => isActionsCol(col.id));
+
+  const stickyHeaderBg =
+    variant === "outline"
+      ? "bg-muted/50"
+      : variant === "simple" || variant === "ghost"
+        ? "bg-background"
+        : "bg-muted";
 
   return (
     <div
@@ -168,23 +200,38 @@ export function DataTable<TData, TValue>({
         isVisibleColumnFilter ? "gap-2" : "",
       )}
     >
-      <div className="grid md:flex md:flex-wrap gap-2 md:justify-between w-full">
+      <div className="flex md:flex-wrap gap-2 justify-end md:justify-between w-full">
         {children}
         {isVisibleColumnFilter && !mobileCardRender && (
-          <DataTableColumnFilter table={table} />
+          <DataTableColumnFilter
+            table={table}
+            tableContainerRef={tableContainerRef}
+          />
         )}
       </div>
 
       {/* Vista de Tabla para pantallas grandes */}
       <div className={cn(dataTableVariants({ variant }), className)}>
-        <div className="overflow-x-auto w-full">
+        <div ref={tableContainerRef} className="overflow-x-auto w-full">
           <Table className="text-xs md:text-sm">
             <TableHeader className={cn(headerVariants({ variant }))}>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="text-nowrap h-10">
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id} className="h-10">
+                      <TableHead
+                        key={header.id}
+                        data-column-id={header.id}
+                        className={cn(
+                          "h-10",
+                          hasActionsColumn &&
+                            isActionsCol(header.id) &&
+                            cn(
+                              "sticky right-0 z-20 border-l border-border",
+                              stickyHeaderBg,
+                            ),
+                        )}
+                      >
                         {header.isPlaceholder ? null : header.column.columnDef
                             .enableSorting ? (
                           <Button
@@ -230,10 +277,18 @@ export function DataTable<TData, TValue>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className="text-nowrap hover:bg-muted bg-background"
+                    className="text-nowrap hover:bg-muted bg-background group"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="p-2 truncate">
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          "p-2 truncate",
+                          hasActionsColumn &&
+                            isActionsCol(cell.column.id) &&
+                            "sticky right-0 z-1 bg-background group-hover:bg-muted border-l border-border",
+                        )}
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
@@ -290,7 +345,7 @@ export function DataTable<TData, TValue>({
                 key={row.id}
                 className={cn(mobileCardVariants({ variant }))}
               >
-                <CardContent className="px-4">
+                <CardContent className="p-4">
                   <div className="grid grid-cols-1 gap-2">
                     {contentCells.map((cell) => {
                       const header = cell.column.columnDef.header;
@@ -306,7 +361,7 @@ export function DataTable<TData, TValue>({
                           key={cell.id}
                           className="grid grid-cols-3 items-center gap-1 text-wrap"
                         >
-                          <span className="text-xs font-medium text-primary">
+                          <span className="text-xs font-medium text-primary dark:text-primary-foreground">
                             {headerText}
                           </span>
                           <div className="text-xs text-foreground col-span-2">

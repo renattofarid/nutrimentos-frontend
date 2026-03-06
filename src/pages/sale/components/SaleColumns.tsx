@@ -300,6 +300,13 @@ export const getSaleColumns = ({
     },
   },
   {
+    accessorKey: "user.name",
+    header: "Usuario",
+    cell: ({ getValue }) => (
+      <span className="font-semibold">{getValue() as string}</span>
+    ),
+  },
+  {
     id: "actions",
     header: "Acciones",
     cell: ({ row }) => {

@@ -1,6 +1,10 @@
 import { DataTable } from "@/components/DataTable.tsx";
 import type { SaleResource } from "../lib/sale.interface";
-import type { ColumnDef, RowSelectionState, OnChangeFn } from "@tanstack/react-table";
+import type {
+  ColumnDef,
+  RowSelectionState,
+  OnChangeFn,
+} from "@tanstack/react-table";
 
 interface Props {
   columns: ColumnDef<SaleResource>[];
@@ -33,6 +37,7 @@ export default function SaleTable({
         getRowId={(row) => row.id.toString()}
         initialColumnVisibility={{
           id: false,
+          user_name: false,
         }}
       >
         {children}

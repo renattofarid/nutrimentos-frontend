@@ -137,6 +137,7 @@ export interface InventoryItem {
   warehouse_id: number;
   warehouse_name: string;
   product_id: number;
+  product_code: string;
   product_name: string;
   stock: string;
   min_stock: string;

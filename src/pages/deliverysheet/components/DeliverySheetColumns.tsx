@@ -126,6 +126,20 @@ export const getDeliverySheetColumns = ({
     },
   },
   {
+    accessorKey: "created_at",
+    header: "Fecha de Creación",
+    cell: ({ getValue }) => {
+      const date = new Date(getValue() as string);
+      return date.toLocaleDateString("es-PE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    },
+  },
+  {
     id: "actions",
     header: "Acciones",
     cell: ({ row }) => {

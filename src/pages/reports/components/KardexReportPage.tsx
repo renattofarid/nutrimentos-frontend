@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
 import { useSidebar } from "@/components/ui/sidebar";
+import type { ProductResource } from "@/pages/product/lib/product.interface";
 
 interface FilterFormValues {
   product_id: string;
@@ -254,9 +255,10 @@ export default function KardexReportPage() {
               label="Producto"
               placeholder="Buscar producto..."
               useQueryHook={useProductAsyncSearch}
-              mapOptionFn={(item) => ({
+              mapOptionFn={(item: ProductResource) => ({
                 label: item.name,
                 value: String(item.id),
+                description: item.codigo,
               })}
             />
 

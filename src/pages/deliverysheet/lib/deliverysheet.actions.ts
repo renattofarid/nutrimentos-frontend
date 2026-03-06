@@ -13,6 +13,34 @@ import type {
 import { DELIVERY_SHEET_ENDPOINT } from "./deliverysheet.interface";
 
 // ============================================
+// EXPORT
+// ============================================
+
+export interface ExportDeliverySheetsParams {
+  branch_id?: number | null;
+  company_id?: number | null;
+  customer_id?: number | null;
+  delivery_date_from?: string | null;
+  delivery_date_to?: string | null;
+  driver_id?: number | null;
+  issue_date_from?: string | null;
+  issue_date_to?: string | null;
+  status?: "PENDIENTE" | "EN_REPARTO" | "RENDIDA" | "CERRADA" | "ANULADA" | null;
+  type?: "CONTADO" | "CREDITO" | null;
+  zone_id?: number | null;
+}
+
+export const exportDeliverySheets = async (
+  params: ExportDeliverySheetsParams
+): Promise<Blob> => {
+  const response = await api.get<Blob>(`${DELIVERY_SHEET_ENDPOINT}/export`, {
+    params,
+    responseType: "blob",
+  });
+  return response.data;
+};
+
+// ============================================
 // DELIVERY SHEET - Main CRUD Actions
 // ============================================
 

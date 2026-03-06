@@ -118,6 +118,13 @@ export const CreditNoteColumns = ({
     },
   },
   {
+    accessorKey: "user.name",
+    header: "Usuario",
+    cell: ({ getValue }) => (
+      <span className="font-semibold">{getValue() as string}</span>
+    ),
+  },
+  {
     accessorKey: "created_at",
     header: "Fecha de Creación",
     cell: ({ getValue }) => {

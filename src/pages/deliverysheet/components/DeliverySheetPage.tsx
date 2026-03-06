@@ -12,11 +12,14 @@ import {
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import DeliverySheetDetailSheet from "./DeliverySheetDetailSheet";
 import { StatusUpdateDialog } from "./StatusUpdateDialog";
-import { findDeliverySheetById } from "../lib/deliverysheet.actions";
+import {
+  findDeliverySheetById,
+  exportDeliverySheets,
+} from "../lib/deliverysheet.actions";
 import TitleComponent from "@/components/TitleComponent";
 import PageWrapper from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, FileSpreadsheet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import type { DeliverySheetStatusSchema } from "../lib/deliverysheet.schema";
@@ -24,6 +27,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import DeliverySheetOptions from "./DeliverySheetOptions";
 import { useDeliverySheets } from "../lib/deliverysheet.hook";
+import { toast } from "sonner";
 
 export default function DeliverySheetPage() {
   const navigate = useNavigate();
@@ -41,25 +45,94 @@ export default function DeliverySheetPage() {
   const [openStatusDialog, setOpenStatusDialog] = useState(false);
 
   const [search, setSearch] = useState("");
-
-  const [start_date, setStartDate] = useState<Date | undefined>();
-  const [end_date, setEndDate] = useState<Date | undefined>();
+  const [status, setStatus] = useState("");
+  const [type, setType] = useState("");
+  const [customer_id, setCustomerId] = useState("");
+  const [driver_id, setDriverId] = useState("");
+  const [zone_id, setZoneId] = useState("");
+  const [branch_id, setBranchId] = useState("");
+  const [company_id, setCompanyId] = useState("");
+  const [issue_date_from, setIssueDateFrom] = useState<Date | undefined>();
+  const [issue_date_to, setIssueDateTo] = useState<Date | undefined>();
+  const [delivery_date_from, setDeliveryDateFrom] = useState<Date | undefined>();
+  const [delivery_date_to, setDeliveryDateTo] = useState<Date | undefined>();
+  const [isExporting, setIsExporting] = useState(false);
 
   const { removeDeliverySheet, updateStatus } = useDeliverySheetStore();
 
   const { data, refetch, isLoading } = useDeliverySheets({
     page,
     per_page: perPage,
-    search,
-    issue_date: [
-      start_date ? start_date.toISOString().split("T")[0] : undefined,
-      end_date ? end_date.toISOString().split("T")[0] : undefined,
-    ],
+    search: search || undefined,
+    status: status || undefined,
+    type: type || undefined,
+    customer_id: customer_id ? Number(customer_id) : undefined,
+    driver_id: driver_id ? Number(driver_id) : undefined,
+    zone_id: zone_id ? Number(zone_id) : undefined,
+    date_from: issue_date_from
+      ? issue_date_from.toISOString().split("T")[0]
+      : undefined,
+    date_to: issue_date_to
+      ? issue_date_to.toISOString().split("T")[0]
+      : undefined,
   });
 
   useEffect(() => {
-    setPage(1); // Reset to first page on filter change
-  }, [page, perPage, search, start_date, end_date]);
+    setPage(1);
+  }, [
+    search,
+    status,
+    type,
+    customer_id,
+    driver_id,
+    zone_id,
+    branch_id,
+    company_id,
+    issue_date_from,
+    issue_date_to,
+    delivery_date_from,
+    delivery_date_to,
+  ]);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const blob = await exportDeliverySheets({
+        branch_id: branch_id ? Number(branch_id) : null,
+        company_id: company_id ? Number(company_id) : null,
+        customer_id: customer_id ? Number(customer_id) : null,
+        delivery_date_from: delivery_date_from
+          ? delivery_date_from.toISOString().split("T")[0]
+          : null,
+        delivery_date_to: delivery_date_to
+          ? delivery_date_to.toISOString().split("T")[0]
+          : null,
+        driver_id: driver_id ? Number(driver_id) : null,
+        issue_date_from: issue_date_from
+          ? issue_date_from.toISOString().split("T")[0]
+          : null,
+        issue_date_to: issue_date_to
+          ? issue_date_to.toISOString().split("T")[0]
+          : null,
+        status: (status as any) || null,
+        type: (type as any) || null,
+        zone_id: zone_id ? Number(zone_id) : null,
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "planillas-reparto.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Planillas exportadas exitosamente");
+    } catch {
+      toast.error("Error al exportar las planillas");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleDelete = (id: number) => {
     setDeliverySheetToDelete(id);
@@ -123,10 +196,21 @@ export default function DeliverySheetPage() {
           subtitle="Administrar todas las planillas de reparto registradas en el sistema"
           icon={ICON}
         />
-        <Button size={"sm"} onClick={() => navigate(ROUTE_ADD)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nueva Planilla
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size={"sm"}
+            variant="outline"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            {isExporting ? "Exportando..." : "Exportar"}
+          </Button>
+          <Button size={"sm"} onClick={() => navigate(ROUTE_ADD)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nueva Planilla
+          </Button>
+        </div>
       </div>
 
       <DeliverySheetTable
@@ -137,11 +221,31 @@ export default function DeliverySheetPage() {
         <DeliverySheetOptions
           search={search}
           setSearch={setSearch}
-          start_date={start_date}
-          end_date={end_date}
-          onDateChange={(from, to) => {
-            setStartDate(from);
-            setEndDate(to);
+          status={status}
+          setStatus={setStatus}
+          type={type}
+          setType={setType}
+          customer_id={customer_id}
+          setCustomerId={setCustomerId}
+          driver_id={driver_id}
+          setDriverId={setDriverId}
+          zone_id={zone_id}
+          setZoneId={setZoneId}
+          branch_id={branch_id}
+          setBranchId={setBranchId}
+          company_id={company_id}
+          setCompanyId={setCompanyId}
+          issue_date_from={issue_date_from}
+          issue_date_to={issue_date_to}
+          onIssueDateChange={(from, to) => {
+            setIssueDateFrom(from);
+            setIssueDateTo(to);
+          }}
+          delivery_date_from={delivery_date_from}
+          delivery_date_to={delivery_date_to}
+          onDeliveryDateChange={(from, to) => {
+            setDeliveryDateFrom(from);
+            setDeliveryDateTo(to);
           }}
         />
       </DeliverySheetTable>

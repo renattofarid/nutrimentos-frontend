@@ -21,7 +21,7 @@ export default function CreditNoteTable({
         columns={columns}
         data={data}
         isLoading={isLoading}
-        initialColumnVisibility={{}}
+        initialColumnVisibility={{ created_at: false }}
       >
         {children}
       </DataTable>

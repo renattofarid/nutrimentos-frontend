@@ -21,7 +21,9 @@ export default function PurchaseCreditNoteTable({
         columns={columns}
         data={data}
         isLoading={isLoading}
-        initialColumnVisibility={{}}
+        initialColumnVisibility={{
+          created_at: false,
+        }}
       >
         {children}
       </DataTable>

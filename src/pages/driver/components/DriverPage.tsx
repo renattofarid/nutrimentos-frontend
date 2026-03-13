@@ -36,11 +36,15 @@ export default function DriverPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [roleAssignmentPerson, setRoleAssignmentPerson] =
     useState<PersonResource | null>(null);
-  const { data, isLoading, refetch } = useDrivers();
+  const { data, isLoading, refetch } = useDrivers({
+    page,
+    per_page,
+    search,
+  });
 
   useEffect(() => {
     setPage(1);
-  }, [page, search, per_page]);
+  }, [search, per_page]);
 
   const handleDelete = async () => {
     if (!deleteId) return;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   useDeliverySheetReport,
@@ -42,7 +42,6 @@ import { exportDeliverySheetReport } from "../lib/reports.actions";
 import { toast } from "sonner";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
-import { useSidebar } from "@/components/ui/sidebar";
 
 interface FilterFormValues {
   customer_id: string;
@@ -275,13 +274,7 @@ export default function DeliverySheetReportPage() {
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
-  const { setOpen, setOpenMobile } = useSidebar();
   const { data: rawData, isLoading, fetch } = useDeliverySheetReport();
-
-  useEffect(() => {
-    setOpen(false);
-    setOpenMobile(false);
-  }, []);
 
   const form = useForm<FilterFormValues>({
     defaultValues: {

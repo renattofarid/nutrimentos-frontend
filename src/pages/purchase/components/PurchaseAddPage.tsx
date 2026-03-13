@@ -15,12 +15,10 @@ import { PURCHASE } from "../lib/purchase.interface";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
-import { useSidebar } from "@/components/ui/sidebar";
 
 export default function PurchaseAddPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { setOpen, setOpenMobile } = useSidebar();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { MODEL, ICON } = PURCHASE;
   const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({
@@ -44,11 +42,6 @@ export default function PurchaseAddPage() {
     refetchSuppliers();
     refetchWarehouses();
     refetchBranches();
-  }, []);
-
-  useEffect(() => {
-    setOpen(false);
-    setOpenMobile(false);
   }, []);
 
   const isLoading = !suppliers || warehousesLoading || branchesLoading;

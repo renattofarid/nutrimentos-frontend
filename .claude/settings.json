@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const lr = require\\(''./node_modules/lucide-react''\\); console.log\\(''ShieldUser:'', !!lr.ShieldUser\\)\")"
+    ]
+  }
+}

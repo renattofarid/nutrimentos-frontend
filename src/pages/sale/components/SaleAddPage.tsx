@@ -13,14 +13,12 @@ import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { SALE } from "../lib/sale.interface";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
-import { useSidebar } from "@/components/ui/sidebar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 
 export const SaleAddPage = () => {
   const { ICON } = SALE;
-  const { setOpen, setOpenMobile } = useSidebar();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuthStore();
@@ -35,11 +33,6 @@ export const SaleAddPage = () => {
 
   useEffect(() => {
     onRefreshWarehouses();
-  }, []);
-
-  useEffect(() => {
-    setOpen(false);
-    setOpenMobile(false);
   }, []);
 
   const { createSale } = useSaleStore();

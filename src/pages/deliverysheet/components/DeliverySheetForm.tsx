@@ -436,6 +436,7 @@ export const DeliverySheetForm = ({
                       </TableHead>
                       <TableHead>Documento</TableHead>
                       <TableHead>Cliente</TableHead>
+                      <TableHead>Vendedor</TableHead>
                       <TableHead>Fecha</TableHead>
                       <TableHead>Nota de Crédito</TableHead>
                       <TableHead className="text-right">Total</TableHead>
@@ -466,6 +467,11 @@ export const DeliverySheetForm = ({
                         <TableCell>
                           {sale.customer.business_name ??
                             `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`}
+                        </TableCell>
+                        <TableCell>
+                          {sale.vendedor
+                            ? `${sale.vendedor.names} ${sale.vendedor.father_surname} ${sale.vendedor.mother_surname}`
+                            : "-"}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
@@ -535,10 +541,14 @@ export const DeliverySheetForm = ({
                   {selectedSaleIds.length} ventas
                 </span>
                 <span className="font-semibold">
-                  Peso: <span className="font-bold">{totalWeight.toFixed(2)} kg</span>
+                  Peso:{" "}
+                  <span className="font-bold">{totalWeight.toFixed(2)} kg</span>
                 </span>
                 <span className="font-semibold">
-                  Total: <span className="font-bold">S/. {totalAmount.toFixed(2)}</span>
+                  Total:{" "}
+                  <span className="font-bold">
+                    S/. {totalAmount.toFixed(2)}
+                  </span>
                 </span>
               </div>
             </div>

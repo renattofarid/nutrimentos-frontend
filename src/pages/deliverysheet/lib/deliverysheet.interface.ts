@@ -312,7 +312,8 @@ export interface AvailableSale {
   branch_id: number;
   warehouse_id: number;
   customer_id: number;
-  vendedor_id: number | null;
+  person_zone_id?: number;
+  vendedor_id?: number;
   user_id: number;
   document_type: string;
   serie: string;
@@ -334,13 +335,47 @@ export interface AvailableSale {
   amount_other: string;
   currency: string;
   status: string;
-  electronic_invoice_id: number | null;
+  electronic_invoice_id?: number;
   is_electronic: number;
-  observations: string | null;
+  observations?: string;
   created_at: string;
+  person_zone: PersonZone;
+  vendedor: Vendedor;
   customer: AvailableSaleCustomer;
   details: AvailableSaleDetail[];
   credit_notes?: CreditNoteResource[];
+}
+
+interface Vendedor {
+  id: number;
+  number_document: string;
+  type_person: string;
+  names: string;
+  father_surname: string;
+  mother_surname: string;
+  gender: string;
+  birth_date: string;
+  phone: string;
+  email: string;
+  address: null;
+  business_name: null;
+  commercial_name: null;
+  occupation: null;
+  job_position_id: null;
+  business_type_id: null;
+  zone_id: null;
+  created_at: string;
+  document_type_id: number;
+}
+
+interface PersonZone {
+  id: number;
+  person_id: number;
+  zone_id: number;
+  address: string;
+  is_primary: boolean;
+  created_at: string;
+  zone: Zone;
 }
 
 export interface AvailableSalesResponse {

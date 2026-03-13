@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TitleFormComponent from "@/components/TitleFormComponent";
 import { ProductForm } from "./ProductForm";
@@ -23,7 +23,6 @@ import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 import PageWrapper from "@/components/PageWrapper";
-import { useSidebar } from "@/components/ui/sidebar";
 
 const { MODEL, ROUTE, ICON } = PRODUCT;
 
@@ -31,7 +30,6 @@ export default function ProductAddPage() {
   const navigate = useNavigate();
   const { createProduct } = useProductStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { setOpen, setOpenMobile } = useSidebar();
   const { data: companies } = useAllCompanies();
   const { data: categories } = useAllCategories();
   const { data: brands } = useAllBrands();
@@ -41,12 +39,6 @@ export default function ProductAddPage() {
   const { data: suppliers } = useAllPersons({
     role_names: [SUPPLIER_ROLE_CODE],
   });
-
-  useEffect(() => {
-    setOpen(false);
-    setOpenMobile(false);
-  }, []);
-
   const getDefaultValues = (): Partial<ProductSchema> => ({
     codigo: "",
     name: "",

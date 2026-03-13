@@ -24,7 +24,6 @@ import { toast } from "sonner";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { FilterMultiSelect } from "@/components/FilterMultiSelect";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
-import { useSidebar } from "@/components/ui/sidebar";
 
 interface FilterFormValues {
   zone_ids: string[];
@@ -142,7 +141,6 @@ const columns: ColumnDef<CarLoadRow>[] = [
 export default function CarLoadReportPage() {
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
-  const { setOpen, setOpenMobile } = useSidebar();
   const { data: rawData, isLoading, fetch } = useCarLoadReport();
   const { data: zonesData } = useZoneAsyncSearch({ per_page: 100 });
 
@@ -150,11 +148,6 @@ export default function CarLoadReportPage() {
     label: z.name,
     value: String(z.id),
   }));
-
-  useEffect(() => {
-    setOpen(false);
-    setOpenMobile(false);
-  }, []);
 
   const form = useForm<FilterFormValues>({
     defaultValues: {

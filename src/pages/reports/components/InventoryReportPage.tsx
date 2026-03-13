@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useInventoryReport } from "../lib/reports.hook";
 import {
@@ -21,7 +21,6 @@ import PageWrapper from "@/components/PageWrapper";
 import { exportInventoryReport } from "../lib/reports.actions";
 import { toast } from "sonner";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
-import { useSidebar } from "@/components/ui/sidebar";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 
 interface FilterFormValues {
@@ -135,18 +134,12 @@ export default function InventoryReportPage() {
 
   const { data: rawData, isLoading, fetch } = useInventoryReport();
 
-  const { setOpen, setOpenMobile } = useSidebar();
   const form = useForm<FilterFormValues>({
     defaultValues: {
       product_id: "",
       warehouse_id: "",
     },
   });
-
-  useEffect(() => {
-    setOpen(false);
-    setOpenMobile(false);
-  }, []);
 
   const handleSearch = (values: FilterFormValues) => {
     const params: InventoryReportParams = {

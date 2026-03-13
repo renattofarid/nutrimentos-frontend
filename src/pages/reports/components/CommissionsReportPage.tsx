@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   useCommissionsReport,
@@ -38,7 +38,6 @@ import { toast } from "sonner";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { FormSelect } from "@/components/FormSelect";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
-import { useSidebar } from "@/components/ui/sidebar";
 
 interface FilterFormValues {
   document_type: string;
@@ -199,13 +198,7 @@ export default function CommissionsReportPage() {
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
-  const { setOpen, setOpenMobile } = useSidebar();
   const { data: rawData, isLoading, fetch } = useCommissionsReport();
-
-  useEffect(() => {
-    setOpen(false);
-    setOpenMobile(false);
-  }, []);
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
@@ -451,4 +444,3 @@ export default function CommissionsReportPage() {
     </PageWrapper>
   );
 }
-

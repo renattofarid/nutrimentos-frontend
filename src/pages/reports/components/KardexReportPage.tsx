@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useKardexReport } from "../lib/reports.hook";
 import {
@@ -19,7 +19,6 @@ import { exportKardexReport } from "../lib/reports.actions";
 import { toast } from "sonner";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
-import { useSidebar } from "@/components/ui/sidebar";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 
 interface FilterFormValues {
@@ -149,13 +148,7 @@ const columns: ColumnDef<KardexItem>[] = [
 export default function KardexReportPage() {
   const [isExporting, setIsExporting] = useState(false);
 
-  const { setOpen, setOpenMobile } = useSidebar();
   const { data: rawData, isLoading, fetch } = useKardexReport();
-
-  useEffect(() => {
-    setOpen(false);
-    setOpenMobile(false);
-  }, []);
 
   const form = useForm<FilterFormValues>({
     defaultValues: {

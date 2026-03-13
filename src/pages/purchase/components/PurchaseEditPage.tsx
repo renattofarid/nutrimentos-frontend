@@ -15,7 +15,6 @@ import type { PurchaseSchema } from "../lib/purchase.schema";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
-import { useSidebar } from "@/components/ui/sidebar";
 
 export default function PurchaseEditPage() {
   const { ICON } = PURCHASE;
@@ -41,7 +40,6 @@ export default function PurchaseEditPage() {
   });
   const { updatePurchase, fetchPurchase, purchase, isFinding } =
     usePurchaseStore();
-  const { setOpen, setOpenMobile } = useSidebar();
 
   useEffect(() => {
     refetchSuppliers();
@@ -49,10 +47,6 @@ export default function PurchaseEditPage() {
     refetchBranches();
   }, []);
 
-  useEffect(() => {
-    setOpen(false);
-    setOpenMobile(false);
-  }, []);
 
   const isLoading =
     !suppliers || warehousesLoading || branchesLoading || isFinding;

@@ -11,14 +11,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import PageWrapper from "@/components/PageWrapper";
 import { DataTable } from "@/components/DataTable";
-import { SearchableSelectAsync } from "@/components/SearchableSelectAsync";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import { parseFormattedNumber } from "@/lib/utils";
 import { findDeliverySheetById } from "../lib/deliverysheet.actions";
 import { useDeliverySheetStore } from "../lib/deliverysheet.store";
-import { useDeliverySheets } from "../lib/deliverysheet.hook";
+import { useAllDeliverySheets } from "../lib/deliverysheet.hook";
 import type {
   DeliverySheetById,
-  DeliverySheetResource,
   SheetSale,
 } from "../lib/deliverysheet.interface";
 import { DELIVERY_SHEET } from "../lib/deliverysheet.interface";
@@ -43,6 +42,18 @@ export default function SettlementPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const { submitSettlement } = useDeliverySheetStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: sheetsData } = useAllDeliverySheets();
+  const sheetOptions = useMemo(
+    () =>
+      (sheetsData ?? [])
+        .filter((item) => parseFloat(item.pending_amount_raw) > 0)
+        .map((item) => ({
+          value: item.id.toString(),
+          label: `${item.sheet_number} - ${item.issue_date} > Pendiente: ${item.pending_amount}`,
+        })),
+    [sheetsData],
+  );
   const [expandedNotes, setExpandedNotes] = useState<Set<number>>(new Set());
 
   const form = useForm<SettlementFormSchema>({
@@ -199,22 +210,17 @@ export default function SettlementPage() {
           onBack={() => navigate(DELIVERY_SHEET.ROUTE)}
         />
 
-        <SearchableSelectAsync
+        <SearchableSelect
           label="Planilla de Cobranza"
-          placeholder="Buscar planilla..."
+          placeholder="Buscar planilla de cobranza"
           value={selectedId}
+          options={sheetOptions}
           onChange={(val) => {
             setSelectedId(val);
             setDeliverySheet(null);
             setErrors([]);
           }}
-          useQueryHook={useDeliverySheets}
-          mapOptionFn={(item: DeliverySheetResource) => ({
-            value: item.id.toString(),
-            label: item.sheet_number,
-            description: `${item.issue_date} > Total: ${item.collected_amount}`,
-          })}
-          withValue={false}
+          className="min-w-96"
         />
 
         {selectedId && isLoading && (

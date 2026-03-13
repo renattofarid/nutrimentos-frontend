@@ -21,7 +21,6 @@ import { useAllNationalities } from "@/pages/nationality/lib/nationality.hook";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import FormSkeleton from "@/components/FormSkeleton";
-import { useSidebar } from "@/components/ui/sidebar";
 import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL, ROUTE } = PRODUCT;
@@ -39,12 +38,7 @@ export default function ProductEditPage() {
   const { data: productTypes } = useAllProductTypes();
   const { data: nationalities } = useAllNationalities();
   const { data: suppliers } = useAllPersons();
-  const { setOpen, setOpenMobile } = useSidebar();
 
-  useEffect(() => {
-    setOpen(false);
-    setOpenMobile(false);
-  }, []);
 
   useEffect(() => {
     const loadProductData = async () => {

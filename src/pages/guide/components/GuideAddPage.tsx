@@ -25,7 +25,6 @@ import type { GuideSchema } from "../lib/guide.schema";
 import { GUIDE } from "../lib/guide.interface";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
-import { useSidebar } from "@/components/ui/sidebar";
 import { useAllClients } from "@/pages/client/lib/client.hook";
 import { useAllSuppliers } from "@/pages/supplier/lib/supplier.hook";
 
@@ -33,7 +32,6 @@ export default function GuideAddPage() {
   const { ROUTE, MODEL, ICON } = GUIDE;
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { setOpen, setOpenMobile } = useSidebar();
   const { user } = useAuthStore();
 
   const {
@@ -96,10 +94,6 @@ export default function GuideAddPage() {
     refetchVehicles();
   }, []);
 
-  useEffect(() => {
-    setOpen(false);
-    setOpenMobile(false);
-  }, []);
 
   const isLoading =
     branchesLoading ||

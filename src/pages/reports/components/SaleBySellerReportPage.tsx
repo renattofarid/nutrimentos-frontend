@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   useSaleBySellerReport,
@@ -25,7 +25,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileSpreadsheet, Search, Filter, ArrowUpDown, Package } from "lucide-react";
+import {
+  FileSpreadsheet,
+  Search,
+  Filter,
+  ArrowUpDown,
+  Package,
+} from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportSaleBySellerReport } from "../lib/reports.actions";
@@ -33,7 +39,6 @@ import { toast } from "sonner";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { FormSelect } from "@/components/FormSelect";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
-import { useSidebar } from "@/components/ui/sidebar";
 
 interface FilterFormValues {
   document_type: string;
@@ -260,13 +265,7 @@ const columns: ColumnDef<SaleWorkerReportResource>[] = [
 export default function SaleBySellerReportPage() {
   const [isExporting, setIsExporting] = useState(false);
 
-  const { setOpen, setOpenMobile } = useSidebar();
   const { data: rawData, isLoading, fetch } = useSaleBySellerReport();
-
-  useEffect(() => {
-    setOpen(false);
-    setOpenMobile(false);
-  }, []);
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
@@ -412,8 +411,6 @@ export default function SaleBySellerReportPage() {
               placeholder="Seleccionar rango"
             />
           </GroupFormSection>
-
-       
 
           {rawData && (
             <GroupFormSection

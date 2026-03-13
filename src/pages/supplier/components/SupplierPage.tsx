@@ -30,11 +30,15 @@ export default function SupplierPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [roleAssignmentPerson, setRoleAssignmentPerson] =
     useState<PersonResource | null>(null);
-  const { data, isLoading, refetch } = useSuppliers();
+  const { data, isLoading, refetch } = useSuppliers({
+    page,
+    per_page,
+    search,
+  });
 
   useEffect(() => {
     setPage(1);
-  }, [page, search, per_page]);
+  }, [search, per_page]);
 
   const handleDelete = async () => {
     if (!deleteId) return;

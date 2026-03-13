@@ -41,11 +41,15 @@ export default function ClientPage() {
   const [addressesPerson, setAddressesPerson] = useState<PersonResource | null>(
     null,
   );
-  const { data, isLoading, refetch } = useClients();
+  const { data, isLoading, refetch } = useClients({
+    page,
+    per_page,
+    search,
+  });
 
   useEffect(() => {
     setPage(1);
-  }, [page, search, per_page]);
+  }, [search, per_page]);
 
   const handleDelete = async () => {
     if (!deleteId) return;

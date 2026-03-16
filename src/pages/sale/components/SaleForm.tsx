@@ -951,6 +951,22 @@ export const SaleForm = ({
         >
           <FormSelect
             control={form.control}
+            name="branch_id"
+            label="Tienda"
+            placeholder="Seleccione una tienda"
+            options={
+              branches?.map((branch) => ({
+                value: branch.id.toString(),
+                label: branch.name,
+                description: branch.address,
+              })) || []
+            }
+            disabled={mode === "update"}
+            autoSelectSingle
+          />
+
+          <FormSelect
+            control={form.control}
             name="document_type"
             label="Tipo de Documento"
             placeholder="Seleccione tipo"
@@ -958,6 +974,55 @@ export const SaleForm = ({
               value: dt.value,
               label: dt.label,
             }))}
+          />
+
+          <DatePickerFormField
+            control={form.control}
+            name="issue_date"
+            label="Fecha de Emisión"
+            placeholder="Seleccione fecha"
+            dateFormat="dd/MM/yyyy"
+            disabledRange={{
+              after: new Date(),
+            }}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="person_zone_id"
+            label="Zona"
+            placeholder="Seleccione dirección"
+            options={customerAddresses.map((addr) => ({
+              value: addr.id.toString(),
+              label: addr.zone_name + (addr.is_primary ? " (Principal)" : ""),
+              description: addr.address,
+            }))}
+            disabled={!selectedCustomerId || customerAddresses.length === 0}
+          />
+
+
+          <FormSelect
+            control={form.control}
+            name="currency"
+            label="Moneda"
+            placeholder="Seleccione moneda"
+            options={CURRENCIES.map((c) => ({
+              value: c.value,
+              label: c.label,
+            }))}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="warehouse_id"
+            label="Almacén"
+            placeholder="Seleccione un almacén"
+            options={filteredWarehouses.map((warehouse) => ({
+              value: warehouse.id.toString(),
+              label: warehouse.name,
+            }))}
+            disabled={mode === "update" || !selectedBranchId}
+            autoSelectSingle
           />
 
           <div className="flex gap-2 items-end">
@@ -1003,48 +1068,6 @@ export const SaleForm = ({
 
           <FormSelect
             control={form.control}
-            name="person_zone_id"
-            label="Dirección de Entrega"
-            placeholder="Seleccione dirección"
-            options={customerAddresses.map((addr) => ({
-              value: addr.id.toString(),
-              label: addr.zone_name + (addr.is_primary ? " (Principal)" : ""),
-              description: addr.address,
-            }))}
-            disabled={!selectedCustomerId || customerAddresses.length === 0}
-          />
-
-          <FormSelect
-            control={form.control}
-            name="branch_id"
-            label="Tienda"
-            placeholder="Seleccione una tienda"
-            options={
-              branches?.map((branch) => ({
-                value: branch.id.toString(),
-                label: branch.name,
-                description: branch.address,
-              })) || []
-            }
-            disabled={mode === "update"}
-            autoSelectSingle
-          />
-
-          <FormSelect
-            control={form.control}
-            name="warehouse_id"
-            label="Almacén"
-            placeholder="Seleccione un almacén"
-            options={filteredWarehouses.map((warehouse) => ({
-              value: warehouse.id.toString(),
-              label: warehouse.name,
-            }))}
-            disabled={mode === "update" || !selectedBranchId}
-            autoSelectSingle
-          />
-
-          <FormSelect
-            control={form.control}
             name="vendedor_id"
             label="Vendedor"
             placeholder="Seleccionar vendedor"
@@ -1065,28 +1088,6 @@ export const SaleForm = ({
             options={PAYMENT_TYPES.map((pt) => ({
               value: pt.value,
               label: pt.label,
-            }))}
-          />
-
-          <DatePickerFormField
-            control={form.control}
-            name="issue_date"
-            label="Fecha de Emisión"
-            placeholder="Seleccione fecha"
-            dateFormat="dd/MM/yyyy"
-            disabledRange={{
-              after: new Date(),
-            }}
-          />
-
-          <FormSelect
-            control={form.control}
-            name="currency"
-            label="Moneda"
-            placeholder="Seleccione moneda"
-            options={CURRENCIES.map((c) => ({
-              value: c.value,
-              label: c.label,
             }))}
           />
 

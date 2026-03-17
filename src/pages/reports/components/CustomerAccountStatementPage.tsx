@@ -19,7 +19,6 @@ import { FormSelect } from "@/components/FormSelect";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
 import { exportCustomerAccountStatement } from "../lib/reports.actions";
-import { toast } from "sonner";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import type { Option } from "@/lib/core.interface";
@@ -27,6 +26,7 @@ import {
   transformCustomerAccountStatementData,
   calculateAccountStatementMetrics,
 } from "../lib/reports.utils";
+import { errorToast, successToast } from "@/lib/core.function";
 
 export const CustomerAccountStatementTitle = "Estado de Cuenta de Clientes";
 
@@ -327,11 +327,11 @@ export default function CustomerAccountStatementPage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success(
+      successToast(
         `Reporte exportado exitosamente en formato ${exportType.toUpperCase()}`,
       );
     } catch (error) {
-      toast.error("Error al exportar el reporte");
+      errorToast("Error al exportar el reporte");
       console.error(error);
     } finally {
       setIsExporting(false);

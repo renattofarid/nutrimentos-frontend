@@ -8,7 +8,6 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Loader, Save, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { toast } from "sonner";
 import PageWrapper from "@/components/PageWrapper";
 import { DataTable } from "@/components/DataTable";
 import { SearchableSelect } from "@/components/SearchableSelect";
@@ -31,6 +30,7 @@ import {
   SettlementSummary,
   SaleTableWithNotes,
 } from "./settlement";
+import { errorToast, successToast } from "@/lib/core.function";
 
 export default function SettlementPage() {
   const navigate = useNavigate();
@@ -112,7 +112,7 @@ export default function SettlementPage() {
             error.response?.data?.error ||
             "Error al cargar la planilla de reparto",
         ]);
-        toast.error("Error al cargar la planilla");
+        errorToast("Error al cargar la planilla");
       } finally {
         setIsLoading(false);
       }
@@ -123,7 +123,7 @@ export default function SettlementPage() {
 
   const handleSubmit = async (data: SettlementFormSchema) => {
     if (!deliverySheet) {
-      toast.error("No se encontró la planilla de reparto");
+      errorToast("No se encontró la planilla de reparto");
       return;
     }
 
@@ -139,7 +139,7 @@ export default function SettlementPage() {
         setErrors([
           `Debe seleccionar el estado de entrega para todas las boletas (${invalidSales.length} pendientes)`,
         ]);
-        toast.error("Completar todos los estados de entrega");
+        errorToast("Completar todos los estados de entrega");
         return;
       }
 
@@ -158,7 +158,7 @@ export default function SettlementPage() {
       };
 
       await submitSettlement(deliverySheet.id, settlementData);
-      toast.success("Rendición registrada exitosamente");
+      successToast("Rendición registrada exitosamente");
       navigate(DELIVERY_SHEET.ROUTE);
     } catch (error: any) {
       console.error("Error al registrar la rendición:", error);
@@ -167,7 +167,7 @@ export default function SettlementPage() {
         error.response?.data?.error ||
         "Error al registrar la rendición";
       setErrors([errorMessage]);
-      toast.error(errorMessage);
+      errorToast(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

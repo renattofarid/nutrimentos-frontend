@@ -20,10 +20,11 @@ import { FileText, Search, Filter, Truck, Scale } from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportCarLoadReport } from "../lib/reports.actions";
-import { toast } from "sonner";
+
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { FilterMultiSelect } from "@/components/FilterMultiSelect";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
+import { errorToast, successToast } from "@/lib/core.function";
 
 interface FilterFormValues {
   zone_ids: string[];
@@ -189,9 +190,9 @@ export default function CarLoadReportPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast.success("Reporte de Llenado de Carros exportado exitosamente");
+      successToast("Reporte de Llenado de Carros exportado exitosamente");
     } catch {
-      toast.error("Error al exportar el reporte de Llenado de Carros");
+      errorToast("Error al exportar el reporte de Llenado de Carros");
     } finally {
       setIsExportingPdf(false);
     }

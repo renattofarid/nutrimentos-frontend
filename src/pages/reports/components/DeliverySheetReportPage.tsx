@@ -1,4 +1,4 @@
-import {  useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   useDeliverySheetReport,
@@ -39,9 +39,9 @@ import {
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportDeliverySheetReport } from "../lib/reports.actions";
-import { toast } from "sonner";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
+import { errorToast, successToast } from "@/lib/core.function";
 
 interface FilterFormValues {
   customer_id: string;
@@ -319,9 +319,9 @@ export default function DeliverySheetReportPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast.success("Reporte de Planilla de Cobranza exportado exitosamente");
+      successToast("Reporte de Planilla de Cobranza exportado exitosamente");
     } catch {
-      toast.error("Error al exportar el reporte de Planilla de Cobranza");
+      errorToast("Error al exportar el reporte de Planilla de Cobranza");
     } finally {
       setIsExportingExcel(false);
       setIsExportingPdf(false);

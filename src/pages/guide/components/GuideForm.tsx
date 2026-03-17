@@ -21,7 +21,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader, Truck, Search, Plus, Eye, EyeOff, Package, ShoppingCart } from "lucide-react";
+import {
+  Loader,
+  Truck,
+  Search,
+  Plus,
+  Eye,
+  EyeOff,
+  Package,
+  ShoppingCart,
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
@@ -48,10 +57,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { format } from "date-fns";
 import { getSalesByRange } from "@/pages/sale/lib/sale.actions";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
-import { toast } from "sonner";
 import { useDrivers } from "@/pages/driver/lib/driver.hook";
 import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
-import { successToast } from "@/lib/core.function";
+import { errorToast, successToast, warningToast } from "@/lib/core.function";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useUbigeosFrom, useUbigeosTo } from "../lib/ubigeo.hook";
 import { Switch } from "@/components/ui/switch";
@@ -126,7 +134,17 @@ export const GuideForm = ({
       quantity_kg: string;
       unit_code: string;
     }[]
-  >([{ product_id: "", product_code: "", product_name: "", description: "", quantity_sacks: "", quantity_kg: "", unit_code: "KGM" }]);
+  >([
+    {
+      product_id: "",
+      product_code: "",
+      product_name: "",
+      description: "",
+      quantity_sacks: "",
+      quantity_kg: "",
+      unit_code: "KGM",
+    },
+  ]);
 
   // Búsqueda async de producto por código (al dar Tab en la grilla)
   const [productCodeSearch, setProductCodeSearch] = useState<{
@@ -138,9 +156,12 @@ export const GuideForm = ({
     setError: (msg: string) => void;
   } | null>(null);
 
-  const { data: productSearchResult, isFetching: isSearchingProduct } = useProduct(
-    productCodeSearch ? { codigo: productCodeSearch.code, direction: "asc" } : undefined
-  );
+  const { data: productSearchResult, isFetching: isSearchingProduct } =
+    useProduct(
+      productCodeSearch
+        ? { codigo: productCodeSearch.code, direction: "asc" }
+        : undefined,
+    );
 
   // Estado para búsqueda de transportista
   const [isSearchingCarrier, setIsSearchingCarrier] = useState(false);
@@ -219,7 +240,7 @@ export const GuideForm = ({
           existingCarrier.business_name ||
             `${existingCarrier.names} ${existingCarrier.father_surname}`.trim(),
         );
-        toast.success("Transportista encontrado en el sistema");
+        successToast("Transportista encontrado en el sistema");
         return;
       }
 
@@ -227,13 +248,13 @@ export const GuideForm = ({
       const result = await searchRUC({ search: documentNumber });
       if (result && isValidData(result.message) && result.data) {
         form.setValue("carrier_name", result.data.business_name || "");
-        toast.success("Datos obtenidos de SUNAT");
+        successToast("Datos obtenidos de SUNAT");
       } else {
-        toast.warning("No se encontró información del RUC");
+        warningToast("No se encontró información del RUC");
       }
     } catch (error) {
       console.error("Error searching carrier document:", error);
-      toast.error("Error al buscar el documento");
+      errorToast("Error al buscar el documento");
     } finally {
       setIsSearchingCarrier(false);
     }
@@ -261,7 +282,7 @@ export const GuideForm = ({
       !searchParams.numero_inicio ||
       !searchParams.numero_fin
     ) {
-      toast.error("Complete todos los campos de búsqueda");
+      errorToast("Complete todos los campos de búsqueda");
       return;
     }
 
@@ -270,7 +291,7 @@ export const GuideForm = ({
       const response = await getSalesByRange(searchParams);
 
       if (response.data.length === 0) {
-        toast.warning("No se encontraron ventas en el rango especificado");
+        warningToast("No se encontraron ventas en el rango especificado");
         setSalesByRange([]);
         return;
       }
@@ -287,7 +308,7 @@ export const GuideForm = ({
       );
 
       // if (response.meta.tiene_faltantes) {
-      //   toast.warning(
+      //   warningToast(
       //     `Hay números faltantes en el rango: ${response.meta.numeros_faltantes?.join(
       //       ", "
       //     )}`
@@ -295,7 +316,7 @@ export const GuideForm = ({
       // }
     } catch (error) {
       console.error("Error searching sales by range:", error);
-      toast.error("Error al buscar ventas");
+      errorToast("Error al buscar ventas");
       setSalesByRange([]);
     } finally {
       setIsSearchingSales(false);
@@ -335,7 +356,15 @@ export const GuideForm = ({
   const handleAddDetail = () => {
     setCustomDetails((prev) => [
       ...prev,
-      { product_id: "", product_code: "", product_name: "", description: "", quantity_sacks: "", quantity_kg: "", unit_code: "KGM" },
+      {
+        product_id: "",
+        product_code: "",
+        product_name: "",
+        description: "",
+        quantity_sacks: "",
+        quantity_kg: "",
+        unit_code: "KGM",
+      },
     ]);
   };
 
@@ -343,29 +372,28 @@ export const GuideForm = ({
     setCustomDetails((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleDetailChange = (
-    index: number,
-    field: string,
-    value: string,
-  ) => {
+  const handleDetailChange = (index: number, field: string, value: string) => {
     setCustomDetails((prev) =>
       prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
     );
   };
 
-  const handleProductSelect = useCallback((index: number, product: ProductOption) => {
-    setCustomDetails((prev) => {
-      const updated = [...prev];
-      updated[index] = {
-        ...updated[index],
-        product_id: product.id,
-        product_code: product.codigo,
-        product_name: product.name,
-        description: product.name,
-      };
-      return updated;
-    });
-  }, []);
+  const handleProductSelect = useCallback(
+    (index: number, product: ProductOption) => {
+      setCustomDetails((prev) => {
+        const updated = [...prev];
+        updated[index] = {
+          ...updated[index],
+          product_id: product.id,
+          product_code: product.codigo,
+          product_name: product.name,
+          description: product.name,
+        };
+        return updated;
+      });
+    },
+    [],
+  );
 
   // Cuando useProduct retorna resultado, auto-seleccionar primer producto y avanzar celda
   useEffect(() => {
@@ -384,7 +412,7 @@ export const GuideForm = ({
       callbacks.advance();
     } else if (productSearchResult !== undefined) {
       callbacks.setError(
-        `No se encontró ningún producto con código "${productCodeSearch.code}"`
+        `No se encontró ningún producto con código "${productCodeSearch.code}"`,
       );
     }
 
@@ -394,7 +422,12 @@ export const GuideForm = ({
   }, [productSearchResult, isSearchingProduct]);
 
   const handleProductCodeTab = useCallback(
-    (rowIndex: number, code: string, advance: () => void, setError: (msg: string) => void) => {
+    (
+      rowIndex: number,
+      code: string,
+      advance: () => void,
+      setError: (msg: string) => void,
+    ) => {
       if (!code.trim()) {
         advance();
         return;
@@ -402,7 +435,7 @@ export const GuideForm = ({
       productCodeCallbacksRef.current = { advance, setError };
       setProductCodeSearch({ rowIndex, code });
     },
-    []
+    [],
   );
 
   // Auto-calcular totales cuando cambian los productos personalizados
@@ -453,14 +486,14 @@ export const GuideForm = ({
 
   const handleFormSubmit = (data: any) => {
     if (!useCustomDetails && selectedSales.length === 0) {
-      toast.error("Debe seleccionar al menos una venta");
+      errorToast("Debe seleccionar al menos una venta");
       return;
     }
 
     if (useCustomDetails) {
       const validDetails = customDetails.filter((d) => d.product_id);
       if (validDetails.length === 0) {
-        toast.error("Debe agregar al menos un producto");
+        errorToast("Debe agregar al menos un producto");
         return;
       }
     }
@@ -523,7 +556,7 @@ export const GuideForm = ({
   // Sin lista estática: la búsqueda es async por código (handleProductCodeTab)
   const productOptions: ProductOption[] = [];
 
-  const gridColumns: ExcelGridColumn<typeof customDetails[0]>[] = [
+  const gridColumns: ExcelGridColumn<(typeof customDetails)[0]>[] = [
     {
       id: "product_code",
       header: "Código",
@@ -567,7 +600,10 @@ export const GuideForm = ({
       render: (row, index) => (
         <SearchableSelect
           buttonSize="default"
-          options={UNIT_MEASUREMENTS.map((um) => ({ value: um.value, label: um.label }))}
+          options={UNIT_MEASUREMENTS.map((um) => ({
+            value: um.value,
+            label: um.label,
+          }))}
           value={row.unit_code}
           onChange={(value) => handleDetailChange(index, "unit_code", value)}
           placeholder="Unidad"
@@ -936,172 +972,172 @@ export const GuideForm = ({
 
           {/* Campos adicionales (ocultos por defecto) */}
           <div className={showAdvancedFields ? "contents" : "hidden"}>
-              {/* Selector de Conductor */}
-              <div className="md:col-span-2">
-                <FormSelectAsync
-                  name="driver_id"
-                  label="Conductor"
-                  control={form.control}
-                  placeholder="Buscar conductor..."
-                  useQueryHook={useDrivers}
-                  mapOptionFn={(driver) => ({
-                    value: driver.id.toString(),
-                    label:
+            {/* Selector de Conductor */}
+            <div className="md:col-span-2">
+              <FormSelectAsync
+                name="driver_id"
+                label="Conductor"
+                control={form.control}
+                placeholder="Buscar conductor..."
+                useQueryHook={useDrivers}
+                mapOptionFn={(driver) => ({
+                  value: driver.id.toString(),
+                  label:
+                    driver.business_name ||
+                    `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
+                  description: driver.number_document || "",
+                })}
+                onValueChange={(_value, driver) => {
+                  if (driver) {
+                    const docType =
+                      driver.document_type_name ||
+                      (driver.number_document?.length === 8 ? "DNI" : "CE");
+                    form.setValue("driver_document_type", docType);
+                    form.setValue(
+                      "driver_document_number",
+                      driver.number_document || "",
+                    );
+                    const fullName =
                       driver.business_name ||
-                      `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
-                    description: driver.number_document || "",
-                  })}
-                  onValueChange={(_value, driver) => {
-                    if (driver) {
-                      const docType =
-                        driver.document_type_name ||
-                        (driver.number_document?.length === 8 ? "DNI" : "CE");
-                      form.setValue("driver_document_type", docType);
-                      form.setValue(
-                        "driver_document_number",
-                        driver.number_document || "",
-                      );
-                      const fullName =
-                        driver.business_name ||
-                        `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
-                      form.setValue("driver_name", fullName);
-                    }
-                  }}
-                  preloadItemId={"37"}
-                >
-                  <Button type="button" variant="outline" size="icon" asChild>
-                    <Link to={DRIVER.ROUTE_ADD} target="_blank">
-                      <Plus className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </FormSelectAsync>
-              </div>
+                      `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
+                    form.setValue("driver_name", fullName);
+                  }
+                }}
+                preloadItemId={"37"}
+              >
+                <Button type="button" variant="outline" size="icon" asChild>
+                  <Link to={DRIVER.ROUTE_ADD} target="_blank">
+                    <Plus className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </FormSelectAsync>
+            </div>
 
-              <FormSelect
-                control={form.control}
-                name="driver_document_type"
-                label={`Tipo de Documento del Conductor${modalityValue === "PUBLICO" ? "" : " "}`}
-                placeholder="Seleccione tipo"
-                options={[
-                  { value: "DNI", label: "DNI" },
-                  { value: "CE", label: "Carnet de Extranjería" },
-                  { value: "PASAPORTE", label: "Pasaporte" },
-                ]}
-              />
+            <FormSelect
+              control={form.control}
+              name="driver_document_type"
+              label={`Tipo de Documento del Conductor${modalityValue === "PUBLICO" ? "" : " "}`}
+              placeholder="Seleccione tipo"
+              options={[
+                { value: "DNI", label: "DNI" },
+                { value: "CE", label: "Carnet de Extranjería" },
+                { value: "PASAPORTE", label: "Pasaporte" },
+              ]}
+            />
 
-              <FormField
-                control={form.control}
-                name="driver_document_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Número de Documento del Conductor
-                      {modalityValue === "PUBLICO" ? "" : " "}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        variant="default"
-                        placeholder="Ej: 12345678"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="driver_document_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Número de Documento del Conductor
+                    {modalityValue === "PUBLICO" ? "" : " "}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      variant="default"
+                      placeholder="Ej: 12345678"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="driver_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Nombre Completo del Conductor
-                      {modalityValue === "PUBLICO" ? "" : " "}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        variant="default"
-                        placeholder="Ej: Juan Pérez García"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="driver_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Nombre Completo del Conductor
+                    {modalityValue === "PUBLICO" ? "" : " "}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      variant="default"
+                      placeholder="Ej: Juan Pérez García"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="driver_license"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Licencia de Conducir
-                      {modalityValue === "PUBLICO" ? "" : " "}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        variant="default"
-                        placeholder="Ej: Q12345678"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="driver_license"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Licencia de Conducir
+                    {modalityValue === "PUBLICO" ? "" : " "}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      variant="default"
+                      placeholder="Ej: Q12345678"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="carrier_mtc_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Número MTC{modalityValue === "PUBLICO" ? "" : " "}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        variant="default"
-                        placeholder="Ej: MTC-123456"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="carrier_mtc_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Número MTC{modalityValue === "PUBLICO" ? "" : " "}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      variant="default"
+                      placeholder="Ej: MTC-123456"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormSelect
-                control={form.control}
-                name="unit_measurement"
-                label="Unidad de Medida"
-                placeholder="Seleccione"
-                options={UNIT_MEASUREMENTS.map((um) => ({
-                  value: um.value,
-                  label: um.label,
-                }))}
-              />
+            <FormSelect
+              control={form.control}
+              name="unit_measurement"
+              label="Unidad de Medida"
+              placeholder="Seleccione"
+              options={UNIT_MEASUREMENTS.map((um) => ({
+                value: um.value,
+                label: um.label,
+              }))}
+            />
 
-              <FormField
-                control={form.control}
-                name="total_packages"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total de Bultos (sacos)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        variant="default"
-                        placeholder="0"
-                        {...field}
-                        className="bg-muted"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="total_packages"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Total de Bultos (sacos)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      variant="default"
+                      placeholder="0"
+                      {...field}
+                      className="bg-muted"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         </GroupFormSection>
 

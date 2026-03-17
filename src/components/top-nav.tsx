@@ -14,7 +14,6 @@ import {
   NavigationMenuTrigger,
   NavigationMenuLink,
 } from "@/components/ui/navigation-menu";
-import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { TYPE_USER } from "@/pages/type-users/lib/typeUser.interface";
@@ -72,6 +71,7 @@ import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-
 import { SettlementTitle } from "@/pages/deliverysheet/components/settlement/SettlementHeader";
 import { CustomerAccountStatementTitle } from "@/pages/reports/components/CustomerAccountStatementPage";
 import type { LucideIcon } from "lucide-react";
+import { useWindowManager } from "@/stores/window-manager.store";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -381,7 +381,10 @@ export const navData: NavItem[] = [
 export function TopNav() {
   const { access } = useAuthStore();
   const [filteredNav, setFilteredNav] = useState<NavItem[]>([]);
-  const location = useLocation();
+  const { tabs, activeTabId, openTab } = useWindowManager();
+
+  const activeTab = tabs.find((t) => t.id === activeTabId);
+  const activePath = activeTab?.path ?? "";
 
   useEffect(() => {
     if (!ENABLE_PERMISSION_VALIDATION) {
@@ -409,10 +412,10 @@ export function TopNav() {
   }, [access]);
 
   const isSubItemActive = (url: string) =>
-    location.pathname === url || location.pathname.startsWith(url + "/");
+    activePath === url || activePath.startsWith(url + "/");
 
   const isItemActive = (item: NavItem): boolean => {
-    if (!item.items) return location.pathname === item.url;
+    if (!item.items) return activePath === item.url;
     return item.items.some((sub) => isSubItemActive(sub.url));
   };
 
@@ -439,17 +442,17 @@ export function TopNav() {
                         asChild
                         active={isSubItemActive(sub.url)}
                       >
-                        <Link
-                          to={sub.url}
+                        <button
+                          onClick={() => openTab(sub.url, sub.title)}
                           className={cn(
-                            "flex flex-row items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground",
+                            "w-full flex flex-row items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground",
                             isSubItemActive(sub.url) &&
                               "bg-accent/50 text-accent-foreground font-medium",
                           )}
                         >
                           {sub.icon && <sub.icon className="size-3.5 shrink-0" />}
                           <span>{sub.title}</span>
-                        </Link>
+                        </button>
                       </NavigationMenuLink>
                     </li>
                   ))}
@@ -459,8 +462,8 @@ export function TopNav() {
           ) : (
             <NavigationMenuItem key={item.title}>
               <NavigationMenuLink asChild active={isItemActive(item)}>
-                <Link
-                  to={item.url}
+                <button
+                  onClick={() => openTab(item.url, item.title)}
                   className={cn(
                     "inline-flex flex-row h-7 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
                     isItemActive(item) && "text-primary font-semibold",
@@ -468,7 +471,7 @@ export function TopNav() {
                 >
                   {item.icon && <item.icon className="size-3.5" />}
                   {item.title}
-                </Link>
+                </button>
               </NavigationMenuLink>
             </NavigationMenuItem>
           ),

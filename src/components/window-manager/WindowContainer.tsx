@@ -57,7 +57,7 @@ export function WindowContainer() {
       {tabs.map((tab) => (
         <div
           key={tab.id}
-          className="absolute inset-0 overflow-auto"
+          className="absolute inset-0 overflow-auto p-4"
           style={{ display: tab.id === activeTabId ? "block" : "none" }}
         >
           <WindowFrame tabId={tab.id} initialPath={tab.initialPath} />

@@ -678,6 +678,15 @@ export default function App() {
             path={SaleRoute}
             element={
               <ProtectedRoute path={SaleRoute}>
+                <SaleAddPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/ventas/listado"
+            element={
+              <ProtectedRoute path={SaleRoute}>
                 <SalePage />
               </ProtectedRoute>
             }
@@ -833,6 +842,14 @@ export default function App() {
           {/* Rutas de Planillas de Reparto */}
           <Route
             path={DeliverySheetRoute}
+            element={
+              <ProtectedRoute path={DeliverySheetRoute}>
+                <DeliverySheetAddPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/planillas/listado"
             element={
               <ProtectedRoute path={DeliverySheetRoute}>
                 <DeliverySheetPage />

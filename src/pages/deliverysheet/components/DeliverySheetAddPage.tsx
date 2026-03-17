@@ -11,6 +11,8 @@ import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import { useEffect } from "react";
 import { format } from "date-fns";
 import PageWrapper from "@/components/PageWrapper";
+import { Button } from "@/components/ui/button";
+import { List } from "lucide-react";
 
 export default function DeliverySheetAddPage() {
   const navigate = useNavigate();
@@ -33,14 +35,14 @@ export default function DeliverySheetAddPage() {
   const handleSubmit = async (data: DeliverySheetSchema) => {
     try {
       await createDeliverySheet(data);
-      navigate("/planillas");
+      navigate("/planillas/listado");
     } catch (error) {
       console.error("Error al crear planilla", error);
     }
   };
 
   const handleCancel = () => {
-    navigate("/planillas");
+    navigate("/planillas/listado");
   };
 
   const handleSearchSales = (params: {
@@ -71,6 +73,13 @@ export default function DeliverySheetAddPage() {
           mode="create"
           icon={ICON}
         />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => navigate("/planillas/listado")}
+        >
+          <List className="size-4 mr-2" /> Ver Listado
+        </Button>
       </div>
 
       <DeliverySheetForm

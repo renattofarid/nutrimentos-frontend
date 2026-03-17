@@ -102,7 +102,7 @@ export default function DeliverySheetOptions({
         onChange={setSearch}
         placeholder="Buscar por número, cliente o conductor"
       />
-
+      {/* 
       <SearchableSelect
         options={STATUS_OPTIONS}
         value={status}
@@ -129,7 +129,7 @@ export default function DeliverySheetOptions({
         value={driver_id}
         onChange={setDriverId}
         placeholder="Conductor"
-      />
+      /> */}
 
       <SearchableSelect
         options={zoneOptions}
@@ -137,7 +137,7 @@ export default function DeliverySheetOptions({
         onChange={setZoneId}
         placeholder="Zona"
       />
-
+      {/* 
       <SearchableSelect
         options={branchOptions}
         value={branch_id}
@@ -166,8 +166,7 @@ export default function DeliverySheetOptions({
         onDateChange={onDeliveryDateChange}
         placeholder="F. Reparto"
         className="w-[220px]"
-      />
-
+      /> */}
     </div>
   );
 }

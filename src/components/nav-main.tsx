@@ -16,8 +16,8 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useWindowManager } from "@/stores/window-manager.store";
 
 export function NavMain({
   items,
@@ -34,59 +34,37 @@ export function NavMain({
     }[];
   }[];
 }) {
-  const location = useLocation();
   const { state, setOpen } = useSidebar();
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
+  const { tabs, activeTabId, openTab } = useWindowManager();
 
-  // Función para verificar si algún subitem coincide con la ruta actual
+  const activeTab = tabs.find((t) => t.id === activeTabId);
+  const activePath = activeTab?.path ?? "";
+
+  const isSubItemActive = (url: string): boolean =>
+    activePath === url || activePath.startsWith(url + "/");
+
   const isItemActive = (item: (typeof items)[0]): boolean => {
-    if (!item.items) {
-      return location.pathname === item.url;
-    }
-    return item.items.some(
-      (subItem) =>
-        location.pathname === subItem.url ||
-        location.pathname.startsWith(subItem.url + "/")
-    );
+    if (!item.items) return activePath === item.url;
+    return item.items.some((sub) => isSubItemActive(sub.url));
   };
 
-  // Función para verificar si un subitem está activo
-  const isSubItemActive = (url: string): boolean => {
-    // Coincidencia exacta o coincidencia con sub-ruta (seguida de /)
-    return (
-      location.pathname === url ||
-      location.pathname.startsWith(url + "/")
-    );
-  };
-
-  // Efecto para abrir automáticamente el collapsible que contiene la ruta actual
   useEffect(() => {
     const newOpenItems: Record<string, boolean> = {};
     items.forEach((item) => {
       if (item.items) {
-        const shouldBeOpen = isItemActive(item);
-        newOpenItems[item.title] = shouldBeOpen;
+        newOpenItems[item.title] = isItemActive(item);
       }
     });
     setOpenItems(newOpenItems);
-  }, [location.pathname, items]);
+  }, [activePath, items]);
 
-  // Función para manejar el clic en un item cuando el sidebar está colapsado
   const handleItemClick = (itemTitle: string, isOpen: boolean) => {
     if (state === "collapsed") {
-      // Si el sidebar está colapsado, abrirlo primero
       setOpen(true);
-      // Luego abrir el item
-      setOpenItems((prev) => ({
-        ...prev,
-        [itemTitle]: true,
-      }));
+      setOpenItems((prev) => ({ ...prev, [itemTitle]: true }));
     } else {
-      // Si el sidebar está expandido, comportamiento normal de toggle
-      setOpenItems((prev) => ({
-        ...prev,
-        [itemTitle]: isOpen,
-      }));
+      setOpenItems((prev) => ({ ...prev, [itemTitle]: isOpen }));
     }
   };
 
@@ -99,9 +77,7 @@ export function NavMain({
               key={item.title}
               asChild
               open={openItems[item.title]}
-              onOpenChange={(isOpen) => {
-                handleItemClick(item.title, isOpen);
-              }}
+              onOpenChange={(isOpen) => handleItemClick(item.title, isOpen)}
               className="group/collapsible"
             >
               <SidebarMenuItem className="p-0">
@@ -123,10 +99,10 @@ export function NavMain({
                           asChild
                           isActive={isSubItemActive(subItem.url)}
                         >
-                          <Link to={subItem.url}>
+                          <button onClick={() => openTab(subItem.url, subItem.title)}>
                             {subItem.icon && <subItem.icon />}
                             <span>{subItem.title}</span>
-                          </Link>
+                          </button>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}
@@ -141,10 +117,10 @@ export function NavMain({
                 tooltip={item.title}
                 isActive={isItemActive(item)}
               >
-                <Link to={item.url}>
+                <button onClick={() => openTab(item.url, item.title)}>
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
-                </Link>
+                </button>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )

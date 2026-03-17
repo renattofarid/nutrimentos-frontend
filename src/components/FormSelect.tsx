@@ -47,6 +47,7 @@ interface FormSelectProps {
   strictFilter?: boolean;
   enableCodeSearch?: boolean; // Nueva prop para habilitar búsqueda por código
   autoSelectSingle?: boolean;
+  uppercase?: boolean;
 }
 
 export function FormSelect({
@@ -63,6 +64,7 @@ export function FormSelect({
   strictFilter = false,
   enableCodeSearch = false,
   autoSelectSingle = false,
+  uppercase = false,
 }: FormSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -92,7 +94,12 @@ export function FormSelect({
             {typeof label === "function" ? (
               label()
             ) : (
-              <FormLabel className="flex justify-start items-center">
+              <FormLabel
+                className={cn(
+                  "flex justify-start items-center",
+                  uppercase && "uppercase",
+                )}
+              >
                 {label}
                 {tooltip && (
                   <Tooltip>
@@ -138,6 +145,7 @@ export function FormSelect({
                       "w-full justify-between min-h-7 flex min-w-0",
                       !field.value && "text-muted-foreground",
                       field.value && "bg-muted",
+                      uppercase && "uppercase",
                     )}
                   >
                     <span className="!text-nowrap line-clamp-1">
@@ -227,14 +235,23 @@ export function FormSelect({
                               />
                               <div className="flex flex-col min-w-0 flex-1">
                                 <span
-                                  className={cn("truncate", classNameOption)}
+                                  className={cn(
+                                    "truncate",
+                                    classNameOption,
+                                    uppercase && "uppercase",
+                                  )}
                                 >
                                   {typeof option.label === "function"
                                     ? option.label()
                                     : option.label}
                                 </span>
                                 {option.description && (
-                                  <span className="text-[10px] text-muted-foreground truncate">
+                                  <span
+                                    className={cn(
+                                      "text-[10px] text-muted-foreground truncate",
+                                      uppercase && "uppercase",
+                                    )}
+                                  >
                                     {withValue && `${option.value} - `}{" "}
                                     {option.description}
                                   </span>
@@ -291,14 +308,23 @@ export function FormSelect({
                                 />
                                 <div className="flex flex-col min-w-0 flex-1">
                                   <span
-                                    className={cn("truncate", classNameOption)}
+                                    className={cn(
+                                      "truncate",
+                                      classNameOption,
+                                      uppercase && "uppercase",
+                                    )}
                                   >
                                     {typeof option.label === "function"
                                       ? option.label()
                                       : option.label}
                                   </span>
                                   {option.description && (
-                                    <span className="text-[10px] text-muted-foreground truncate">
+                                    <span
+                                      className={cn(
+                                        "text-[10px] text-muted-foreground truncate",
+                                        uppercase && "uppercase",
+                                      )}
+                                    >
                                       {withValue && `${option.value} - `}{" "}
                                       {option.description}
                                     </span>
@@ -358,13 +384,24 @@ export function FormSelect({
                             )}
                           />
                           <div className="flex flex-col min-w-0 flex-1">
-                            <span className={cn("truncate", classNameOption)}>
+                            <span
+                              className={cn(
+                                "truncate",
+                                classNameOption,
+                                uppercase && "uppercase",
+                              )}
+                            >
                               {typeof option.label === "function"
                                 ? option.label()
                                 : option.label}
                             </span>
                             {option.description && (
-                              <span className="text-[10px] text-muted-foreground truncate">
+                              <span
+                                className={cn(
+                                  "text-[10px] text-muted-foreground truncate",
+                                  uppercase && "uppercase",
+                                )}
+                              >
                                 {withValue && `${option.value} - `}{" "}
                                 {option.description}
                               </span>

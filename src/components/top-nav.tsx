@@ -14,7 +14,6 @@ import {
   NavigationMenuTrigger,
   NavigationMenuLink,
 } from "@/components/ui/navigation-menu";
-import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { TYPE_USER } from "@/pages/type-users/lib/typeUser.interface";
@@ -54,6 +53,7 @@ import {
 } from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
 import { ACCOUNTS_PAYABLE } from "@/pages/accounts-payable/lib/accounts-payable.interface";
 import { WAREHOUSE_DOCUMENT } from "@/pages/warehouse-document/lib/warehouse-document.interface";
+import { WAREHOUSE_PRODUCT } from "@/pages/warehouse-product/lib/warehouse-product.interface";
 import {
   DELIVERY_SHEET,
   DeliverySheetSettlementRoute,
@@ -72,6 +72,7 @@ import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-
 import { SettlementTitle } from "@/pages/deliverysheet/components/settlement/SettlementHeader";
 import { CustomerAccountStatementTitle } from "@/pages/reports/components/CustomerAccountStatementPage";
 import type { LucideIcon } from "lucide-react";
+import { useWindowManager } from "@/stores/window-manager.store";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -234,6 +235,11 @@ const {
   ICON_REACT: ReportsIcon,
   MODEL: { name: ReportsTitle },
 } = REPORTS;
+const {
+  ICON_REACT: WarehouseProductIcon,
+  ROUTE: WarehouseProductRoute,
+  MODEL: { plural: WarehouseProductTitle },
+} = WAREHOUSE_PRODUCT;
 
 export type NavSubItem = { title: string; url: string; icon?: LucideIcon };
 export type NavItem = {
@@ -311,6 +317,11 @@ export const navData: NavItem[] = [
         icon: ReportsIcon,
       },
       { title: BoxShiftTitle!, url: BoxShiftRoute, icon: BoxShiftIcon },
+      {
+        title: WarehouseProductTitle!,
+        url: WarehouseProductRoute,
+        icon: WarehouseProductIcon,
+      },
     ],
   },
   {
@@ -381,7 +392,10 @@ export const navData: NavItem[] = [
 export function TopNav() {
   const { access } = useAuthStore();
   const [filteredNav, setFilteredNav] = useState<NavItem[]>([]);
-  const location = useLocation();
+  const { tabs, activeTabId, openTab } = useWindowManager();
+
+  const activeTab = tabs.find((t) => t.id === activeTabId);
+  const activePath = activeTab?.path ?? "";
 
   useEffect(() => {
     if (!ENABLE_PERMISSION_VALIDATION) {
@@ -409,15 +423,15 @@ export function TopNav() {
   }, [access]);
 
   const isSubItemActive = (url: string) =>
-    location.pathname === url || location.pathname.startsWith(url + "/");
+    activePath === url || activePath.startsWith(url + "/");
 
   const isItemActive = (item: NavItem): boolean => {
-    if (!item.items) return location.pathname === item.url;
+    if (!item.items) return activePath === item.url;
     return item.items.some((sub) => isSubItemActive(sub.url));
   };
 
   return (
-    <NavigationMenu viewport={false}>
+    <NavigationMenu viewport={false} className="justify-start">
       <NavigationMenuList className="gap-0">
         {filteredNav.map((item) =>
           item.items ? (
@@ -432,24 +446,24 @@ export function TopNav() {
                 {item.title}
               </NavigationMenuTrigger>
               <NavigationMenuContent>
-                <ul className="grid w-44 gap-0 p-1">
+                <ul className="grid min-w-48 w-auto gap-0 p-1">
                   {item.items.map((sub) => (
                     <li key={sub.title}>
                       <NavigationMenuLink
                         asChild
                         active={isSubItemActive(sub.url)}
                       >
-                        <Link
-                          to={sub.url}
+                        <button
+                          onClick={() => openTab(sub.url, sub.title)}
                           className={cn(
-                            "flex flex-row items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground",
+                            "w-full flex flex-row justify-start text-start items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground",
                             isSubItemActive(sub.url) &&
                               "bg-accent/50 text-accent-foreground font-medium",
                           )}
                         >
                           {sub.icon && <sub.icon className="size-3.5 shrink-0" />}
-                          <span>{sub.title}</span>
-                        </Link>
+                          <span className="text-start">{sub.title}</span>
+                        </button>
                       </NavigationMenuLink>
                     </li>
                   ))}
@@ -459,16 +473,16 @@ export function TopNav() {
           ) : (
             <NavigationMenuItem key={item.title}>
               <NavigationMenuLink asChild active={isItemActive(item)}>
-                <Link
-                  to={item.url}
+                <button
+                  onClick={() => openTab(item.url, item.title)}
                   className={cn(
-                    "inline-flex flex-row h-7 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                    "inline-flex flex-row justify-start text-start items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
                     isItemActive(item) && "text-primary font-semibold",
                   )}
                 >
                   {item.icon && <item.icon className="size-3.5" />}
                   {item.title}
-                </Link>
+                </button>
               </NavigationMenuLink>
             </NavigationMenuItem>
           ),

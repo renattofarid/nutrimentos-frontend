@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TitleFormComponent from "@/components/TitleFormComponent";
+import { Button } from "@/components/ui/button";
+import { List } from "lucide-react";
 import { SaleForm } from "./SaleForm";
 import { type SaleSchema } from "../lib/sale.schema";
 import { useSaleStore } from "../lib/sales.store";
@@ -58,7 +60,7 @@ export const SaleAddPage = () => {
     try {
       await createSale(data);
       successToast("Venta creada correctamente");
-      navigate("/ventas");
+      navigate("/ventas/listado");
     } catch (error: any) {
       errorToast(error.response?.data?.message || ERROR_MESSAGE);
     } finally {
@@ -90,8 +92,15 @@ export const SaleAddPage = () => {
   return (
     <PageWrapper size="3xl">
       <div className="mb-6">
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center justify-between mb-4">
           <TitleFormComponent title="Venta" mode="create" icon={ICON} />
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => navigate("/ventas/listado")}
+          >
+            <List className="size-4 mr-2" /> Ver Listado
+          </Button>
         </div>
       </div>
 
@@ -118,7 +127,7 @@ export const SaleAddPage = () => {
           mode="create"
           branches={branches!}
           warehouses={warehouses!}
-          onCancel={() => navigate("/ventas")}
+          onCancel={() => navigate("/ventas/listado")}
         />
       )}
     </PageWrapper>

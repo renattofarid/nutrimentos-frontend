@@ -3,19 +3,19 @@ import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Badge } from "./ui/badge";
 import { useExpiringAlerts } from "@/pages/purchaseinstallment/lib/purchaseinstallment.hook";
-import { useNavigate } from "react-router-dom";
+import { useWindowManager } from "@/stores/window-manager.store";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
 import FormSkeleton from "./FormSkeleton";
 
 export function NotificationBell() {
   const { data: alerts, isLoading } = useExpiringAlerts();
-  const navigate = useNavigate();
+  const { openTab } = useWindowManager();
 
   const alertCount = alerts?.length || 0;
 
   const handleAlertClick = (purchaseId: number) => {
-    navigate(`/compras/detalle/${purchaseId}`);
+    openTab(`/compras/detalle/${purchaseId}`, `Compra #${purchaseId}`);
   };
 
   return (

@@ -486,7 +486,7 @@ export function ExcelGrid<T extends Record<string, any>>({
           onClick={onAddRow}
           size="sm"
           variant="outline"
-          className="gap-2"
+          className="gap-2 uppercase"
           disabled={disabled}
         >
           <Plus className="h-4 w-4" />
@@ -502,7 +502,7 @@ export function ExcelGrid<T extends Record<string, any>>({
           }}
           size="sm"
           variant="outline"
-          className="gap-2 text-destructive hover:text-destructive"
+          className="gap-2 text-destructive hover:text-destructive uppercase"
           disabled={focusedCell === null || data.length === 0}
         >
           <X className="h-4 w-4" />

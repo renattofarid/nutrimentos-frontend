@@ -65,6 +65,7 @@ interface FormSelectAsyncProps {
   additionalParams?: Record<string, any>; // Parámetros adicionales para el hook
   onValueChange?: (value: string, item?: any) => void; // Callback cuando cambia el valor
   preloadItemId?: string; // ID del item a precargar buscando en todas las páginas
+  uppercase?: boolean; // Si es true, muestra el texto en mayúsculas
 }
 
 export function FormSelectAsync({
@@ -88,6 +89,7 @@ export function FormSelectAsync({
   additionalParams = {},
   onValueChange,
   preloadItemId,
+  uppercase = false,
 }: FormSelectAsyncProps) {
   const { field: controlField } = useController({ name, control });
   const [open, setOpen] = useState(false);
@@ -255,7 +257,12 @@ export function FormSelectAsync({
             {label && typeof label === "function"
               ? label()
               : label && (
-                  <FormLabel className="flex justify-start items-center">
+                  <FormLabel
+                    className={cn(
+                      "flex justify-start items-center",
+                      uppercase && "uppercase",
+                    )}
+                  >
                     {label}
                     {required && <RequiredField />}
                     {tooltip && (
@@ -286,6 +293,7 @@ export function FormSelectAsync({
                         "w-full justify-between min-h-7 flex min-w-0",
                         !field.value && "text-muted-foreground",
                         field.value && "bg-muted",
+                        uppercase && "uppercase",
                         className,
                       )}
                     >
@@ -366,14 +374,23 @@ export function FormSelectAsync({
                               />
                               <div className="flex flex-col min-w-0 flex-1">
                                 <span
-                                  className={cn("truncate", classNameOption)}
+                                  className={cn(
+                                    "truncate",
+                                    classNameOption,
+                                    uppercase && "uppercase",
+                                  )}
                                 >
                                   {typeof option.label === "function"
                                     ? option.label()
                                     : option.label}
                                 </span>
                                 {option.description && (
-                                  <span className="text-[10px] text-muted-foreground truncate">
+                                  <span
+                                    className={cn(
+                                      "text-[10px] text-muted-foreground truncate",
+                                      uppercase && "uppercase",
+                                    )}
+                                  >
                                     {withValue && `${option.value} - `}{" "}
                                     {option.description}
                                   </span>
@@ -398,7 +415,12 @@ export function FormSelectAsync({
               {children}
             </div>
             {description && (
-              <FormDescription className="text-xs text-muted-foreground mb-0!">
+              <FormDescription
+                className={cn(
+                  "text-xs text-muted-foreground mb-0!",
+                  uppercase && "uppercase",
+                )}
+              >
                 {description}
               </FormDescription>
             )}

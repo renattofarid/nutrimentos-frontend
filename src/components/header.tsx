@@ -4,10 +4,11 @@ import { NotificationBell } from "./NotificationBell";
 import { TopNav } from "./top-nav";
 import { MobileNav } from "./mobile-nav";
 import { Wheat } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useWindowManager } from "@/stores/window-manager.store";
 
 export default function HeaderComponent() {
   const { user } = useAuthStore();
+  const { openTab } = useWindowManager();
 
   if (!user) {
     return null;
@@ -21,7 +22,10 @@ export default function HeaderComponent() {
       </div>
 
       {/* Logo — only visible on desktop (lg+) */}
-      <Link to="/inicio" className="hidden lg:flex items-center gap-2 shrink-0 mr-2">
+      <button
+        onClick={() => openTab("/inicio", "Dashboard")}
+        className="hidden lg:flex items-center gap-2 shrink-0 mr-2"
+      >
         <div className="bg-sidebar-primary text-primary-foreground flex aspect-square size-7 items-center justify-center rounded-sm">
           <Wheat className="size-4" />
         </div>
@@ -29,10 +33,10 @@ export default function HeaderComponent() {
           <span className="text-sm font-bold text-primary truncate">Grupo el Milagro</span>
           <span className="text-xs truncate">Nutrialimentos</span>
         </div>
-      </Link>
+      </button>
 
       {/* Desktop navigation */}
-      <div className="hidden md:flex flex-1 min-w-0">
+      <div className="hidden md:flex flex-1 min-w-0 justify-start">
         <TopNav />
       </div>
 

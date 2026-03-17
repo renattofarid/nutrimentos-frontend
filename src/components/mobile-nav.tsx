@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Menu, Wheat, ChevronDown } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -9,17 +8,22 @@ import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import { hasAccessToRoute } from "@/App";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
 import { navData, type NavItem } from "./top-nav";
+import { useWindowManager } from "@/stores/window-manager.store";
 
 export function MobileNav() {
   const { access } = useAuthStore();
   const [open, setOpen] = useState(false);
   const [filteredNav, setFilteredNav] = useState<NavItem[]>([]);
-  const location = useLocation();
+  const { tabs, activeTabId, openTab } = useWindowManager();
 
-  // Close on navigation
-  useEffect(() => {
+  const activeTab = tabs.find((t) => t.id === activeTabId);
+  const activePath = activeTab?.path ?? "";
+
+  // Cerrar al abrir un tab
+  const handleOpen = (url: string, title: string) => {
+    openTab(url, title);
     setOpen(false);
-  }, [location.pathname]);
+  };
 
   useEffect(() => {
     if (!ENABLE_PERMISSION_VALIDATION) {
@@ -44,10 +48,10 @@ export function MobileNav() {
   }, [access]);
 
   const isSubItemActive = (url: string) =>
-    location.pathname === url || location.pathname.startsWith(url + "/");
+    activePath === url || activePath.startsWith(url + "/");
 
   const isItemActive = (item: NavItem): boolean => {
-    if (!item.items) return location.pathname === item.url;
+    if (!item.items) return activePath === item.url;
     return item.items.some((sub) => isSubItemActive(sub.url));
   };
 
@@ -67,10 +71,9 @@ export function MobileNav() {
         <SheetContent side="left" className="w-72 p-0 flex flex-col">
           <SheetHeader className="px-4 py-3 border-b shrink-0">
             <SheetTitle asChild>
-              <Link
-                to="/inicio"
-                className="flex items-center gap-2"
-                onClick={() => setOpen(false)}
+              <button
+                className="flex items-center gap-2 w-full"
+                onClick={() => handleOpen("/inicio", "Dashboard")}
               >
                 <div className="bg-sidebar-primary text-primary-foreground flex aspect-square size-7 items-center justify-center rounded-sm">
                   <Wheat className="size-4" />
@@ -79,7 +82,7 @@ export function MobileNav() {
                   <span className="text-sm font-bold text-primary">Grupo el Milagro</span>
                   <span className="text-xs text-muted-foreground">Nutrialimentos</span>
                 </div>
-              </Link>
+              </button>
             </SheetTitle>
           </SheetHeader>
 
@@ -108,17 +111,17 @@ export function MobileNav() {
                         <ul className="ml-4 mt-0.5 border-l pl-2 space-y-0.5">
                           {item.items.map((sub) => (
                             <li key={sub.title}>
-                              <Link
-                                to={sub.url}
+                              <button
+                                onClick={() => handleOpen(sub.url, sub.title)}
                                 className={cn(
-                                  "flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
+                                  "w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
                                   isSubItemActive(sub.url) &&
                                     "bg-accent/50 text-accent-foreground font-medium"
                                 )}
                               >
                                 {sub.icon && <sub.icon className="size-4 shrink-0" />}
                                 <span>{sub.title}</span>
-                              </Link>
+                              </button>
                             </li>
                           ))}
                         </ul>
@@ -127,17 +130,17 @@ export function MobileNav() {
                   </li>
                 ) : (
                   <li key={item.title}>
-                    <Link
-                      to={item.url}
+                    <button
+                      onClick={() => handleOpen(item.url, item.title)}
                       className={cn(
-                        "flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
+                        "w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
                         isItemActive(item) &&
                           "bg-accent/50 text-accent-foreground font-medium"
                       )}
                     >
                       {item.icon && <item.icon className="size-4 shrink-0" />}
                       <span className="font-medium">{item.title}</span>
-                    </Link>
+                    </button>
                   </li>
                 )
               )}

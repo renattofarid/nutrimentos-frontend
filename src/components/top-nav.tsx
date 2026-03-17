@@ -53,6 +53,7 @@ import {
 } from "@/pages/accounts-receivable/lib/accounts-receivable.interface";
 import { ACCOUNTS_PAYABLE } from "@/pages/accounts-payable/lib/accounts-payable.interface";
 import { WAREHOUSE_DOCUMENT } from "@/pages/warehouse-document/lib/warehouse-document.interface";
+import { WAREHOUSE_PRODUCT } from "@/pages/warehouse-product/lib/warehouse-product.interface";
 import {
   DELIVERY_SHEET,
   DeliverySheetSettlementRoute,
@@ -234,6 +235,11 @@ const {
   ICON_REACT: ReportsIcon,
   MODEL: { name: ReportsTitle },
 } = REPORTS;
+const {
+  ICON_REACT: WarehouseProductIcon,
+  ROUTE: WarehouseProductRoute,
+  MODEL: { plural: WarehouseProductTitle },
+} = WAREHOUSE_PRODUCT;
 
 export type NavSubItem = { title: string; url: string; icon?: LucideIcon };
 export type NavItem = {
@@ -311,6 +317,11 @@ export const navData: NavItem[] = [
         icon: ReportsIcon,
       },
       { title: BoxShiftTitle!, url: BoxShiftRoute, icon: BoxShiftIcon },
+      {
+        title: WarehouseProductTitle!,
+        url: WarehouseProductRoute,
+        icon: WarehouseProductIcon,
+      },
     ],
   },
   {
@@ -420,7 +431,7 @@ export function TopNav() {
   };
 
   return (
-    <NavigationMenu viewport={false}>
+    <NavigationMenu viewport={false} className="justify-start">
       <NavigationMenuList className="gap-0">
         {filteredNav.map((item) =>
           item.items ? (
@@ -435,7 +446,7 @@ export function TopNav() {
                 {item.title}
               </NavigationMenuTrigger>
               <NavigationMenuContent>
-                <ul className="grid w-44 gap-0 p-1">
+                <ul className="grid min-w-48 w-auto gap-0 p-1">
                   {item.items.map((sub) => (
                     <li key={sub.title}>
                       <NavigationMenuLink
@@ -445,13 +456,13 @@ export function TopNav() {
                         <button
                           onClick={() => openTab(sub.url, sub.title)}
                           className={cn(
-                            "w-full flex flex-row items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground",
+                            "w-full flex flex-row justify-start text-start items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground",
                             isSubItemActive(sub.url) &&
                               "bg-accent/50 text-accent-foreground font-medium",
                           )}
                         >
                           {sub.icon && <sub.icon className="size-3.5 shrink-0" />}
-                          <span>{sub.title}</span>
+                          <span className="text-start">{sub.title}</span>
                         </button>
                       </NavigationMenuLink>
                     </li>
@@ -465,7 +476,7 @@ export function TopNav() {
                 <button
                   onClick={() => openTab(item.url, item.title)}
                   className={cn(
-                    "inline-flex flex-row h-7 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                    "inline-flex flex-row justify-start text-start items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
                     isItemActive(item) && "text-primary font-semibold",
                   )}
                 >

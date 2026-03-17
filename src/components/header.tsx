@@ -36,7 +36,7 @@ export default function HeaderComponent() {
       </button>
 
       {/* Desktop navigation */}
-      <div className="hidden md:flex flex-1 min-w-0">
+      <div className="hidden md:flex flex-1 min-w-0 justify-start">
         <TopNav />
       </div>
 

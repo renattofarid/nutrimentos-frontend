@@ -1,6 +1,6 @@
 "use client";
 
-// import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
+import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
 import SearchInput from "@/components/SearchInput";
 import { SearchableSelect } from "@/components/SearchableSelect";
 // import { useAllBranches } from "@/pages/branch/lib/branch.hook";
@@ -15,10 +15,10 @@ import { useAllZones } from "@/pages/zone/lib/zone.hook";
 //   { value: "CERRADA", label: "Cerrada" },
 // ];
 
-// const TYPE_OPTIONS = [
-//   { value: "CONTADO", label: "Contado" },
-//   { value: "CREDITO", label: "Crédito" },
-// ];
+const TYPE_OPTIONS = [
+  { value: "CONTADO", label: "Contado" },
+  { value: "CREDITO", label: "Crédito" },
+];
 
 interface DeliverySheetOptionsProps {
   search: string;
@@ -48,16 +48,16 @@ interface DeliverySheetOptionsProps {
 export default function DeliverySheetOptions({
   search,
   setSearch,
-  // issue_date_from,
-  // issue_date_to,
-  // onIssueDateChange,
+  issue_date_from,
+  issue_date_to,
+  onIssueDateChange,
   // delivery_date_from,
   // delivery_date_to,
   // onDeliveryDateChange,
   // status,
   // setStatus,
-  // type,
-  // setType,
+  type,
+  setType,
   // customer_id,
   // setCustomerId,
   // driver_id,
@@ -102,19 +102,20 @@ export default function DeliverySheetOptions({
         onChange={setSearch}
         placeholder="Buscar por número, cliente o conductor"
       />
-      {/* 
-      <SearchableSelect
-        options={STATUS_OPTIONS}
-        value={status}
-        onChange={setStatus}
-        placeholder="Estado"
-      />
 
       <SearchableSelect
         options={TYPE_OPTIONS}
         value={type}
         onChange={setType}
         placeholder="Tipo"
+      />
+
+      {/* 
+      <SearchableSelect
+        options={STATUS_OPTIONS}
+        value={status}
+        onChange={setStatus}
+        placeholder="Estado"
       />
 
       <SearchableSelect
@@ -153,20 +154,20 @@ export default function DeliverySheetOptions({
       />
 
       <DateRangePickerFilter
-        dateFrom={issue_date_from}
-        dateTo={issue_date_to}
-        onDateChange={onIssueDateChange}
-        placeholder="F. Emisión"
-        className="w-[220px]"
-      />
-
-      <DateRangePickerFilter
         dateFrom={delivery_date_from}
         dateTo={delivery_date_to}
         onDateChange={onDeliveryDateChange}
         placeholder="F. Reparto"
         className="w-[220px]"
       /> */}
+
+      <DateRangePickerFilter
+        dateFrom={issue_date_from}
+        dateTo={issue_date_to}
+        onDateChange={onIssueDateChange}
+        placeholder="F. Emisión"
+        className="w-[220px]"
+      />
     </div>
   );
 }

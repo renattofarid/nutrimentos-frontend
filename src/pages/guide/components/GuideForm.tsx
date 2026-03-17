@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo } from "react";
 import {
   Form,
   FormField,
@@ -62,6 +61,7 @@ import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
 import { errorToast, successToast, warningToast } from "@/lib/core.function";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useUbigeosFrom, useUbigeosTo } from "../lib/ubigeo.hook";
+import { useClients } from "@/pages/client/lib/client.hook";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useProduct } from "@/pages/product/lib/product.hook";
@@ -615,12 +615,20 @@ export const GuideForm = ({
 
   const customerValue = form.watch("customer_id");
 
+  const [selectedCustomer, setSelectedCustomer] = useState<PersonResource | null>(null);
+
+  // Inicializar selectedCustomer desde la prop en modo edición
+  useEffect(() => {
+    if (defaultValues.customer_id && customers.length > 0 && !selectedCustomer) {
+      const found = customers.find(
+        (c) => c.id.toString() === defaultValues.customer_id,
+      );
+      if (found) setSelectedCustomer(found);
+    }
+  }, [customers, defaultValues.customer_id, selectedCustomer]);
+
   // Obtener las direcciones del cliente seleccionado
-  const selectedCustomerAddresses = useMemo(() => {
-    if (!customerValue) return [];
-    const customer = customers.find((c) => c.id.toString() === customerValue);
-    return customer?.person_zones || [];
-  }, [customerValue, customers]);
+  const selectedCustomerAddresses = selectedCustomer?.person_zones || [];
 
   // Setear automáticamente la primera person_zone cuando se selecciona un cliente y solo hay una
   useEffect(() => {
@@ -695,19 +703,23 @@ export const GuideForm = ({
             />
           </div>
 
-          <FormSelect
+          <FormSelectAsync
             control={form.control}
             name="customer_id"
             label="Cliente"
             placeholder="Seleccione un cliente"
-            options={customers.map((customer) => ({
+            useQueryHook={useClients}
+            mapOptionFn={(customer: PersonResource) => ({
               value: customer.id.toString(),
               label:
                 customer.business_name ??
                 `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
               description: customer.number_document ?? "-",
-            }))}
-            withValue
+            })}
+            onValueChange={(_value, customer) => {
+              setSelectedCustomer(customer ?? null);
+            }}
+            preloadItemId={defaultValues.customer_id}
           />
 
           <FormSelect

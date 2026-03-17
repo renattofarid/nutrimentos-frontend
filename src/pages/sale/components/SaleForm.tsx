@@ -952,7 +952,7 @@ export const SaleForm = ({
           <FormSelect
             control={form.control}
             name="branch_id"
-            label="Tienda"
+            label="TIENDA"
             placeholder="Seleccione una tienda"
             options={
               branches?.map((branch) => ({
@@ -963,23 +963,25 @@ export const SaleForm = ({
             }
             disabled={mode === "update"}
             autoSelectSingle
+            uppercase
           />
 
           <FormSelect
             control={form.control}
             name="document_type"
-            label="Tipo de Documento"
+            label="TIPO DE DOCUMENTO"
             placeholder="Seleccione tipo"
             options={DOCUMENT_TYPES.map((dt) => ({
               value: dt.value,
               label: dt.label,
             }))}
+            uppercase
           />
 
           <DatePickerFormField
             control={form.control}
             name="issue_date"
-            label="Fecha de Emisión"
+            label="FECHA DE EMISIÓN"
             placeholder="Seleccione fecha"
             dateFormat="dd/MM/yyyy"
             disabledRange={{
@@ -990,7 +992,7 @@ export const SaleForm = ({
           <FormSelect
             control={form.control}
             name="person_zone_id"
-            label="Zona"
+            label="ZONA"
             placeholder="Seleccione dirección"
             options={customerAddresses.map((addr) => ({
               value: addr.id.toString(),
@@ -998,24 +1000,25 @@ export const SaleForm = ({
               description: addr.address,
             }))}
             disabled={!selectedCustomerId || customerAddresses.length === 0}
+            uppercase
           />
-
 
           <FormSelect
             control={form.control}
             name="currency"
-            label="Moneda"
+            label="MONEDA"
             placeholder="Seleccione moneda"
             options={CURRENCIES.map((c) => ({
               value: c.value,
               label: c.label,
             }))}
+            uppercase
           />
 
           <FormSelect
             control={form.control}
             name="warehouse_id"
-            label="Almacén"
+            label="ALMACÉN"
             placeholder="Seleccione un almacén"
             options={filteredWarehouses.map((warehouse) => ({
               value: warehouse.id.toString(),
@@ -1023,6 +1026,7 @@ export const SaleForm = ({
             }))}
             disabled={mode === "update" || !selectedBranchId}
             autoSelectSingle
+            uppercase
           />
 
           <div className="flex gap-2 items-end">
@@ -1030,7 +1034,7 @@ export const SaleForm = ({
               <FormSelectAsync
                 control={form.control}
                 name="customer_id"
-                label="Cliente"
+                label="CLIENTE"
                 placeholder="Seleccione un cliente"
                 useQueryHook={useClients}
                 mapOptionFn={(customer: PersonResource) => ({
@@ -1053,6 +1057,7 @@ export const SaleForm = ({
                     : undefined
                 }
                 disabled={mode === "update"}
+                uppercase
               />
             </div>
             <Button
@@ -1069,7 +1074,7 @@ export const SaleForm = ({
           <FormSelect
             control={form.control}
             name="vendedor_id"
-            label="Vendedor"
+            label="VENDEDOR"
             placeholder="Seleccionar vendedor"
             options={[
               ...(workers?.map((worker) => ({
@@ -1078,25 +1083,28 @@ export const SaleForm = ({
                 description: worker.number_document ?? "-",
               })) || []),
             ]}
+            uppercase
           />
 
           <FormSelect
             control={form.control}
             name="payment_type"
-            label="Tipo de Pago"
+            label="TIPO DE PAGO"
             placeholder="Seleccione tipo"
             options={PAYMENT_TYPES.map((pt) => ({
               value: pt.value,
               label: pt.label,
             }))}
+            uppercase
           />
 
           <div className="lg:col-span-2">
             <FormInput
               name="observations"
               control={form.control}
-              label="Observaciones"
+              label="OBSERVACIONES"
               placeholder="Ingrese observaciones adicionales"
+              uppercase
             />
           </div>
         </GroupFormSection>

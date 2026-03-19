@@ -107,7 +107,7 @@ export function DatePickerFormField<T extends FieldValues>({
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <FormItem className="flex flex-col">
+    <FormItem className="flex flex-col gap-0.5">
       {label && <FormLabel>{label}</FormLabel>}
 
       {isMobile ? (
@@ -115,6 +115,7 @@ export function DatePickerFormField<T extends FieldValues>({
           <DrawerTrigger asChild>
             <FormControl>
               <Button
+                size="sm"
                 variant="outline"
                 className="w-full justify-between font-normal truncate"
                 disabled={disabled}
@@ -147,6 +148,7 @@ export function DatePickerFormField<T extends FieldValues>({
             <FormControl>
               <Button
                 variant="outline"
+                size="sm"
                 className={cn(
                   "w-full justify-start text-left font-normal truncate",
                   !parsedDate && "text-muted-foreground",

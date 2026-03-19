@@ -35,7 +35,6 @@ import { formatNumber } from "@/lib/formatCurrency";
 import {
   DOCUMENT_TYPES,
   PAYMENT_TYPES,
-  CURRENCIES,
 } from "../lib/sale.interface";
 import { errorToast } from "@/lib/core.function";
 import { GroupFormSection } from "@/components/GroupFormSection";
@@ -49,7 +48,6 @@ import {
   type ProductOption,
 } from "@/components/ExcelGrid";
 import { FormInput } from "@/components/FormInput";
-import { Badge } from "@/components/ui/badge";
 
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
@@ -268,18 +266,9 @@ export const SaleForm = ({
   const selectedBranchId = form.watch("branch_id");
   const selectedWarehouseId = form.watch("warehouse_id");
   const selectedDocumentType = form.watch("document_type");
-  const selectedCurrency = form.watch("currency");
   const selectedCustomerId = form.watch("customer_id");
 
-  // Función para obtener el símbolo de moneda
-  const getCurrencySymbol = () => {
-    const currency = CURRENCIES.find((c) => c.value === selectedCurrency);
-    if (!currency) return "";
-    if (selectedCurrency === "PEN") return "S/.";
-    if (selectedCurrency === "USD") return "$";
-    if (selectedCurrency === "EUR") return "€";
-    return "";
-  };
+  const getCurrencySymbol = () => "S/.";
 
   // Efecto para filtrar warehouses cuando cambia branch
   useEffect(() => {
@@ -938,22 +927,22 @@ export const SaleForm = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleFormSubmit)}
-        className="space-y-6 w-full"
+        className="space-y-2 w-full"
       >
         {/* Información General */}
         <GroupFormSection
           title="Información General"
           icon={Users2}
-          cols={{ sm: 1, md: 3, lg: 5 }}
-          headerExtra={
-            mode === "create" &&
-            autoSerie &&
-            autoNumero && (
-              <Badge variant="default" className="px-3 py-1" size="default">
-                {autoSerie} - {autoNumero}
-              </Badge>
-            )
-          }
+          cols={{ sm: 1, md: 3, lg: 4 }}
+          // headerExtra={
+          //   mode === "create" &&
+          //   autoSerie &&
+          //   autoNumero && (
+          //     <Badge variant="default" className="px-3 py-1" size="default">
+          //       {autoSerie} - {autoNumero}
+          //     </Badge>
+          //   )
+          // }
         >
           <FormSelect
             control={form.control}
@@ -984,6 +973,38 @@ export const SaleForm = ({
             uppercase
           />
 
+          <div className="hidden">
+            <FormSelect
+              control={form.control}
+              name="person_zone_id"
+              label="ZONA"
+              placeholder="Seleccione dirección"
+              options={customerAddresses.map((addr) => ({
+                value: addr.id.toString(),
+                label: addr.zone_name + (addr.is_primary ? " (Principal)" : ""),
+                description: addr.address,
+              }))}
+              disabled={!selectedCustomerId || customerAddresses.length === 0}
+              uppercase
+            />
+          </div>
+
+          <FormInput
+            name="_correlativo_display"
+            label="SERIE / CORRELATIVO"
+            value={
+              mode === "create"
+                ? autoSerie && autoNumero
+                  ? `${autoSerie} - ${autoNumero}`
+                  : ""
+                : sale
+                  ? `${sale.serie} - ${sale.numero}`
+                  : ""
+            }
+            readOnly
+            disabled
+          />
+
           <DatePickerFormField
             control={form.control}
             name="issue_date"
@@ -993,32 +1014,6 @@ export const SaleForm = ({
             disabledRange={{
               after: new Date(),
             }}
-          />
-
-          <FormSelect
-            control={form.control}
-            name="person_zone_id"
-            label="ZONA"
-            placeholder="Seleccione dirección"
-            options={customerAddresses.map((addr) => ({
-              value: addr.id.toString(),
-              label: addr.zone_name + (addr.is_primary ? " (Principal)" : ""),
-              description: addr.address,
-            }))}
-            disabled={!selectedCustomerId || customerAddresses.length === 0}
-            uppercase
-          />
-
-          <FormSelect
-            control={form.control}
-            name="currency"
-            label="MONEDA"
-            placeholder="Seleccione moneda"
-            options={CURRENCIES.map((c) => ({
-              value: c.value,
-              label: c.label,
-            }))}
-            uppercase
           />
 
           <FormSelect
@@ -1069,7 +1064,7 @@ export const SaleForm = ({
             <Button
               type="button"
               variant="outline"
-              size="icon"
+              size="icon-sm"
               onClick={() => setIsClientDialogOpen(true)}
               title="Agregar nuevo cliente"
             >
@@ -1104,15 +1099,6 @@ export const SaleForm = ({
             uppercase
           />
 
-          <div className="lg:col-span-2">
-            <FormInput
-              name="observations"
-              control={form.control}
-              label="OBSERVACIONES"
-              placeholder="Ingrese observaciones adicionales"
-              uppercase
-            />
-          </div>
         </GroupFormSection>
 
         {/* Detalles, Cuotas y Resumen */}
@@ -1186,15 +1172,15 @@ export const SaleForm = ({
               title="Resumen"
               icon={FileText}
               cols={{ sm: 1 }}
-              headerExtra={
-                mode === "create" &&
-                autoSerie &&
-                autoNumero && (
-                  <Badge variant="default" className="px-3 py-1" size="default">
-                    {autoSerie} - {autoNumero}
-                  </Badge>
-                )
-              }
+              // headerExtra={
+              //   mode === "create" &&
+              //   autoSerie &&
+              //   autoNumero && (
+              //     <Badge variant="default" className="px-3 py-1" size="default">
+              //       {autoSerie} - {autoNumero}
+              //     </Badge>
+              //   )
+              // }
             >
               <div className="space-y-6">
                 {/* Peso Total */}
@@ -1275,6 +1261,14 @@ export const SaleForm = ({
                       </div>
                     </>
                   )}
+
+                <FormInput
+                  name="observations"
+                  control={form.control}
+                  label="OBSERVACIONES"
+                  placeholder="Ingrese observaciones adicionales"
+                  uppercase
+                />
               </div>
             </GroupFormSection>
           </div>

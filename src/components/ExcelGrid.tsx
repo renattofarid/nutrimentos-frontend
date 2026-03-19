@@ -478,7 +478,7 @@ export function ExcelGrid<T extends Record<string, any>>({
   };
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn("space-y-2", className)}>
       {/* Botones de acción */}
       <div className="flex gap-2">
         <Button

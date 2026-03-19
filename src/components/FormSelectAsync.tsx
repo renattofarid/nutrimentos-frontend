@@ -253,7 +253,7 @@ export function FormSelectAsync({
             : null);
 
         return (
-          <FormItem className="flex flex-col justify-between">
+          <FormItem className="flex flex-col justify-between gap-0.5">
             {label && typeof label === "function"
               ? label()
               : label && (
@@ -289,8 +289,9 @@ export function FormSelectAsync({
                       variant="outline"
                       role="combobox"
                       disabled={disabled}
+                      size="sm"
                       className={cn(
-                        "w-full justify-between min-h-7 flex min-w-0",
+                        "w-full justify-between flex min-w-0",
                         !field.value && "text-muted-foreground",
                         field.value && "bg-muted",
                         uppercase && "uppercase",

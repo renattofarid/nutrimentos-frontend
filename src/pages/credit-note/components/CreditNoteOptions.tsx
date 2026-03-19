@@ -4,8 +4,10 @@ import SearchInput from "@/components/SearchInput";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
 import { useAllCreditNoteMotives } from "@/pages/credit-note-motive/lib/credit-note-motive.hook";
-import { useAllClients } from "@/pages/client/lib/client.hook";
 import { CREDIT_NOTE_STATUSES } from "../lib/credit-note.interface";
+import { SearchableSelectAsync } from "@/components/SearchableSelectAsync";
+import { useClients } from "@/pages/client/lib/client.hook";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
 
 interface CreditNoteOptionsProps {
   search: string;
@@ -35,16 +37,10 @@ export default function CreditNoteOptions({
   onDateChange,
 }: CreditNoteOptionsProps) {
   const { data: motives = [] } = useAllCreditNoteMotives();
-  const { data: clients } = useAllClients();
 
   const motiveOptions = (motives ?? []).map((m) => ({
     value: String(m.id),
     label: m.name,
-  }));
-
-  const clientOptions = (clients ?? []).map((c) => ({
-    value: String(c.id),
-    label: c.business_name || `${c.names} ${c.father_surname}`,
   }));
 
   const statusOptions = CREDIT_NOTE_STATUSES.map((s) => ({
@@ -60,8 +56,15 @@ export default function CreditNoteOptions({
         placeholder="N° Nota de Crédito"
       />
 
-      <SearchableSelect
-        options={clientOptions}
+      <SearchableSelectAsync
+        useQueryHook={useClients}
+        mapOptionFn={(customer: PersonResource) => ({
+          value: customer.id.toString(),
+          label:
+            customer.business_name ??
+            `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
+          description: customer.number_document ?? "-",
+        })}
         value={customer_id}
         onChange={setCustomerId}
         placeholder="Cliente"

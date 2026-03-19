@@ -10,12 +10,14 @@ import type {
 } from "../lib/reports.interface";
 import { Badge } from "@/components/ui/badge";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
-import { useAllClients } from "@/pages/client/lib/client.hook";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FileSpreadsheet, Search, Filter, DollarSign } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
+import { FormSelectAsync } from "@/components/FormSelectAsync";
+import { useClients } from "@/pages/client/lib/client.hook";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
 import { exportCustomerAccountStatement } from "../lib/reports.actions";
@@ -216,7 +218,6 @@ export default function CustomerAccountStatementPage() {
   const [isExporting, setIsExporting] = useState(false);
 
   const { data: zones } = useAllZones();
-  const { data: clients } = useAllClients();
   const { data: workers } = useAllWorkers();
 
   const { data: rawData, isLoading, fetch } = useCustomerAccountStatement();
@@ -250,15 +251,6 @@ export default function CustomerAccountStatementPage() {
     zones?.map((zone) => ({
       value: zone.id.toString(),
       label: zone.name,
-    })) || [];
-
-  const clientOptions: Option[] =
-    clients?.map((client) => ({
-      value: client.id.toString(),
-      label:
-        client.business_name ??
-        `${client.names} ${client.father_surname} ${client.mother_surname}`,
-      description: client.number_document ?? client.phone,
     })) || [];
 
   const workerOptions: Option[] =
@@ -380,13 +372,19 @@ export default function CustomerAccountStatementPage() {
               options={zoneOptions}
             />
 
-            <FormSelect
+            <FormSelectAsync
               control={form.control}
               name="customer_id"
               label="Cliente"
-              placeholder="Seleccionar cliente"
-              options={clientOptions}
-              withValue
+              placeholder="Seleccione un cliente"
+              useQueryHook={useClients}
+              mapOptionFn={(customer: PersonResource) => ({
+                value: customer.id.toString(),
+                label:
+                  customer.business_name ??
+                  `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
+                description: customer.number_document ?? "-",
+              })}
             />
 
             <FormSelect

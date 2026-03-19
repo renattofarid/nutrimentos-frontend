@@ -20,8 +20,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { successToast, errorToast } from "@/lib/core.function";
 import { FormSelect } from "@/components/FormSelect";
-import { useAllClients } from "@/pages/client/lib/client.hook";
+import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useAllPaymentConcepts } from "@/pages/payment-concept/lib/payment-concept.hook";
+import { useClients } from "@/pages/client/lib/client.hook";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
 
 interface BoxMovementCreateModalProps {
   open: boolean;
@@ -37,7 +39,6 @@ export default function BoxMovementCreateModal({
   onSuccess,
 }: BoxMovementCreateModalProps) {
   const { createBoxMovement, isSubmitting } = useBoxMovementStore();
-  const { data: persons } = useAllClients();
 
   // Obtener las cajas aperturadas del usuario
   const defaultBoxId = boxId;
@@ -102,23 +103,19 @@ export default function BoxMovementCreateModal({
             />
           </div>
 
-          <FormSelect
-            name="customer_id"
+          <FormSelectAsync
             control={form.control}
+            name="customer_id"
             label="Cliente"
             placeholder="Seleccione un cliente"
-            options={
-              persons?.map((person) => ({
-                value: person.id.toString(),
-                label:
-                  person.business_name ??
-                  person.names +
-                    " " +
-                    (person.father_surname ?? "") +
-                    " " +
-                    (person.mother_surname ?? ""),
-              })) || []
-            }
+            useQueryHook={useClients}
+            mapOptionFn={(customer: PersonResource) => ({
+              value: customer.id.toString(),
+              label:
+                customer.business_name ??
+                `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
+              description: customer.number_document ?? "-",
+            })}
           />
 
           <FormSelect

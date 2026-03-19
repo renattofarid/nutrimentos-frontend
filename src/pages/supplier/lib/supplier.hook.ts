@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-import { useSupplierStore } from "./supplier.store";
 import { SUPPLIER, SUPPLIER_ROLE_CODE } from "./supplier.interface";
 import { useQuery } from "@tanstack/react-query";
 import { getPersons } from "@/pages/person/lib/person.actions";
@@ -17,24 +15,4 @@ export function useSuppliers(params?: Record<string, unknown>) {
         },
       }),
   });
-}
-
-export function useAllSuppliers() {
-  const { allSuppliers, isLoadingAll, error, fetchAllSuppliers } =
-    useSupplierStore();
-
-  useEffect(() => {
-    if (!allSuppliers) {
-      fetchAllSuppliers({ params: {} });
-    }
-  }, [allSuppliers, fetchAllSuppliers]);
-
-  return {
-    data: allSuppliers,
-    isLoading: isLoadingAll,
-    error,
-    refetch: (refetchParams?: Record<string, unknown>) => {
-      return fetchAllSuppliers({ params: refetchParams });
-    },
-  };
 }

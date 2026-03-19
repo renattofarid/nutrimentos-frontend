@@ -45,6 +45,7 @@ interface ExcelGridProps<T> {
   productOptions?: ProductOption[];
   onProductSelect?: (index: number, product: ProductOption) => void;
   onProductCodeTab?: (rowIndex: number, code: string, advance: () => void, setError: (msg: string) => void) => void;
+  onRemoveEmptyRows?: () => void;
   className?: string;
   emptyMessage?: string;
   disabled?: boolean;
@@ -59,6 +60,7 @@ export function ExcelGrid<T extends Record<string, any>>({
   productOptions = [],
   onProductSelect,
   onProductCodeTab,
+  onRemoveEmptyRows,
   className,
   emptyMessage = "No hay datos. Agregue una nueva fila para comenzar.",
   disabled = false,
@@ -240,6 +242,47 @@ export function ExcelGrid<T extends Record<string, any>>({
       }
     } else if (e.key === "Enter") {
       e.preventDefault();
+
+      // Si es un campo de código de producto con callback async, hacer lookup primero
+      if (column.type === "product-code" && onProductCodeTab) {
+        const code = (data[rowIndex][column.accessor as string] || "").toString();
+        const inputEl = e.target as HTMLInputElement;
+
+        const advance = () => {
+          const nextRow = rowIndex + 1;
+          if (nextRow < data.length) {
+            const firstEditableCol = columns.findIndex(col => col.type !== "readonly");
+            if (firstEditableCol !== -1) {
+              setFocusedCell({ row: nextRow, col: firstEditableCol });
+              setTimeout(() => {
+                const key = `${nextRow}-${firstEditableCol}`;
+                const input = inputRefs.current[key];
+                if (input) { input.focus(); input.select(); }
+              }, 0);
+            }
+          } else if (!disabled) {
+            onAddRow();
+            setTimeout(() => {
+              const firstEditableCol = columns.findIndex(col => col.type !== "readonly");
+              if (firstEditableCol !== -1) {
+                const key = `${data.length}-${firstEditableCol}`;
+                const input = inputRefs.current[key];
+                if (input) { input.focus(); input.select(); }
+                setFocusedCell({ row: data.length, col: firstEditableCol });
+              }
+            }, 50);
+          }
+        };
+
+        const setError = (msg: string) => {
+          inputEl.setCustomValidity(msg);
+          inputEl.reportValidity();
+          setTimeout(() => inputEl.setCustomValidity(""), 2500);
+        };
+
+        onProductCodeTab(rowIndex, code, advance, setError);
+        return;
+      }
 
       // Si estamos en la última fila, agregar una nueva
       if (rowIndex === data.length - 1 && !disabled) {
@@ -478,7 +521,14 @@ export function ExcelGrid<T extends Record<string, any>>({
   };
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div
+      className={cn("space-y-2", className)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node) && onRemoveEmptyRows) {
+          onRemoveEmptyRows();
+        }
+      }}
+    >
       {/* Botones de acción */}
       <div className="flex gap-2">
         <Button

@@ -79,7 +79,6 @@ interface GuideFormProps {
   mode?: "create" | "update";
   branches: BranchResource[];
   warehouses: WarehouseResource[];
-  customers: PersonResource[];
   motives: GuideMotiveResource[];
   vehicles: VehicleResource[];
   guide?: GuideResource;
@@ -92,7 +91,6 @@ export const GuideForm = ({
   isSubmitting = false,
   branches,
   warehouses,
-  customers,
   motives,
   vehicles,
 }: GuideFormProps) => {
@@ -615,17 +613,8 @@ export const GuideForm = ({
 
   const customerValue = form.watch("customer_id");
 
-  const [selectedCustomer, setSelectedCustomer] = useState<PersonResource | null>(null);
-
-  // Inicializar selectedCustomer desde la prop en modo edición
-  useEffect(() => {
-    if (defaultValues.customer_id && customers.length > 0 && !selectedCustomer) {
-      const found = customers.find(
-        (c) => c.id.toString() === defaultValues.customer_id,
-      );
-      if (found) setSelectedCustomer(found);
-    }
-  }, [customers, defaultValues.customer_id, selectedCustomer]);
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<PersonResource | null>(null);
 
   // Obtener las direcciones del cliente seleccionado
   const selectedCustomerAddresses = selectedCustomer?.person_zones || [];
@@ -661,14 +650,10 @@ export const GuideForm = ({
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="xs"
               onClick={() => setShowAdvancedFields((v) => !v)}
             >
-              {showAdvancedFields ? (
-                <EyeOff className="h-4 w-4 mr-2" />
-              ) : (
-                <Eye className="h-4 w-4 mr-2" />
-              )}
+              {showAdvancedFields ? <EyeOff /> : <Eye />}
               {showAdvancedFields
                 ? "Ocultar campos adicionales"
                 : "Mostrar campos adicionales"}
@@ -722,80 +707,92 @@ export const GuideForm = ({
             preloadItemId={defaultValues.customer_id}
           />
 
-          <FormSelect
-            control={form.control}
-            name="motive_id"
-            label="Motivo de Traslado"
-            placeholder="Seleccione un motivo"
-            options={motives
-              .sort((a, b) => a.id - b.id)
-              .map((motive) => ({
-                value: motive.id.toString(),
-                label: motive.name,
-                description: "CÓDIGO: " + motive.code,
+          <div className="hidden">
+            <FormSelect
+              control={form.control}
+              name="motive_id"
+              label="Motivo de Traslado"
+              placeholder="Seleccione un motivo"
+              options={motives
+                .sort((a, b) => a.id - b.id)
+                .map((motive) => ({
+                  value: motive.id.toString(),
+                  label: motive.name,
+                  description: "CÓDIGO: " + motive.code,
+                }))}
+            />
+          </div>
+
+          <div className="hidden">
+            <FormSelect
+              control={form.control}
+              name="modality"
+              label="Modalidad de Transporte"
+              placeholder="Seleccione modalidad"
+              options={MODALITIES.map((mod) => ({
+                value: mod.value,
+                label: mod.label,
               }))}
-          />
+            />
+          </div>
 
-          <FormSelect
-            control={form.control}
-            name="modality"
-            label="Modalidad de Transporte"
-            placeholder="Seleccione modalidad"
-            options={MODALITIES.map((mod) => ({
-              value: mod.value,
-              label: mod.label,
-            }))}
-          />
+          <div className="hidden">
+            <DatePickerFormField
+              control={form.control}
+              name="issue_date"
+              label="Fecha de Emisión"
+              placeholder="Seleccione fecha"
+            />
+          </div>
 
-          <DatePickerFormField
-            control={form.control}
-            name="issue_date"
-            label="Fecha de Emisión"
-            placeholder="Seleccione fecha"
-          />
+          <div className="hidden">
+            <DatePickerFormField
+              control={form.control}
+              name="transfer_date"
+              label="Fecha de Traslado"
+              placeholder="Seleccione fecha"
+            />
+          </div>
 
-          <DatePickerFormField
-            control={form.control}
-            name="transfer_date"
-            label="Fecha de Traslado"
-            placeholder="Seleccione fecha"
-          />
+          <div className="hidden">
+            <FormSelectAsync
+              control={form.control}
+              name="ubigeo_origin_id"
+              label="Ubigeo de Origen"
+              placeholder="Buscar ubigeo..."
+              useQueryHook={useUbigeosFrom}
+              additionalParams={{
+                per_page: 1300,
+              }}
+              mapOptionFn={(item: UbigeoResource) => ({
+                value: item.id.toString(),
+                label: item.name,
+                description: item.cadena,
+              })}
+              preloadItemId={defaultValues.ubigeo_origin_id}
+            />
+          </div>
 
-          <FormSelectAsync
-            control={form.control}
-            name="ubigeo_origin_id"
-            label="Ubigeo de Origen"
-            placeholder="Buscar ubigeo..."
-            useQueryHook={useUbigeosFrom}
-            additionalParams={{
-              per_page: 1300,
-            }}
-            mapOptionFn={(item: UbigeoResource) => ({
-              value: item.id.toString(),
-              label: item.name,
-              description: item.cadena,
-            })}
-            preloadItemId={defaultValues.ubigeo_origin_id}
-          />
-
-          <FormField
-            control={form.control}
-            name="origin_address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Dirección de Origen</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Av. Principal 123"
-                    className="w-full"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="hidden">
+            <FormField
+              control={form.control}
+              name="origin_address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dirección de Origen</FormLabel>
+                  <FormControl>
+                    <Input
+                      variant="default"
+                      placeholder="Ej: Av. Principal 123"
+                      className="w-full"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           <FormSelectAsync
             control={form.control}

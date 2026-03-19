@@ -398,6 +398,13 @@ export const SaleForm = ({
     form.setValue("details", updatedDetails);
   };
 
+  const handleRemoveEmptyDetailRows = useCallback(() => {
+    const filtered = details.filter((detail) => !!detail.product_id);
+    if (filtered.length === 0 || filtered.length === details.length) return;
+    setDetails(filtered);
+    form.setValue("details", filtered);
+  }, [details, form]);
+
   const handleCellChange = async (
     index: number,
     field: string,
@@ -1119,6 +1126,7 @@ export const SaleForm = ({
                 onCellChange={handleCellChange}
                 onProductSelect={handleProductSelect}
                 onProductCodeTab={handleProductCodeTab}
+                onRemoveEmptyRows={handleRemoveEmptyDetailRows}
                 emptyMessage="Seleccione un almacén y cliente para comenzar."
                 disabled={!selectedWarehouseId || !form.watch("customer_id")}
               />

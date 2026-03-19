@@ -112,9 +112,15 @@ export const SaleForm = ({
   const { data: productSearchResult, isFetching: isSearchingProduct } =
     useProduct(
       productCodeSearch
-        ? { codigo: productCodeSearch.code, direction: "asc" }
+        ? { codigo: productCodeSearch.code, direction: "asc", sort: "codigo" }
         : undefined,
     );
+
+  const productSelected =
+    productSearchResult?.data &&
+    productSearchResult.data.filter(
+      (p) => p.codigo === productCodeSearch?.code,
+    )[0];
 
   // Estado para las direcciones del cliente seleccionado
   const [customerAddresses, setCustomerAddresses] = useState<
@@ -672,8 +678,8 @@ export const SaleForm = ({
     const callbacks = productCodeCallbacksRef.current;
     if (!callbacks) return;
 
-    if (productSearchResult?.data && productSearchResult.data.length > 0) {
-      const product = productSearchResult.data[0];
+    if (productSelected) {
+      const product =productSelected;
       handleProductSelect(productCodeSearch.rowIndex, {
         id: product.id.toString(),
         codigo: product.codigo,

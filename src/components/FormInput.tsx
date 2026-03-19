@@ -162,7 +162,7 @@ export function FormInput({
         };
 
         return (
-          <FormItem className="flex flex-col justify-between">
+          <FormItem className="flex flex-col justify-between gap-0.5">
             <FormLabel className="flex justify-start items-center text-xs md:text-sm leading-none h-fit dark:text-muted-foreground">
               {label}
               {required && <RequiredField />}
@@ -190,7 +190,7 @@ export function FormInput({
                 <FormControl>
                   <Input
                     className={cn(
-                      "text-xs md:text-sm",
+                      "h-7 md:h-8 text-xs md:text-sm",
                       addonStart && "pl-10",
                       addonEnd && "pr-10",
                       className,

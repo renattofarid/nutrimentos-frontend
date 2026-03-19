@@ -211,7 +211,6 @@ export default function GuideEditPage() {
             mode="update"
             branches={branches}
             warehouses={warehouses}
-            customers={customers}
             motives={motives}
             vehicles={vehicles}
             guide={guide}

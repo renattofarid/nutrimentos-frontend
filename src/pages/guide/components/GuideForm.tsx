@@ -52,7 +52,7 @@ import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interfac
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import type { VehicleResource } from "@/pages/vehicle/lib/vehicle.interface";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { format } from "date-fns";
 import { getSalesByRange } from "@/pages/sale/lib/sale.actions";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
@@ -547,7 +547,6 @@ export const GuideForm = ({
           sale_ids: selectedSales,
         };
 
-    console.log("✅ Payload final siendo enviado:", payload);
     onSubmit(payload);
   };
 
@@ -617,20 +616,22 @@ export const GuideForm = ({
     useState<PersonResource | null>(null);
 
   // Obtener las direcciones del cliente seleccionado
-  const selectedCustomerAddresses = selectedCustomer?.person_zones || [];
+  const selectedCustomerAddresses = useMemo(
+    () => selectedCustomer?.person_zones || [],
+    [selectedCustomer],
+  );
 
   // Setear automáticamente la primera person_zone cuando se selecciona un cliente y solo hay una
   useEffect(() => {
     if (customerValue && selectedCustomerAddresses.length === 1) {
-      setSearchParams((prev) => ({
-        ...prev,
-        person_zone_id: selectedCustomerAddresses[0].id.toString(),
-      }));
+      const newId = selectedCustomerAddresses[0].id.toString();
+      setSearchParams((prev) =>
+        prev.person_zone_id === newId ? prev : { ...prev, person_zone_id: newId },
+      );
     } else if (!customerValue) {
-      setSearchParams((prev) => ({
-        ...prev,
-        person_zone_id: "",
-      }));
+      setSearchParams((prev) =>
+        prev.person_zone_id === "" ? prev : { ...prev, person_zone_id: "" },
+      );
     }
   }, [customerValue, selectedCustomerAddresses]);
 
@@ -644,7 +645,7 @@ export const GuideForm = ({
         <GroupFormSection
           title="Información de la Guía"
           icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 4, xl: 6 }}
+          cols={{ sm: 1, md: 2, lg: 4 }}
           className="col-span-full"
           headerExtra={
             <Button
@@ -802,7 +803,7 @@ export const GuideForm = ({
             placeholder="Ej: Av. Secundaria 456"
           />
 
-          <div className="col-span-full">
+          <div className="col-span-full hidden">
             <FormInput
               control={form.control}
               name="observations"
@@ -811,7 +812,7 @@ export const GuideForm = ({
             />
           </div>
 
-          <Separator className="col-span-full my-1" />
+          {showAdvancedFields && <Separator className="col-span-full my-1" />}
 
           {modalityValue !== "PRIVADO" && (
             <FormField
@@ -1023,38 +1024,31 @@ export const GuideForm = ({
               className="bg-muted"
             />
           </div>
-        </GroupFormSection>
 
-        {/* Switch: Por Ventas / Por Productos */}
-        <div className="col-span-full flex items-center gap-3 p-4 bg-sidebar rounded-lg border">
-          <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-          <Label htmlFor="detail-mode" className="text-sm font-medium">
-            Por Ventas
-          </Label>
-          <Switch
-            id="detail-mode"
-            checked={useCustomDetails}
-            onCheckedChange={(checked) => {
-              setUseCustomDetails(checked);
-              form.setValue("total_weight", 0 as any);
-              form.setValue("total_packages", 0 as any);
-            }}
-          />
-          <Label htmlFor="detail-mode" className="text-sm font-medium">
-            Por Productos
-          </Label>
-          <Package className="h-4 w-4 text-muted-foreground" />
-        </div>
+          {/* Switch: Por Ventas / Por Productos */}
+          <div className="col-span-full flex items-center gap-3 p-4 bg-sidebar rounded-lg border">
+            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            <Label htmlFor="detail-mode" className="text-sm font-medium">
+              Por Ventas
+            </Label>
+            <Switch
+              id="detail-mode"
+              checked={useCustomDetails}
+              onCheckedChange={(checked) => {
+                setUseCustomDetails(checked);
+                form.setValue("total_weight", 0 as any);
+                form.setValue("total_packages", 0 as any);
+              }}
+            />
+            <Label htmlFor="detail-mode" className="text-sm font-medium">
+              Por Productos
+            </Label>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </div>
 
-        {/* Detalle por Ventas */}
-        {!useCustomDetails && (
-          <GroupFormSection
-            className="col-span-full"
-            title="Búsqueda de Ventas por Rango"
-            icon={Search}
-            cols={{ sm: 1 }}
-          >
-            <div className="space-y-4">
+          {/* Detalle por Ventas */}
+          {!useCustomDetails && (
+            <div className="col-span-full space-y-4">
               {/* Filtros de búsqueda */}
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-sidebar rounded-lg">
                 <SearchableSelect
@@ -1126,39 +1120,43 @@ export const GuideForm = ({
                   }
                 />
 
-                <FormInput
-                  name="numero_fin"
-                  label="Número Fin"
-                  placeholder="Ej: 100"
-                  type="number"
-                  value={searchParams.numero_fin}
-                  onChange={(e) =>
-                    setSearchParams({
-                      ...searchParams,
-                      numero_fin: e.target.value,
-                    })
-                  }
-                />
-
-                <div className="md:col-span-full flex justify-end">
-                  <Button
-                    type="button"
-                    variant="default"
-                    onClick={handleSearchSalesByRange}
-                    disabled={isSearchingSales}
-                  >
-                    {isSearchingSales ? (
-                      <>
-                        <Loader className="mr-2 h-4 w-4 animate-spin" />
-                        Buscando...
-                      </>
-                    ) : (
-                      <>
-                        <Search className="mr-2 h-4 w-4" />
-                        Buscar Ventas
-                      </>
-                    )}
-                  </Button>
+                <div className="flex flex-col justify-between">
+                  <label className="flex justify-start items-center text-xs md:text-sm mb-0.5 leading-none h-fit font-medium text-muted-foreground">
+                    Número Fin
+                  </label>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      type="number"
+                      placeholder="Ej: 100"
+                      value={searchParams.numero_fin}
+                      onChange={(e) =>
+                        setSearchParams({
+                          ...searchParams,
+                          numero_fin: e.target.value,
+                        })
+                      }
+                      className="h-7 md:h-8 text-xs md:text-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="default"
+                      onClick={handleSearchSalesByRange}
+                      disabled={isSearchingSales}
+                      className="shrink-0"
+                    >
+                      {isSearchingSales ? (
+                        <>
+                          <Loader className="mr-2 h-4 w-4 animate-spin" />
+                          Buscando...
+                        </>
+                      ) : (
+                        <>
+                          <Search className="mr-2 h-4 w-4" />
+                          Buscar Ventas
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -1274,9 +1272,9 @@ export const GuideForm = ({
                     </ul>
                   </div>
                 )}
-            </div>
-          </GroupFormSection>
-        )}
+          </div>
+          )}
+        </GroupFormSection>
 
         {/* Detalle por Productos */}
         {useCustomDetails && (

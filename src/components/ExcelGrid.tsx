@@ -17,7 +17,13 @@ import { cn } from "@/lib/utils";
 export interface ExcelGridColumn<T> {
   id: string;
   header: string;
-  type: "product-search" | "product-code" | "text" | "number" | "readonly" | "switch";
+  type:
+    | "product-search"
+    | "product-code"
+    | "text"
+    | "number"
+    | "readonly"
+    | "switch";
   width?: string;
   accessor?: keyof T;
   render?: (row: T, index: number) => React.ReactNode;
@@ -44,7 +50,12 @@ interface ExcelGridProps<T> {
   onCellChange: (index: number, field: string, value: string) => void;
   productOptions?: ProductOption[];
   onProductSelect?: (index: number, product: ProductOption) => void;
-  onProductCodeTab?: (rowIndex: number, code: string, advance: () => void, setError: (msg: string) => void) => void;
+  onProductCodeTab?: (
+    rowIndex: number,
+    code: string,
+    advance: () => void,
+    setError: (msg: string) => void,
+  ) => void;
   onRemoveEmptyRows?: () => void;
   className?: string;
   emptyMessage?: string;
@@ -77,13 +88,19 @@ export function ExcelGrid<T extends Record<string, any>>({
   };
 
   // Función para obtener la siguiente celda editable
-  const getNextEditableCell = (currentRow: number, currentCol: number): { row: number; col: number } | null => {
+  const getNextEditableCell = (
+    currentRow: number,
+    currentCol: number,
+  ): { row: number; col: number } | null => {
     const currentRowData = data[currentRow];
 
     // Buscar en la misma fila
     for (let col = currentCol + 1; col < columns.length; col++) {
       const column = columns[col];
-      if (column.type !== "readonly" && !isColumnHidden(column, currentRowData)) {
+      if (
+        column.type !== "readonly" &&
+        !isColumnHidden(column, currentRowData)
+      ) {
         return { row: currentRow, col };
       }
     }
@@ -93,7 +110,10 @@ export function ExcelGrid<T extends Record<string, any>>({
       const nextRowData = data[currentRow + 1];
       for (let col = 0; col < columns.length; col++) {
         const column = columns[col];
-        if (column.type !== "readonly" && !isColumnHidden(column, nextRowData)) {
+        if (
+          column.type !== "readonly" &&
+          !isColumnHidden(column, nextRowData)
+        ) {
           return { row: currentRow + 1, col };
         }
       }
@@ -102,13 +122,19 @@ export function ExcelGrid<T extends Record<string, any>>({
     return null;
   };
 
-  const getPreviousEditableCell = (currentRow: number, currentCol: number): { row: number; col: number } | null => {
+  const getPreviousEditableCell = (
+    currentRow: number,
+    currentCol: number,
+  ): { row: number; col: number } | null => {
     const currentRowData = data[currentRow];
 
     // Buscar en la misma fila
     for (let col = currentCol - 1; col >= 0; col--) {
       const column = columns[col];
-      if (column.type !== "readonly" && !isColumnHidden(column, currentRowData)) {
+      if (
+        column.type !== "readonly" &&
+        !isColumnHidden(column, currentRowData)
+      ) {
         return { row: currentRow, col };
       }
     }
@@ -118,7 +144,10 @@ export function ExcelGrid<T extends Record<string, any>>({
       const prevRowData = data[currentRow - 1];
       for (let col = columns.length - 1; col >= 0; col--) {
         const column = columns[col];
-        if (column.type !== "readonly" && !isColumnHidden(column, prevRowData)) {
+        if (
+          column.type !== "readonly" &&
+          !isColumnHidden(column, prevRowData)
+        ) {
           return { row: currentRow - 1, col };
         }
       }
@@ -131,7 +160,7 @@ export function ExcelGrid<T extends Record<string, any>>({
     e: React.KeyboardEvent,
     rowIndex: number,
     colIndex: number,
-    column: ExcelGridColumn<T>
+    column: ExcelGridColumn<T>,
   ) => {
     if (e.key === "Tab") {
       e.preventDefault();
@@ -140,7 +169,9 @@ export function ExcelGrid<T extends Record<string, any>>({
       if (column.type === "product-code") {
         // Si hay callback async, delegarle toda la lógica
         if (onProductCodeTab) {
-          const code = (data[rowIndex][column.accessor as string] || "").toString();
+          const code = (
+            data[rowIndex][column.accessor as string] || ""
+          ).toString();
           const inputEl = e.target as HTMLInputElement;
           const isShift = e.shiftKey;
 
@@ -154,16 +185,24 @@ export function ExcelGrid<T extends Record<string, any>>({
               setTimeout(() => {
                 const key = `${nextCell.row}-${nextCell.col}`;
                 const input = inputRefs.current[key];
-                if (input) { input.focus(); input.select(); }
+                if (input) {
+                  input.focus();
+                  input.select();
+                }
               }, 0);
             } else if (!isShift && rowIndex === data.length - 1 && !disabled) {
               onAddRow();
               setTimeout(() => {
-                const firstEditableCol = columns.findIndex(col => col.type !== "readonly");
+                const firstEditableCol = columns.findIndex(
+                  (col) => col.type !== "readonly",
+                );
                 if (firstEditableCol !== -1) {
                   const key = `${data.length}-${firstEditableCol}`;
                   const input = inputRefs.current[key];
-                  if (input) { input.focus(); input.select(); }
+                  if (input) {
+                    input.focus();
+                    input.select();
+                  }
                   setFocusedCell({ row: data.length, col: firstEditableCol });
                 }
               }, 50);
@@ -184,8 +223,12 @@ export function ExcelGrid<T extends Record<string, any>>({
         const currentValue = data[rowIndex][column.accessor as string];
         if (currentValue && currentValue.trim() !== "") {
           const searchValue = currentValue.toString().toLowerCase();
-          const exactMatch = productOptions.find(p => p.codigo.toLowerCase() === searchValue);
-          const partialMatches = productOptions.filter(p => p.codigo.toLowerCase().includes(searchValue));
+          const exactMatch = productOptions.find(
+            (p) => p.codigo.toLowerCase() === searchValue,
+          );
+          const partialMatches = productOptions.filter((p) =>
+            p.codigo.toLowerCase().includes(searchValue),
+          );
 
           if (exactMatch) {
             if (onProductSelect) onProductSelect(rowIndex, exactMatch);
@@ -193,7 +236,9 @@ export function ExcelGrid<T extends Record<string, any>>({
             if (onProductSelect) onProductSelect(rowIndex, partialMatches[0]);
           } else if (partialMatches.length > 1) {
             const input = e.target as HTMLInputElement;
-            input.setCustomValidity(`Se encontraron ${partialMatches.length} productos. Sea más específico.`);
+            input.setCustomValidity(
+              `Se encontraron ${partialMatches.length} productos. Sea más específico.`,
+            );
             input.reportValidity();
             setTimeout(() => input.setCustomValidity(""), 3000);
             return;
@@ -227,7 +272,9 @@ export function ExcelGrid<T extends Record<string, any>>({
           onAddRow();
           setTimeout(() => {
             // Enfocar la primera celda editable de la nueva fila
-            const firstEditableCol = columns.findIndex(col => col.type !== "readonly");
+            const firstEditableCol = columns.findIndex(
+              (col) => col.type !== "readonly",
+            );
             if (firstEditableCol !== -1) {
               const key = `${data.length}-${firstEditableCol}`;
               const input = inputRefs.current[key];
@@ -245,29 +292,41 @@ export function ExcelGrid<T extends Record<string, any>>({
 
       // Si es un campo de código de producto con callback async, hacer lookup primero
       if (column.type === "product-code" && onProductCodeTab) {
-        const code = (data[rowIndex][column.accessor as string] || "").toString();
+        const code = (
+          data[rowIndex][column.accessor as string] || ""
+        ).toString();
         const inputEl = e.target as HTMLInputElement;
 
         const advance = () => {
           const nextRow = rowIndex + 1;
           if (nextRow < data.length) {
-            const firstEditableCol = columns.findIndex(col => col.type !== "readonly");
+            const firstEditableCol = columns.findIndex(
+              (col) => col.type !== "readonly",
+            );
             if (firstEditableCol !== -1) {
               setFocusedCell({ row: nextRow, col: firstEditableCol });
               setTimeout(() => {
                 const key = `${nextRow}-${firstEditableCol}`;
                 const input = inputRefs.current[key];
-                if (input) { input.focus(); input.select(); }
+                if (input) {
+                  input.focus();
+                  input.select();
+                }
               }, 0);
             }
           } else if (!disabled) {
             onAddRow();
             setTimeout(() => {
-              const firstEditableCol = columns.findIndex(col => col.type !== "readonly");
+              const firstEditableCol = columns.findIndex(
+                (col) => col.type !== "readonly",
+              );
               if (firstEditableCol !== -1) {
                 const key = `${data.length}-${firstEditableCol}`;
                 const input = inputRefs.current[key];
-                if (input) { input.focus(); input.select(); }
+                if (input) {
+                  input.focus();
+                  input.select();
+                }
                 setFocusedCell({ row: data.length, col: firstEditableCol });
               }
             }, 50);
@@ -289,7 +348,9 @@ export function ExcelGrid<T extends Record<string, any>>({
         onAddRow();
         setTimeout(() => {
           // Enfocar la primera celda editable de la nueva fila
-          const firstEditableCol = columns.findIndex(col => col.type !== "readonly");
+          const firstEditableCol = columns.findIndex(
+            (col) => col.type !== "readonly",
+          );
           if (firstEditableCol !== -1) {
             const key = `${data.length}-${firstEditableCol}`;
             const input = inputRefs.current[key];
@@ -337,8 +398,12 @@ export function ExcelGrid<T extends Record<string, any>>({
     }
   };
 
-
-  const renderCell = (row: T, rowIndex: number, column: ExcelGridColumn<T>, colIndex: number) => {
+  const renderCell = (
+    row: T,
+    rowIndex: number,
+    column: ExcelGridColumn<T>,
+    colIndex: number,
+  ) => {
     const cellKey = `${rowIndex}-${colIndex}`;
 
     if (column.render) {
@@ -353,15 +418,19 @@ export function ExcelGrid<T extends Record<string, any>>({
 
         // Filtrar productos que coincidan con el valor actual
         const matchingProducts = codeValue
-          ? productOptions.filter(p =>
-              p.codigo.toLowerCase().includes(codeValue.toString().toLowerCase())
+          ? productOptions.filter((p) =>
+              p.codigo
+                .toLowerCase()
+                .includes(codeValue.toString().toLowerCase()),
             )
           : [];
 
         return (
           <>
             <input
-              ref={(el) => { inputRefs.current[cellKey] = el; }}
+              ref={(el) => {
+                inputRefs.current[cellKey] = el;
+              }}
               type="text"
               value={codeValue}
               onChange={(e) => {
@@ -396,15 +465,17 @@ export function ExcelGrid<T extends Record<string, any>>({
         return (
           <>
             <input
-              ref={(el) => { inputRefs.current[cellKey] = el; }}
+              ref={(el) => {
+                inputRefs.current[cellKey] = el;
+              }}
               type="text"
               value={searchValue}
               onChange={(e) => {
                 const value = e.target.value;
 
                 // Buscar el producto por nombre
-                const product = productOptions.find(p =>
-                  p.name.toLowerCase() === value.toLowerCase()
+                const product = productOptions.find(
+                  (p) => p.name.toLowerCase() === value.toLowerCase(),
                 );
 
                 // Si se encontró el producto, seleccionarlo
@@ -436,7 +507,9 @@ export function ExcelGrid<T extends Record<string, any>>({
         const isDisabled = column.disabled ? column.disabled(row) : false;
         return (
           <input
-            ref={(el) => { inputRefs.current[cellKey] = el; }}
+            ref={(el) => {
+              inputRefs.current[cellKey] = el;
+            }}
             type="number"
             value={row[column.accessor as string] || ""}
             onChange={(e) => {
@@ -452,7 +525,7 @@ export function ExcelGrid<T extends Record<string, any>>({
             onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex, column)}
             className={cn(
               "w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent text-right",
-              isDisabled && "opacity-50 cursor-not-allowed"
+              isDisabled && "opacity-50 cursor-not-allowed",
             )}
             step="any"
             min="0"
@@ -463,11 +536,15 @@ export function ExcelGrid<T extends Record<string, any>>({
       case "text":
         return (
           <input
-            ref={(el) => { inputRefs.current[cellKey] = el; }}
+            ref={(el) => {
+              inputRefs.current[cellKey] = el;
+            }}
             type="text"
             value={row[column.accessor as string] || ""}
-            onChange={(e) => column.onCellChange?.(rowIndex, e.target.value) ||
-                           onCellChange(rowIndex, column.accessor as string, e.target.value)}
+            onChange={(e) =>
+              column.onCellChange?.(rowIndex, e.target.value) ||
+              onCellChange(rowIndex, column.accessor as string, e.target.value)
+            }
             onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
             onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex, column)}
             className="w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent"
@@ -480,7 +557,7 @@ export function ExcelGrid<T extends Record<string, any>>({
         return (
           <div className="h-full flex items-center justify-center px-2 py-1 gap-2">
             <Switch
-              ref={(el) => {
+              ref={(el: any) => {
                 if (el) {
                   // Crear un wrapper que tenga focus/select para compatibilidad con inputRefs
                   const wrapper = {
@@ -497,7 +574,9 @@ export function ExcelGrid<T extends Record<string, any>>({
                 }
               }}
               onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
-              onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex, column)}
+              onKeyDown={(e: any) =>
+                handleKeyDown(e, rowIndex, colIndex, column)
+              }
               className="data-[state=checked]:bg-blue-600"
             />
             {switchLabel && (
@@ -524,7 +603,10 @@ export function ExcelGrid<T extends Record<string, any>>({
     <div
       className={cn("space-y-2", className)}
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node) && onRemoveEmptyRows) {
+        if (
+          !e.currentTarget.contains(e.relatedTarget as Node) &&
+          onRemoveEmptyRows
+        ) {
           onRemoveEmptyRows();
         }
       }}
@@ -596,11 +678,11 @@ export function ExcelGrid<T extends Record<string, any>>({
                         key={column.id}
                         className={cn(
                           "p-0 h-9 border-r last:border-r-0",
-                          hidden && "pointer-events-none"
+                          hidden && "pointer-events-none",
                         )}
                         style={{
-                          visibility: hidden ? 'hidden' : 'visible',
-                          width: column.width
+                          visibility: hidden ? "hidden" : "visible",
+                          width: column.width,
                         }}
                       >
                         {!hidden && renderCell(row, rowIndex, column, colIndex)}

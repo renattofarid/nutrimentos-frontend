@@ -108,6 +108,12 @@ export function FormSelectAsync({
   );
   const rawItemsMap = useRef<Map<string, any>>(new Map());
   const hasAutoSelected = useRef(false);
+  const mapOptionFnRef = useRef(mapOptionFn);
+  mapOptionFnRef.current = mapOptionFn;
+  const onValueChangeRef = useRef(onValueChange);
+  onValueChangeRef.current = onValueChange;
+  const controlFieldRef = useRef(controlField);
+  controlFieldRef.current = controlField;
 
   // Hook de consulta con parámetros dinámicos
   const { data, isLoading, isFetching } = useQueryHook({
@@ -145,11 +151,11 @@ export function FormSelectAsync({
   // Agregar nuevas opciones cuando llegan datos
   useEffect(() => {
     if (data?.data) {
-      const newOptions = data.data.map(mapOptionFn);
+      const newOptions = data.data.map(mapOptionFnRef.current);
 
       // Store raw items for reliable lookup in onValueChange
       for (const item of data.data) {
-        const opt = mapOptionFn(item);
+        const opt = mapOptionFnRef.current(item);
         rawItemsMap.current.set(opt.value, item);
       }
 
@@ -166,7 +172,7 @@ export function FormSelectAsync({
         });
       }
     }
-  }, [data, page, mapOptionFn]);
+  }, [data, page]);
 
   // Precargar item específico buscando en todas las páginas
   useEffect(() => {
@@ -196,18 +202,18 @@ export function FormSelectAsync({
 
   // Auto-seleccionar el item de preloadItemId cuando aparece en las opciones
   useEffect(() => {
-    if (!preloadItemId || hasAutoSelected.current || controlField.value) return;
+    if (!preloadItemId || hasAutoSelected.current || controlFieldRef.current.value) return;
     const found = allOptions.find((opt) => opt.value === preloadItemId);
     if (found) {
       hasAutoSelected.current = true;
-      controlField.onChange(preloadItemId);
+      controlFieldRef.current.onChange(preloadItemId);
       setSelectedOption(found);
-      if (onValueChange) {
+      if (onValueChangeRef.current) {
         const rawItem = rawItemsMap.current.get(preloadItemId);
-        onValueChange(preloadItemId, rawItem);
+        onValueChangeRef.current(preloadItemId, rawItem);
       }
     }
-  }, [allOptions, preloadItemId, controlField, onValueChange]);
+  }, [allOptions, preloadItemId]);
 
   // Manejar scroll para cargar más
   const handleScroll = useCallback(

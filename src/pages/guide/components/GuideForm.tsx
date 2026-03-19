@@ -774,23 +774,11 @@ export const GuideForm = ({
           </div>
 
           <div className="hidden">
-            <FormField
+            <FormInput
               control={form.control}
               name="origin_address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dirección de Origen</FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder="Ej: Av. Principal 123"
-                      className="w-full"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Dirección de Origen"
+              placeholder="Ej: Av. Principal 123"
             />
           </div>
 
@@ -807,43 +795,21 @@ export const GuideForm = ({
             })}
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="destination_address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Dirección de Destino</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Av. Secundaria 456"
-                    className="w-full"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Dirección de Destino"
+            placeholder="Ej: Av. Secundaria 456"
           />
 
-          <FormField
-            control={form.control}
-            name="observations"
-            render={({ field }) => (
-              <FormItem className="col-span-full">
-                <FormLabel>Observaciones </FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Observaciones adicionales"
-                    className="w-full"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="col-span-full">
+            <FormInput
+              control={form.control}
+              name="observations"
+              label="Observaciones"
+              placeholder="Observaciones adicionales"
+            />
+          </div>
 
           <Separator className="col-span-full my-1" />
 
@@ -903,47 +869,22 @@ export const GuideForm = ({
           )}
 
           {modalityValue !== "PRIVADO" && (
-            <FormField
+            <FormInput
               control={form.control}
               name="carrier_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Nombre del Transportista
-                    {modalityValue === "PUBLICO" ? "" : " "}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder="Ej: Transportes SAC"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Nombre del Transportista"
+              placeholder="Ej: Transportes SAC"
             />
           )}
 
-          <FormField
+          <FormInput
             control={form.control}
             name="total_weight"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Peso Total (kg)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    variant="default"
-                    placeholder="0.00"
-                    {...field}
-                    className="bg-muted"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Peso Total (kg)"
+            type="number"
+            step="0.01"
+            placeholder="0.00"
+            className="bg-muted"
           />
 
           <FormField
@@ -1034,87 +975,32 @@ export const GuideForm = ({
               ]}
             />
 
-            <FormField
+            <FormInput
               control={form.control}
               name="driver_document_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Número de Documento del Conductor
-                    {modalityValue === "PUBLICO" ? "" : " "}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder="Ej: 12345678"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Número de Documento del Conductor"
+              placeholder="Ej: 12345678"
             />
 
-            <FormField
+            <FormInput
               control={form.control}
               name="driver_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Nombre Completo del Conductor
-                    {modalityValue === "PUBLICO" ? "" : " "}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder="Ej: Juan Pérez García"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Nombre Completo del Conductor"
+              placeholder="Ej: Juan Pérez García"
             />
 
-            <FormField
+            <FormInput
               control={form.control}
               name="driver_license"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Licencia de Conducir
-                    {modalityValue === "PUBLICO" ? "" : " "}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder="Ej: Q12345678"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Licencia de Conducir"
+              placeholder="Ej: Q12345678"
             />
 
-            <FormField
+            <FormInput
               control={form.control}
               name="carrier_mtc_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Número MTC{modalityValue === "PUBLICO" ? "" : " "}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder="Ej: MTC-123456"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Número MTC"
+              placeholder="Ej: MTC-123456"
             />
 
             <FormSelect
@@ -1128,24 +1014,13 @@ export const GuideForm = ({
               }))}
             />
 
-            <FormField
+            <FormInput
               control={form.control}
               name="total_packages"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Total de Bultos (sacos)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      variant="default"
-                      placeholder="0"
-                      {...field}
-                      className="bg-muted"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Total de Bultos (sacos)"
+              type="number"
+              placeholder="0"
+              className="bg-muted"
             />
           </div>
         </GroupFormSection>

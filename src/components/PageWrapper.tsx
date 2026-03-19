@@ -13,7 +13,7 @@ export default function PageWrapper({ children, size = "3xl" }: Props) {
   };
 
   return (
-    <div className={cn("w-full mx-auto md:pt-0 space-y-6", sizeClasses[size])}>
+    <div className={cn("w-full mx-auto md:pt-0 space-y-2", sizeClasses[size])}>
       {children}
     </div>
   );

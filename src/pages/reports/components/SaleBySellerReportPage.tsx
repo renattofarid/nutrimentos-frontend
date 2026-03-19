@@ -35,10 +35,10 @@ import {
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportSaleBySellerReport } from "../lib/reports.actions";
-import { toast } from "sonner";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { FormSelect } from "@/components/FormSelect";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
+import { errorToast, successToast } from "@/lib/core.function";
 
 interface FilterFormValues {
   document_type: string;
@@ -310,9 +310,9 @@ export default function SaleBySellerReportPage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success("Reporte de Ventas por Vendedor exportado exitosamente");
+      successToast("Reporte de Ventas por Vendedor exportado exitosamente");
     } catch (error) {
-      toast.error("Error al exportar el reporte de Ventas por Vendedor");
+      errorToast("Error al exportar el reporte de Ventas por Vendedor");
     } finally {
       setIsExporting(false);
     }

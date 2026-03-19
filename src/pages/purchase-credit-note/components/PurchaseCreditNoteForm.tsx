@@ -17,6 +17,8 @@ import {
 } from "../lib/purchase-credit-note.schema";
 import { Textarea } from "@/components/ui/textarea";
 import { FormSelect } from "@/components/FormSelect";
+import { FormSelectAsync } from "@/components/FormSelectAsync";
+import { useSuppliers } from "@/pages/supplier/lib/supplier.hook";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
 import type { PurchaseResource } from "@/pages/purchase/lib/purchase.interface";
@@ -45,7 +47,6 @@ interface PurchaseCreditNoteFormProps {
   onCancel?: () => void;
   isSubmitting?: boolean;
   purchases?: Array<{ value: string; label: string }>;
-  suppliers?: Array<{ value: string; label: string }>;
   warehouses?: Array<{ value: string; label: string }>;
   creditNoteTypes?: Array<{ value: string; label: string }>;
   selectedPurchase?: PurchaseResource | null;
@@ -58,7 +59,6 @@ export const PurchaseCreditNoteForm = ({
   onCancel,
   isSubmitting = false,
   purchases = [],
-  suppliers = [],
   warehouses = [],
   creditNoteTypes = [],
   selectedPurchase,
@@ -236,13 +236,20 @@ export const PurchaseCreditNoteForm = ({
             />
           )}
 
-          <FormSelect
+          <FormSelectAsync
             control={form.control}
             name="supplier_id"
             label="Proveedor"
             placeholder="Seleccione un proveedor"
-            options={suppliers}
+            useQueryHook={useSuppliers}
+            mapOptionFn={(supplier) => ({
+              value: supplier.id.toString(),
+              label: supplier.business_name
+                ? supplier.business_name
+                : `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`,
+            })}
             disabled={isDetailed && !!selectedPurchase}
+            preloadItemId={defaultValues.supplier_id}
           />
 
           <FormSelect

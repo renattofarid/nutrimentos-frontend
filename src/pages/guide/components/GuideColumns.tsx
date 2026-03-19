@@ -3,7 +3,6 @@ import type { GuideResource } from "../lib/guide.interface";
 import { Badge } from "@/components/ui/badge";
 import { ButtonAction } from "@/components/ButtonAction";
 import { Eye, Pencil } from "lucide-react";
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
 import ExportButtons from "@/components/ExportButtons";
 
 interface GuideColumnsProps {
@@ -14,7 +13,6 @@ interface GuideColumnsProps {
 
 export const GuideColumns = ({
   onEdit,
-  onDelete,
   onView,
 }: GuideColumnsProps): ColumnDef<GuideResource>[] => [
   {
@@ -138,7 +136,7 @@ export const GuideColumns = ({
           onClick={() => onEdit(row.original.id)}
           tooltip="Editar"
         />
-        <DeleteButton onClick={() => onDelete(row.original.id)} />
+        {/* <DeleteButton onClick={() => onDelete(row.original.id)} /> */}
       </div>
     ),
   },

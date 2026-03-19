@@ -86,7 +86,7 @@ export function FormInput({
     return (
       <div className="flex flex-col justify-between">
         {label && (
-          <label className="flex justify-start items-center text-xs md:text-sm mb-1 leading-none h-fit font-medium text-muted-foreground">
+          <label className="flex justify-start items-center text-xs md:text-sm mb-0.5 leading-none h-fit font-medium text-muted-foreground">
             {label}
             {required && <RequiredField />}
             {tooltip && (
@@ -114,7 +114,7 @@ export function FormInput({
             <Input
               name={name}
               className={cn(
-                "h-8 md:h-9 text-xs md:text-sm",
+                "h-7 md:h-8 text-xs md:text-sm",
                 addonStart && "pl-10",
                 addonEnd && "pr-10",
                 className,
@@ -162,7 +162,7 @@ export function FormInput({
         };
 
         return (
-          <FormItem className="flex flex-col justify-between">
+          <FormItem className="flex flex-col justify-between gap-0.5">
             <FormLabel className="flex justify-start items-center text-xs md:text-sm leading-none h-fit dark:text-muted-foreground">
               {label}
               {required && <RequiredField />}
@@ -190,7 +190,7 @@ export function FormInput({
                 <FormControl>
                   <Input
                     className={cn(
-                      "text-xs md:text-sm",
+                      "h-7 md:h-8 text-xs md:text-sm",
                       addonStart && "pl-10",
                       addonEnd && "pr-10",
                       className,

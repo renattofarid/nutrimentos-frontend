@@ -27,7 +27,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import DeliverySheetOptions from "./DeliverySheetOptions";
 import { useDeliverySheets } from "../lib/deliverysheet.hook";
-import { toast } from "sonner";
+import { errorToast, successToast } from "@/lib/core.function";
 
 export default function DeliverySheetPage() {
   const navigate = useNavigate();
@@ -126,9 +126,9 @@ export default function DeliverySheetPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast.success("Planillas exportadas exitosamente");
+      successToast("Planillas exportadas exitosamente");
     } catch {
-      toast.error("Error al exportar las planillas");
+      errorToast("Error al exportar las planillas");
     } finally {
       setIsExporting(false);
     }

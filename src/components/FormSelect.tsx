@@ -90,7 +90,7 @@ export function FormSelect({
         }, [options, field.value, disabled, autoSelectSingle]);
 
         return (
-          <FormItem className="flex flex-col justify-start">
+          <FormItem className="flex flex-col justify-start gap-0.5">
             {typeof label === "function" ? (
               label()
             ) : (
@@ -141,8 +141,9 @@ export function FormSelect({
                     variant={"outline"}
                     role="combobox"
                     disabled={disabled}
+                    size="sm"
                     className={cn(
-                      "w-full justify-between min-h-7 flex min-w-0",
+                      "w-full justify-between flex min-w-0",
                       !field.value && "text-muted-foreground",
                       field.value && "bg-muted",
                       uppercase && "uppercase",

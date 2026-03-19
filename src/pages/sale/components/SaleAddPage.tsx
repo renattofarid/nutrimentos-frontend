@@ -91,17 +91,15 @@ export const SaleAddPage = () => {
 
   return (
     <PageWrapper size="3xl">
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <TitleFormComponent title="Venta" mode="create" icon={ICON} />
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => navigate("/ventas/listado")}
-          >
-            <List className="size-4 mr-2" /> Ver Listado
-          </Button>
-        </div>
+      <div className="flex items-center justify-between">
+        <TitleFormComponent title="Venta" mode="create" icon={ICON} />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => navigate("/ventas/listado")}
+        >
+          <List className="size-4 mr-2" /> Ver Listado
+        </Button>
       </div>
 
       {!canShowForm && (

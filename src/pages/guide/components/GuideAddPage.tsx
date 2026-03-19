@@ -25,8 +25,6 @@ import type { GuideSchema } from "../lib/guide.schema";
 import { GUIDE } from "../lib/guide.interface";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
-import { useAllClients } from "@/pages/client/lib/client.hook";
-import { useAllSuppliers } from "@/pages/supplier/lib/supplier.hook";
 
 export default function GuideAddPage() {
   const { ROUTE, MODEL, ICON } = GUIDE;
@@ -46,8 +44,7 @@ export default function GuideAddPage() {
     isLoading: warehousesLoading,
     refetch: refetchWarehouses,
   } = useAllWarehouses();
-  const { data: customers, refetch: refetchCustomers } = useAllClients();
-  const { data: suppliers, refetch: refetchSuppliers } = useAllSuppliers();
+
   const {
     data: motives,
     isLoading: motivesLoading,
@@ -83,8 +80,6 @@ export default function GuideAddPage() {
   useEffect(() => {
     refetchBranches();
     refetchWarehouses();
-    refetchCustomers();
-    refetchSuppliers();
     refetchMotives();
     refetchCategories();
     refetchBrands();
@@ -98,8 +93,6 @@ export default function GuideAddPage() {
   const isLoading =
     branchesLoading ||
     warehousesLoading ||
-    !customers ||
-    !suppliers ||
     motivesLoading ||
     categoriesLoading ||
     brandsLoading ||
@@ -176,8 +169,6 @@ export default function GuideAddPage() {
         branches.length > 0 &&
         warehouses &&
         warehouses.length > 0 &&
-        customers &&
-        customers.length > 0 &&
         motives &&
         motives.length > 0 &&
         categories &&
@@ -190,8 +181,6 @@ export default function GuideAddPage() {
         productTypes.length > 0 &&
         nationalities &&
         nationalities.length > 0 &&
-        suppliers &&
-        suppliers.length > 0 &&
         vehicles && (
           <GuideForm
             defaultValues={getDefaultValues()}
@@ -201,7 +190,6 @@ export default function GuideAddPage() {
             mode="create"
             branches={branches}
             warehouses={warehouses}
-            customers={customers}
             motives={motives}
             vehicles={vehicles}
           />

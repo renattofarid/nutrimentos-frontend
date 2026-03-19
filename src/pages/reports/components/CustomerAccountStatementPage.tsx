@@ -10,16 +10,17 @@ import type {
 } from "../lib/reports.interface";
 import { Badge } from "@/components/ui/badge";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
-import { useAllClients } from "@/pages/client/lib/client.hook";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { FileSpreadsheet, Search, Filter, DollarSign } from "lucide-react";
+import { FileSpreadsheet, Search, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
+import { FormSelectAsync } from "@/components/FormSelectAsync";
+import { useClients } from "@/pages/client/lib/client.hook";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
 import { exportCustomerAccountStatement } from "../lib/reports.actions";
-import { toast } from "sonner";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import type { Option } from "@/lib/core.interface";
@@ -27,6 +28,7 @@ import {
   transformCustomerAccountStatementData,
   calculateAccountStatementMetrics,
 } from "../lib/reports.utils";
+import { errorToast, successToast } from "@/lib/core.function";
 
 export const CustomerAccountStatementTitle = "Estado de Cuenta de Clientes";
 
@@ -214,9 +216,9 @@ const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
 
 export default function CustomerAccountStatementPage() {
   const [isExporting, setIsExporting] = useState(false);
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
 
   const { data: zones } = useAllZones();
-  const { data: clients } = useAllClients();
   const { data: workers } = useAllWorkers();
 
   const { data: rawData, isLoading, fetch } = useCustomerAccountStatement();
@@ -247,19 +249,7 @@ export default function CustomerAccountStatementPage() {
   });
 
   const zoneOptions: Option[] =
-    zones?.map((zone) => ({
-      value: zone.id.toString(),
-      label: zone.name,
-    })) || [];
-
-  const clientOptions: Option[] =
-    clients?.map((client) => ({
-      value: client.id.toString(),
-      label:
-        client.business_name ??
-        `${client.names} ${client.father_surname} ${client.mother_surname}`,
-      description: client.number_document ?? client.phone,
-    })) || [];
+    zones?.map((zone) => ({ value: zone.id.toString(), label: zone.name })) || [];
 
   const workerOptions: Option[] =
     workers?.map((worker) => ({
@@ -327,11 +317,11 @@ export default function CustomerAccountStatementPage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success(
+      successToast(
         `Reporte exportado exitosamente en formato ${exportType.toUpperCase()}`,
       );
     } catch (error) {
-      toast.error("Error al exportar el reporte");
+      errorToast("Error al exportar el reporte");
       console.error(error);
     } finally {
       setIsExporting(false);
@@ -348,87 +338,101 @@ export default function CustomerAccountStatementPage() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">
-          <GroupFormSection
-            title="Filtros de Búsqueda"
-            icon={Filter}
-            gap="gap-2"
-            cols={{ sm: 1, md: 2, lg: 3, xl: 5 }}
-            headerExtra={
-              <div className="flex gap-2">
-                <Button type="submit" disabled={isLoading} size="sm">
-                  <Search className="mr-2 h-4 w-4" />
-                  Buscar
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleExport("excel")}
-                  disabled={isExporting || !tableData || tableData.length === 0}
-                >
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Excel
-                </Button>
+          <div className="space-y-3">
+            <div className="flex items-end gap-2">
+              <div className="flex-1 max-w-sm">
+                <FormSelectAsync
+                  control={form.control}
+                  name="customer_id"
+                  label="Cliente"
+                  placeholder="Seleccione un cliente"
+                  useQueryHook={useClients}
+                  mapOptionFn={(customer: PersonResource) => ({
+                    value: customer.id.toString(),
+                    label:
+                      customer.business_name ??
+                      `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
+                    description: customer.number_document ?? "-",
+                  })}
+                />
               </div>
-            }
-          >
-            <FormSelect
-              control={form.control}
-              name="zone_id"
-              label="Zona"
-              placeholder="Seleccionar zona"
-              options={zoneOptions}
-            />
-
-            <FormSelect
-              control={form.control}
-              name="customer_id"
-              label="Cliente"
-              placeholder="Seleccionar cliente"
-              options={clientOptions}
-              withValue
-            />
-
-            <FormSelect
-              control={form.control}
-              name="vendedor_id"
-              label="Vendedor"
-              placeholder="Seleccionar vendedor"
-              options={workerOptions}
-            />
-
-            <DateRangePickerFormField
-              control={form.control}
-              nameFrom="start_date"
-              nameTo="end_date"
-              label="Rango de Fechas"
-              placeholder="Seleccionar rango"
-            />
-
-            <FormSelect
-              control={form.control}
-              name="payment_type"
-              label="Tipo de Pago"
-              placeholder="Seleccionar tipo"
-              options={paymentTypeOptions}
-            />
-
-            <FormSelect
-              control={form.control}
-              name="query_type"
-              label="Tipo de Consulta"
-              placeholder="Seleccionar tipo"
-              options={queryTypeOptions}
-            />
-            <div className="col-span-2">
-              <FormSwitch
-                control={form.control}
-                name="show_old"
-                label="Mostrar antiguos"
-                text="Incluir registros antiguos en la consulta"
-              />
+              <Button type="submit" disabled={isLoading} size="sm">
+                <Search className="mr-2 h-4 w-4" />
+                Buscar
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleExport("excel")}
+                disabled={isExporting || !tableData || tableData.length === 0}
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Excel
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowMoreFilters((v) => !v)}
+              >
+                {showMoreFilters ? (
+                  <ChevronUp className="mr-1 h-4 w-4" />
+                ) : (
+                  <ChevronDown className="mr-1 h-4 w-4" />
+                )}
+                {showMoreFilters ? "Menos filtros" : "Más filtros"}
+              </Button>
             </div>
-          </GroupFormSection>
+
+            {showMoreFilters && (
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-5">
+                <FormSelect
+                  control={form.control}
+                  name="zone_id"
+                  label="Zona"
+                  placeholder="Seleccionar zona"
+                  options={zoneOptions}
+                />
+                <FormSelect
+                  control={form.control}
+                  name="vendedor_id"
+                  label="Vendedor"
+                  placeholder="Seleccionar vendedor"
+                  options={workerOptions}
+                />
+                <DateRangePickerFormField
+                  control={form.control}
+                  nameFrom="start_date"
+                  nameTo="end_date"
+                  label="Rango de Fechas"
+                  placeholder="Seleccionar rango"
+                />
+                <FormSelect
+                  control={form.control}
+                  name="payment_type"
+                  label="Tipo de Pago"
+                  placeholder="Seleccionar tipo"
+                  options={paymentTypeOptions}
+                />
+                <FormSelect
+                  control={form.control}
+                  name="query_type"
+                  label="Tipo de Consulta"
+                  placeholder="Seleccionar tipo"
+                  options={queryTypeOptions}
+                />
+                <div className="col-span-2">
+                  <FormSwitch
+                    control={form.control}
+                    name="show_old"
+                    label="Mostrar antiguos"
+                    text="Incluir registros antiguos en la consulta"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
 
           {meta && (
             <GroupFormSection

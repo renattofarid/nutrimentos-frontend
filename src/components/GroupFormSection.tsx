@@ -13,11 +13,55 @@ interface FormSectionProps {
     md?: 1 | 2 | 3 | 4 | 5 | 6;
     lg?: 1 | 2 | 3 | 4 | 5 | 6;
     xl?: 1 | 2 | 3 | 4 | 5 | 6;
+    "2xl"?: 1 | 2 | 3 | 4 | 5 | 6;
   };
   className?: string;
   gap?: string;
   headerExtra?: ReactNode;
 }
+
+const colsMap = {
+  sm: {
+    1: "sm:grid-cols-1",
+    2: "sm:grid-cols-2",
+    3: "sm:grid-cols-3",
+    4: "sm:grid-cols-4",
+    5: "sm:grid-cols-5",
+    6: "sm:grid-cols-6",
+  },
+  md: {
+    1: "md:grid-cols-1",
+    2: "md:grid-cols-2",
+    3: "md:grid-cols-3",
+    4: "md:grid-cols-4",
+    5: "md:grid-cols-5",
+    6: "md:grid-cols-6",
+  },
+  lg: {
+    1: "lg:grid-cols-1",
+    2: "lg:grid-cols-2",
+    3: "lg:grid-cols-3",
+    4: "lg:grid-cols-4",
+    5: "lg:grid-cols-5",
+    6: "lg:grid-cols-6",
+  },
+  xl: {
+    1: "xl:grid-cols-1",
+    2: "xl:grid-cols-2",
+    3: "xl:grid-cols-3",
+    4: "xl:grid-cols-4",
+    5: "xl:grid-cols-5",
+    6: "xl:grid-cols-6",
+  },
+  "2xl": {
+    1: "2xl:grid-cols-1",
+    2: "2xl:grid-cols-2",
+    3: "2xl:grid-cols-3",
+    4: "2xl:grid-cols-4",
+    5: "2xl:grid-cols-5",
+    6: "2xl:grid-cols-6",
+  },
+} as const;
 
 export const GroupFormSection = ({
   title,
@@ -27,47 +71,17 @@ export const GroupFormSection = ({
   children,
   cols = { sm: 2, md: 3, lg: 4 },
   className,
-  gap = "gap-3 md:gap-3",
+  gap = "gap-3",
   headerExtra,
 }: FormSectionProps) => {
-  const getGridCols = (breakpoint: 'sm' | 'md' | 'lg' | 'xl', value?: number) => {
-    if (!value) return '';
-    const colsMap: Record<string, string> = {
-      'sm-1': 'sm:grid-cols-1',
-      'sm-2': 'sm:grid-cols-2',
-      'sm-3': 'sm:grid-cols-3',
-      'sm-4': 'sm:grid-cols-4',
-      'sm-5': 'sm:grid-cols-5',
-      'sm-6': 'sm:grid-cols-6',
-      'md-1': 'md:grid-cols-1',
-      'md-2': 'md:grid-cols-2',
-      'md-3': 'md:grid-cols-3',
-      'md-4': 'md:grid-cols-4',
-      'md-5': 'md:grid-cols-5',
-      'md-6': 'md:grid-cols-6',
-      'lg-1': 'lg:grid-cols-1',
-      'lg-2': 'lg:grid-cols-2',
-      'lg-3': 'lg:grid-cols-3',
-      'lg-4': 'lg:grid-cols-4',
-      'lg-5': 'lg:grid-cols-5',
-      'lg-6': 'lg:grid-cols-6',
-      'xl-1': 'xl:grid-cols-1',
-      'xl-2': 'xl:grid-cols-2',
-      'xl-3': 'xl:grid-cols-3',
-      'xl-4': 'xl:grid-cols-4',
-      'xl-5': 'xl:grid-cols-5',
-      'xl-6': 'xl:grid-cols-6',
-    };
-    return colsMap[`${breakpoint}-${value}`] || '';
-  };
-
   const gridClasses = [
     "grid",
     "grid-cols-1",
-    getGridCols('sm', cols.sm),
-    getGridCols('md', cols.md),
-    getGridCols('lg', cols.lg),
-    getGridCols('xl', cols.xl),
+    cols.sm && colsMap.sm[cols.sm],
+    cols.md && colsMap.md[cols.md],
+    cols.lg && colsMap.lg[cols.lg],
+    cols.xl && colsMap.xl[cols.xl],
+    cols["2xl"] && colsMap["2xl"][cols["2xl"]],
     gap,
     "items-start",
   ]
@@ -78,18 +92,18 @@ export const GroupFormSection = ({
     <div
       className={cn(
         `bg-background rounded-md border border-muted shadow-sm overflow-hidden`,
-        className
+        className,
       )}
     >
-      <div className={`${bgColor} p-2 border-b border-muted`}>
+      <div className={`${bgColor} px-2 py-0 border-b border-muted`}>
         <div className="flex flex-row flex-wrap justify-between sm:items-center gap-3">
           <h3
             className={cn(
-              "text-sm md:text-base font-semibold flex items-center",
-              iconColor
+              "text-xs md:text-sm font-semibold flex items-center",
+              iconColor,
             )}
           >
-            <Icon className={`size-4 md:size-5 mr-2`} />
+            <Icon className={`size-2 md:size-3 mr-2`} />
             {title}
           </h3>
           {headerExtra}

@@ -19,9 +19,9 @@ import { FileSpreadsheet, Search, Filter, Package } from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportInventoryReport } from "../lib/reports.actions";
-import { toast } from "sonner";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
+import { errorToast, successToast } from "@/lib/core.function";
 
 interface FilterFormValues {
   product_id: string;
@@ -168,9 +168,9 @@ export default function InventoryReportPage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success("Reporte de inventario exportado exitosamente");
+      successToast("Reporte de inventario exportado exitosamente");
     } catch {
-      toast.error("Error al exportar el reporte de inventario");
+      errorToast("Error al exportar el reporte de inventario");
     } finally {
       setIsExporting(false);
     }

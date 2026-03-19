@@ -16,10 +16,10 @@ import { FileSpreadsheet, Search, Filter, ArrowUpDown } from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportKardexReport } from "../lib/reports.actions";
-import { toast } from "sonner";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
+import { errorToast, successToast } from "@/lib/core.function";
 
 interface FilterFormValues {
   product_id: string;
@@ -190,9 +190,9 @@ export default function KardexReportPage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success("Reporte de Kardex exportado exitosamente");
+      successToast("Reporte de Kardex exportado exitosamente");
     } catch {
-      toast.error("Error al exportar el reporte de Kardex");
+      errorToast("Error al exportar el reporte de Kardex");
     } finally {
       setIsExporting(false);
     }

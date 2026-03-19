@@ -17,7 +17,6 @@ import FormWrapper from "@/components/FormWrapper";
 import { usePurchaseCreditNoteStore } from "../lib/purchase-credit-note.store";
 import FormSkeleton from "@/components/FormSkeleton";
 import { useAllPurchases } from "@/pages/purchase/lib/purchase.hook";
-import { useAllSuppliers } from "@/pages/supplier/lib/supplier.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import {
   useAllPurchaseCreditNoteTypes,
@@ -40,7 +39,6 @@ export default function PurchaseCreditNoteEditPage() {
   const { data: creditNote, isFinding } =
     usePurchaseCreditNoteById(creditNoteId);
   const { data: purchases, isLoading: isLoadingPurchases } = useAllPurchases();
-  const { data: suppliers, isLoading: isLoadingSuppliers } = useAllSuppliers();
   const { data: warehouses, isLoading: isLoadingWarehouses } =
     useAllWarehouses();
   const { data: creditNoteTypes, isLoading: isLoadingTypes } =
@@ -62,19 +60,6 @@ export default function PurchaseCreditNoteEditPage() {
         label: `${purchase.document_type} ${purchase.document_number} - ${purchase.supplier_fullname}`,
       })) || [],
     [purchases],
-  );
-
-  const suppliersOptions = useMemo(
-    () =>
-      suppliers?.map((supplier) => ({
-        value: supplier.id.toString(),
-        label:
-          supplier.business_name ||
-          [supplier.names, supplier.father_surname, supplier.mother_surname]
-            .filter(Boolean)
-            .join(" "),
-      })) || [],
-    [suppliers],
   );
 
   const warehousesOptions = useMemo(
@@ -185,7 +170,6 @@ export default function PurchaseCreditNoteEditPage() {
   if (
     isFinding ||
     isLoadingPurchases ||
-    isLoadingSuppliers ||
     isLoadingWarehouses ||
     isLoadingTypes
   ) {
@@ -227,7 +211,6 @@ export default function PurchaseCreditNoteEditPage() {
         onCancel={() => navigate(ROUTE)}
         isSubmitting={isSubmitting}
         purchases={purchasesOptions}
-        suppliers={suppliersOptions}
         warehouses={warehousesOptions}
         creditNoteTypes={creditNoteTypesOptions}
         selectedPurchase={selectedPurchase}

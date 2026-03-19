@@ -6,12 +6,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Loader, Save, AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader, Save, AlertCircle, Search } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { toast } from "sonner";
 import PageWrapper from "@/components/PageWrapper";
 import { DataTable } from "@/components/DataTable";
-import { SearchableSelect } from "@/components/SearchableSelect";
 import { parseFormattedNumber } from "@/lib/utils";
 import { findDeliverySheetById } from "../lib/deliverysheet.actions";
 import { useDeliverySheetStore } from "../lib/deliverysheet.store";
@@ -31,10 +30,13 @@ import {
   SettlementSummary,
   SaleTableWithNotes,
 } from "./settlement";
+import { errorToast, successToast } from "@/lib/core.function";
 
 export default function SettlementPage() {
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string>("");
+  const [sheetNumberInput, setSheetNumberInput] = useState<string>("");
+  const [searchError, setSearchError] = useState<string>("");
   const [deliverySheet, setDeliverySheet] = useState<DeliverySheetById | null>(
     null,
   );
@@ -44,16 +46,31 @@ export default function SettlementPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: sheetsData } = useAllDeliverySheets();
-  const sheetOptions = useMemo(
-    () =>
-      (sheetsData ?? [])
-        .filter((item) => parseFloat(item.pending_amount_raw) > 0)
-        .map((item) => ({
-          value: item.id.toString(),
-          label: `${item.sheet_number} - ${item.issue_date} > Pendiente: ${item.pending_amount}`,
-        })),
-    [sheetsData],
-  );
+
+  const handleSearchSheet = () => {
+    setSearchError("");
+    const trimmed = sheetNumberInput.trim();
+    if (!trimmed) {
+      setSearchError("Ingrese un número de planilla");
+      return;
+    }
+    const match = (sheetsData ?? []).find(
+      (item) =>
+        item.sheet_number.toLowerCase() === trimmed.toLowerCase() &&
+        parseFloat(item.pending_amount_raw) > 0,
+    );
+    if (!match) {
+      setSearchError(
+        "No se encontró una planilla pendiente con ese número",
+      );
+      setSelectedId("");
+      setDeliverySheet(null);
+      return;
+    }
+    setSelectedId(match.id.toString());
+    setDeliverySheet(null);
+    setErrors([]);
+  };
   const [expandedNotes, setExpandedNotes] = useState<Set<number>>(new Set());
 
   const form = useForm<SettlementFormSchema>({
@@ -112,7 +129,7 @@ export default function SettlementPage() {
             error.response?.data?.error ||
             "Error al cargar la planilla de reparto",
         ]);
-        toast.error("Error al cargar la planilla");
+        errorToast("Error al cargar la planilla");
       } finally {
         setIsLoading(false);
       }
@@ -123,7 +140,7 @@ export default function SettlementPage() {
 
   const handleSubmit = async (data: SettlementFormSchema) => {
     if (!deliverySheet) {
-      toast.error("No se encontró la planilla de reparto");
+      errorToast("No se encontró la planilla de reparto");
       return;
     }
 
@@ -139,7 +156,7 @@ export default function SettlementPage() {
         setErrors([
           `Debe seleccionar el estado de entrega para todas las boletas (${invalidSales.length} pendientes)`,
         ]);
-        toast.error("Completar todos los estados de entrega");
+        errorToast("Completar todos los estados de entrega");
         return;
       }
 
@@ -158,7 +175,7 @@ export default function SettlementPage() {
       };
 
       await submitSettlement(deliverySheet.id, settlementData);
-      toast.success("Rendición registrada exitosamente");
+      successToast("Rendición registrada exitosamente");
       navigate(DELIVERY_SHEET.ROUTE);
     } catch (error: any) {
       console.error("Error al registrar la rendición:", error);
@@ -167,7 +184,7 @@ export default function SettlementPage() {
         error.response?.data?.error ||
         "Error al registrar la rendición";
       setErrors([errorMessage]);
-      toast.error(errorMessage);
+      errorToast(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -210,18 +227,36 @@ export default function SettlementPage() {
           onBack={() => navigate(DELIVERY_SHEET.ROUTE)}
         />
 
-        <SearchableSelect
-          label="Planilla de Cobranza"
-          placeholder="Buscar planilla de cobranza"
-          value={selectedId}
-          options={sheetOptions}
-          onChange={(val) => {
-            setSelectedId(val);
-            setDeliverySheet(null);
-            setErrors([]);
-          }}
-          className="min-w-96"
-        />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs md:text-sm font-medium text-muted-foreground">
+            Número de Planilla
+          </label>
+          <div className="flex gap-2 items-center">
+            <Input
+              placeholder="Ej: PL-0001"
+              value={sheetNumberInput}
+              onChange={(e) => {
+                setSheetNumberInput(e.target.value);
+                setSearchError("");
+              }}
+              onKeyDown={(e) => e.key === "Enter" && handleSearchSheet()}
+              className="h-7 md:h-8 text-xs md:text-sm max-w-64"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleSearchSheet}
+              className="gap-1.5"
+            >
+              <Search className="h-3.5 w-3.5" />
+              Buscar
+            </Button>
+          </div>
+          {searchError && (
+            <p className="text-xs font-medium text-destructive">{searchError}</p>
+          )}
+        </div>
 
         {selectedId && isLoading && (
           <div className="flex items-center justify-center h-48">

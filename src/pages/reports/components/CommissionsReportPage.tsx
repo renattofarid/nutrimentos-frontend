@@ -34,10 +34,10 @@ import {
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportCommissionsReport } from "../lib/reports.actions";
-import { toast } from "sonner";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { FormSelect } from "@/components/FormSelect";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
+import { errorToast, successToast } from "@/lib/core.function";
 
 interface FilterFormValues {
   document_type: string;
@@ -241,9 +241,9 @@ export default function CommissionsReportPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast.success("Reporte de Comisiones exportado exitosamente");
+      successToast("Reporte de Comisiones exportado exitosamente");
     } catch {
-      toast.error("Error al exportar el reporte de Comisiones");
+      errorToast("Error al exportar el reporte de Comisiones");
     } finally {
       setIsExportingExcel(false);
       setIsExportingPdf(false);

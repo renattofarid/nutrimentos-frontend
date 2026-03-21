@@ -32,10 +32,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { formatDecimalTrunc, parseFormattedNumber } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatCurrency";
-import {
-  DOCUMENT_TYPES,
-  PAYMENT_TYPES,
-} from "../lib/sale.interface";
+import { DOCUMENT_TYPES, PAYMENT_TYPES } from "../lib/sale.interface";
 import { errorToast } from "@/lib/core.function";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { ClientDialog } from "@/pages/client/components/ClientDialog";
@@ -280,30 +277,19 @@ export const SaleForm = ({
 
       // Si el warehouse seleccionado no está en la nueva lista filtrada, limpiar
       const currentWarehouseId = form.getValues("warehouse_id");
-      let warehouseCleared = false;
 
       if (currentWarehouseId) {
         const isValid = filtered.some(
-          (warehouse) => warehouse.id.toString() === currentWarehouseId,
+          (warehouse) =>
+            warehouse.id.toString() === currentWarehouseId.toString(),
         );
         if (!isValid) {
           form.setValue("warehouse_id", "");
-          warehouseCleared = true;
         }
-      }
-
-      // Si solo hay un almacén, seleccionarlo automáticamente
-      // Esto se ejecuta si: no hay almacén seleccionado, o el almacén fue limpiado
-      if (
-        filtered.length === 1 &&
-        mode === "create" &&
-        (!currentWarehouseId || warehouseCleared)
-      ) {
-        form.setValue("warehouse_id", filtered[0].id.toString());
       }
     } else {
       setFilteredWarehouses([]);
-      form.setValue("warehouse_id", "");
+      // form.setValue("warehouse_id", "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBranchId, warehouses]);
@@ -675,7 +661,7 @@ export const SaleForm = ({
     if (!callbacks) return;
 
     if (productSelected) {
-      const product =productSelected;
+      const product = productSelected;
       handleProductSelect(productCodeSearch.rowIndex, {
         id: product.id.toString(),
         codigo: product.codigo,
@@ -1105,7 +1091,6 @@ export const SaleForm = ({
             }))}
             uppercase
           />
-
         </GroupFormSection>
 
         {/* Detalles, Cuotas y Resumen */}

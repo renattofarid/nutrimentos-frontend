@@ -8,18 +8,17 @@ import {
 } from "@/components/ui/form";
 import {
   Popover,
-  PopoverTrigger,
+  PopoverAnchor,
   PopoverContent,
 } from "@/components/ui/popover";
 import {
   Command,
-  CommandInput,
   CommandEmpty,
   CommandList,
   CommandItem,
 } from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Check, ChevronsUpDown, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Control } from "react-hook-form";
 import { useController } from "react-hook-form";
@@ -47,7 +46,6 @@ interface FormSelectAsyncProps {
   children?: React.ReactNode;
   className?: string;
   required?: boolean;
-  // Props específicos para async
   useQueryHook: (params: {
     search?: string;
     2?: number;
@@ -61,11 +59,16 @@ interface FormSelectAsyncProps {
   mapOptionFn: (item: any) => Option;
   perPage?: number;
   debounceMs?: number;
-  defaultOption?: Option; // Opción inicial para mostrar cuando se edita
-  additionalParams?: Record<string, any>; // Parámetros adicionales para el hook
-  onValueChange?: (value: string, item?: any) => void; // Callback cuando cambia el valor
-  preloadItemId?: string; // ID del item a precargar buscando en todas las páginas
-  uppercase?: boolean; // Si es true, muestra el texto en mayúsculas
+  defaultOption?: Option;
+  additionalParams?: Record<string, any>;
+  onValueChange?: (value: string, item?: any) => void;
+  preloadItemId?: string;
+  uppercase?: boolean;
+}
+
+function getOptionLabel(opt: Option): string {
+  if (typeof opt.label === "string") return opt.label;
+  return opt.value;
 }
 
 export function FormSelectAsync({
@@ -106,6 +109,9 @@ export function FormSelectAsync({
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const rawItemsMap = useRef<Map<string, any>>(new Map());
   const hasAutoSelected = useRef(false);
   const mapOptionFnRef = useRef(mapOptionFn);
@@ -115,7 +121,6 @@ export function FormSelectAsync({
   const controlFieldRef = useRef(controlField);
   controlFieldRef.current = controlField;
 
-  // Hook de consulta con parámetros dinámicos
   const { data, isLoading, isFetching } = useQueryHook({
     search: debouncedSearch,
     page,
@@ -123,47 +128,37 @@ export function FormSelectAsync({
     ...additionalParams,
   });
 
-  // Debounce para el search
+  // Debounce search → API call
   useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
 
     debounceTimerRef.current = setTimeout(() => {
-      // Solo limpiar opciones si realmente cambió la búsqueda
       if (debouncedSearch !== search) {
         setDebouncedSearch(search);
-        setPage(1); // Resetear a página 1 cuando cambia la búsqueda
-        // Solo limpiar si hay búsqueda activa (para evitar limpiar en estado inicial)
+        setPage(1);
         if (search !== "" || open) {
-          setAllOptions([]); // Limpiar opciones anteriores solo cuando hay búsqueda
+          setAllOptions([]);
         }
       }
     }, debounceMs);
 
     return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
   }, [search, debounceMs, debouncedSearch, open]);
 
-  // Agregar nuevas opciones cuando llegan datos
+  // Accumulate options from API
   useEffect(() => {
     if (data?.data) {
       const newOptions = data.data.map(mapOptionFnRef.current);
-
-      // Store raw items for reliable lookup in onValueChange
       for (const item of data.data) {
         const opt = mapOptionFnRef.current(item);
         rawItemsMap.current.set(opt.value, item);
       }
-
       if (page === 1) {
         setAllOptions(newOptions);
       } else {
         setAllOptions((prev) => {
-          // Evitar duplicados
           const existingIds = new Set(prev.map((opt) => opt.value));
           const uniqueNew = newOptions.filter(
             (opt) => !existingIds.has(opt.value),
@@ -174,7 +169,7 @@ export function FormSelectAsync({
     }
   }, [data, page]);
 
-  // Precargar item específico buscando en todas las páginas
+  // Preload item by id (paginate until found)
   useEffect(() => {
     if (
       preloadItemId &&
@@ -183,24 +178,14 @@ export function FormSelectAsync({
       data?.meta?.last_page &&
       page < data.meta.last_page
     ) {
-      // Verificar si el item ya está cargado
       const itemFound = allOptions.some((opt) => opt.value === preloadItemId);
-
       if (!itemFound) {
-        // Cargar siguiente página para buscar el item
         setPage((prev) => prev + 1);
       }
     }
-  }, [
-    preloadItemId,
-    allOptions,
-    isLoading,
-    isFetching,
-    data?.meta?.last_page,
-    page,
-  ]);
+  }, [preloadItemId, allOptions, isLoading, isFetching, data?.meta?.last_page, page]);
 
-  // Auto-seleccionar el item de preloadItemId cuando aparece en las opciones
+  // Auto-select preloaded item
   useEffect(() => {
     if (!preloadItemId || hasAutoSelected.current || controlFieldRef.current.value) return;
     const found = allOptions.find((opt) => opt.value === preloadItemId);
@@ -215,13 +200,12 @@ export function FormSelectAsync({
     }
   }, [allOptions, preloadItemId]);
 
-  // Manejar scroll para cargar más
+  // Infinite scroll
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
       const target = e.currentTarget;
       const bottom =
         target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
-
       if (
         bottom &&
         !isLoading &&
@@ -235,15 +219,24 @@ export function FormSelectAsync({
     [isLoading, isFetching, data?.meta?.last_page, page],
   );
 
-  // Reset cuando se cierra el popover
-  const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
-    if (!newOpen) {
+  const handleFocus = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    setSearch("");
+    setDebouncedSearch("");
+    setPage(1);
+    setAllOptions([]);
+    setOpen(true);
+  };
+
+  const handleBlur = () => {
+    closeTimerRef.current = setTimeout(() => {
+      setOpen(false);
       setSearch("");
-      setDebouncedSearch("");
-      setPage(1);
-      // NO limpiamos allOptions para mantener la opción seleccionada visible
-    }
+    }, 150);
+  };
+
+  const handleListMouseDown = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
   };
 
   return (
@@ -251,12 +244,34 @@ export function FormSelectAsync({
       control={control}
       name={name}
       render={({ field }) => {
-        // Buscar la opción seleccionada en las opciones cargadas o usar la cache
         const selected =
           allOptions.find((opt) => opt.value === field.value) ||
           (field.value && selectedOption?.value === field.value
             ? selectedOption
             : null);
+
+        const displayLabel = selected ? getOptionLabel(selected) : "";
+
+        const handleSelect = (option: Option) => {
+          const newValue =
+            option.value === field.value ? "" : option.value;
+          field.onChange(newValue);
+          setSelectedOption(newValue ? option : null);
+          if (onValueChange) {
+            const selectedItem = rawItemsMap.current.get(option.value);
+            onValueChange(newValue, selectedItem);
+          }
+          if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+          setOpen(false);
+          setSearch("");
+        };
+
+        const handleClear = (e: React.MouseEvent) => {
+          e.stopPropagation();
+          field.onChange("");
+          setSelectedOption(null);
+          if (onValueChange) onValueChange("");
+        };
 
         return (
           <FormItem className="flex flex-col justify-between gap-0.5">
@@ -288,50 +303,54 @@ export function FormSelectAsync({
                 )}
 
             <div className="flex gap-2 items-center">
-              <Popover open={open} onOpenChange={handleOpenChange}>
-                <PopoverTrigger asChild>
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverAnchor asChild>
                   <FormControl>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      disabled={disabled}
-                      size="sm"
-                      className={cn(
-                        "w-full justify-between flex min-w-0",
-                        !field.value && "text-muted-foreground",
-                        field.value && "bg-muted",
-                        uppercase && "uppercase",
-                        className,
-                      )}
-                    >
-                      <span className="text-nowrap! line-clamp-1">
-                        {selected
-                          ? typeof selected.label === "function"
-                            ? selected.label()
-                            : selected.label
-                          : placeholder}
-                      </span>
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
+                    <div className="relative w-full">
+                      <Input
+                        value={open ? search : displayLabel}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        placeholder={placeholder}
+                        disabled={disabled}
+                        className={cn(
+                          "h-8 pr-8 text-sm",
+                          field.value && !open && "bg-muted",
+                          uppercase && "uppercase",
+                          className,
+                        )}
+                        autoComplete="off"
+                      />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                        {(isLoading || isFetching) && open ? (
+                          <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                        ) : field.value && !disabled ? (
+                          <button
+                            type="button"
+                            tabIndex={-1}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={handleClear}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        ) : null}
+                        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50 pointer-events-none" />
+                      </div>
+                    </div>
                   </FormControl>
-                </PopoverTrigger>
+                </PopoverAnchor>
 
                 <PopoverContent
                   className="p-0 min-w-(--radix-popover-trigger-width)! w-auto"
+                  onMouseDown={handleListMouseDown}
                   onWheel={(e) => e.stopPropagation()}
                   onWheelCapture={(e) => e.stopPropagation()}
                   onTouchMove={(e) => e.stopPropagation()}
+                  onOpenAutoFocus={(e) => e.preventDefault()}
                 >
-                  <Command
-                    className="max-h-72 overflow-hidden"
-                    shouldFilter={false}
-                  >
-                    <CommandInput
-                      className="border-none focus:ring-0"
-                      placeholder="Buscar..."
-                      value={search}
-                      onValueChange={setSearch}
-                    />
+                  <Command className="max-h-72 overflow-hidden" shouldFilter={false}>
                     <CommandList
                       className="max-h-60 overflow-y-auto"
                       ref={scrollRef}
@@ -353,23 +372,7 @@ export function FormSelectAsync({
                             <CommandItem
                               key={option.value}
                               className="cursor-pointer"
-                              onSelect={() => {
-                                const newValue =
-                                  option.value === field.value
-                                    ? ""
-                                    : option.value;
-                                field.onChange(newValue);
-                                // Actualizar cache de la opción seleccionada
-                                setSelectedOption(newValue ? option : null);
-                                // Llamar onValueChange si existe, pasando el item completo
-                                if (onValueChange) {
-                                  const selectedItem = rawItemsMap.current.get(
-                                    option.value,
-                                  );
-                                  onValueChange(newValue, selectedItem);
-                                }
-                                setOpen(false);
-                              }}
+                              onSelect={() => handleSelect(option)}
                             >
                               <Check
                                 className={cn(
@@ -421,6 +424,7 @@ export function FormSelectAsync({
               </Popover>
               {children}
             </div>
+
             {description && (
               <FormDescription
                 className={cn(

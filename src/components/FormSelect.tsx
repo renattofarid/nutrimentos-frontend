@@ -8,20 +8,19 @@ import {
 } from "@/components/ui/form";
 import {
   Popover,
-  PopoverTrigger,
+  PopoverAnchor,
   PopoverContent,
 } from "@/components/ui/popover";
 import {
   Command,
-  CommandInput,
   CommandEmpty,
   CommandList,
   CommandItem,
 } from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import React from "react";
 import {
   Tooltip,
@@ -45,9 +44,14 @@ interface FormSelectProps {
   withValue?: boolean;
   classNameOption?: string;
   strictFilter?: boolean;
-  enableCodeSearch?: boolean; // Nueva prop para habilitar búsqueda por código
+  enableCodeSearch?: boolean;
   autoSelectSingle?: boolean;
   uppercase?: boolean;
+}
+
+function getOptionLabel(opt: Option): string {
+  if (typeof opt.label === "string") return opt.label;
+  return opt.value;
 }
 
 export function FormSelect({
@@ -61,7 +65,6 @@ export function FormSelect({
   tooltip,
   withValue = false,
   classNameOption,
-  strictFilter = false,
   enableCodeSearch = false,
   autoSelectSingle = false,
   uppercase = false,
@@ -69,6 +72,27 @@ export function FormSelect({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [searchTab, setSearchTab] = useState<"name" | "code">("name");
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+
+  const handleFocus = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    setSearch("");
+    setOpen(true);
+  };
+
+  const handleBlur = () => {
+    closeTimerRef.current = setTimeout(() => {
+      setOpen(false);
+      setSearch("");
+      if (enableCodeSearch) setSearchTab("name");
+    }, 150);
+  };
+
+  const handleListMouseDown = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+  };
 
   return (
     <FormField
@@ -76,6 +100,7 @@ export function FormSelect({
       name={name}
       render={({ field }) => {
         const selected = options.find((opt) => opt.value === field.value);
+        const displayLabel = selected ? getOptionLabel(selected) : "";
 
         // Auto-select if only one option is available
         useEffect(() => {
@@ -88,6 +113,81 @@ export function FormSelect({
             field.onChange(options[0].value);
           }
         }, [options, field.value, disabled, autoSelectSingle]);
+
+        const filterByName = (opts: Option[]) =>
+          search
+            ? opts.filter((opt) =>
+                getOptionLabel(opt)
+                  .toLowerCase()
+                  .includes(search.toLowerCase()),
+              )
+            : opts;
+
+        const filterByCode = (opts: Option[]) =>
+          search
+            ? opts.filter((opt) =>
+                (opt.searchCode || "")
+                  .toLowerCase()
+                  .includes(search.toLowerCase()),
+              )
+            : opts;
+
+        const filteredOptions =
+          enableCodeSearch && searchTab === "code"
+            ? filterByCode(options)
+            : filterByName(options);
+
+        const handleSelect = (optionValue: string) => {
+          const newValue =
+            optionValue === field.value ? "" : optionValue;
+          field.onChange(newValue);
+          if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+          setOpen(false);
+          setSearch("");
+        };
+
+        const handleClear = (e: React.MouseEvent) => {
+          e.stopPropagation();
+          field.onChange("");
+        };
+
+        const optionItem = (option: Option) => (
+          <CommandItem
+            key={option.value}
+            className="cursor-pointer"
+            onSelect={() => handleSelect(option.value)}
+          >
+            <Check
+              className={cn(
+                "mr-2 h-4 w-4 shrink-0",
+                option.value === field.value ? "opacity-100" : "opacity-0",
+              )}
+            />
+            <div className="flex flex-col min-w-0 flex-1">
+              <span
+                className={cn(
+                  "truncate",
+                  classNameOption,
+                  uppercase && "uppercase",
+                )}
+              >
+                {typeof option.label === "function"
+                  ? option.label()
+                  : option.label}
+              </span>
+              {option.description && (
+                <span
+                  className={cn(
+                    "text-[10px] text-muted-foreground truncate",
+                    uppercase && "uppercase",
+                  )}
+                >
+                  {withValue && `${option.value} - `} {option.description}
+                </span>
+              )}
+            </div>
+          </CommandItem>
+        );
 
         return (
           <FormItem className="flex flex-col justify-start gap-0.5">
@@ -123,49 +223,49 @@ export function FormSelect({
               </FormDescription>
             )}
 
-            <Popover
-              open={open}
-              onOpenChange={(newOpen) => {
-                setOpen(newOpen);
-                if (!newOpen) {
-                  setSearch("");
-                  if (enableCodeSearch) {
-                    setSearchTab("name");
-                  }
-                }
-              }}
-            >
-              <PopoverTrigger asChild>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverAnchor asChild>
                 <FormControl>
-                  <Button
-                    variant={"outline"}
-                    role="combobox"
-                    disabled={disabled}
-                    size="sm"
-                    className={cn(
-                      "w-full justify-between flex min-w-0",
-                      !field.value && "text-muted-foreground",
-                      field.value && "bg-muted",
-                      uppercase && "uppercase",
-                    )}
-                  >
-                    <span className="!text-nowrap line-clamp-1">
-                      {selected
-                        ? typeof selected.label === "function"
-                          ? selected.label()
-                          : selected.label
-                        : placeholder}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
+                  <div className="relative">
+                    <Input
+                      value={open ? search : displayLabel}
+                      onChange={(e) => setSearch(e.target.value)}
+                      onFocus={handleFocus}
+                      onBlur={handleBlur}
+                      placeholder={placeholder}
+                      disabled={disabled}
+                      className={cn(
+                        "h-8 pr-8 text-sm",
+                        field.value && !open && "bg-muted",
+                        uppercase && "uppercase",
+                      )}
+                      autoComplete="off"
+                    />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                      {field.value && !disabled && (
+                        <button
+                          type="button"
+                          tabIndex={-1}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={handleClear}
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                      <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50 pointer-events-none" />
+                    </div>
+                  </div>
                 </FormControl>
-              </PopoverTrigger>
+              </PopoverAnchor>
 
               <PopoverContent
                 className="p-0 !min-w-(--radix-popover-trigger-width) w-auto"
+                onMouseDown={handleListMouseDown}
                 onWheel={(e) => e.stopPropagation()}
                 onWheelCapture={(e) => e.stopPropagation()}
                 onTouchMove={(e) => e.stopPropagation()}
+                onOpenAutoFocus={(e) => e.preventDefault()}
               >
                 {enableCodeSearch ? (
                   <Tabs
@@ -184,232 +284,34 @@ export function FormSelect({
                         Por Código
                       </TabsTrigger>
                     </TabsList>
-
                     <TabsContent value="name" className="m-0">
-                      <Command
-                        className="max-h-72 overflow-hidden"
-                        shouldFilter={!strictFilter}
-                      >
-                        <CommandInput
-                          className="border-none focus:ring-0"
-                          placeholder="Buscar por nombre..."
-                          value={strictFilter ? search : undefined}
-                          onValueChange={strictFilter ? setSearch : undefined}
-                        />
+                      <Command className="max-h-72 overflow-hidden" shouldFilter={false}>
                         <CommandList className="max-h-60 overflow-y-auto">
                           <CommandEmpty className="py-4 text-center text-sm">
                             No hay resultados.
                           </CommandEmpty>
-                          {(strictFilter
-                            ? options.filter((option) => {
-                                if (!search) return true;
-                                const label =
-                                  typeof option.label === "function"
-                                    ? option.label()
-                                    : option.label;
-                                return (label || "")
-                                  .toString()
-                                  .toLowerCase()
-                                  .includes(search.toLowerCase());
-                              })
-                            : options
-                          ).map((option) => (
-                            <CommandItem
-                              key={option.value}
-                              className="cursor-pointer"
-                              onSelect={() => {
-                                const newValue =
-                                  option.value === field.value
-                                    ? ""
-                                    : option.value;
-                                field.onChange(newValue);
-                                setOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4 shrink-0",
-                                  option.value === field.value
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              <div className="flex flex-col min-w-0 flex-1">
-                                <span
-                                  className={cn(
-                                    "truncate",
-                                    classNameOption,
-                                    uppercase && "uppercase",
-                                  )}
-                                >
-                                  {typeof option.label === "function"
-                                    ? option.label()
-                                    : option.label}
-                                </span>
-                                {option.description && (
-                                  <span
-                                    className={cn(
-                                      "text-[10px] text-muted-foreground truncate",
-                                      uppercase && "uppercase",
-                                    )}
-                                  >
-                                    {withValue && `${option.value} - `}{" "}
-                                    {option.description}
-                                  </span>
-                                )}
-                              </div>
-                            </CommandItem>
-                          ))}
+                          {filterByName(options).map(optionItem)}
                         </CommandList>
                       </Command>
                     </TabsContent>
-
                     <TabsContent value="code" className="m-0">
-                      <Command
-                        className="max-h-72 overflow-hidden"
-                        shouldFilter={false}
-                      >
-                        <CommandInput
-                          className="border-none focus:ring-0"
-                          placeholder="Buscar por código..."
-                          value={search}
-                          onValueChange={setSearch}
-                        />
+                      <Command className="max-h-72 overflow-hidden" shouldFilter={false}>
                         <CommandList className="max-h-60 overflow-y-auto">
                           <CommandEmpty className="py-4 text-center text-sm">
                             No hay resultados.
                           </CommandEmpty>
-                          {options
-                            .filter((option) => {
-                              if (!search) return true;
-                              return (option.searchCode || "")
-                                .toLowerCase()
-                                .includes(search.toLowerCase());
-                            })
-                            .map((option) => (
-                              <CommandItem
-                                key={option.value}
-                                className="cursor-pointer"
-                                onSelect={() => {
-                                  const newValue =
-                                    option.value === field.value
-                                      ? ""
-                                      : option.value;
-                                  field.onChange(newValue);
-                                  setOpen(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4 shrink-0",
-                                    option.value === field.value
-                                      ? "opacity-100"
-                                      : "opacity-0",
-                                  )}
-                                />
-                                <div className="flex flex-col min-w-0 flex-1">
-                                  <span
-                                    className={cn(
-                                      "truncate",
-                                      classNameOption,
-                                      uppercase && "uppercase",
-                                    )}
-                                  >
-                                    {typeof option.label === "function"
-                                      ? option.label()
-                                      : option.label}
-                                  </span>
-                                  {option.description && (
-                                    <span
-                                      className={cn(
-                                        "text-[10px] text-muted-foreground truncate",
-                                        uppercase && "uppercase",
-                                      )}
-                                    >
-                                      {withValue && `${option.value} - `}{" "}
-                                      {option.description}
-                                    </span>
-                                  )}
-                                </div>
-                              </CommandItem>
-                            ))}
+                          {filterByCode(options).map(optionItem)}
                         </CommandList>
                       </Command>
                     </TabsContent>
                   </Tabs>
                 ) : (
-                  <Command
-                    className="max-h-72 overflow-hidden"
-                    shouldFilter={!strictFilter}
-                  >
-                    <CommandInput
-                      className="border-none focus:ring-0"
-                      placeholder="Buscar..."
-                      value={strictFilter ? search : undefined}
-                      onValueChange={strictFilter ? setSearch : undefined}
-                    />
+                  <Command className="max-h-72 overflow-hidden" shouldFilter={false}>
                     <CommandList className="max-h-60 overflow-y-auto">
                       <CommandEmpty className="py-4 text-center text-sm">
                         No hay resultados.
                       </CommandEmpty>
-                      {(strictFilter
-                        ? options.filter((option) => {
-                            if (!search) return true;
-                            const label =
-                              typeof option.label === "function"
-                                ? option.label()
-                                : option.label;
-                            return (label || "")
-                              .toString()
-                              .toLowerCase()
-                              .includes(search.toLowerCase());
-                          })
-                        : options
-                      ).map((option) => (
-                        <CommandItem
-                          key={option.value}
-                          className="cursor-pointer"
-                          onSelect={() => {
-                            const newValue =
-                              option.value === field.value ? "" : option.value;
-                            field.onChange(newValue);
-                            setOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4 shrink-0",
-                              option.value === field.value
-                                ? "opacity-100"
-                                : "opacity-0",
-                            )}
-                          />
-                          <div className="flex flex-col min-w-0 flex-1">
-                            <span
-                              className={cn(
-                                "truncate",
-                                classNameOption,
-                                uppercase && "uppercase",
-                              )}
-                            >
-                              {typeof option.label === "function"
-                                ? option.label()
-                                : option.label}
-                            </span>
-                            {option.description && (
-                              <span
-                                className={cn(
-                                  "text-[10px] text-muted-foreground truncate",
-                                  uppercase && "uppercase",
-                                )}
-                              >
-                                {withValue && `${option.value} - `}{" "}
-                                {option.description}
-                              </span>
-                            )}
-                          </div>
-                        </CommandItem>
-                      ))}
+                      {filteredOptions.map(optionItem)}
                     </CommandList>
                   </Command>
                 )}

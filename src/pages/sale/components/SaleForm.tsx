@@ -131,8 +131,12 @@ export const SaleForm = ({
   const { data: workers = [] } = useAllWorkers();
 
   // Estados para serie y número automático
-  const [autoSerie, setAutoSerie] = useState<string>("");
-  const [autoNumero, setAutoNumero] = useState<string>("");
+  const [autoSerie, setAutoSerie] = useState<string>(
+    mode === "update" && sale ? sale.serie : "",
+  );
+  const [autoNumero, setAutoNumero] = useState<string>(
+    mode === "update" && sale ? sale.numero : "",
+  );
 
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
@@ -982,21 +986,22 @@ export const SaleForm = ({
             />
           </div>
 
-          <FormInput
-            name="_correlativo_display"
-            label="SERIE / CORRELATIVO"
-            value={
-              mode === "create"
-                ? autoSerie && autoNumero
-                  ? `${autoSerie} - ${autoNumero}`
-                  : ""
-                : sale
-                  ? `${sale.serie} - ${sale.numero}`
-                  : ""
-            }
-            readOnly
-            disabled
-          />
+          <div className="flex gap-2">
+            <FormInput
+              name="_serie_display"
+              label="SERIE"
+              value={autoSerie}
+              onChange={(e) => setAutoSerie(e.target.value)}
+              className="font-bold"
+            />
+            <FormInput
+              name="_numero_display"
+              label="CORRELATIVO"
+              value={autoNumero}
+              onChange={(e) => setAutoNumero(e.target.value)}
+              className="font-bold"
+            />
+          </div>
 
           <DatePickerFormField
             control={form.control}

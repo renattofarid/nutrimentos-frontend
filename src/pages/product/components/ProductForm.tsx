@@ -6,11 +6,10 @@ import {
   Form,
   FormField,
   FormItem,
-  FormLabel,
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { FormInput } from "@/components/FormInput";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -81,43 +80,20 @@ export const ProductForm = ({
           gap="gap-3"
           cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
         >
-          <FormField
+          <FormInput
             control={form.control}
             name="codigo"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Código</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: PROD-001"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(e.target.value.toUpperCase())
-                    }
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Código"
+            placeholder="Ej: PROD-001"
+            uppercase
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nombre del Producto</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: Producto de ejemplo"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Nombre del Producto"
+            placeholder="Ej: Producto de ejemplo"
+            uppercase
           />
 
           <FormSelect
@@ -236,25 +212,14 @@ export const ProductForm = ({
           icon={Weight}
           cols={{ sm: 1, md: 3 }}
         >
-          <FormField
+          <FormInput
             control={form.control}
             name="weight"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Peso</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    type="number"
-                    step="0.01"
-                    min={0}
-                    placeholder="0.00"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Peso"
+            type="number"
+            step="0.01"
+            min={0}
+            placeholder="0.00"
           />
 
           <FormSwitch
@@ -264,25 +229,14 @@ export const ProductForm = ({
             text="Venta por Kilogramo"
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="price_per_kg"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Precio por Kg</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    type="number"
-                    step="0.01"
-                    min={0}
-                    placeholder="0.00"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Precio por Kg"
+            type="number"
+            step="0.01"
+            min={0}
+            placeholder="0.00"
           />
         </GroupFormSection>
 

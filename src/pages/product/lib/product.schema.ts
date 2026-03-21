@@ -33,13 +33,13 @@ export const productSchemaCreate = z.object({
   supplier_id: requiredStringId("Debe seleccionar un proveedor"),
   nationality_id: z.string().optional().default(""),
   comment: z.string().optional().default(""),
-  weight: z
+  weight: z.coerce
     .string()
     .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) > 0), {
       message: "Debe ser un número válido mayor o igual a 0",
     }),
   is_kg: z.boolean().default(true),
-  price_per_kg: z
+  price_per_kg: z.coerce
     .string()
     .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) > 0), {
       message: "Debe ser un número válido mayor o igual a 0",

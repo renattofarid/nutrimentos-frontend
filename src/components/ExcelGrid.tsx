@@ -299,36 +299,27 @@ export function ExcelGrid<T extends Record<string, any>>({
 
         const advance = () => {
           const nextRow = rowIndex + 1;
+
           if (nextRow < data.length) {
-            const firstEditableCol = columns.findIndex(
-              (col) => col.type !== "readonly",
-            );
-            if (firstEditableCol !== -1) {
-              setFocusedCell({ row: nextRow, col: firstEditableCol });
-              setTimeout(() => {
-                const key = `${nextRow}-${firstEditableCol}`;
-                const input = inputRefs.current[key];
-                if (input) {
-                  input.focus();
-                  input.select();
-                }
-              }, 0);
-            }
+            setFocusedCell({ row: nextRow, col: colIndex });
+            setTimeout(() => {
+              const key = `${nextRow}-${colIndex}`;
+              const input = inputRefs.current[key];
+              if (input) {
+                input.focus();
+                input.select();
+              }
+            }, 0);
           } else if (!disabled) {
             onAddRow();
             setTimeout(() => {
-              const firstEditableCol = columns.findIndex(
-                (col) => col.type !== "readonly",
-              );
-              if (firstEditableCol !== -1) {
-                const key = `${data.length}-${firstEditableCol}`;
-                const input = inputRefs.current[key];
-                if (input) {
-                  input.focus();
-                  input.select();
-                }
-                setFocusedCell({ row: data.length, col: firstEditableCol });
+              const key = `${data.length}-${colIndex}`;
+              const input = inputRefs.current[key];
+              if (input) {
+                input.focus();
+                input.select();
               }
+              setFocusedCell({ row: data.length, col: colIndex });
             }, 50);
           }
         };

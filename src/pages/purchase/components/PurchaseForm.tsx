@@ -2,16 +2,9 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { FormInput } from "@/components/FormInput";
 import { Loader, Plus, Trash2, Pencil, Users2, UserPlus } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
@@ -901,40 +894,19 @@ export const PurchaseForm = ({
             }))}
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="document_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Número de Documento</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Ej: B001-00123"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Número de Documento"
+            placeholder="Ej: B001-00123"
+            uppercase
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="reference_number"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Número de Referencia</FormLabel>
-                <FormControl>
-                  <Input
-                    variant="default"
-                    placeholder="Número de referencia (opcional)"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Número de Referencia"
+            placeholder="Número de referencia (opcional)"
           />
 
           <FormSelect
@@ -948,82 +920,34 @@ export const PurchaseForm = ({
             }))}
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="discount_global"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Descuento Global</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    variant="default"
-                    placeholder="0.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === "" ? 0 : parseFloat(e.target.value)
-                      )
-                    }
-                    value={field.value ?? 0}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Descuento Global"
+            type="number"
+            step="0.01"
+            min={0}
+            placeholder="0.00"
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="freight_cost"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Costo de Flete</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    variant="default"
-                    placeholder="0.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === "" ? 0 : parseFloat(e.target.value)
-                      )
-                    }
-                    value={field.value ?? 0}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Costo de Flete"
+            type="number"
+            step="0.01"
+            min={0}
+            placeholder="0.00"
           />
 
-          <FormField
+          <FormInput
             control={form.control}
             name="loading_cost"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Costo de Estiba</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    variant="default"
-                    placeholder="0.00"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === "" ? 0 : parseFloat(e.target.value)
-                      )
-                    }
-                    value={field.value ?? 0}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Costo de Estiba"
+            type="number"
+            step="0.01"
+            min={0}
+            placeholder="0.00"
           />
 
           {/* IGV */}
@@ -1044,22 +968,11 @@ export const PurchaseForm = ({
           />
 
           <div className="md:col-span-3">
-            <FormField
+            <FormInput
               control={form.control}
               name="observations"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
-                  <FormControl>
-                    <Input
-                      variant="default"
-                      placeholder="Observaciones adicionales (opcional)"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Observaciones"
+              placeholder="Observaciones adicionales (opcional)"
             />
           </div>
         </GroupFormSection>
@@ -1117,41 +1030,21 @@ export const PurchaseForm = ({
             cols={{ sm: 1 }}
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-sidebar rounded-lg">
-              <FormField
+              <FormInput
                 control={installmentTempForm.control}
                 name="temp_due_days"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Días de Vencimiento</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        variant="default"
-                        placeholder="0"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+                label="Días de Vencimiento"
+                type="number"
+                placeholder="0"
               />
 
-              <FormField
+              <FormInput
                 control={installmentTempForm.control}
                 name="temp_amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monto</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        variant="default"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+                label="Monto"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
               />
 
               <div className="flex items-end">

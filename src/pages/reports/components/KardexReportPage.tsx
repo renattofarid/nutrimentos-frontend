@@ -119,6 +119,32 @@ const columns: ColumnDef<KardexItem>[] = [
     },
   },
   {
+    accessorKey: "quantity_in_kg",
+    header: "Ent. Kilos",
+    size: 100,
+    cell: ({ row }) => {
+      const kg = row.original.quantity_in_kg;
+      if (!kg || kg === 0)
+        return <span className="text-muted-foreground text-sm">—</span>;
+      return (
+        <span className="font-semibold text-green-600">+{kg} kg</span>
+      );
+    },
+  },
+  {
+    accessorKey: "quantity_in_sacos",
+    header: "Ent. Sacos",
+    size: 100,
+    cell: ({ row }) => {
+      const sacos = row.original.quantity_in_sacos;
+      if (!sacos || sacos === 0)
+        return <span className="text-muted-foreground text-sm">—</span>;
+      return (
+        <span className="font-semibold text-green-600">+{sacos} sac</span>
+      );
+    },
+  },
+  {
     accessorKey: "quantity_out",
     header: "Salida",
     size: 100,
@@ -134,12 +160,58 @@ const columns: ColumnDef<KardexItem>[] = [
     },
   },
   {
+    accessorKey: "quantity_out_kg",
+    header: "Sal. Kilos",
+    size: 100,
+    cell: ({ row }) => {
+      const kg = row.original.quantity_out_kg;
+      if (!kg || kg === 0)
+        return <span className="text-muted-foreground text-sm">—</span>;
+      return (
+        <span className="font-semibold text-red-600">-{kg} kg</span>
+      );
+    },
+  },
+  {
+    accessorKey: "quantity_out_sacos",
+    header: "Sal. Sacos",
+    size: 100,
+    cell: ({ row }) => {
+      const sacos = row.original.quantity_out_sacos;
+      if (!sacos || sacos === 0)
+        return <span className="text-muted-foreground text-sm">—</span>;
+      return (
+        <span className="font-semibold text-red-600">-{sacos} sac</span>
+      );
+    },
+  },
+  {
     accessorKey: "balance_quantity",
     header: "Saldo",
     size: 100,
     cell: ({ row }) => (
       <span className="font-bold text-base">
         {row.original.balance_quantity} {row.original.product.unit.name}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "balance_quantity_kg",
+    header: "Saldo Kilos",
+    size: 110,
+    cell: ({ row }) => (
+      <span className="font-bold text-base">
+        {row.original.balance_quantity_kg} kg
+      </span>
+    ),
+  },
+  {
+    accessorKey: "balance_quantity_sacos",
+    header: "Saldo Sacos",
+    size: 110,
+    cell: ({ row }) => (
+      <span className="font-bold text-base">
+        {row.original.balance_quantity_sacos} sac
       </span>
     ),
   },

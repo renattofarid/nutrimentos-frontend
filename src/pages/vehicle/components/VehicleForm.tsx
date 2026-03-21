@@ -18,9 +18,9 @@ import {
   type VehicleSchema,
 } from "../lib/vehicle.schema.ts";
 import { Loader } from "lucide-react";
-import { useSuppliers } from "@/pages/supplier/lib/supplier.hook";
 import { FormInput } from "@/components/FormInput";
 import { FormSelectAsync } from "@/components/FormSelectAsync.tsx";
+import { useDrivers } from "@/pages/driver/lib/driver.hook.ts";
 
 interface VehicleFormProps {
   defaultValues: Partial<VehicleSchema>;
@@ -120,14 +120,14 @@ export const VehicleForm = ({
           <FormSelectAsync
             control={form.control}
             name="owner_id"
-            label="Proveedor"
-            placeholder="Seleccione un proveedor"
-            useQueryHook={useSuppliers}
-            mapOptionFn={(supplier) => ({
-              value: supplier.id.toString(),
-              label: supplier.business_name
-                ? supplier.business_name
-                : `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`,
+            label="Conductor"
+            placeholder="Seleccione un conductor"
+            useQueryHook={useDrivers}
+            mapOptionFn={(driver) => ({
+              value: driver.id.toString(),
+              label: driver.business_name
+                ? driver.business_name
+                : `${driver.names} ${driver.father_surname} ${driver.mother_surname}`,
             })}
             preloadItemId={defaultValues.owner_id}
           />

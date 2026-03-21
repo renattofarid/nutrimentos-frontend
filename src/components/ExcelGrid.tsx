@@ -169,10 +169,8 @@ export function ExcelGrid<T extends Record<string, any>>({
       if (column.type === "product-code") {
         // Si hay callback async, delegarle toda la lógica
         if (onProductCodeTab) {
-          const code = (
-            data[rowIndex][column.accessor as string] || ""
-          ).toString();
           const inputEl = e.target as HTMLInputElement;
+          const code = inputEl.value.trim();
           const isShift = e.shiftKey;
 
           const advance = () => {
@@ -292,10 +290,8 @@ export function ExcelGrid<T extends Record<string, any>>({
 
       // Si es un campo de código de producto con callback async, hacer lookup primero
       if (column.type === "product-code" && onProductCodeTab) {
-        const code = (
-          data[rowIndex][column.accessor as string] || ""
-        ).toString();
         const inputEl = e.target as HTMLInputElement;
+        const code = inputEl.value.trim();
 
         const advance = () => {
           const nextRow = rowIndex + 1;

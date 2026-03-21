@@ -170,12 +170,18 @@ export interface KardexItem {
   warehouse_id: number;
   warehouse: Warehouse;
   quantity_in: number;
+  quantity_in_kg: number;
+  quantity_in_sacos: number;
   unit_cost_in: number;
   total_cost_in: number;
   quantity_out: number;
+  quantity_out_kg: number;
+  quantity_out_sacos: number;
   unit_cost_out: number;
   total_cost_out: number;
   balance_quantity: number;
+  balance_quantity_kg: number;
+  balance_quantity_sacos: number;
   balance_unit_cost: number;
   balance_total_cost: number;
   warehouse_document_id: null | number;

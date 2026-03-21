@@ -64,10 +64,10 @@ export const VehicleColumns = ({
   },
   {
     accessorKey: "owner",
-    header: "Proveedor",
+    header: "Conductor",
     cell: ({ getValue }) => {
       const owner = getValue() as VehicleResource["owner"];
-      return owner ? owner.full_name : "Sin proveedor";
+      return owner ? owner.full_name : "Sin conductor";
     },
   },
   {

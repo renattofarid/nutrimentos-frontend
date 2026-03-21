@@ -211,7 +211,7 @@ export default function InventoryReportPage() {
                   variant="outline"
                   size="sm"
                   onClick={handleExport}
-                  disabled={isExporting || tableData.length === 0}
+                  disabled={isExporting}
                 >
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
                   Excel

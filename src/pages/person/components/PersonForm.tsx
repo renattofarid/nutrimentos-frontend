@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
+import { useFormLayout } from "@/components/GroupFormSection";
 import { Loader, Search, Paperclip, IdCard } from "lucide-react";
 import {
   personCreateSchema,
@@ -41,6 +42,122 @@ import { GroupFormSection } from "@/components/GroupFormSection";
 import PersonAddressesList from "@/pages/client/components/PersonAddressesList";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
+
+interface NumberDocumentContentProps {
+  field: any;
+  errors: any;
+  fieldsFromSearch: { names: boolean };
+  dirtyFields: any;
+  document_type_id: string;
+  isClient: boolean;
+  isSearching: boolean;
+  handleDocumentSearch: () => void;
+}
+
+function NumberDocumentContent({
+  field,
+  errors,
+  fieldsFromSearch,
+  dirtyFields,
+  document_type_id,
+  isClient,
+  isSearching,
+  handleDocumentSearch,
+}: NumberDocumentContentProps) {
+  const { horizontal } = useFormLayout();
+
+  const labelText = (
+    <>
+      Número de Documento{" "}
+      {!isClient && errors.number_document && "*"}
+      {isClient && " (Opcional)"}
+    </>
+  );
+
+  const inputEl = (
+    <FormControl>
+      <div className="relative">
+        <Input
+          placeholder={
+            document_type_id === TYPE_DOCUMENT.DNI.id
+              ? "Ingrese 8 dígitos"
+              : document_type_id === TYPE_DOCUMENT.RUC.id
+                ? "Ingrese 11 dígitos"
+                : document_type_id === "CE"
+                  ? "Ingrese 8-9 dígitos"
+                  : document_type_id === "PASAPORTE"
+                    ? "Ingrese 8-11 caracteres"
+                    : "Ingrese el número"
+          }
+          {...field}
+          className={`
+            ${fieldsFromSearch.names ? "bg-blue-50 border-blue-200" : ""}
+            ${errors.number_document ? "border-destructive focus-visible:ring-destructive" : ""}
+            ${dirtyFields.number_document && !errors.number_document ? "border-primary" : ""}
+          `}
+          maxLength={
+            document_type_id === TYPE_DOCUMENT.DNI.id ? 8
+            : document_type_id === TYPE_DOCUMENT.RUC.id ? 11
+            : document_type_id === "CE" ? 9
+            : 11
+          }
+          onChange={(e) => {
+            let value;
+            if (document_type_id === TYPE_DOCUMENT.DNI.id || document_type_id === TYPE_DOCUMENT.RUC.id || document_type_id === "CE") {
+              value = e.target.value.replace(/\D/g, "");
+            } else {
+              value = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
+            }
+            field.onChange(value);
+            if (
+              value &&
+              ((document_type_id === TYPE_DOCUMENT.DNI.id && value.length === 8) ||
+                (document_type_id === TYPE_DOCUMENT.RUC.id && value.length === 11))
+            ) {
+              setTimeout(() => handleDocumentSearch(), 100);
+            }
+          }}
+        />
+        {(document_type_id === TYPE_DOCUMENT.DNI.id || document_type_id === TYPE_DOCUMENT.RUC.id) && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            onClick={handleDocumentSearch}
+            disabled={isSearching || !field.value}
+          >
+            {isSearching ? <Loader className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          </Button>
+        )}
+      </div>
+    </FormControl>
+  );
+
+  if (horizontal) {
+    return (
+      <FormItem className="flex flex-row items-start gap-3">
+        <FormLabel className="w-36 shrink-0 text-right text-xs font-bold uppercase dark:text-muted-foreground">
+          {labelText}
+        </FormLabel>
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+          {inputEl}
+          <FormMessage />
+        </div>
+      </FormItem>
+    );
+  }
+
+  return (
+    <FormItem>
+      <FormLabel className={errors.number_document ? "text-destructive" : ""}>
+        {labelText}
+      </FormLabel>
+      {inputEl}
+      <FormMessage />
+    </FormItem>
+  );
+}
 
 interface PersonFormProps {
   initialData?: PersonResource | null;
@@ -287,6 +404,7 @@ export const PersonForm = ({
           title="Información de Documento"
           icon={IdCard}
           cols={{ sm: 1 }}
+          horizontal
         >
           <FormSelect
             control={form.control}
@@ -318,161 +436,16 @@ export const PersonForm = ({
             control={form.control}
             name="number_document"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel
-                  className={errors.number_document ? "text-destructive" : ""}
-                >
-                  Número de Documento{" "}
-                  {!isClient && errors.number_document && "*"}
-                  {isClient && " (Opcional)"}
-                </FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      placeholder={
-                        document_type_id === TYPE_DOCUMENT.DNI.id
-                          ? "Ingrese 8 dígitos"
-                          : document_type_id === TYPE_DOCUMENT.RUC.id
-                            ? "Ingrese 11 dígitos"
-                            : document_type_id === "CE"
-                              ? "Ingrese 8-9 dígitos"
-                              : document_type_id === "PASAPORTE"
-                                ? "Ingrese 8-11 caracteres"
-                                : "Ingrese el número"
-                      }
-                      {...field}
-                      className={`
-                        ${
-                          fieldsFromSearch.names
-                            ? "bg-blue-50 border-blue-200"
-                            : ""
-                        }
-                        ${
-                          errors.number_document
-                            ? "border-destructive focus-visible:ring-destructive"
-                            : ""
-                        }
-                        ${
-                          dirtyFields.number_document && !errors.number_document
-                            ? "border-primary"
-                            : ""
-                        }
-                      `}
-                      maxLength={
-                        document_type_id === TYPE_DOCUMENT.DNI.id
-                          ? 8
-                          : document_type_id === TYPE_DOCUMENT.RUC.id
-                            ? 11
-                            : document_type_id === "CE"
-                              ? 9
-                              : document_type_id === "PASAPORTE"
-                                ? 11
-                                : 11
-                      }
-                      onChange={(e) => {
-                        let value;
-                        // For DNI, RUC, CE only allow numbers
-                        if (
-                          document_type_id === TYPE_DOCUMENT.DNI.id ||
-                          document_type_id === TYPE_DOCUMENT.RUC.id ||
-                          document_type_id === "CE"
-                        ) {
-                          value = e.target.value.replace(/\D/g, "");
-                        } else {
-                          // For PASAPORTE allow alphanumeric
-                          value = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
-                        }
-
-                        field.onChange(value);
-
-                        // Auto-search when completing DNI (8 digits) or RUC (11 digits)
-                        // Only if value is not empty (for optional client documents)
-                        if (
-                          value &&
-                          ((document_type_id === TYPE_DOCUMENT.DNI.id &&
-                            value.length === 8) ||
-                            (document_type_id === TYPE_DOCUMENT.RUC.id &&
-                              value.length === 11))
-                        ) {
-                          setTimeout(() => handleDocumentSearch(), 100);
-                        }
-                      }}
-                    />
-                    {(document_type_id === TYPE_DOCUMENT.DNI.id ||
-                      document_type_id === TYPE_DOCUMENT.RUC.id) && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={handleDocumentSearch}
-                        disabled={isSearching || !field.value}
-                      >
-                        {isSearching ? (
-                          <Loader className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Search className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </FormControl>
-                <FormMessage />
-                {/* Fixed height container for feedback messages */}
-                {field.value && !errors.number_document && (
-                  <div className="h-4 text-xs">
-                    <>
-                      {document_type_id === TYPE_DOCUMENT.DNI.id &&
-                        field.value.length === 8 && (
-                          <p className="text-primary">
-                            ✓ DNI válido (8 dígitos)
-                          </p>
-                        )}
-                      {document_type_id === TYPE_DOCUMENT.RUC.id &&
-                        field.value.length === 11 && (
-                          <p className="text-primary">
-                            ✓ RUC válido (11 dígitos)
-                          </p>
-                        )}
-                      {document_type_id === "CE" &&
-                        field.value.length >= 8 &&
-                        field.value.length <= 9 && (
-                          <p className="text-primary">
-                            ✓ CE válido ({field.value.length} dígitos)
-                          </p>
-                        )}
-                      {document_type_id === "PASAPORTE" &&
-                        field.value.length >= 8 &&
-                        field.value.length <= 11 && (
-                          <p className="text-primary">
-                            ✓ Pasaporte válido ({field.value.length} caracteres)
-                          </p>
-                        )}
-                      {/* Show progress */}
-                      {((document_type_id === TYPE_DOCUMENT.DNI.id &&
-                        field.value.length < 8) ||
-                        (document_type_id === TYPE_DOCUMENT.RUC.id &&
-                          field.value.length < 11) ||
-                        (document_type_id === "CE" && field.value.length < 8) ||
-                        (document_type_id === "PASAPORTE" &&
-                          field.value.length < 8)) && (
-                        <p className="text-amber-600">
-                          {document_type_id === TYPE_DOCUMENT.DNI.id &&
-                            `${8 - field.value.length} dígitos restantes`}
-                          {document_type_id === TYPE_DOCUMENT.RUC.id &&
-                            `${11 - field.value.length} dígitos restantes`}
-                          {document_type_id === "CE" &&
-                            field.value.length < 8 &&
-                            `${8 - field.value.length} dígitos restantes`}
-                          {document_type_id === "PASAPORTE" &&
-                            field.value.length < 8 &&
-                            `${8 - field.value.length} caracteres restantes`}
-                        </p>
-                      )}
-                    </>
-                  </div>
-                )}
-              </FormItem>
+              <NumberDocumentContent
+                field={field}
+                errors={errors}
+                fieldsFromSearch={fieldsFromSearch}
+                dirtyFields={dirtyFields}
+                document_type_id={document_type_id}
+                isClient={isClient}
+                isSearching={isSearching}
+                handleDocumentSearch={handleDocumentSearch}
+              />
             )}
           />
 
@@ -575,6 +548,7 @@ export const PersonForm = ({
             title="Información Adicional"
             icon={Paperclip}
             cols={{ sm: 1 }}
+            horizontal
           >
             <FormInput
               control={form.control}

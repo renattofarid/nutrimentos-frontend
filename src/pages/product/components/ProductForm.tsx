@@ -62,7 +62,7 @@ export const ProductForm = ({
 }: ProductFormProps) => {
   const form = useForm({
     resolver: zodResolver(
-      mode === "create" ? productSchemaCreate : productSchemaUpdate
+      mode === "create" ? productSchemaCreate : productSchemaUpdate,
     ),
     defaultValues: {
       ...defaultValues,
@@ -79,6 +79,7 @@ export const ProductForm = ({
           icon={Info}
           gap="gap-3"
           cols={{ sm: 1 }}
+          horizontal
         >
           <FormInput
             control={form.control}
@@ -186,24 +187,12 @@ export const ProductForm = ({
             text="¿Está Gravado?"
           />
 
-          <div className="col-span-full">
-            <FormField
-              control={form.control}
-              name="comment"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Este es un producto de prueba"
-                      rows={4}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormInput
+            control={form.control}
+            name="comment"
+            label="Comentarios (Opcional)"
+            placeholder="Ej: Comentarios sobre el producto"
+          />
         </GroupFormSection>
 
         {/* Peso y Precio por Kg */}
@@ -211,6 +200,7 @@ export const ProductForm = ({
           title="Información de Peso"
           icon={Weight}
           cols={{ sm: 1 }}
+          horizontal
         >
           <FormInput
             control={form.control}

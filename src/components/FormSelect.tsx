@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { Control } from "react-hook-form";
 import type { Option } from "@/lib/core.interface";
+import { useFormLayout } from "./GroupFormSection";
 
 interface FormSelectProps {
   name: string;
@@ -69,6 +70,7 @@ export function FormSelect({
   autoSelectSingle = false,
   uppercase = false,
 }: FormSelectProps) {
+  const { horizontal } = useFormLayout();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [searchTab, setSearchTab] = useState<"name" | "code">("name");
@@ -191,33 +193,46 @@ export function FormSelect({
           </CommandItem>
         );
 
-        return (
-          <FormItem className="flex flex-col justify-start gap-0.5">
-            {typeof label === "function" ? (
-              label()
-            ) : (
-              <FormLabel
-                className={cn(
-                  "flex justify-start items-center font-bold uppercase",
-                )}
-              >
-                {label}
-                {tooltip && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge
-                        variant="default"
-                        className="ml-2 p-0 aspect-square w-4 h-4 text-center justify-center"
-                      >
-                        ?
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>{tooltip}</TooltipContent>
-                  </Tooltip>
-                )}
-              </FormLabel>
-            )}
+        const labelNode =
+          typeof label === "function" ? (
+            label()
+          ) : (
+            <FormLabel
+              className={cn(
+                "flex items-center font-bold uppercase",
+                horizontal
+                  ? "w-36 shrink-0 justify-end text-right"
+                  : "justify-start",
+              )}
+            >
+              {label}
+              {tooltip && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant="default"
+                      className="ml-2 p-0 aspect-square w-4 h-4 text-center justify-center"
+                    >
+                      ?
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>{tooltip}</TooltipContent>
+                </Tooltip>
+              )}
+            </FormLabel>
+          );
 
+        return (
+          <FormItem
+            className={cn(
+              horizontal
+                ? "flex flex-row items-start gap-3"
+                : "flex flex-col justify-start gap-0.5",
+            )}
+          >
+            {labelNode}
+
+            <div className={cn(horizontal ? "flex-1 min-w-0 flex flex-col gap-0.5" : "contents")}>
             {description && (
               <FormDescription className="text-sm text-muted-foreground !mb-0">
                 {description}
@@ -328,6 +343,7 @@ export function FormSelect({
             </Popover>
 
             <FormMessage />
+            </div>
           </FormItem>
         );
       }}

@@ -1,8 +1,19 @@
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
+
+interface FormLayoutContextValue {
+  horizontal: boolean;
+}
+
+export const FormLayoutContext = createContext<FormLayoutContextValue>({
+  horizontal: false,
+});
+
+export const useFormLayout = () => useContext(FormLayoutContext);
 
 interface FormSectionProps {
+  horizontal?: boolean;
   title: string;
   icon: LucideIcon;
   iconColor?: string;
@@ -73,6 +84,7 @@ export const GroupFormSection = ({
   className,
   gap = "gap-3",
   headerExtra,
+  horizontal = false,
 }: FormSectionProps) => {
   const gridClasses = [
     "grid",
@@ -110,7 +122,9 @@ export const GroupFormSection = ({
         </div>
       </div>
       <div className="p-3">
-        <div className={cn(gridClasses)}>{children}</div>
+        <FormLayoutContext.Provider value={{ horizontal }}>
+          <div className={cn(gridClasses)}>{children}</div>
+        </FormLayoutContext.Provider>
       </div>
     </div>
   );

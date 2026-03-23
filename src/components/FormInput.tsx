@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import RequiredField from "./RequiredField";
 import { cn } from "@/lib/utils";
+import { useFormLayout } from "./GroupFormSection";
 
 interface FormInputProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -53,6 +54,7 @@ export function FormInput({
   ...inputProps
 }: FormInputProps) {
   const isNumberType = inputProps.type === "number";
+  const { horizontal } = useFormLayout();
 
   // Si no hay control, funcionar como input controlado estándar
   if (!control) {
@@ -161,25 +163,35 @@ export function FormInput({
           }
         };
 
-        return (
-          <FormItem className="flex flex-col justify-between gap-0.5">
-            <FormLabel className="flex justify-start items-center text-xs md:text-sm leading-none h-fit font-bold uppercase dark:text-muted-foreground">
-              {label}
-              {required && <RequiredField />}
-              {tooltip && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge
-                      color="tertiary"
-                      className="ml-2 p-0 aspect-square w-4 h-4 text-center justify-center"
-                    >
-                      ?
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>{tooltip}</TooltipContent>
-                </Tooltip>
-              )}
-            </FormLabel>
+        const labelNode = label ? (
+          <FormLabel
+            className={cn(
+              "flex items-center text-xs md:text-sm leading-none font-bold uppercase dark:text-muted-foreground",
+              horizontal
+                ? "w-36 shrink-0 justify-end text-right"
+                : "justify-start h-fit",
+            )}
+          >
+            {label}
+            {required && <RequiredField />}
+            {tooltip && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    color="tertiary"
+                    className="ml-2 p-0 aspect-square w-4 h-4 text-center justify-center"
+                  >
+                    ?
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>{tooltip}</TooltipContent>
+              </Tooltip>
+            )}
+          </FormLabel>
+        ) : null;
+
+        const inputNode = (
+          <div className="flex flex-col gap-0.5 flex-1 min-w-0">
             <div className="flex flex-col gap-2 items-center">
               <div className="relative w-full">
                 {addonStart && (
@@ -209,13 +221,25 @@ export function FormInput({
               </div>
               {children}
             </div>
-
             {description && (
               <FormDescription className="text-xs text-muted-foreground mb-0!">
                 {description}
               </FormDescription>
             )}
             <FormMessage />
+          </div>
+        );
+
+        return (
+          <FormItem
+            className={cn(
+              horizontal
+                ? "flex flex-row items-start gap-3"
+                : "flex flex-col justify-between gap-0.5",
+            )}
+          >
+            {labelNode}
+            {inputNode}
           </FormItem>
         );
       }}

@@ -4,13 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
-  FormField,
-  FormItem,
-  FormControl,
-  FormMessage,
 } from "@/components/ui/form";
 import { FormInput } from "@/components/FormInput";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
   productSchemaCreate,

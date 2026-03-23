@@ -138,7 +138,6 @@ export const useSaleStore = create<SaleStore>((set) => ({
       const errorMsg =
         error instanceof Error ? error.message : ERROR_MESSAGE(MODEL, "create");
       set({ error: errorMsg, isSubmitting: false });
-      errorToast(errorMsg);
       throw error;
     }
   },

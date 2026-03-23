@@ -137,7 +137,7 @@ function NumberDocumentContent({
   if (horizontal) {
     return (
       <FormItem className="flex flex-row items-center gap-3">
-        <FormLabel className="w-36 shrink-0 text-right text-xs font-bold uppercase dark:text-muted-foreground">
+        <FormLabel className="w-48 shrink-0 text-right text-xs font-bold uppercase dark:text-muted-foreground">
           {labelText}
         </FormLabel>
         <div className="flex-1 min-w-0 flex flex-col gap-0.5">

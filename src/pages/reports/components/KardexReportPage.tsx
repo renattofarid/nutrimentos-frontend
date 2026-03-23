@@ -104,10 +104,10 @@ const columns: ColumnDef<KardexItem>[] = [
         size: 220,
         cell: ({ row }) => (
           <div>
-            <p className="text-xs text-muted-foreground font-mono">
-              {row.original.product.code}
-            </p>
             <p className="font-medium text-sm">{row.original.product.name}</p>
+            <p className="text-xs text-muted-foreground font-mono">
+              CÓDIGO: {row.original.product.codigo}
+            </p>
           </div>
         ),
       },
@@ -251,7 +251,8 @@ export default function KardexReportPage() {
 
   const [productCodeInput, setProductCodeInput] = useState("");
   const [codeToSearch, setCodeToSearch] = useState<string | null>(null);
-  const [externalProductOption, setExternalProductOption] = useState<Option | null>(null);
+  const [externalProductOption, setExternalProductOption] =
+    useState<Option | null>(null);
 
   const { data: productByCode, isFetching: isSearchingByCode } = useProduct(
     codeToSearch ? { codigo: codeToSearch, per_page: 5 } : undefined,
@@ -370,7 +371,7 @@ export default function KardexReportPage() {
             }
           >
             <div className="flex flex-col gap-0.5">
-              <Label className="text-sm font-medium">Código</Label>
+              <Label className="text-sm font-bold uppercase leading-none">Código</Label>
               <div className="relative">
                 <Input
                   value={productCodeInput}

@@ -185,7 +185,7 @@ export function DatePickerFormField<T extends FieldValues>({
     return (
       <FormItem className="flex flex-row items-center gap-3">
         {label && (
-          <FormLabel className="w-36 shrink-0 text-right font-bold uppercase">
+          <FormLabel className="w-48 shrink-0 text-right justify-end font-bold uppercase">
             {label}
           </FormLabel>
         )}

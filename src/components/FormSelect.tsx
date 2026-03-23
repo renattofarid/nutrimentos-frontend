@@ -201,7 +201,7 @@ export function FormSelect({
               className={cn(
                 "flex items-center font-bold uppercase",
                 horizontal
-                  ? "w-36 shrink-0 justify-end text-right"
+                  ? "w-48 shrink-0 justify-end text-right"
                   : "justify-start",
               )}
             >

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import {
+  getAnnualSalesReport,
   getCarLoadReport,
   getCommissionsReport,
   getCustomerAccountStatement,
@@ -8,8 +9,11 @@ import {
   getInventoryReport,
   getKardexReport,
   getSaleBySellerReport,
+  getSalesByProductReport,
 } from "./reports.actions";
 import type {
+  AnnualSalesReportParams,
+  AnnualSalesReportResponse,
   CarLoadReportParams,
   CarLoadReportResponse,
   CommissionsReportParams,
@@ -26,6 +30,8 @@ import type {
   KardexReportParams,
   SaleBySellerReportParams,
   SaleBySellerReportResponse,
+  SalesByProductReportParams,
+  SalesByProductReportResponse,
 } from "./reports.interface";
 
 interface ReportsStore {
@@ -78,6 +84,18 @@ interface ReportsStore {
   detailedSalesLoading: boolean;
   detailedSalesError: string | null;
   fetchDetailedSalesReport: (params: DetailedSalesReportParams) => Promise<void>;
+
+  // Sales By Product
+  salesByProductReport: SalesByProductReportResponse | null;
+  salesByProductLoading: boolean;
+  salesByProductError: string | null;
+  fetchSalesByProductReport: (params: SalesByProductReportParams) => Promise<void>;
+
+  // Annual Sales
+  annualSalesReport: AnnualSalesReportResponse | null;
+  annualSalesLoading: boolean;
+  annualSalesError: string | null;
+  fetchAnnualSalesReport: (params: AnnualSalesReportParams) => Promise<void>;
 }
 
 export const useReportsStore = create<ReportsStore>((set) => ({
@@ -223,6 +241,42 @@ export const useReportsStore = create<ReportsStore>((set) => ({
       set({
         detailedSalesError: "Error al cargar el reporte de ventas detallado",
         detailedSalesLoading: false,
+      });
+    }
+  },
+
+  // ─── Sales By Product ────────────────────────────────────────────────────
+  salesByProductReport: null,
+  salesByProductLoading: false,
+  salesByProductError: null,
+
+  fetchSalesByProductReport: async (params: SalesByProductReportParams) => {
+    set({ salesByProductLoading: true, salesByProductError: null });
+    try {
+      const response = await getSalesByProductReport(params);
+      set({ salesByProductReport: response, salesByProductLoading: false });
+    } catch {
+      set({
+        salesByProductError: "Error al cargar el reporte de ventas por producto",
+        salesByProductLoading: false,
+      });
+    }
+  },
+
+  // ─── Annual Sales ────────────────────────────────────────────────────────
+  annualSalesReport: null,
+  annualSalesLoading: false,
+  annualSalesError: null,
+
+  fetchAnnualSalesReport: async (params: AnnualSalesReportParams) => {
+    set({ annualSalesLoading: true, annualSalesError: null });
+    try {
+      const response = await getAnnualSalesReport(params);
+      set({ annualSalesReport: response, annualSalesLoading: false });
+    } catch {
+      set({
+        annualSalesError: "Error al cargar el reporte de ventas anuales",
+        annualSalesLoading: false,
       });
     }
   },

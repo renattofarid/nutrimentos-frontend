@@ -60,6 +60,18 @@ export const CAR_LOAD_REPORT_ROUTE = `${ROUTE}/llenado-carros`;
 // Detailed Sales Report
 export const DETAILED_SALES_REPORT_ROUTE = `${ROUTE}/ventas-detallado`;
 
+// Sales By Product Report
+export const SALES_BY_PRODUCT_REPORT_ROUTE = `${ROUTE}/ventas-por-producto`;
+
+// Sales Register Report
+export const SALES_REGISTER_REPORT_ROUTE = `${ROUTE}/registro-ventas`;
+
+// Purchase Register Report
+export const PURCHASE_REGISTER_REPORT_ROUTE = `${ROUTE}/registro-compras`;
+
+// Annual Sales Report
+export const ANNUAL_SALES_REPORT_ROUTE = `${ROUTE}/ventas-anuales`;
+
 export interface CustomerAccountStatementParams {
   zone_id?: number | null;
   customer_id?: number | null;
@@ -169,7 +181,7 @@ export interface KardexItem {
   movement_date: string;
   movement_date_formatted: string;
   product_id: number;
-  product: Product;
+  product: Product1;
   warehouse_id: number;
   warehouse: Warehouse;
   quantity_in: number;
@@ -225,11 +237,11 @@ interface Warehouse {
   code: null;
 }
 
-interface Product {
+interface Product1 {
   id: number;
   name: string;
-  code: null;
-  sku: null;
+  codigo?: string;
+  sku?: string;
   unit: Unit;
 }
 
@@ -607,5 +619,78 @@ export interface DetailedSaleItem {
 
 export interface DetailedSalesReportResponse {
   data: DetailedSaleItem[];
+  total: number;
+}
+
+/**
+ * SALES BY PRODUCT REPORT
+ */
+
+export interface SalesByProductReportParams {
+  branch_id?: number | null;
+  end_date?: string | null;
+  format?: "excel" | "pdf" | null;
+  start_date?: string | null;
+  user_id?: number | null;
+  warehouse_id?: number | null;
+}
+
+export interface SalesByProductItem {
+  codigo: string;
+  producto: string;
+  sacos: number;
+  kg: number;
+  tn: number;
+  sin_igv: number;
+  con_igv: number;
+  p_prom: number;
+  is_taxed: boolean;
+}
+
+export interface SalesByProductReportResponse {
+  data: SalesByProductItem[];
+  total: number;
+}
+
+/**
+ * ANNUAL SALES REPORT
+ */
+
+export interface AnnualSalesReportParams {
+  branch_id?: number | null;
+  end_date?: string | null;
+  format?: "excel" | "pdf" | null;
+  start_date?: string | null;
+  user_id?: number | null;
+  warehouse_id?: number | null;
+  year?: number | null;
+}
+
+export interface AnnualSalesMonths {
+  "1": number;
+  "2": number;
+  "3": number;
+  "4": number;
+  "5": number;
+  "6": number;
+  "7": number;
+  "8": number;
+  "9": number;
+  "10": number;
+  "11": number;
+  "12": number;
+}
+
+export interface AnnualSalesItem {
+  zona: string;
+  vendedor: string;
+  codigo: string;
+  producto: string;
+  months: AnnualSalesMonths;
+  total: number;
+}
+
+export interface AnnualSalesReportResponse {
+  data: AnnualSalesItem[];
   total: number;
 }

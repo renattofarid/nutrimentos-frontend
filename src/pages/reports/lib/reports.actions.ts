@@ -1,5 +1,7 @@
 import { api } from "@/lib/config";
 import type {
+  AnnualSalesReportParams,
+  AnnualSalesReportResponse,
   CarLoadReportParams,
   CarLoadReportResponse,
   CommissionsReportParams,
@@ -16,6 +18,8 @@ import type {
   KardexReportResponse,
   SaleBySellerReportParams,
   SaleBySellerReportResponse,
+  SalesByProductReportParams,
+  SalesByProductReportResponse,
 } from "./reports.interface";
 
 const REPORTS_ENDPOINT = "/reports";
@@ -241,6 +245,48 @@ export async function getCarLoadReport(
       ...rest,
       "zone_ids[]": zone_ids,
     },
+  });
+  return data;
+}
+
+export async function getSalesByProductReport(
+  params: SalesByProductReportParams,
+): Promise<SalesByProductReportResponse> {
+  const { data } = await api.get<SalesByProductReportResponse>(
+    "/reports/sales-by-product",
+    { params },
+  );
+  return data;
+}
+
+export async function exportSalesByProductReport(
+  params: SalesByProductReportParams,
+  format: "excel" | "pdf",
+): Promise<Blob> {
+  const { data } = await api.get<Blob>("/reports/sales-by-product", {
+    params: { ...params, format },
+    responseType: "blob",
+  });
+  return data;
+}
+
+export async function getAnnualSalesReport(
+  params: AnnualSalesReportParams,
+): Promise<AnnualSalesReportResponse> {
+  const { data } = await api.get<AnnualSalesReportResponse>(
+    "/reports/annual-sales",
+    { params },
+  );
+  return data;
+}
+
+export async function exportAnnualSalesReport(
+  params: AnnualSalesReportParams,
+  format: "excel" | "pdf",
+): Promise<Blob> {
+  const { data } = await api.get<Blob>("/reports/annual-sales", {
+    params: { ...params, format },
+    responseType: "blob",
   });
   return data;
 }

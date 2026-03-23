@@ -153,6 +153,10 @@ export function getSaleTableColumns(
       },
     },
     {
+      accessorKey: "sale.warehouse.name",
+      header: "Almacén",
+    },
+    {
       accessorKey: "delivery_status",
       header: "Estado",
       cell: ({ row }) => {

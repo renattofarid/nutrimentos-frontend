@@ -168,7 +168,7 @@ export function FormInput({
             className={cn(
               "flex items-center text-xs md:text-sm leading-none font-bold uppercase dark:text-muted-foreground",
               horizontal
-                ? "w-36 shrink-0 justify-end text-right"
+                ? "w-48 shrink-0 justify-end text-right"
                 : "justify-start h-fit",
             )}
           >

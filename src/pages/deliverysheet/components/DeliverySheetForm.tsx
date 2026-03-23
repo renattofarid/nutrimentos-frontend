@@ -434,15 +434,15 @@ export const DeliverySheetForm = ({
                           onCheckedChange={handleToggleAll}
                         />
                       </TableHead>
-                      <TableHead>Documento</TableHead>
-                      <TableHead>Cliente</TableHead>
                       <TableHead>Vendedor</TableHead>
                       <TableHead>Fecha</TableHead>
-                      <TableHead>Nota de Crédito</TableHead>
+                      <TableHead>Cliente</TableHead>
                       <TableHead className="text-right">Total</TableHead>
+                      <TableHead>Nota de Crédito</TableHead>
                       <TableHead className="text-right">
                         Monto Pendiente
                       </TableHead>
+                      <TableHead>Documento</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -453,20 +453,6 @@ export const DeliverySheetForm = ({
                             checked={selectedSaleIds.includes(sale.id)}
                             onCheckedChange={() => handleToggleSale(sale.id)}
                           />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="text-xs text-muted-foreground">
-                              {sale.document_type}
-                            </span>
-                            <span className="font-mono font-semibold">
-                              {sale.serie}-{sale.numero}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {sale.customer.business_name ??
-                            `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`}
                         </TableCell>
                         <TableCell>
                           {sale.vendedor
@@ -485,7 +471,15 @@ export const DeliverySheetForm = ({
                             )}
                           </Badge>
                         </TableCell>
+                        <TableCell>
+                          {sale.customer.business_name ??
+                            `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`}
+                        </TableCell>
 
+                        <TableCell className="text-right text-muted-foreground">
+                          S/.{" "}
+                          {parseFormattedNumber(sale.total_amount).toFixed(2)}
+                        </TableCell>
                         <TableCell>
                           {sale.credit_notes && sale.credit_notes.length > 0 ? (
                             <div className="flex gap-1">
@@ -523,13 +517,19 @@ export const DeliverySheetForm = ({
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-right text-muted-foreground">
-                          S/.{" "}
-                          {parseFormattedNumber(sale.total_amount).toFixed(2)}
-                        </TableCell>
                         <TableCell className="text-right font-bold">
                           S/.{" "}
                           {parseFormattedNumber(sale.current_amount).toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="text-xs text-muted-foreground">
+                              {sale.document_type}
+                            </span>
+                            <span className="font-mono font-semibold">
+                              {sale.serie}-{sale.numero}
+                            </span>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

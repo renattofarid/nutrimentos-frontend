@@ -222,12 +222,25 @@ export function FormSelectAsync({
 
   const handleFocus = () => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    const currentLabel = displayLabelRef.current;
-    setSearch(currentLabel);
-    setDebouncedSearch(currentLabel);
+    setSearch("");
     setPage(1);
-    setAllOptions([]);
     setOpen(true);
+
+    if (debouncedSearch === "") {
+      // La query no va a refetchear porque debouncedSearch no cambia.
+      // Repoblar desde el cache inmediatamente.
+      if (data?.data) {
+        const newOptions = data.data.map(mapOptionFnRef.current);
+        for (const item of data.data) {
+          const opt = mapOptionFnRef.current(item);
+          rawItemsMap.current.set(opt.value, item);
+        }
+        setAllOptions(newOptions);
+      }
+    } else {
+      setDebouncedSearch("");
+      setAllOptions([]);
+    }
   };
 
   const handleBlur = () => {
@@ -318,11 +331,22 @@ export function FormSelectAsync({
                         onMouseDown={(e) => {
                           if (!open && !disabled && document.activeElement === e.currentTarget) {
                             if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-                            setSearch(displayLabelRef.current);
-                            setDebouncedSearch(displayLabelRef.current);
+                            setSearch("");
                             setPage(1);
-                            setAllOptions([]);
                             setOpen(true);
+                            if (debouncedSearch === "") {
+                              if (data?.data) {
+                                const newOptions = data.data.map(mapOptionFnRef.current);
+                                for (const item of data.data) {
+                                  const opt = mapOptionFnRef.current(item);
+                                  rawItemsMap.current.set(opt.value, item);
+                                }
+                                setAllOptions(newOptions);
+                              }
+                            } else {
+                              setDebouncedSearch("");
+                              setAllOptions([]);
+                            }
                           }
                         }}
                         placeholder={placeholder}

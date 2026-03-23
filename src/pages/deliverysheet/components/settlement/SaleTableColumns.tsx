@@ -32,19 +32,32 @@ export function getSaleTableColumns(
 ): ColumnDef<SheetSaleWithIndex>[] {
   return [
     {
-      id: "document_customer",
-      header: "Documento / Cliente",
+      accessorKey: "sale.issue_date",
+      header: "Fecha",
+      cell: ({ row }) => {
+        const issueDate = row.original.sale.issue_date || "";
+        const formattedDate = new Date(issueDate).toLocaleDateString("es-PE", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+        });
+        return <span className="font-mono">{formattedDate}</span>;
+      },
+    },
+    {
+      accessorKey: "sale.customer.full_name",
+      header: "Cliente",
       cell: ({ row }) => (
-        <div className="space-y-2 min-w-[200px]">
-          <div className="flex items-center gap-2">
-            <Badge className="font-mono font-semibold text-sm">
-              {row.original.sale.full_document_number}
-            </Badge>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            {row.original.sale.customer?.full_name || "Sin cliente"}
-          </div>
-        </div>
+        <span>{row.original.sale.customer?.full_name || "Sin cliente"}</span>
+      ),
+    },
+    {
+      accessorKey: "sale.full_document_number",
+      header: "Documento",
+      cell: ({ row }) => (
+        <Badge variant="outline" className="font-mono">
+          {row.original.sale.full_document_number}
+        </Badge>
       ),
     },
     {
@@ -157,7 +170,7 @@ export function getSaleTableColumns(
               }
             >
               <SelectTrigger
-                className={`w-full md:w-[160px] ${
+                className={`w-full h-8! md:w-[160px] ${
                   formErrors?.delivery_status ? "border-red-500" : ""
                 }`}
               >
@@ -226,7 +239,7 @@ export function getSaleTableColumns(
                 min="0"
                 max={pendingAmount.toString()}
                 placeholder="0.00"
-                className={`w-32 text-right ${
+                className={`w-32 h-8 text-right ${
                   formErrors?.payment_amount ? "border-red-500" : ""
                 }`}
                 value={formValues?.payment_amount || "0"}

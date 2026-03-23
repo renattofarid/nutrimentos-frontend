@@ -610,6 +610,9 @@ export const GuideForm = ({
     },
   ];
 
+  const [selectedVehicle, setSelectedVehicle] =
+    useState<VehicleResource | null>(null);
+
   const customerValue = form.watch("customer_id");
 
   const [selectedCustomer, setSelectedCustomer] =
@@ -888,38 +891,59 @@ export const GuideForm = ({
             className="bg-muted"
           />
 
-          <FormField
-            control={form.control}
-            name="vehicle_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Vehículo</FormLabel>
-                <FormControl>
-                  <SearchableSelect
-                    className="md:w-full"
-                    buttonSize="default"
-                    options={vehicles.map((vehicle) => ({
-                      value: vehicle.id.toString(),
-                      label: `${vehicle.plate} - ${vehicle.brand} ${vehicle.model}`,
-                      description: vehicle.vehicle_type || "",
-                    }))}
-                    value={field.value ?? ""}
-                    onChange={(value) => {
-                      field.onChange(value);
-                      const vehicle = vehicles.find(
-                        (v) => v.id.toString() === value,
-                      );
-                      if (vehicle?.mtc) {
-                        form.setValue("carrier_mtc_number", vehicle.mtc);
-                      }
-                    }}
-                    placeholder="Seleccionar vehículo..."
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="space-y-2">
+            <FormField
+              control={form.control}
+              name="vehicle_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Placa del Vehículo</FormLabel>
+                  <FormControl>
+                    <SearchableSelect
+                      className="md:w-full"
+                      buttonSize="default"
+                      options={vehicles.map((vehicle) => ({
+                        value: vehicle.id.toString(),
+                        label: vehicle.plate,
+                        description: `${vehicle.brand} ${vehicle.model}${vehicle.owner ? ` — ${vehicle.owner.full_name}` : ""}`,
+                      }))}
+                      value={field.value ?? ""}
+                      onChange={(value) => {
+                        field.onChange(value);
+                        const vehicle = vehicles.find(
+                          (v) => v.id.toString() === value,
+                        );
+                        setSelectedVehicle(vehicle ?? null);
+                        if (vehicle?.mtc) {
+                          form.setValue("carrier_mtc_number", vehicle.mtc);
+                        }
+                        if (vehicle?.owner) {
+                          const docNum = vehicle.owner.document_number || "";
+                          const docType = docNum.length === 8 ? "DNI" : "CE";
+                          form.setValue("driver_document_type", docType);
+                          form.setValue("driver_document_number", docNum);
+                          form.setValue("driver_name", vehicle.owner.full_name);
+                        }
+                      }}
+                      placeholder="Seleccionar placa..."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {selectedVehicle?.owner && (
+              <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Chofer: </span>
+                {selectedVehicle.owner.full_name}
+                {selectedVehicle.owner.document_number && (
+                  <span className="ml-2 text-xs">
+                    ({selectedVehicle.owner.document_number})
+                  </span>
+                )}
+              </div>
             )}
-          />
+          </div>
 
           {/* Campos adicionales (ocultos por defecto) */}
           <div className={showAdvancedFields ? "contents" : "hidden"}>

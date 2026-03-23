@@ -40,6 +40,7 @@ export interface ProductOption {
   name: string;
   weight?: string;
   price_per_kg?: string;
+  purchase_price?: string;
 }
 
 interface ExcelGridProps<T> {

@@ -27,7 +27,6 @@ import {
   DeliverySheetInfo,
   getSaleTableColumns,
   SaleMobileCard,
-  SettlementSummary,
   SaleTableWithNotes,
 } from "./settlement";
 import { errorToast, successToast } from "@/lib/core.function";
@@ -60,9 +59,7 @@ export default function SettlementPage() {
         parseFloat(item.pending_amount_raw) > 0,
     );
     if (!match) {
-      setSearchError(
-        "No se encontró una planilla pendiente con ese número",
-      );
+      setSearchError("No se encontró una planilla pendiente con ese número");
       setSelectedId("");
       setDeliverySheet(null);
       return;
@@ -254,7 +251,9 @@ export default function SettlementPage() {
             </Button>
           </div>
           {searchError && (
-            <p className="text-xs font-medium text-destructive">{searchError}</p>
+            <p className="text-xs font-medium text-destructive">
+              {searchError}
+            </p>
           )}
         </div>
 
@@ -303,9 +302,7 @@ export default function SettlementPage() {
                 />
               </SaleTableWithNotes>
 
-              <SettlementSummary deliverySheet={deliverySheet} />
-
-              <div className="flex flex-col sm:flex-row justify-end gap-3 sticky bottom-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4 rounded-lg border shadow-lg">
+              <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <Button
                   type="button"
                   variant="outline"

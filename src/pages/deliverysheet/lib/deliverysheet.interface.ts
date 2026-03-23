@@ -148,6 +148,7 @@ export interface SheetSaleDetail {
   id: number;
   document_type: string;
   full_document_number: string;
+  issue_date?: string;
   customer: Customer;
   credit_notes: Creditnote[];
   credit_notes_total: string;

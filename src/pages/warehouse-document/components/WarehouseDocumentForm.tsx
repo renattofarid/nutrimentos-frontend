@@ -45,6 +45,8 @@ interface DetailRow {
   unit_price: string;
   observations: string;
   total: number;
+  purchase_price?: string;
+  price_per_kg?: string;
 }
 
 export default function WarehouseDocumentForm({
@@ -184,13 +186,15 @@ export default function WarehouseDocumentForm({
 
   // Función para convertir DetailRow[] a formato del schema
   const convertDetailsToSchema = (details: DetailRow[]) => {
-    return details.map((detail) => ({
-      product_id: detail.product_id,
-      quantity_sacks: parseFloat(detail.quantity_sacks) || 0,
-      quantity_kg: parseFloat(detail.quantity_kg) || undefined,
-      unit_price: parseFloat(detail.unit_price) || 0,
-      observations: detail.observations || "",
-    }));
+    return details.map((detail) => {
+      return {
+        product_id: detail.product_id,
+        quantity_sacks: parseFloat(detail.quantity_sacks) || 0,
+        quantity_kg: parseFloat(detail.quantity_kg) || 0,
+        unit_price: parseFloat(detail.unit_price) || 0,
+        observations: detail.observations || "",
+      };
+    });
   };
 
   // Funciones para ExcelGrid
@@ -225,23 +229,32 @@ export default function WarehouseDocumentForm({
 
   const handleCellChange = (index: number, field: string, value: string) => {
     const updatedDetails = [...details];
-    updatedDetails[index] = { ...updatedDetails[index], [field]: value };
+    const current = { ...updatedDetails[index], [field]: value };
 
-    // Recalcular totales cuando cambian cantidad o precio
-    if (field === "quantity_kg" || field === "unit_price") {
-      const detail = updatedDetails[index];
-      const quantityKg = parseFloat(detail.quantity_kg) || 0;
-      const unitPrice = parseFloat(detail.unit_price) || 0;
-      const total = quantityKg * unitPrice;
-
-      updatedDetails[index] = {
-        ...updatedDetails[index],
-        total,
-      };
+    if (field === "quantity_sacks") {
+      // Solo sacos: poner kg en 0, setear precio por saco
+      const purchasePrice = parseFloat(current.purchase_price || "") || 0;
+      const qty = parseFloat(value) || 0;
+      current.quantity_kg = "0";
+      current.unit_price = current.purchase_price || "";
+      current.total = qty * purchasePrice;
+    } else if (field === "quantity_kg") {
+      // Solo kg: poner sacos en 0, setear precio por kg
+      const priceKg = parseFloat(current.price_per_kg || "") || 0;
+      const qty = parseFloat(value) || 0;
+      current.quantity_sacks = "0";
+      current.unit_price = current.price_per_kg || "";
+      current.total = qty * priceKg;
+    } else if (field === "unit_price") {
+      // Si editan precio manual, recalcular con la cantidad activa
+      const unitPrice = parseFloat(value) || 0;
+      const qtyKg = parseFloat(current.quantity_kg) || 0;
+      const qtySacks = parseFloat(current.quantity_sacks) || 0;
+      current.total = qtySacks > 0 ? qtySacks * unitPrice : qtyKg * unitPrice;
     }
 
+    updatedDetails[index] = current;
     setDetails(updatedDetails);
-    // Actualizar el campo details del formulario
     form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
     form.clearErrors("details");
   };
@@ -250,11 +263,33 @@ export default function WarehouseDocumentForm({
     (index: number, product: ProductOption) => {
       setDetails((prev) => {
         const updatedDetails = [...prev];
+        const current = updatedDetails[index];
+        const purchasePrice = product.purchase_price || "";
+        const pricePerKg = product.price_per_kg || "";
+
+        // Recalcular total si ya hay cantidad ingresada
+        const qtySacks = parseFloat(current.quantity_sacks) || 0;
+        const qtyKg = parseFloat(current.quantity_kg) || 0;
+        let unit_price = current.unit_price;
+        let total = current.total;
+
+        if (qtySacks > 0) {
+          unit_price = purchasePrice;
+          total = qtySacks * (parseFloat(purchasePrice) || 0);
+        } else if (qtyKg > 0) {
+          unit_price = pricePerKg;
+          total = qtyKg * (parseFloat(pricePerKg) || 0);
+        }
+
         updatedDetails[index] = {
-          ...updatedDetails[index],
+          ...current,
           product_id: product.id,
           product_code: product.codigo,
           product_name: product.name,
+          purchase_price: purchasePrice,
+          price_per_kg: pricePerKg,
+          unit_price,
+          total,
         };
         form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
         form.clearErrors("details");
@@ -280,6 +315,8 @@ export default function WarehouseDocumentForm({
         codigo: productSelected.codigo,
         name: productSelected.name,
         weight: productSelected.weight,
+        price_per_kg: productSelected.price_per_kg,
+        purchase_price: productSelected.purchase_price,
       });
       callbacks.advance();
     } else if (productSearchResult !== undefined) {
@@ -392,9 +429,11 @@ export default function WarehouseDocumentForm({
         });
         return false;
       }
-      if (!detail.quantity_sacks || parseFloat(detail.quantity_sacks) <= 0) {
+      const hasSacks = parseFloat(detail.quantity_sacks) > 0;
+      const hasKg = parseFloat(detail.quantity_kg) > 0;
+      if (!hasSacks && !hasKg) {
         form.setError("details", {
-          message: `Fila ${i + 1}: La cantidad en sacos debe ser mayor a 0`,
+          message: `Fila ${i + 1}: Ingrese cantidad en sacos o en kg`,
         });
         return false;
       }

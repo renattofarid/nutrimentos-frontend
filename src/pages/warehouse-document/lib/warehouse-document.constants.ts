@@ -13,15 +13,10 @@ export const DOCUMENT_TYPES: { value: DocumentType; label: string }[] = [
 
 export const DOCUMENT_MOTIVES: { value: DocumentMotive; label: string }[] = [
   { value: "COMPRA", label: "Compra" },
-  { value: "VENTA", label: "Venta" },
   { value: "DEVOLUCION", label: "Devolución" },
   { value: "TRASLADO_INTERNO", label: "Traslado Interno" },
   { value: "AJUSTE_STOCK", label: "Ajuste de Stock" },
   { value: "OTRO", label: "Otro" },
-  { value: "TRANSFERENCIA", label: "Transferencia" },
-  { value: "MERMA", label: "Merma" },
-  { value: "DONACION", label: "Donación" },
-  { value: "USO_INTERNO", label: "Uso Interno" },
 ];
 
 export const DOCUMENT_STATUS: {
@@ -48,7 +43,7 @@ export const getDocumentStatusLabel = (status: DocumentStatus): string => {
 };
 
 export const getDocumentStatusVariant = (
-  status: DocumentStatus
+  status: DocumentStatus,
 ): "default" | "secondary" | "destructive" => {
   return (
     DOCUMENT_STATUS.find((ds) => ds.value === status)?.variant || "default"

@@ -198,8 +198,7 @@ export function FormSelect({
             ) : (
               <FormLabel
                 className={cn(
-                  "flex justify-start items-center",
-                  uppercase && "uppercase",
+                  "flex justify-start items-center font-bold uppercase",
                 )}
               >
                 {label}

@@ -46,7 +46,7 @@ export function FormSwitch<T extends FieldValues>({
       name={name}
       render={({ field }) => (
         <FormItem className="flex flex-col gap-0.5">
-          {label && <FormLabel className="h-fit flex">{label}</FormLabel>}
+          {label && <FormLabel className="h-fit flex font-bold uppercase">{label}</FormLabel>}
           <FormLabel
             className={cn(
               "flex flex-row items-center justify-between rounded-lg border shadow-xs bg-background hover:bg-muted hover:cursor-pointer",

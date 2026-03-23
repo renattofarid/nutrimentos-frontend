@@ -370,12 +370,12 @@ export function DataTable<TData, TValue>({
                       return (
                         <div
                           key={cell.id}
-                          className="grid grid-cols-3 items-center gap-1 text-wrap"
+                          className="flex flex-col gap-0.5 text-wrap"
                         >
-                          <span className="text-xs font-medium text-primary dark:text-primary-foreground">
+                          <span className="text-xs font-bold uppercase text-primary dark:text-primary-foreground">
                             {headerText}
                           </span>
-                          <div className="text-xs text-foreground col-span-2">
+                          <div className="text-xs text-foreground">
                             {flexRender(
                               cell.column.columnDef.cell,
                               cell.getContext(),

@@ -12,7 +12,7 @@ import type { KardexItem, KardexReportParams } from "../lib/reports.interface";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { FileSpreadsheet, Filter, ArrowUpDown } from "lucide-react";
+import { FileSpreadsheet, Filter, ArrowUpDown, Loader2 } from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportKardexReport } from "../lib/reports.actions";
@@ -20,6 +20,10 @@ import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import { errorToast, successToast } from "@/lib/core.function";
+import { useProduct } from "@/pages/product/lib/product.hook";
+import type { Option } from "@/lib/core.interface";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface FilterFormValues {
   product_id: string;
@@ -245,6 +249,29 @@ export default function KardexReportPage() {
 
   const { data: rawData, isLoading, fetch } = useKardexReport();
 
+  const [productCodeInput, setProductCodeInput] = useState("");
+  const [codeToSearch, setCodeToSearch] = useState<string | null>(null);
+  const [externalProductOption, setExternalProductOption] = useState<Option | null>(null);
+
+  const { data: productByCode, isFetching: isSearchingByCode } = useProduct(
+    codeToSearch ? { codigo: codeToSearch, per_page: 5 } : undefined,
+  );
+
+  useEffect(() => {
+    if (!codeToSearch || isSearchingByCode) return;
+    const product = productByCode?.data?.[0];
+    if (product) {
+      setExternalProductOption({
+        value: String(product.id),
+        label: product.name,
+        description: product.codigo,
+      });
+    } else {
+      errorToast(`No se encontró producto con código "${codeToSearch}"`);
+    }
+    setCodeToSearch(null);
+  }, [productByCode, isSearchingByCode, codeToSearch]);
+
   const form = useForm<FilterFormValues>({
     defaultValues: {
       product_id: "",
@@ -342,6 +369,30 @@ export default function KardexReportPage() {
               </Button>
             }
           >
+            <div className="flex flex-col gap-0.5">
+              <Label className="text-sm font-medium">Código</Label>
+              <div className="relative">
+                <Input
+                  value={productCodeInput}
+                  onChange={(e) => setProductCodeInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === "Tab") {
+                      e.preventDefault();
+                      if (productCodeInput.trim()) {
+                        setCodeToSearch(productCodeInput.trim());
+                      }
+                    }
+                  }}
+                  placeholder="Ej: 60"
+                  className="h-8 text-sm pr-7"
+                  autoComplete="off"
+                />
+                {isSearchingByCode && (
+                  <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                )}
+              </div>
+            </div>
+
             <FormSelectAsync
               control={form.control}
               name="product_id"
@@ -353,6 +404,13 @@ export default function KardexReportPage() {
                 value: String(item.id),
                 description: item.codigo,
               })}
+              externalOption={externalProductOption}
+              onValueChange={(value) => {
+                if (!value) {
+                  setProductCodeInput("");
+                  setExternalProductOption(null);
+                }
+              }}
             />
 
             <FormSelectAsync

@@ -78,7 +78,7 @@ export const ProductForm = ({
           title="Información Básica"
           icon={Info}
           gap="gap-3"
-          cols={{ sm: 1, md: 2, lg: 3, xl: 4 }}
+          cols={{ sm: 1 }}
         >
           <FormInput
             control={form.control}
@@ -210,7 +210,7 @@ export const ProductForm = ({
         <GroupFormSection
           title="Información de Peso"
           icon={Weight}
-          cols={{ sm: 1, md: 3 }}
+          cols={{ sm: 1 }}
         >
           <FormInput
             control={form.control}

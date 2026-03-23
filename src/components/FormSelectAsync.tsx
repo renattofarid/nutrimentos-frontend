@@ -64,6 +64,7 @@ interface FormSelectAsyncProps {
   onValueChange?: (value: string, item?: any) => void;
   preloadItemId?: string;
   uppercase?: boolean;
+  externalOption?: Option | null;
 }
 
 function getOptionLabel(opt: Option): string {
@@ -93,6 +94,7 @@ export function FormSelectAsync({
   onValueChange,
   preloadItemId,
   uppercase = false,
+  externalOption,
 }: FormSelectAsyncProps) {
   const { field: controlField } = useController({ name, control });
   const [open, setOpen] = useState(false);
@@ -121,6 +123,25 @@ export function FormSelectAsync({
   onValueChangeRef.current = onValueChange;
   const controlFieldRef = useRef(controlField);
   controlFieldRef.current = controlField;
+  const appliedExternalRef = useRef<string | undefined>(undefined);
+
+  // Apply externally provided selection (e.g. from a code search input)
+  useEffect(() => {
+    if (externalOption != null) {
+      if (appliedExternalRef.current === externalOption.value) return;
+      appliedExternalRef.current = externalOption.value;
+      setSelectedOption(externalOption);
+      controlFieldRef.current.onChange(externalOption.value);
+      if (onValueChangeRef.current) onValueChangeRef.current(externalOption.value);
+    } else {
+      if (appliedExternalRef.current == null) return;
+      appliedExternalRef.current = undefined;
+      setSelectedOption(null);
+      controlFieldRef.current.onChange("");
+      if (onValueChangeRef.current) onValueChangeRef.current("");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalOption?.value]);
 
   const { data, isLoading, isFetching } = useQueryHook({
     search: debouncedSearch,
@@ -295,10 +316,7 @@ export function FormSelectAsync({
               ? label()
               : label && (
                   <FormLabel
-                    className={cn(
-                      "flex justify-start items-center",
-                      uppercase && "uppercase",
-                    )}
+                    className="flex justify-start items-center font-bold uppercase"
                   >
                     {label}
                     {required && <RequiredField />}

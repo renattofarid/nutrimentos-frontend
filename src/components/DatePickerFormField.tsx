@@ -108,7 +108,7 @@ export function DatePickerFormField<T extends FieldValues>({
 
   return (
     <FormItem className="flex flex-col gap-0.5">
-      {label && <FormLabel>{label}</FormLabel>}
+      {label && <FormLabel className="font-bold uppercase">{label}</FormLabel>}
 
       {isMobile ? (
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>

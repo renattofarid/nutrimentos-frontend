@@ -57,6 +57,9 @@ export const COMMISSIONS_REPORT_ROUTE = `${ROUTE}/comisiones`;
 // Car Load Report
 export const CAR_LOAD_REPORT_ROUTE = `${ROUTE}/llenado-carros`;
 
+// Detailed Sales Report
+export const DETAILED_SALES_REPORT_ROUTE = `${ROUTE}/ventas-detallado`;
+
 export interface CustomerAccountStatementParams {
   zone_id?: number | null;
   customer_id?: number | null;
@@ -565,4 +568,44 @@ export interface CarLoadReportData {
 export interface CarLoadReportResponse {
   message: string;
   data: CarLoadReportData;
+}
+
+/**
+ * DETAILED SALES REPORT
+ */
+
+export interface DetailedSalesReportParams {
+  branch_id?: number | null;
+  customer_id?: number | null;
+  document_type?: "FACTURA" | "BOLETA" | "TICKET" | null;
+  end_date?: string | null;
+  format?: "excel" | "pdf" | null;
+  payment_type?: "CONTADO" | "CREDITO" | null;
+  start_date?: string | null;
+  user_id?: number | null;
+  warehouse_id?: number | null;
+}
+
+export interface DetailedSaleItem {
+  fecha: string;
+  nro_doc: string;
+  dni_ruc: string;
+  nombre: string;
+  direccion: string;
+  telefono: string;
+  tienda: string;
+  cod_producto: string;
+  producto: string;
+  sac: string;
+  kg: string;
+  precio: string;
+  sub_total: string;
+  igv: string;
+  total: string;
+  vendedor: string;
+}
+
+export interface DetailedSalesReportResponse {
+  data: DetailedSaleItem[];
+  total: number;
 }

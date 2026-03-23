@@ -331,34 +331,34 @@ export function ExcelGrid<T extends Record<string, any>>({
         return;
       }
 
-      // Si estamos en la última fila, agregar una nueva
+      // Enter siempre va a la primera columna editable de la siguiente fila
+      const firstEditableCol = columns.findIndex(
+        (col) => col.type !== "readonly",
+      );
+      const targetCol = firstEditableCol !== -1 ? firstEditableCol : 0;
+
       if (rowIndex === data.length - 1 && !disabled) {
+        // Última fila: agregar nueva y enfocar primera columna editable
         onAddRow();
         setTimeout(() => {
-          // Enfocar la primera celda editable de la nueva fila
-          const firstEditableCol = columns.findIndex(
-            (col) => col.type !== "readonly",
-          );
-          if (firstEditableCol !== -1) {
-            const key = `${data.length}-${firstEditableCol}`;
-            const input = inputRefs.current[key];
-            if (input) {
-              input.focus();
-              input.select(); // Seleccionar todo el texto
-            }
-            setFocusedCell({ row: data.length, col: firstEditableCol });
-          }
-        }, 50);
-      } else {
-        // Ir a la misma columna en la siguiente fila
-        const nextRow = rowIndex + 1;
-        setFocusedCell({ row: nextRow, col: colIndex });
-        setTimeout(() => {
-          const key = `${nextRow}-${colIndex}`;
+          const key = `${data.length}-${targetCol}`;
           const input = inputRefs.current[key];
           if (input) {
             input.focus();
-            input.select(); // Seleccionar todo el texto
+            input.select();
+          }
+          setFocusedCell({ row: data.length, col: targetCol });
+        }, 50);
+      } else {
+        // Ir a la primera columna editable de la siguiente fila
+        const nextRow = rowIndex + 1;
+        setFocusedCell({ row: nextRow, col: targetCol });
+        setTimeout(() => {
+          const key = `${nextRow}-${targetCol}`;
+          const input = inputRefs.current[key];
+          if (input) {
+            input.focus();
+            input.select();
           }
         }, 0);
       }

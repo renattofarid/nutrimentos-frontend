@@ -76,6 +76,7 @@ import SaleBySellerReportPage from "@/pages/reports/components/SaleBySellerRepor
 import DeliverySheetReportPage from "@/pages/reports/components/DeliverySheetReportPage";
 import CommissionsReportPage from "@/pages/reports/components/CommissionsReportPage";
 import CarLoadReportPage from "@/pages/reports/components/CarLoadReportPage";
+import DetailedSalesReportPage from "@/pages/reports/components/DetailedSalesReportPage";
 import { TYPE_USER } from "@/pages/type-users/lib/typeUser.interface";
 import { USER } from "@/pages/users/lib/User.interface";
 import { COMPANY } from "@/pages/company/lib/company.interface";
@@ -118,6 +119,7 @@ import {
   COMMISSIONS_REPORT_ROUTE,
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
   DELIVERY_SHEET_REPORT_ROUTE,
+  DETAILED_SALES_REPORT_ROUTE,
   INVENTORY_REPORT_ROUTE,
   KARDEX_REPORT_ROUTE,
   SALE_BY_SELLER_REPORT_ROUTE,
@@ -295,6 +297,7 @@ export function AppRoutes() {
       <Route path={DELIVERY_SHEET_REPORT_ROUTE} element={<DeliverySheetReportPage />} />
       <Route path={COMMISSIONS_REPORT_ROUTE} element={<CommissionsReportPage />} />
       <Route path={CAR_LOAD_REPORT_ROUTE} element={<CarLoadReportPage />} />
+      <Route path={DETAILED_SALES_REPORT_ROUTE} element={<DetailedSalesReportPage />} />
 
       <Route path={PurchaseInstallmentRoute} element={<PurchaseInstallmentPage />} />
 

@@ -63,6 +63,7 @@ import {
   CAR_LOAD_REPORT_ROUTE,
   COMMISSIONS_REPORT_ROUTE,
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+  DETAILED_SALES_REPORT_ROUTE,
   INVENTORY_REPORT_ROUTE,
   KARDEX_REPORT_ROUTE,
   REPORTS,
@@ -340,6 +341,11 @@ export const navData: NavItem[] = [
       {
         title: "Llenado de Carros",
         url: CAR_LOAD_REPORT_ROUTE,
+        icon: ReportsIcon,
+      },
+      {
+        title: "Ventas Detallado",
+        url: DETAILED_SALES_REPORT_ROUTE,
         icon: ReportsIcon,
       },
     ],

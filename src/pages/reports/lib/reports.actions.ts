@@ -8,6 +8,8 @@ import type {
   CustomerAccountStatementResponse,
   DeliverySheetReportParams,
   DeliverySheetReportResponse,
+  DetailedSalesReportParams,
+  DetailedSalesReportResponse,
   InventoryReportParams,
   InventoryReportResponse,
   KardexReportParams,
@@ -174,6 +176,27 @@ export const downloadReport = async (
     throw error;
   }
 };
+
+export async function getDetailedSalesReport(
+  params: DetailedSalesReportParams,
+): Promise<DetailedSalesReportResponse> {
+  const { data } = await api.get<DetailedSalesReportResponse>(
+    "/reports/detailed-sales",
+    { params },
+  );
+  return data;
+}
+
+export async function exportDetailedSalesReport(
+  params: DetailedSalesReportParams,
+  format: "excel" | "pdf",
+): Promise<Blob> {
+  const { data } = await api.get<Blob>("/reports/detailed-sales", {
+    params: { ...params, format },
+    responseType: "blob",
+  });
+  return data;
+}
 
 export const fetchSelectOptions = async (endpoint: string) => {
   const response = await api.get(endpoint);

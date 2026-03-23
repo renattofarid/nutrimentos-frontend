@@ -4,6 +4,7 @@ import {
   getCommissionsReport,
   getCustomerAccountStatement,
   getDeliverySheetReport,
+  getDetailedSalesReport,
   getInventoryReport,
   getKardexReport,
   getSaleBySellerReport,
@@ -17,6 +18,8 @@ import type {
   CustomerAccountStatementParams,
   DeliverySheetReportParams,
   DeliverySheetReportResponse,
+  DetailedSalesReportParams,
+  DetailedSalesReportResponse,
   InventoryReportResponse,
   InventoryReportParams,
   KardexReportResponse,
@@ -69,6 +72,12 @@ interface ReportsStore {
   carLoadLoading: boolean;
   carLoadError: string | null;
   fetchCarLoadReport: (params: CarLoadReportParams) => Promise<void>;
+
+  // Detailed Sales
+  detailedSalesReport: DetailedSalesReportResponse | null;
+  detailedSalesLoading: boolean;
+  detailedSalesError: string | null;
+  fetchDetailedSalesReport: (params: DetailedSalesReportParams) => Promise<void>;
 }
 
 export const useReportsStore = create<ReportsStore>((set) => ({
@@ -196,6 +205,24 @@ export const useReportsStore = create<ReportsStore>((set) => ({
       set({
         carLoadError: "Error al cargar el reporte de llenado de carros",
         carLoadLoading: false,
+      });
+    }
+  },
+
+  // ─── Detailed Sales ──────────────────────────────────────────────────────
+  detailedSalesReport: null,
+  detailedSalesLoading: false,
+  detailedSalesError: null,
+
+  fetchDetailedSalesReport: async (params: DetailedSalesReportParams) => {
+    set({ detailedSalesLoading: true, detailedSalesError: null });
+    try {
+      const response = await getDetailedSalesReport(params);
+      set({ detailedSalesReport: response, detailedSalesLoading: false });
+    } catch {
+      set({
+        detailedSalesError: "Error al cargar el reporte de ventas detallado",
+        detailedSalesLoading: false,
       });
     }
   },

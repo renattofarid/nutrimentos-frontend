@@ -4,6 +4,7 @@ import type {
   CommissionsReportParams,
   CustomerAccountStatementParams,
   DeliverySheetReportParams,
+  DetailedSalesReportParams,
   KardexReportParams,
   SaleBySellerReportParams,
 } from "./reports.interface";
@@ -251,6 +252,23 @@ export const useZoneAsyncSearch = (params: {
     refetchOnWindowFocus: false,
   });
 };
+
+export function useDetailedSalesReport(params?: DetailedSalesReportParams) {
+  const {
+    detailedSalesReport,
+    detailedSalesLoading,
+    detailedSalesError,
+    fetchDetailedSalesReport,
+  } = useReportsStore();
+
+  return {
+    data: detailedSalesReport,
+    isLoading: detailedSalesLoading,
+    error: detailedSalesError,
+    refetch: () => fetchDetailedSalesReport(params || {}),
+    fetch: fetchDetailedSalesReport,
+  };
+}
 
 export const useBranchAsyncSearch = (params: {
   search?: string;

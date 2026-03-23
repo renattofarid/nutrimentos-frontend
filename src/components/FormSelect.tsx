@@ -226,7 +226,7 @@ export function FormSelect({
           <FormItem
             className={cn(
               horizontal
-                ? "flex flex-row items-start gap-3"
+                ? "flex flex-row items-center gap-3"
                 : "flex flex-col justify-start gap-0.5",
             )}
           >

@@ -438,7 +438,7 @@ export function TopNav() {
             <NavigationMenuItem key={item.title}>
               <NavigationMenuTrigger
                 className={cn(
-                  "h-7 text-xs px-1.5 bg-transparent hover:bg-accent/50",
+                  "h-7 text-sm px-1.5 bg-transparent hover:bg-accent/50 uppercase",
                   isItemActive(item) && "text-primary font-semibold",
                 )}
               >
@@ -456,7 +456,7 @@ export function TopNav() {
                         <button
                           onClick={() => openTab(sub.url, sub.title)}
                           className={cn(
-                            "w-full flex flex-row justify-start text-start items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground",
+                            "w-full flex flex-row justify-start text-start items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground uppercase",
                             isSubItemActive(sub.url) &&
                               "bg-accent/50 text-accent-foreground font-medium",
                           )}
@@ -476,7 +476,7 @@ export function TopNav() {
                 <button
                   onClick={() => openTab(item.url, item.title)}
                   className={cn(
-                    "inline-flex flex-row justify-start text-start items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                    "inline-flex flex-row justify-start text-start items-center gap-1 rounded-md px-1.5 py-1 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground uppercase",
                     isItemActive(item) && "text-primary font-semibold",
                   )}
                 >

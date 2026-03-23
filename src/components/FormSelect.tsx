@@ -75,10 +75,11 @@ export function FormSelect({
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
+  const displayLabelRef = useRef("");
 
   const handleFocus = () => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    setSearch("");
+    setSearch(displayLabelRef.current);
     setOpen(true);
   };
 
@@ -101,6 +102,7 @@ export function FormSelect({
       render={({ field }) => {
         const selected = options.find((opt) => opt.value === field.value);
         const displayLabel = selected ? getOptionLabel(selected) : "";
+        displayLabelRef.current = displayLabel;
 
         // Auto-select if only one option is available
         useEffect(() => {
@@ -232,6 +234,13 @@ export function FormSelect({
                       onChange={(e) => setSearch(e.target.value)}
                       onFocus={handleFocus}
                       onBlur={handleBlur}
+                      onMouseDown={(e) => {
+                        if (!open && !disabled && document.activeElement === e.currentTarget) {
+                          if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+                          setSearch(displayLabelRef.current);
+                          setOpen(true);
+                        }
+                      }}
                       placeholder={placeholder}
                       disabled={disabled}
                       className={cn(
@@ -266,6 +275,7 @@ export function FormSelect({
                 onWheelCapture={(e) => e.stopPropagation()}
                 onTouchMove={(e) => e.stopPropagation()}
                 onOpenAutoFocus={(e) => e.preventDefault()}
+                onFocusOutside={(e) => e.preventDefault()}
               >
                 {enableCodeSearch ? (
                   <Tabs

@@ -10,7 +10,7 @@ import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { successToast, errorToast } from "@/lib/core.function";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { useAllPurchases } from "@/pages/purchase/lib/purchase.hook";
-import FormWrapper from "@/components/FormWrapper";
+import PageWrapper from "@/components/PageWrapper";
 
 const { ICON, EMPTY, TITLES } = WAREHOUSE_DOCUMENT;
 
@@ -67,7 +67,7 @@ export default function WarehouseDocumentAddPage() {
   };
 
   return (
-    <FormWrapper>
+    <PageWrapper>
       <div className="space-y-4">
         <div className="flex items-center gap-4">
           <BackButton />
@@ -91,6 +91,6 @@ export default function WarehouseDocumentAddPage() {
           />
         )}
       </div>
-    </FormWrapper>
+    </PageWrapper>
   );
 }

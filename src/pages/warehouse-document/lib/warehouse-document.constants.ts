@@ -9,16 +9,6 @@ export const DOCUMENT_TYPES: { value: DocumentType; label: string }[] = [
   { value: "SALIDA", label: "Salida" },
   { value: "TRASLADO", label: "Traslado" },
   { value: "AJUSTE", label: "Ajuste" },
-  // { value: "ENTRADA_DEVOLUCION", label: "Entrada por Devolución" },
-  // { value: "ENTRADA_AJUSTE", label: "Entrada por Ajuste" },
-  // { value: "ENTRADA_TRANSFERENCIA", label: "Entrada por Transferencia" },
-  // { value: "ENTRADA_DONACION", label: "Entrada por Donación" },
-  // { value: "SALIDA_DEVOLUCION", label: "Salida por Devolución" },
-  // { value: "SALIDA_AJUSTE", label: "Salida por Ajuste" },
-  // { value: "SALIDA_TRANSFERENCIA", label: "Salida por Transferencia" },
-  // { value: "SALIDA_MERMA", label: "Salida por Merma" },
-  // { value: "SALIDA_DONACION", label: "Salida por Donación" },
-  // { value: "SALIDA_USO_INTERNO", label: "Salida por Uso Interno" },
 ];
 
 export const DOCUMENT_MOTIVES: { value: DocumentMotive; label: string }[] = [

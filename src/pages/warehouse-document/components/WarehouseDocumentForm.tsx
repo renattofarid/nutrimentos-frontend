@@ -6,14 +6,6 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
 import {
   DOCUMENT_TYPES,
   DOCUMENT_MOTIVES,
@@ -81,14 +73,14 @@ export default function WarehouseDocumentForm({
     useProduct(
       productCodeSearch
         ? { codigo: productCodeSearch.code, direction: "asc" }
-        : undefined
+        : undefined,
     );
 
   const form = useForm({
     resolver: zodResolver(warehouseDocumentSchemaCreate) as any,
     defaultValues: defaultValues || {
       warehouse_origin_id: "",
-      document_type: "",
+      document_type: "TRASLADO",
       motive: "",
       warehouse_dest_id: "",
       responsible_origin_id: "",
@@ -137,16 +129,16 @@ export default function WarehouseDocumentForm({
   useEffect(() => {
     if (selectedPurchaseId && selectedPurchaseId !== "") {
       const selectedPurchase = purchases.find(
-        (p) => p.id.toString() === selectedPurchaseId
+        (p) => p.id.toString() === selectedPurchaseId,
       );
 
       if (selectedPurchase) {
         // Llenar automáticamente el almacén, tipo de documento y motivo
         form.setValue(
           "warehouse_origin_id",
-          selectedPurchase.warehouse_id.toString()
+          selectedPurchase.warehouse_id.toString(),
         );
-        form.setValue("document_type", "INGRESO");
+        form.setValue("document_type", "TRASLADO");
         form.setValue("motive", "COMPRA");
 
         // Llenar los detalles si existen
@@ -167,14 +159,14 @@ export default function WarehouseDocumentForm({
                 observations: "",
                 total,
               };
-            }
+            },
           );
 
           setDetails(mappedDetails);
           // Actualizar el campo details del formulario
           form.setValue(
             "details",
-            convertDetailsToSchema(mappedDetails) as any
+            convertDetailsToSchema(mappedDetails) as any,
           );
           form.clearErrors("details");
         }
@@ -184,7 +176,7 @@ export default function WarehouseDocumentForm({
       setDetails([]);
       form.setValue("details", []);
       form.setValue("warehouse_origin_id", "");
-      form.setValue("document_type", "");
+      form.setValue("document_type", "TRASLADO");
       form.setValue("motive", "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -255,20 +247,23 @@ export default function WarehouseDocumentForm({
     form.clearErrors("details");
   };
 
-  const handleProductSelect = useCallback((index: number, product: ProductOption) => {
-    setDetails((prev) => {
-      const updatedDetails = [...prev];
-      updatedDetails[index] = {
-        ...updatedDetails[index],
-        product_id: product.id,
-        product_code: product.codigo,
-        product_name: product.name,
-      };
-      form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
-      form.clearErrors("details");
-      return updatedDetails;
-    });
-  }, [form]);
+  const handleProductSelect = useCallback(
+    (index: number, product: ProductOption) => {
+      setDetails((prev) => {
+        const updatedDetails = [...prev];
+        updatedDetails[index] = {
+          ...updatedDetails[index],
+          product_id: product.id,
+          product_code: product.codigo,
+          product_name: product.name,
+        };
+        form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
+        form.clearErrors("details");
+        return updatedDetails;
+      });
+    },
+    [form],
+  );
 
   // Cuando useProduct retorna resultado, auto-seleccionar primer producto y avanzar celda
   useEffect(() => {
@@ -287,7 +282,7 @@ export default function WarehouseDocumentForm({
       callbacks.advance();
     } else if (productSearchResult !== undefined) {
       callbacks.setError(
-        `No se encontró ningún producto con código "${productCodeSearch.code}"`
+        `No se encontró ningún producto con código "${productCodeSearch.code}"`,
       );
     }
 
@@ -301,7 +296,7 @@ export default function WarehouseDocumentForm({
       rowIndex: number,
       code: string,
       advance: () => void,
-      setError: (msg: string) => void
+      setError: (msg: string) => void,
     ) => {
       if (!code.trim()) {
         advance();
@@ -310,7 +305,7 @@ export default function WarehouseDocumentForm({
       productCodeCallbacksRef.current = { advance, setError };
       setProductCodeSearch({ rowIndex, code });
     },
-    []
+    [],
   );
 
   const calculateDetailsTotal = () => {
@@ -433,42 +428,18 @@ export default function WarehouseDocumentForm({
         <GroupFormSection
           title="Información General"
           icon={FileText}
-          cols={{ sm: 1, md: 2, lg: 3 }}
+          cols={{ sm: 1, md: 2, lg: 4 }}
         >
           <FormSelect
             control={form.control}
-            name="purchase_id"
-            label="Compra (Opcional)"
-            placeholder="Seleccione una compra"
-            options={[
-              { value: "", label: "Ninguna" },
-              ...purchases.map((purchase) => ({
-                value: purchase.id.toString(),
-                label: `${purchase.document_number} - ${purchase.supplier_fullname}`,
-                description: `Total: S/. ${purchase.total_amount}`,
-              })),
-            ]}
-          />
-
-          <FormSelect
-            control={form.control}
-            name="document_type"
-            label="Tipo de Documento"
-            placeholder="Seleccione el tipo"
-            options={DOCUMENT_TYPES.map((type) => ({
-              value: type.value,
-              label: type.label,
-            }))}
-          />
-
-          <FormSelect
-            control={form.control}
-            name="motive"
-            label="Motivo"
-            placeholder="Seleccione el motivo"
-            options={DOCUMENT_MOTIVES.map((motive) => ({
-              value: motive.value,
-              label: motive.label,
+            name="responsible_origin_id"
+            label="Responsable de Origen"
+            placeholder="Seleccione una persona"
+            options={persons.map((p) => ({
+              value: p.id.toString(),
+              label: `${p.names} ${p.father_surname ?? ""} ${
+                p.mother_surname ?? ""
+              }`.trim(),
             }))}
           />
 
@@ -491,30 +462,21 @@ export default function WarehouseDocumentForm({
 
           <FormSelect
             control={form.control}
-            name="responsible_origin_id"
-            label="Responsable de Origen"
-            placeholder="Seleccione una persona"
-            options={persons.map((p) => ({
-              value: p.id.toString(),
-              label: `${p.names} ${p.father_surname ?? ""} ${
-                p.mother_surname ?? ""
-              }`.trim(),
-            }))}
+            name="purchase_id"
+            label="Compra (Opcional)"
+            placeholder="Seleccione una compra"
+            options={[
+              { value: "", label: "Ninguna" },
+              ...purchases.map((purchase) => ({
+                value: purchase.id.toString(),
+                label: `${purchase.document_number} - ${purchase.supplier_fullname}`,
+                description: `Total: S/. ${purchase.total_amount}`,
+              })),
+            ]}
           />
 
           {isTraslado && (
             <>
-              <FormSelect
-                control={form.control}
-                name="warehouse_dest_id"
-                label="Almacén de Destino"
-                placeholder="Seleccione un almacén"
-                options={warehouses.map((w) => ({
-                  value: w.id.toString(),
-                  label: w.name,
-                }))}
-              />
-
               <FormSelect
                 control={form.control}
                 name="responsible_dest_id"
@@ -527,28 +489,40 @@ export default function WarehouseDocumentForm({
                   }`.trim(),
                 }))}
               />
+              <FormSelect
+                control={form.control}
+                name="warehouse_dest_id"
+                label="Almacén de Destino"
+                placeholder="Seleccione un almacén"
+                options={warehouses.map((w) => ({
+                  value: w.id.toString(),
+                  label: w.name,
+                }))}
+              />
             </>
           )}
 
-          <div className="md:col-span-3">
-            <FormField
-              control={form.control}
-              name="observations"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Observaciones adicionales"
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormSelect
+            control={form.control}
+            name="motive"
+            label="Motivo"
+            placeholder="Seleccione el motivo"
+            options={DOCUMENT_MOTIVES.map((motive) => ({
+              value: motive.value,
+              label: motive.label,
+            }))}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="document_type"
+            label="Tipo de Documento"
+            placeholder="Seleccione el tipo"
+            options={DOCUMENT_TYPES.map((type) => ({
+              value: type.value,
+              label: type.label,
+            }))}
+          />
         </GroupFormSection>
 
         <GroupFormSection
@@ -607,8 +581,8 @@ export default function WarehouseDocumentForm({
             {isSubmitting
               ? "Guardando..."
               : mode === "create"
-              ? "Crear Documento"
-              : "Actualizar Documento"}
+                ? "Crear Documento"
+                : "Actualizar Documento"}
           </Button>
         </div>
       </form>

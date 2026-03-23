@@ -90,6 +90,22 @@ export const warehouseDocumentSchemaCreate = z
       message: "Debe seleccionar un responsable de destino para traslados",
       path: ["responsible_dest_id"],
     }
+  )
+  .refine(
+    (data) => {
+      if (
+        data.warehouse_dest_id &&
+        data.warehouse_origin_id &&
+        data.warehouse_dest_id !== ""
+      ) {
+        return data.warehouse_origin_id !== data.warehouse_dest_id;
+      }
+      return true;
+    },
+    {
+      message: "El almacén de destino no puede ser igual al de origen",
+      path: ["warehouse_dest_id"],
+    }
   );
 
 export const warehouseDocumentSchemaUpdate =

@@ -114,6 +114,7 @@ export function FormSelectAsync({
   );
   const rawItemsMap = useRef<Map<string, any>>(new Map());
   const hasAutoSelected = useRef(false);
+  const displayLabelRef = useRef("");
   const mapOptionFnRef = useRef(mapOptionFn);
   mapOptionFnRef.current = mapOptionFn;
   const onValueChangeRef = useRef(onValueChange);
@@ -221,8 +222,9 @@ export function FormSelectAsync({
 
   const handleFocus = () => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    setSearch("");
-    setDebouncedSearch("");
+    const currentLabel = displayLabelRef.current;
+    setSearch(currentLabel);
+    setDebouncedSearch(currentLabel);
     setPage(1);
     setAllOptions([]);
     setOpen(true);
@@ -251,6 +253,7 @@ export function FormSelectAsync({
             : null);
 
         const displayLabel = selected ? getOptionLabel(selected) : "";
+        displayLabelRef.current = displayLabel;
 
         const handleSelect = (option: Option) => {
           const newValue =
@@ -312,6 +315,16 @@ export function FormSelectAsync({
                         onChange={(e) => setSearch(e.target.value)}
                         onFocus={handleFocus}
                         onBlur={handleBlur}
+                        onMouseDown={(e) => {
+                          if (!open && !disabled && document.activeElement === e.currentTarget) {
+                            if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+                            setSearch(displayLabelRef.current);
+                            setDebouncedSearch(displayLabelRef.current);
+                            setPage(1);
+                            setAllOptions([]);
+                            setOpen(true);
+                          }
+                        }}
                         placeholder={placeholder}
                         disabled={disabled}
                         className={cn(
@@ -349,6 +362,7 @@ export function FormSelectAsync({
                   onWheelCapture={(e) => e.stopPropagation()}
                   onTouchMove={(e) => e.stopPropagation()}
                   onOpenAutoFocus={(e) => e.preventDefault()}
+                  onFocusOutside={(e) => e.preventDefault()}
                 >
                   <Command className="max-h-72 overflow-hidden" shouldFilter={false}>
                     <CommandList

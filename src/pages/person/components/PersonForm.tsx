@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { FormInput } from "@/components/FormInput";
+import { useFormLayout } from "@/components/GroupFormSection";
 import { Loader, Search, Paperclip, IdCard } from "lucide-react";
 import {
   personCreateSchema,
@@ -40,6 +42,122 @@ import { GroupFormSection } from "@/components/GroupFormSection";
 import PersonAddressesList from "@/pages/client/components/PersonAddressesList";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
+
+interface NumberDocumentContentProps {
+  field: any;
+  errors: any;
+  fieldsFromSearch: { names: boolean };
+  dirtyFields: any;
+  document_type_id: string;
+  isClient: boolean;
+  isSearching: boolean;
+  handleDocumentSearch: () => void;
+}
+
+function NumberDocumentContent({
+  field,
+  errors,
+  fieldsFromSearch,
+  dirtyFields,
+  document_type_id,
+  isClient,
+  isSearching,
+  handleDocumentSearch,
+}: NumberDocumentContentProps) {
+  const { horizontal } = useFormLayout();
+
+  const labelText = (
+    <>
+      Número de Documento{" "}
+      {!isClient && errors.number_document && "*"}
+      {isClient && " (Opcional)"}
+    </>
+  );
+
+  const inputEl = (
+    <FormControl>
+      <div className="relative">
+        <Input
+          placeholder={
+            document_type_id === TYPE_DOCUMENT.DNI.id
+              ? "Ingrese 8 dígitos"
+              : document_type_id === TYPE_DOCUMENT.RUC.id
+                ? "Ingrese 11 dígitos"
+                : document_type_id === "CE"
+                  ? "Ingrese 8-9 dígitos"
+                  : document_type_id === "PASAPORTE"
+                    ? "Ingrese 8-11 caracteres"
+                    : "Ingrese el número"
+          }
+          {...field}
+          className={`
+            ${fieldsFromSearch.names ? "bg-blue-50 border-blue-200" : ""}
+            ${errors.number_document ? "border-destructive focus-visible:ring-destructive" : ""}
+            ${dirtyFields.number_document && !errors.number_document ? "border-primary" : ""}
+          `}
+          maxLength={
+            document_type_id === TYPE_DOCUMENT.DNI.id ? 8
+            : document_type_id === TYPE_DOCUMENT.RUC.id ? 11
+            : document_type_id === "CE" ? 9
+            : 11
+          }
+          onChange={(e) => {
+            let value;
+            if (document_type_id === TYPE_DOCUMENT.DNI.id || document_type_id === TYPE_DOCUMENT.RUC.id || document_type_id === "CE") {
+              value = e.target.value.replace(/\D/g, "");
+            } else {
+              value = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
+            }
+            field.onChange(value);
+            if (
+              value &&
+              ((document_type_id === TYPE_DOCUMENT.DNI.id && value.length === 8) ||
+                (document_type_id === TYPE_DOCUMENT.RUC.id && value.length === 11))
+            ) {
+              setTimeout(() => handleDocumentSearch(), 100);
+            }
+          }}
+        />
+        {(document_type_id === TYPE_DOCUMENT.DNI.id || document_type_id === TYPE_DOCUMENT.RUC.id) && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            onClick={handleDocumentSearch}
+            disabled={isSearching || !field.value}
+          >
+            {isSearching ? <Loader className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          </Button>
+        )}
+      </div>
+    </FormControl>
+  );
+
+  if (horizontal) {
+    return (
+      <FormItem className="flex flex-row items-center gap-3">
+        <FormLabel className="w-48 shrink-0 text-right text-xs font-bold uppercase dark:text-muted-foreground">
+          {labelText}
+        </FormLabel>
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+          {inputEl}
+          <FormMessage />
+        </div>
+      </FormItem>
+    );
+  }
+
+  return (
+    <FormItem>
+      <FormLabel className={errors.number_document ? "text-destructive" : ""}>
+        {labelText}
+      </FormLabel>
+      {inputEl}
+      <FormMessage />
+    </FormItem>
+  );
+}
 
 interface PersonFormProps {
   initialData?: PersonResource | null;
@@ -285,7 +403,8 @@ export const PersonForm = ({
         <GroupFormSection
           title="Información de Documento"
           icon={IdCard}
-          cols={{ md: 3 }}
+          cols={{ sm: 1 }}
+          horizontal
         >
           <FormSelect
             control={form.control}
@@ -317,161 +436,16 @@ export const PersonForm = ({
             control={form.control}
             name="number_document"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel
-                  className={errors.number_document ? "text-destructive" : ""}
-                >
-                  Número de Documento{" "}
-                  {!isClient && errors.number_document && "*"}
-                  {isClient && " (Opcional)"}
-                </FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      placeholder={
-                        document_type_id === TYPE_DOCUMENT.DNI.id
-                          ? "Ingrese 8 dígitos"
-                          : document_type_id === TYPE_DOCUMENT.RUC.id
-                            ? "Ingrese 11 dígitos"
-                            : document_type_id === "CE"
-                              ? "Ingrese 8-9 dígitos"
-                              : document_type_id === "PASAPORTE"
-                                ? "Ingrese 8-11 caracteres"
-                                : "Ingrese el número"
-                      }
-                      {...field}
-                      className={`
-                        ${
-                          fieldsFromSearch.names
-                            ? "bg-blue-50 border-blue-200"
-                            : ""
-                        }
-                        ${
-                          errors.number_document
-                            ? "border-destructive focus-visible:ring-destructive"
-                            : ""
-                        }
-                        ${
-                          dirtyFields.number_document && !errors.number_document
-                            ? "border-primary"
-                            : ""
-                        }
-                      `}
-                      maxLength={
-                        document_type_id === TYPE_DOCUMENT.DNI.id
-                          ? 8
-                          : document_type_id === TYPE_DOCUMENT.RUC.id
-                            ? 11
-                            : document_type_id === "CE"
-                              ? 9
-                              : document_type_id === "PASAPORTE"
-                                ? 11
-                                : 11
-                      }
-                      onChange={(e) => {
-                        let value;
-                        // For DNI, RUC, CE only allow numbers
-                        if (
-                          document_type_id === TYPE_DOCUMENT.DNI.id ||
-                          document_type_id === TYPE_DOCUMENT.RUC.id ||
-                          document_type_id === "CE"
-                        ) {
-                          value = e.target.value.replace(/\D/g, "");
-                        } else {
-                          // For PASAPORTE allow alphanumeric
-                          value = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
-                        }
-
-                        field.onChange(value);
-
-                        // Auto-search when completing DNI (8 digits) or RUC (11 digits)
-                        // Only if value is not empty (for optional client documents)
-                        if (
-                          value &&
-                          ((document_type_id === TYPE_DOCUMENT.DNI.id &&
-                            value.length === 8) ||
-                            (document_type_id === TYPE_DOCUMENT.RUC.id &&
-                              value.length === 11))
-                        ) {
-                          setTimeout(() => handleDocumentSearch(), 100);
-                        }
-                      }}
-                    />
-                    {(document_type_id === TYPE_DOCUMENT.DNI.id ||
-                      document_type_id === TYPE_DOCUMENT.RUC.id) && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={handleDocumentSearch}
-                        disabled={isSearching || !field.value}
-                      >
-                        {isSearching ? (
-                          <Loader className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Search className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </FormControl>
-                <FormMessage />
-                {/* Fixed height container for feedback messages */}
-                {field.value && !errors.number_document && (
-                  <div className="h-4 text-xs">
-                    <>
-                      {document_type_id === TYPE_DOCUMENT.DNI.id &&
-                        field.value.length === 8 && (
-                          <p className="text-primary">
-                            ✓ DNI válido (8 dígitos)
-                          </p>
-                        )}
-                      {document_type_id === TYPE_DOCUMENT.RUC.id &&
-                        field.value.length === 11 && (
-                          <p className="text-primary">
-                            ✓ RUC válido (11 dígitos)
-                          </p>
-                        )}
-                      {document_type_id === "CE" &&
-                        field.value.length >= 8 &&
-                        field.value.length <= 9 && (
-                          <p className="text-primary">
-                            ✓ CE válido ({field.value.length} dígitos)
-                          </p>
-                        )}
-                      {document_type_id === "PASAPORTE" &&
-                        field.value.length >= 8 &&
-                        field.value.length <= 11 && (
-                          <p className="text-primary">
-                            ✓ Pasaporte válido ({field.value.length} caracteres)
-                          </p>
-                        )}
-                      {/* Show progress */}
-                      {((document_type_id === TYPE_DOCUMENT.DNI.id &&
-                        field.value.length < 8) ||
-                        (document_type_id === TYPE_DOCUMENT.RUC.id &&
-                          field.value.length < 11) ||
-                        (document_type_id === "CE" && field.value.length < 8) ||
-                        (document_type_id === "PASAPORTE" &&
-                          field.value.length < 8)) && (
-                        <p className="text-amber-600">
-                          {document_type_id === TYPE_DOCUMENT.DNI.id &&
-                            `${8 - field.value.length} dígitos restantes`}
-                          {document_type_id === TYPE_DOCUMENT.RUC.id &&
-                            `${11 - field.value.length} dígitos restantes`}
-                          {document_type_id === "CE" &&
-                            field.value.length < 8 &&
-                            `${8 - field.value.length} dígitos restantes`}
-                          {document_type_id === "PASAPORTE" &&
-                            field.value.length < 8 &&
-                            `${8 - field.value.length} caracteres restantes`}
-                        </p>
-                      )}
-                    </>
-                  </div>
-                )}
-              </FormItem>
+              <NumberDocumentContent
+                field={field}
+                errors={errors}
+                fieldsFromSearch={fieldsFromSearch}
+                dirtyFields={dirtyFields}
+                document_type_id={document_type_id}
+                isClient={isClient}
+                isSearching={isSearching}
+                handleDocumentSearch={handleDocumentSearch}
+              />
             )}
           />
 
@@ -494,88 +468,28 @@ export const PersonForm = ({
           {/* Personal Information - Natural Person */}
           {type_person === "NATURAL" && (
             <>
-              <FormField
+              <FormInput
                 control={form.control}
                 name="names"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel
-                      className={errors.names ? "text-destructive" : ""}
-                    >
-                      Nombres {errors.names && "*"}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ingrese los nombres"
-                        {...field}
-                        className={`
-                        ${
-                          fieldsFromSearch.names
-                            ? "bg-blue-50 border-blue-200"
-                            : ""
-                        }
-                        ${
-                          errors.names
-                            ? "border-destructive focus-visible:ring-destructive"
-                            : ""
-                        }
-                        ${
-                          dirtyFields.names && !errors.names
-                            ? "border-primary"
-                            : ""
-                        }
-                      `}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                    {/* Fixed height container for feedback */}
-                    {!errors.names && dirtyFields.names && (
-                      <div className="h-4 text-xs">
-                        <p className="text-primary">✓ Nombres válidos</p>
-                      </div>
-                    )}
-                  </FormItem>
-                )}
+                label="Nombres"
+                placeholder="Ingrese los nombres"
+                className={fieldsFromSearch.names ? "bg-blue-50 border-blue-200" : ""}
               />
 
-              <FormField
+              <FormInput
                 control={form.control}
                 name="father_surname"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Apellido Paterno</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ingrese apellido paterno"
-                        {...field}
-                        className={
-                          fieldsFromSearch.father_surname ? "bg-blue-50" : ""
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label="Apellido Paterno"
+                placeholder="Ingrese apellido paterno"
+                className={fieldsFromSearch.father_surname ? "bg-blue-50" : ""}
               />
 
-              <FormField
+              <FormInput
                 control={form.control}
                 name="mother_surname"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Apellido Materno</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ingrese apellido materno"
-                        {...field}
-                        className={
-                          fieldsFromSearch.mother_surname ? "bg-blue-50" : ""
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label="Apellido Materno"
+                placeholder="Ingrese apellido materno"
+                className={fieldsFromSearch.mother_surname ? "bg-blue-50" : ""}
               />
 
               <FormSelect
@@ -610,91 +524,19 @@ export const PersonForm = ({
           {/* Business Information - Legal Person */}
           {type_person === "JURIDICA" && (
             <>
-              <FormField
+              <FormInput
                 control={form.control}
                 name="business_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel
-                      className={errors.business_name ? "text-destructive" : ""}
-                    >
-                      Razón Social {errors.business_name && "*"}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ingrese la razón social"
-                        {...field}
-                        className={`
-                        ${
-                          fieldsFromSearch.business_name
-                            ? "bg-blue-50 border-blue-200"
-                            : ""
-                        }
-                        ${
-                          errors.business_name
-                            ? "border-destructive focus-visible:ring-destructive"
-                            : ""
-                        }
-                        ${
-                          dirtyFields.business_name && !errors.business_name
-                            ? "border-primary"
-                            : ""
-                        }
-                      `}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                    {/* Fixed height container for feedback */}
-                    {!errors.business_name && dirtyFields.business_name && (
-                      <div className="h-4 text-xs">
-                        <p className="text-primary">✓ Razón social válida</p>
-                      </div>
-                    )}
-                  </FormItem>
-                )}
+                label="Razón Social"
+                placeholder="Ingrese la razón social"
+                className={fieldsFromSearch.business_name ? "bg-blue-50 border-blue-200" : ""}
               />
 
-              <FormField
+              <FormInput
                 control={form.control}
                 name="commercial_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel
-                      className={
-                        errors.commercial_name ? "text-destructive" : ""
-                      }
-                    >
-                      Nombre Comercial {errors.commercial_name && "*"}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ingrese el nombre comercial"
-                        {...field}
-                        className={`
-                        ${
-                          errors.commercial_name
-                            ? "border-destructive focus-visible:ring-destructive"
-                            : ""
-                        }
-                        ${
-                          dirtyFields.commercial_name && !errors.commercial_name
-                            ? "border-primary"
-                            : ""
-                        }
-                      `}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                    {/* Fixed height container for feedback */}
-                    {!errors.commercial_name && dirtyFields.commercial_name && (
-                      <div className="h-4 text-xs">
-                        <p className="text-primary">
-                          ✓ Nombre comercial válido
-                        </p>
-                      </div>
-                    )}
-                  </FormItem>
-                )}
+                label="Nombre Comercial"
+                placeholder="Ingrese el nombre comercial"
               />
             </>
           )}
@@ -705,115 +547,32 @@ export const PersonForm = ({
           <GroupFormSection
             title="Información Adicional"
             icon={Paperclip}
-            cols={{ md: 3 }}
+            cols={{ sm: 1 }}
+            horizontal
           >
-            <FormField
+            <FormInput
               control={form.control}
               name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className={errors.email ? "text-destructive" : ""}>
-                    Correo Electrónico {errors.email && "*"}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="ejemplo@correo.com"
-                      {...field}
-                      className={`
-                      ${
-                        errors.email
-                          ? "border-destructive focus-visible:ring-destructive"
-                          : ""
-                      }
-                      ${
-                        dirtyFields.email && !errors.email
-                          ? "border-primary"
-                          : ""
-                      }
-                    `}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  {/* Fixed height container for feedback */}
-                  {!errors.email && dirtyFields.email && (
-                    <div className="h-4 text-xs">
-                      <p className="text-primary">
-                        ✓ Correo electrónico válido
-                      </p>
-                    </div>
-                  )}
-                </FormItem>
-              )}
+              label="Correo Electrónico"
+              type="email"
+              placeholder="ejemplo@correo.com"
             />
 
-            <FormField
+            <FormInput
               control={form.control}
               name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className={errors.phone ? "text-destructive" : ""}>
-                    Teléfono {errors.phone && "*"}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="987654321 (9 dígitos)"
-                      {...field}
-                      className={`
-                      ${
-                        errors.phone
-                          ? "border-destructive focus-visible:ring-destructive"
-                          : ""
-                      }
-                      ${
-                        dirtyFields.phone && !errors.phone
-                          ? "border-primary"
-                          : ""
-                      }
-                    `}
-                      maxLength={9}
-                      onChange={(e) => {
-                        // Only allow numbers
-                        const value = e.target.value.replace(/\D/g, "");
-                        field.onChange(value);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  {/* Fixed height container for feedback */}
-                  {!errors.phone && dirtyFields.phone && (
-                    <div className="h-4 text-xs">
-                      <p className="text-primary">✓ Teléfono válido</p>
-                      {field.value &&
-                        field.value.length < 9 &&
-                        field.value.length > 0 && (
-                          <p className="text-amber-600">
-                            {9 - field.value.length} dígitos restantes
-                          </p>
-                        )}
-                    </div>
-                  )}
-                </FormItem>
-              )}
+              label="Teléfono"
+              placeholder="987654321 (9 dígitos)"
+              maxLength={9}
             />
 
             {showDirection && (
-              <FormField
+              <FormInput
                 control={form.control}
                 name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Dirección</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ingrese la dirección"
-                        {...field}
-                        className={fieldsFromSearch.address ? "bg-blue-50" : ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label="Dirección"
+                placeholder="Ingrese la dirección"
+                className={fieldsFromSearch.address ? "bg-blue-50" : ""}
               />
             )}
 

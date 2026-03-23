@@ -2,24 +2,28 @@ import { z } from "zod";
 import { requiredStringId } from "@/lib/core.schema";
 
 // Schema para los detalles del documento
-export const warehouseDocumentDetailSchema = z.object({
-  id: z.number().optional(),
-  product_id: requiredStringId("Debe seleccionar un producto"),
-  quantity_sacks: z
-    .number({ message: "La cantidad en sacos es requerida" })
-    .positive("La cantidad debe ser mayor a 0"),
-  quantity_kg: z
-    .number({ message: "La cantidad en kg debe ser un número" })
-    .nonnegative("La cantidad en kg no puede ser negativa")
-    .optional(),
-  unit_price: z
-    .number({ message: "El precio unitario es requerido" })
-    .nonnegative("El precio unitario no puede ser negativo"),
-  observations: z
-    .string()
-    .max(500, "Las observaciones no pueden exceder 500 caracteres")
-    .optional(),
-});
+export const warehouseDocumentDetailSchema = z
+  .object({
+    id: z.number().optional(),
+    product_id: requiredStringId("Debe seleccionar un producto"),
+    quantity_sacks: z
+      .number({ message: "La cantidad en sacos debe ser un número" })
+      .nonnegative("La cantidad en sacos no puede ser negativa"),
+    quantity_kg: z
+      .number({ message: "La cantidad en kg debe ser un número" })
+      .nonnegative("La cantidad en kg no puede ser negativa"),
+    unit_price: z
+      .number({ message: "El precio unitario es requerido" })
+      .nonnegative("El precio unitario no puede ser negativo"),
+    observations: z
+      .string()
+      .max(500, "Las observaciones no pueden exceder 500 caracteres")
+      .optional(),
+  })
+  .refine(
+    (d) => (d.quantity_sacks ?? 0) > 0 || (d.quantity_kg ?? 0) > 0,
+    { message: "Ingrese cantidad en sacos o en kg" },
+  );
 
 // Schema principal para crear documento
 export const warehouseDocumentSchemaCreate = z
@@ -89,6 +93,22 @@ export const warehouseDocumentSchemaCreate = z
     {
       message: "Debe seleccionar un responsable de destino para traslados",
       path: ["responsible_dest_id"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (
+        data.warehouse_dest_id &&
+        data.warehouse_origin_id &&
+        data.warehouse_dest_id !== ""
+      ) {
+        return data.warehouse_origin_id !== data.warehouse_dest_id;
+      }
+      return true;
+    },
+    {
+      message: "El almacén de destino no puede ser igual al de origen",
+      path: ["warehouse_dest_id"],
     }
   );
 

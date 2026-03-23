@@ -32,10 +32,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { formatDecimalTrunc, parseFormattedNumber } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatCurrency";
-import {
-  DOCUMENT_TYPES,
-  PAYMENT_TYPES,
-} from "../lib/sale.interface";
+import { DOCUMENT_TYPES, PAYMENT_TYPES } from "../lib/sale.interface";
 import { errorToast } from "@/lib/core.function";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { ClientDialog } from "@/pages/client/components/ClientDialog";
@@ -134,8 +131,12 @@ export const SaleForm = ({
   const { data: workers = [] } = useAllWorkers();
 
   // Estados para serie y número automático
-  const [autoSerie, setAutoSerie] = useState<string>("");
-  const [autoNumero, setAutoNumero] = useState<string>("");
+  const [autoSerie, setAutoSerie] = useState<string>(
+    mode === "update" && sale ? sale.serie : "",
+  );
+  const [autoNumero, setAutoNumero] = useState<string>(
+    mode === "update" && sale ? sale.numero : "",
+  );
 
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
@@ -280,30 +281,19 @@ export const SaleForm = ({
 
       // Si el warehouse seleccionado no está en la nueva lista filtrada, limpiar
       const currentWarehouseId = form.getValues("warehouse_id");
-      let warehouseCleared = false;
 
       if (currentWarehouseId) {
         const isValid = filtered.some(
-          (warehouse) => warehouse.id.toString() === currentWarehouseId,
+          (warehouse) =>
+            warehouse.id.toString() === currentWarehouseId.toString(),
         );
         if (!isValid) {
           form.setValue("warehouse_id", "");
-          warehouseCleared = true;
         }
-      }
-
-      // Si solo hay un almacén, seleccionarlo automáticamente
-      // Esto se ejecuta si: no hay almacén seleccionado, o el almacén fue limpiado
-      if (
-        filtered.length === 1 &&
-        mode === "create" &&
-        (!currentWarehouseId || warehouseCleared)
-      ) {
-        form.setValue("warehouse_id", filtered[0].id.toString());
       }
     } else {
       setFilteredWarehouses([]);
-      form.setValue("warehouse_id", "");
+      // form.setValue("warehouse_id", "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBranchId, warehouses]);
@@ -387,9 +377,11 @@ export const SaleForm = ({
       total_kg: 0,
       sale_mode: undefined,
     };
-    const updatedDetails = [...details, newDetail];
-    setDetails(updatedDetails);
-    form.setValue("details", updatedDetails);
+    setDetails((prev) => {
+      const updatedDetails = [...prev, newDetail];
+      form.setValue("details", updatedDetails);
+      return updatedDetails;
+    });
   };
 
   const handleRemoveRow = (index: number) => {
@@ -675,7 +667,7 @@ export const SaleForm = ({
     if (!callbacks) return;
 
     if (productSelected) {
-      const product =productSelected;
+      const product = productSelected;
       handleProductSelect(productCodeSearch.rowIndex, {
         id: product.id.toString(),
         codigo: product.codigo,
@@ -996,21 +988,22 @@ export const SaleForm = ({
             />
           </div>
 
-          <FormInput
-            name="_correlativo_display"
-            label="SERIE / CORRELATIVO"
-            value={
-              mode === "create"
-                ? autoSerie && autoNumero
-                  ? `${autoSerie} - ${autoNumero}`
-                  : ""
-                : sale
-                  ? `${sale.serie} - ${sale.numero}`
-                  : ""
-            }
-            readOnly
-            disabled
-          />
+          <div className="flex gap-2">
+            <FormInput
+              name="_serie_display"
+              label="SERIE"
+              value={autoSerie}
+              onChange={(e) => setAutoSerie(e.target.value)}
+              className="font-bold"
+            />
+            <FormInput
+              name="_numero_display"
+              label="CORRELATIVO"
+              value={autoNumero}
+              onChange={(e) => setAutoNumero(e.target.value)}
+              className="font-bold"
+            />
+          </div>
 
           <DatePickerFormField
             control={form.control}
@@ -1105,7 +1098,6 @@ export const SaleForm = ({
             }))}
             uppercase
           />
-
         </GroupFormSection>
 
         {/* Detalles, Cuotas y Resumen */}
@@ -1128,7 +1120,7 @@ export const SaleForm = ({
                 onProductCodeTab={handleProductCodeTab}
                 onRemoveEmptyRows={handleRemoveEmptyDetailRows}
                 emptyMessage="Seleccione un almacén y cliente para comenzar."
-                disabled={!selectedWarehouseId || !form.watch("customer_id")}
+                disabled={!selectedWarehouseId}
               />
             </GroupFormSection>
 

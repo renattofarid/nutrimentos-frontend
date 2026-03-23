@@ -40,6 +40,7 @@ export interface ProductOption {
   name: string;
   weight?: string;
   price_per_kg?: string;
+  purchase_price?: string;
 }
 
 interface ExcelGridProps<T> {
@@ -169,10 +170,8 @@ export function ExcelGrid<T extends Record<string, any>>({
       if (column.type === "product-code") {
         // Si hay callback async, delegarle toda la lógica
         if (onProductCodeTab) {
-          const code = (
-            data[rowIndex][column.accessor as string] || ""
-          ).toString();
           const inputEl = e.target as HTMLInputElement;
+          const code = inputEl.value.trim();
           const isShift = e.shiftKey;
 
           const advance = () => {
@@ -292,43 +291,32 @@ export function ExcelGrid<T extends Record<string, any>>({
 
       // Si es un campo de código de producto con callback async, hacer lookup primero
       if (column.type === "product-code" && onProductCodeTab) {
-        const code = (
-          data[rowIndex][column.accessor as string] || ""
-        ).toString();
         const inputEl = e.target as HTMLInputElement;
+        const code = inputEl.value.trim();
 
         const advance = () => {
           const nextRow = rowIndex + 1;
+
           if (nextRow < data.length) {
-            const firstEditableCol = columns.findIndex(
-              (col) => col.type !== "readonly",
-            );
-            if (firstEditableCol !== -1) {
-              setFocusedCell({ row: nextRow, col: firstEditableCol });
-              setTimeout(() => {
-                const key = `${nextRow}-${firstEditableCol}`;
-                const input = inputRefs.current[key];
-                if (input) {
-                  input.focus();
-                  input.select();
-                }
-              }, 0);
-            }
+            setFocusedCell({ row: nextRow, col: colIndex });
+            setTimeout(() => {
+              const key = `${nextRow}-${colIndex}`;
+              const input = inputRefs.current[key];
+              if (input) {
+                input.focus();
+                input.select();
+              }
+            }, 0);
           } else if (!disabled) {
             onAddRow();
             setTimeout(() => {
-              const firstEditableCol = columns.findIndex(
-                (col) => col.type !== "readonly",
-              );
-              if (firstEditableCol !== -1) {
-                const key = `${data.length}-${firstEditableCol}`;
-                const input = inputRefs.current[key];
-                if (input) {
-                  input.focus();
-                  input.select();
-                }
-                setFocusedCell({ row: data.length, col: firstEditableCol });
+              const key = `${data.length}-${colIndex}`;
+              const input = inputRefs.current[key];
+              if (input) {
+                input.focus();
+                input.select();
               }
+              setFocusedCell({ row: data.length, col: colIndex });
             }, 50);
           }
         };
@@ -343,34 +331,34 @@ export function ExcelGrid<T extends Record<string, any>>({
         return;
       }
 
-      // Si estamos en la última fila, agregar una nueva
+      // Enter siempre va a la primera columna editable de la siguiente fila
+      const firstEditableCol = columns.findIndex(
+        (col) => col.type !== "readonly",
+      );
+      const targetCol = firstEditableCol !== -1 ? firstEditableCol : 0;
+
       if (rowIndex === data.length - 1 && !disabled) {
+        // Última fila: agregar nueva y enfocar primera columna editable
         onAddRow();
         setTimeout(() => {
-          // Enfocar la primera celda editable de la nueva fila
-          const firstEditableCol = columns.findIndex(
-            (col) => col.type !== "readonly",
-          );
-          if (firstEditableCol !== -1) {
-            const key = `${data.length}-${firstEditableCol}`;
-            const input = inputRefs.current[key];
-            if (input) {
-              input.focus();
-              input.select(); // Seleccionar todo el texto
-            }
-            setFocusedCell({ row: data.length, col: firstEditableCol });
-          }
-        }, 50);
-      } else {
-        // Ir a la misma columna en la siguiente fila
-        const nextRow = rowIndex + 1;
-        setFocusedCell({ row: nextRow, col: colIndex });
-        setTimeout(() => {
-          const key = `${nextRow}-${colIndex}`;
+          const key = `${data.length}-${targetCol}`;
           const input = inputRefs.current[key];
           if (input) {
             input.focus();
-            input.select(); // Seleccionar todo el texto
+            input.select();
+          }
+          setFocusedCell({ row: data.length, col: targetCol });
+        }, 50);
+      } else {
+        // Ir a la primera columna editable de la siguiente fila
+        const nextRow = rowIndex + 1;
+        setFocusedCell({ row: nextRow, col: targetCol });
+        setTimeout(() => {
+          const key = `${nextRow}-${targetCol}`;
+          const input = inputRefs.current[key];
+          if (input) {
+            input.focus();
+            input.select();
           }
         }, 0);
       }
@@ -462,6 +450,14 @@ export function ExcelGrid<T extends Record<string, any>>({
         const searchValue = row[column.accessor as string] || "";
         const datalistId = `products-name-${rowIndex}`;
 
+        // Filtrar productos que sean iguales al valor actual
+        const matchingByName = searchValue
+          ? productOptions.filter(
+              (p) =>
+                p.name.toLowerCase() === searchValue.toString().toLowerCase(),
+            )
+          : productOptions;
+
         return (
           <>
             <input
@@ -473,7 +469,7 @@ export function ExcelGrid<T extends Record<string, any>>({
               onChange={(e) => {
                 const value = e.target.value;
 
-                // Buscar el producto por nombre
+                // Buscar el producto por nombre exacto
                 const product = productOptions.find(
                   (p) => p.name.toLowerCase() === value.toLowerCase(),
                 );
@@ -490,16 +486,18 @@ export function ExcelGrid<T extends Record<string, any>>({
               onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex, column)}
               placeholder="Producto..."
               className="w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent"
-              list={datalistId}
+              list={matchingByName.length > 0 ? datalistId : undefined}
               autoComplete="off"
             />
-            <datalist id={datalistId}>
-              {productOptions.map((product) => (
-                <option key={product.id} value={product.name}>
-                  {product.codigo}
-                </option>
-              ))}
-            </datalist>
+            {matchingByName.length > 0 && (
+              <datalist id={datalistId}>
+                {matchingByName.map((product) => (
+                  <option key={product.id} value={product.name}>
+                    {product.codigo}
+                  </option>
+                ))}
+              </datalist>
+            )}
           </>
         );
 

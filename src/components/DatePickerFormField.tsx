@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import type { Matcher } from "react-day-picker";
+import { useFormLayout } from "./GroupFormSection";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -70,6 +71,7 @@ export function DatePickerFormField<T extends FieldValues>({
 }: DatePickerFormFieldProps<T>) {
   const isMobile = useIsMobile();
   const { field, fieldState } = useController({ control, name });
+  const { horizontal } = useFormLayout();
 
   const parsedDate = useMemo(() => {
     if ((field.value as unknown) instanceof Date) return field.value;
@@ -106,10 +108,8 @@ export function DatePickerFormField<T extends FieldValues>({
 
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  return (
-    <FormItem className="flex flex-col gap-0.5">
-      {label && <FormLabel>{label}</FormLabel>}
-
+  const pickerContent = (
+    <>
       {isMobile ? (
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerTrigger asChild>
@@ -178,6 +178,26 @@ export function DatePickerFormField<T extends FieldValues>({
 
       {description && <FormDescription>{description}</FormDescription>}
       <FormMessage>{fieldState.error?.message}</FormMessage>
+    </>
+  );
+
+  if (horizontal) {
+    return (
+      <FormItem className="flex flex-row items-center gap-3">
+        {label && (
+          <FormLabel className="w-48 shrink-0 text-right justify-end font-bold uppercase">
+            {label}
+          </FormLabel>
+        )}
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5">{pickerContent}</div>
+      </FormItem>
+    );
+  }
+
+  return (
+    <FormItem className="flex flex-col gap-0.5">
+      {label && <FormLabel className="font-bold uppercase">{label}</FormLabel>}
+      {pickerContent}
     </FormItem>
   );
 }

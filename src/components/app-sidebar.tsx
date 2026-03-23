@@ -62,13 +62,16 @@ import {
 } from "@/pages/deliverysheet/lib/deliverysheet.interface";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import {
+  ANNUAL_SALES_REPORT_ROUTE,
   CAR_LOAD_REPORT_ROUTE,
   COMMISSIONS_REPORT_ROUTE,
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+  DETAILED_SALES_REPORT_ROUTE,
   INVENTORY_REPORT_ROUTE,
   KARDEX_REPORT_ROUTE,
   REPORTS,
   SALE_BY_SELLER_REPORT_ROUTE,
+  SALES_BY_PRODUCT_REPORT_ROUTE,
 } from "@/pages/reports/lib/reports.interface";
 import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-credit-note.interface";
 import { SettlementTitle } from "@/pages/deliverysheet/components/settlement/SettlementHeader";
@@ -424,6 +427,21 @@ const data = {
         {
           title: "Llenado de Carros",
           url: CAR_LOAD_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: "Ventas Detallado",
+          url: DETAILED_SALES_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: "Ventas Anuales",
+          url: ANNUAL_SALES_REPORT_ROUTE,
+          icon: ReportsIcon,
+        },
+        {
+          title: "Ventas por Producto",
+          url: SALES_BY_PRODUCT_REPORT_ROUTE,
           icon: ReportsIcon,
         },
       ],

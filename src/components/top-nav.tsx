@@ -60,13 +60,18 @@ import {
 } from "@/pages/deliverysheet/lib/deliverysheet.interface";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import {
+  ANNUAL_SALES_REPORT_ROUTE,
   CAR_LOAD_REPORT_ROUTE,
   COMMISSIONS_REPORT_ROUTE,
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+  DETAILED_SALES_REPORT_ROUTE,
   INVENTORY_REPORT_ROUTE,
   KARDEX_REPORT_ROUTE,
+  PURCHASE_REGISTER_REPORT_ROUTE,
   REPORTS,
   SALE_BY_SELLER_REPORT_ROUTE,
+  SALES_BY_PRODUCT_REPORT_ROUTE,
+  SALES_REGISTER_REPORT_ROUTE,
 } from "@/pages/reports/lib/reports.interface";
 import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-credit-note.interface";
 import { SettlementTitle } from "@/pages/deliverysheet/components/settlement/SettlementHeader";
@@ -342,6 +347,31 @@ export const navData: NavItem[] = [
         url: CAR_LOAD_REPORT_ROUTE,
         icon: ReportsIcon,
       },
+      {
+        title: "Ventas Detallado",
+        url: DETAILED_SALES_REPORT_ROUTE,
+        icon: ReportsIcon,
+      },
+      {
+        title: "Ventas Anuales",
+        url: ANNUAL_SALES_REPORT_ROUTE,
+        icon: ReportsIcon,
+      },
+      {
+        title: "Ventas por Producto",
+        url: SALES_BY_PRODUCT_REPORT_ROUTE,
+        icon: ReportsIcon,
+      },
+      {
+        title: "Registro de Ventas",
+        url: SALES_REGISTER_REPORT_ROUTE,
+        icon: ReportsIcon,
+      },
+      {
+        title: "Registro de Compras",
+        url: PURCHASE_REGISTER_REPORT_ROUTE,
+        icon: ReportsIcon,
+      },
     ],
   },
   {
@@ -438,7 +468,7 @@ export function TopNav() {
             <NavigationMenuItem key={item.title}>
               <NavigationMenuTrigger
                 className={cn(
-                  "h-7 text-xs px-1.5 bg-transparent hover:bg-accent/50",
+                  "h-7 text-sm px-1.5 bg-transparent hover:bg-accent/50 uppercase",
                   isItemActive(item) && "text-primary font-semibold",
                 )}
               >
@@ -456,7 +486,7 @@ export function TopNav() {
                         <button
                           onClick={() => openTab(sub.url, sub.title)}
                           className={cn(
-                            "w-full flex flex-row justify-start text-start items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground",
+                            "w-full flex flex-row justify-start text-start items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground uppercase",
                             isSubItemActive(sub.url) &&
                               "bg-accent/50 text-accent-foreground font-medium",
                           )}
@@ -476,7 +506,7 @@ export function TopNav() {
                 <button
                   onClick={() => openTab(item.url, item.title)}
                   className={cn(
-                    "inline-flex flex-row justify-start text-start items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                    "inline-flex flex-row justify-start text-start items-center gap-1 rounded-md px-1.5 py-1 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground uppercase",
                     isItemActive(item) && "text-primary font-semibold",
                   )}
                 >

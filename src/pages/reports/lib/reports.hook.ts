@@ -1,11 +1,14 @@
 import { useReportsStore } from "./reports.store";
 import type {
+  AnnualSalesReportParams,
   CarLoadReportParams,
   CommissionsReportParams,
   CustomerAccountStatementParams,
   DeliverySheetReportParams,
+  DetailedSalesReportParams,
   KardexReportParams,
   SaleBySellerReportParams,
+  SalesByProductReportParams,
 } from "./reports.interface";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -251,6 +254,57 @@ export const useZoneAsyncSearch = (params: {
     refetchOnWindowFocus: false,
   });
 };
+
+export function useDetailedSalesReport(params?: DetailedSalesReportParams) {
+  const {
+    detailedSalesReport,
+    detailedSalesLoading,
+    detailedSalesError,
+    fetchDetailedSalesReport,
+  } = useReportsStore();
+
+  return {
+    data: detailedSalesReport,
+    isLoading: detailedSalesLoading,
+    error: detailedSalesError,
+    refetch: () => fetchDetailedSalesReport(params || {}),
+    fetch: fetchDetailedSalesReport,
+  };
+}
+
+export function useSalesByProductReport(params?: SalesByProductReportParams) {
+  const {
+    salesByProductReport,
+    salesByProductLoading,
+    salesByProductError,
+    fetchSalesByProductReport,
+  } = useReportsStore();
+
+  return {
+    data: salesByProductReport,
+    isLoading: salesByProductLoading,
+    error: salesByProductError,
+    refetch: () => fetchSalesByProductReport(params || {}),
+    fetch: fetchSalesByProductReport,
+  };
+}
+
+export function useAnnualSalesReport(params?: AnnualSalesReportParams) {
+  const {
+    annualSalesReport,
+    annualSalesLoading,
+    annualSalesError,
+    fetchAnnualSalesReport,
+  } = useReportsStore();
+
+  return {
+    data: annualSalesReport,
+    isLoading: annualSalesLoading,
+    error: annualSalesError,
+    refetch: () => fetchAnnualSalesReport(params || {}),
+    fetch: fetchAnnualSalesReport,
+  };
+}
 
 export const useBranchAsyncSearch = (params: {
   search?: string;

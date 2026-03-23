@@ -6,14 +6,6 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
 import {
   DOCUMENT_TYPES,
   DOCUMENT_MOTIVES,
@@ -53,6 +45,8 @@ interface DetailRow {
   unit_price: string;
   observations: string;
   total: number;
+  purchase_price?: string;
+  price_per_kg?: string;
 }
 
 export default function WarehouseDocumentForm({
@@ -81,14 +75,14 @@ export default function WarehouseDocumentForm({
     useProduct(
       productCodeSearch
         ? { codigo: productCodeSearch.code, direction: "asc" }
-        : undefined
+        : undefined,
     );
 
   const form = useForm({
     resolver: zodResolver(warehouseDocumentSchemaCreate) as any,
     defaultValues: defaultValues || {
       warehouse_origin_id: "",
-      document_type: "",
+      document_type: "TRASLADO",
       motive: "",
       warehouse_dest_id: "",
       responsible_origin_id: "",
@@ -137,16 +131,16 @@ export default function WarehouseDocumentForm({
   useEffect(() => {
     if (selectedPurchaseId && selectedPurchaseId !== "") {
       const selectedPurchase = purchases.find(
-        (p) => p.id.toString() === selectedPurchaseId
+        (p) => p.id.toString() === selectedPurchaseId,
       );
 
       if (selectedPurchase) {
         // Llenar automáticamente el almacén, tipo de documento y motivo
         form.setValue(
           "warehouse_origin_id",
-          selectedPurchase.warehouse_id.toString()
+          selectedPurchase.warehouse_id.toString(),
         );
-        form.setValue("document_type", "INGRESO");
+        form.setValue("document_type", "TRASLADO");
         form.setValue("motive", "COMPRA");
 
         // Llenar los detalles si existen
@@ -167,14 +161,14 @@ export default function WarehouseDocumentForm({
                 observations: "",
                 total,
               };
-            }
+            },
           );
 
           setDetails(mappedDetails);
           // Actualizar el campo details del formulario
           form.setValue(
             "details",
-            convertDetailsToSchema(mappedDetails) as any
+            convertDetailsToSchema(mappedDetails) as any,
           );
           form.clearErrors("details");
         }
@@ -184,7 +178,7 @@ export default function WarehouseDocumentForm({
       setDetails([]);
       form.setValue("details", []);
       form.setValue("warehouse_origin_id", "");
-      form.setValue("document_type", "");
+      form.setValue("document_type", "TRASLADO");
       form.setValue("motive", "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -192,13 +186,15 @@ export default function WarehouseDocumentForm({
 
   // Función para convertir DetailRow[] a formato del schema
   const convertDetailsToSchema = (details: DetailRow[]) => {
-    return details.map((detail) => ({
-      product_id: detail.product_id,
-      quantity_sacks: parseFloat(detail.quantity_sacks) || 0,
-      quantity_kg: parseFloat(detail.quantity_kg) || undefined,
-      unit_price: parseFloat(detail.unit_price) || 0,
-      observations: detail.observations || "",
-    }));
+    return details.map((detail) => {
+      return {
+        product_id: detail.product_id,
+        quantity_sacks: parseFloat(detail.quantity_sacks) || 0,
+        quantity_kg: parseFloat(detail.quantity_kg) || 0,
+        unit_price: parseFloat(detail.unit_price) || 0,
+        observations: detail.observations || "",
+      };
+    });
   };
 
   // Funciones para ExcelGrid
@@ -213,13 +209,12 @@ export default function WarehouseDocumentForm({
       observations: "",
       total: 0,
     };
-    const updatedDetails = [...details, newDetail];
-    setDetails(updatedDetails);
-    // Actualizar el campo details del formulario para que la validación funcione
-    form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
-    if (updatedDetails.length > 0) {
+    setDetails((prev) => {
+      const updatedDetails = [...prev, newDetail];
+      form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
       form.clearErrors("details");
-    }
+      return updatedDetails;
+    });
   };
 
   const handleRemoveRow = (index: number) => {
@@ -234,41 +229,75 @@ export default function WarehouseDocumentForm({
 
   const handleCellChange = (index: number, field: string, value: string) => {
     const updatedDetails = [...details];
-    updatedDetails[index] = { ...updatedDetails[index], [field]: value };
+    const current = { ...updatedDetails[index], [field]: value };
 
-    // Recalcular totales cuando cambian cantidad o precio
-    if (field === "quantity_kg" || field === "unit_price") {
-      const detail = updatedDetails[index];
-      const quantityKg = parseFloat(detail.quantity_kg) || 0;
-      const unitPrice = parseFloat(detail.unit_price) || 0;
-      const total = quantityKg * unitPrice;
-
-      updatedDetails[index] = {
-        ...updatedDetails[index],
-        total,
-      };
+    if (field === "quantity_sacks") {
+      // Solo sacos: poner kg en 0, setear precio por saco
+      const purchasePrice = parseFloat(current.purchase_price || "") || 0;
+      const qty = parseFloat(value) || 0;
+      current.quantity_kg = "0";
+      current.unit_price = current.purchase_price || "";
+      current.total = qty * purchasePrice;
+    } else if (field === "quantity_kg") {
+      // Solo kg: poner sacos en 0, setear precio por kg
+      const priceKg = parseFloat(current.price_per_kg || "") || 0;
+      const qty = parseFloat(value) || 0;
+      current.quantity_sacks = "0";
+      current.unit_price = current.price_per_kg || "";
+      current.total = qty * priceKg;
+    } else if (field === "unit_price") {
+      // Si editan precio manual, recalcular con la cantidad activa
+      const unitPrice = parseFloat(value) || 0;
+      const qtyKg = parseFloat(current.quantity_kg) || 0;
+      const qtySacks = parseFloat(current.quantity_sacks) || 0;
+      current.total = qtySacks > 0 ? qtySacks * unitPrice : qtyKg * unitPrice;
     }
 
+    updatedDetails[index] = current;
     setDetails(updatedDetails);
-    // Actualizar el campo details del formulario
     form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
     form.clearErrors("details");
   };
 
-  const handleProductSelect = useCallback((index: number, product: ProductOption) => {
-    setDetails((prev) => {
-      const updatedDetails = [...prev];
-      updatedDetails[index] = {
-        ...updatedDetails[index],
-        product_id: product.id,
-        product_code: product.codigo,
-        product_name: product.name,
-      };
-      form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
-      form.clearErrors("details");
-      return updatedDetails;
-    });
-  }, [form]);
+  const handleProductSelect = useCallback(
+    (index: number, product: ProductOption) => {
+      setDetails((prev) => {
+        const updatedDetails = [...prev];
+        const current = updatedDetails[index];
+        const purchasePrice = product.purchase_price || "";
+        const pricePerKg = product.price_per_kg || "";
+
+        // Recalcular total si ya hay cantidad ingresada
+        const qtySacks = parseFloat(current.quantity_sacks) || 0;
+        const qtyKg = parseFloat(current.quantity_kg) || 0;
+        let unit_price = current.unit_price;
+        let total = current.total;
+
+        if (qtySacks > 0) {
+          unit_price = purchasePrice;
+          total = qtySacks * (parseFloat(purchasePrice) || 0);
+        } else if (qtyKg > 0) {
+          unit_price = pricePerKg;
+          total = qtyKg * (parseFloat(pricePerKg) || 0);
+        }
+
+        updatedDetails[index] = {
+          ...current,
+          product_id: product.id,
+          product_code: product.codigo,
+          product_name: product.name,
+          purchase_price: purchasePrice,
+          price_per_kg: pricePerKg,
+          unit_price,
+          total,
+        };
+        form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
+        form.clearErrors("details");
+        return updatedDetails;
+      });
+    },
+    [form],
+  );
 
   // Cuando useProduct retorna resultado, auto-seleccionar primer producto y avanzar celda
   useEffect(() => {
@@ -276,18 +305,23 @@ export default function WarehouseDocumentForm({
     const callbacks = productCodeCallbacksRef.current;
     if (!callbacks) return;
 
-    if (productSearchResult?.data && productSearchResult.data.length > 0) {
-      const p = productSearchResult.data[0];
+    const productSelected = productSearchResult?.data?.find(
+      (p) => p.codigo === productCodeSearch?.code,
+    );
+
+    if (productSelected) {
       handleProductSelect(productCodeSearch.rowIndex, {
-        id: p.id.toString(),
-        codigo: p.codigo,
-        name: p.name,
-        weight: p.weight,
+        id: productSelected.id.toString(),
+        codigo: productSelected.codigo,
+        name: productSelected.name,
+        weight: productSelected.weight,
+        price_per_kg: productSelected.price_per_kg,
+        purchase_price: productSelected.purchase_price,
       });
       callbacks.advance();
     } else if (productSearchResult !== undefined) {
       callbacks.setError(
-        `No se encontró ningún producto con código "${productCodeSearch.code}"`
+        `No se encontró ningún producto con código "${productCodeSearch.code}"`,
       );
     }
 
@@ -301,7 +335,7 @@ export default function WarehouseDocumentForm({
       rowIndex: number,
       code: string,
       advance: () => void,
-      setError: (msg: string) => void
+      setError: (msg: string) => void,
     ) => {
       if (!code.trim()) {
         advance();
@@ -310,7 +344,7 @@ export default function WarehouseDocumentForm({
       productCodeCallbacksRef.current = { advance, setError };
       setProductCodeSearch({ rowIndex, code });
     },
-    []
+    [],
   );
 
   const calculateDetailsTotal = () => {
@@ -395,9 +429,11 @@ export default function WarehouseDocumentForm({
         });
         return false;
       }
-      if (!detail.quantity_sacks || parseFloat(detail.quantity_sacks) <= 0) {
+      const hasSacks = parseFloat(detail.quantity_sacks) > 0;
+      const hasKg = parseFloat(detail.quantity_kg) > 0;
+      if (!hasSacks && !hasKg) {
         form.setError("details", {
-          message: `Fila ${i + 1}: La cantidad en sacos debe ser mayor a 0`,
+          message: `Fila ${i + 1}: Ingrese cantidad en sacos o en kg`,
         });
         return false;
       }
@@ -433,42 +469,18 @@ export default function WarehouseDocumentForm({
         <GroupFormSection
           title="Información General"
           icon={FileText}
-          cols={{ sm: 1, md: 2, lg: 3 }}
+          cols={{ sm: 1, md: 2, lg: 4 }}
         >
           <FormSelect
             control={form.control}
-            name="purchase_id"
-            label="Compra (Opcional)"
-            placeholder="Seleccione una compra"
-            options={[
-              { value: "", label: "Ninguna" },
-              ...purchases.map((purchase) => ({
-                value: purchase.id.toString(),
-                label: `${purchase.document_number} - ${purchase.supplier_fullname}`,
-                description: `Total: S/. ${purchase.total_amount}`,
-              })),
-            ]}
-          />
-
-          <FormSelect
-            control={form.control}
-            name="document_type"
-            label="Tipo de Documento"
-            placeholder="Seleccione el tipo"
-            options={DOCUMENT_TYPES.map((type) => ({
-              value: type.value,
-              label: type.label,
-            }))}
-          />
-
-          <FormSelect
-            control={form.control}
-            name="motive"
-            label="Motivo"
-            placeholder="Seleccione el motivo"
-            options={DOCUMENT_MOTIVES.map((motive) => ({
-              value: motive.value,
-              label: motive.label,
+            name="responsible_origin_id"
+            label="Responsable de Origen"
+            placeholder="Seleccione una persona"
+            options={persons.map((p) => ({
+              value: p.id.toString(),
+              label: `${p.names} ${p.father_surname ?? ""} ${
+                p.mother_surname ?? ""
+              }`.trim(),
             }))}
           />
 
@@ -491,30 +503,21 @@ export default function WarehouseDocumentForm({
 
           <FormSelect
             control={form.control}
-            name="responsible_origin_id"
-            label="Responsable de Origen"
-            placeholder="Seleccione una persona"
-            options={persons.map((p) => ({
-              value: p.id.toString(),
-              label: `${p.names} ${p.father_surname ?? ""} ${
-                p.mother_surname ?? ""
-              }`.trim(),
-            }))}
+            name="purchase_id"
+            label="Compra (Opcional)"
+            placeholder="Seleccione una compra"
+            options={[
+              { value: "", label: "Ninguna" },
+              ...purchases.map((purchase) => ({
+                value: purchase.id.toString(),
+                label: `${purchase.document_number} - ${purchase.supplier_fullname}`,
+                description: `Total: S/. ${purchase.total_amount}`,
+              })),
+            ]}
           />
 
           {isTraslado && (
             <>
-              <FormSelect
-                control={form.control}
-                name="warehouse_dest_id"
-                label="Almacén de Destino"
-                placeholder="Seleccione un almacén"
-                options={warehouses.map((w) => ({
-                  value: w.id.toString(),
-                  label: w.name,
-                }))}
-              />
-
               <FormSelect
                 control={form.control}
                 name="responsible_dest_id"
@@ -527,28 +530,40 @@ export default function WarehouseDocumentForm({
                   }`.trim(),
                 }))}
               />
+              <FormSelect
+                control={form.control}
+                name="warehouse_dest_id"
+                label="Almacén de Destino"
+                placeholder="Seleccione un almacén"
+                options={warehouses.map((w) => ({
+                  value: w.id.toString(),
+                  label: w.name,
+                }))}
+              />
             </>
           )}
 
-          <div className="md:col-span-3">
-            <FormField
-              control={form.control}
-              name="observations"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Observaciones adicionales"
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormSelect
+            control={form.control}
+            name="motive"
+            label="Motivo"
+            placeholder="Seleccione el motivo"
+            options={DOCUMENT_MOTIVES.map((motive) => ({
+              value: motive.value,
+              label: motive.label,
+            }))}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="document_type"
+            label="Tipo de Documento"
+            placeholder="Seleccione el tipo"
+            options={DOCUMENT_TYPES.map((type) => ({
+              value: type.value,
+              label: type.label,
+            }))}
+          />
         </GroupFormSection>
 
         <GroupFormSection
@@ -607,8 +622,8 @@ export default function WarehouseDocumentForm({
             {isSubmitting
               ? "Guardando..."
               : mode === "create"
-              ? "Crear Documento"
-              : "Actualizar Documento"}
+                ? "Crear Documento"
+                : "Actualizar Documento"}
           </Button>
         </div>
       </form>

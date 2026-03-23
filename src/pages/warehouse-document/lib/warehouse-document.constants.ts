@@ -9,29 +9,14 @@ export const DOCUMENT_TYPES: { value: DocumentType; label: string }[] = [
   { value: "SALIDA", label: "Salida" },
   { value: "TRASLADO", label: "Traslado" },
   { value: "AJUSTE", label: "Ajuste" },
-  // { value: "ENTRADA_DEVOLUCION", label: "Entrada por Devolución" },
-  // { value: "ENTRADA_AJUSTE", label: "Entrada por Ajuste" },
-  // { value: "ENTRADA_TRANSFERENCIA", label: "Entrada por Transferencia" },
-  // { value: "ENTRADA_DONACION", label: "Entrada por Donación" },
-  // { value: "SALIDA_DEVOLUCION", label: "Salida por Devolución" },
-  // { value: "SALIDA_AJUSTE", label: "Salida por Ajuste" },
-  // { value: "SALIDA_TRANSFERENCIA", label: "Salida por Transferencia" },
-  // { value: "SALIDA_MERMA", label: "Salida por Merma" },
-  // { value: "SALIDA_DONACION", label: "Salida por Donación" },
-  // { value: "SALIDA_USO_INTERNO", label: "Salida por Uso Interno" },
 ];
 
 export const DOCUMENT_MOTIVES: { value: DocumentMotive; label: string }[] = [
   { value: "COMPRA", label: "Compra" },
-  { value: "VENTA", label: "Venta" },
   { value: "DEVOLUCION", label: "Devolución" },
   { value: "TRASLADO_INTERNO", label: "Traslado Interno" },
   { value: "AJUSTE_STOCK", label: "Ajuste de Stock" },
   { value: "OTRO", label: "Otro" },
-  { value: "TRANSFERENCIA", label: "Transferencia" },
-  { value: "MERMA", label: "Merma" },
-  { value: "DONACION", label: "Donación" },
-  { value: "USO_INTERNO", label: "Uso Interno" },
 ];
 
 export const DOCUMENT_STATUS: {
@@ -58,7 +43,7 @@ export const getDocumentStatusLabel = (status: DocumentStatus): string => {
 };
 
 export const getDocumentStatusVariant = (
-  status: DocumentStatus
+  status: DocumentStatus,
 ): "default" | "secondary" | "destructive" => {
   return (
     DOCUMENT_STATUS.find((ds) => ds.value === status)?.variant || "default"

@@ -44,7 +44,7 @@ export const SaleAddPage = () => {
   const getDefaultValues = (): Partial<SaleSchema> => ({
     branch_id: "",
     customer_id: "",
-    warehouse_id: "",
+    warehouse_id: "12",
     vendedor_id: "",
     document_type: "BOLETA",
     issue_date: format(new Date(), "yyyy-MM-dd"),

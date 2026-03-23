@@ -1,14 +1,19 @@
 import { create } from "zustand";
 import {
+  getAnnualSalesReport,
   getCarLoadReport,
   getCommissionsReport,
   getCustomerAccountStatement,
   getDeliverySheetReport,
+  getDetailedSalesReport,
   getInventoryReport,
   getKardexReport,
   getSaleBySellerReport,
+  getSalesByProductReport,
 } from "./reports.actions";
 import type {
+  AnnualSalesReportParams,
+  AnnualSalesReportResponse,
   CarLoadReportParams,
   CarLoadReportResponse,
   CommissionsReportParams,
@@ -17,12 +22,16 @@ import type {
   CustomerAccountStatementParams,
   DeliverySheetReportParams,
   DeliverySheetReportResponse,
+  DetailedSalesReportParams,
+  DetailedSalesReportResponse,
   InventoryReportResponse,
   InventoryReportParams,
   KardexReportResponse,
   KardexReportParams,
   SaleBySellerReportParams,
   SaleBySellerReportResponse,
+  SalesByProductReportParams,
+  SalesByProductReportResponse,
 } from "./reports.interface";
 
 interface ReportsStore {
@@ -69,6 +78,24 @@ interface ReportsStore {
   carLoadLoading: boolean;
   carLoadError: string | null;
   fetchCarLoadReport: (params: CarLoadReportParams) => Promise<void>;
+
+  // Detailed Sales
+  detailedSalesReport: DetailedSalesReportResponse | null;
+  detailedSalesLoading: boolean;
+  detailedSalesError: string | null;
+  fetchDetailedSalesReport: (params: DetailedSalesReportParams) => Promise<void>;
+
+  // Sales By Product
+  salesByProductReport: SalesByProductReportResponse | null;
+  salesByProductLoading: boolean;
+  salesByProductError: string | null;
+  fetchSalesByProductReport: (params: SalesByProductReportParams) => Promise<void>;
+
+  // Annual Sales
+  annualSalesReport: AnnualSalesReportResponse | null;
+  annualSalesLoading: boolean;
+  annualSalesError: string | null;
+  fetchAnnualSalesReport: (params: AnnualSalesReportParams) => Promise<void>;
 }
 
 export const useReportsStore = create<ReportsStore>((set) => ({
@@ -196,6 +223,60 @@ export const useReportsStore = create<ReportsStore>((set) => ({
       set({
         carLoadError: "Error al cargar el reporte de llenado de carros",
         carLoadLoading: false,
+      });
+    }
+  },
+
+  // ─── Detailed Sales ──────────────────────────────────────────────────────
+  detailedSalesReport: null,
+  detailedSalesLoading: false,
+  detailedSalesError: null,
+
+  fetchDetailedSalesReport: async (params: DetailedSalesReportParams) => {
+    set({ detailedSalesLoading: true, detailedSalesError: null });
+    try {
+      const response = await getDetailedSalesReport(params);
+      set({ detailedSalesReport: response, detailedSalesLoading: false });
+    } catch {
+      set({
+        detailedSalesError: "Error al cargar el reporte de ventas detallado",
+        detailedSalesLoading: false,
+      });
+    }
+  },
+
+  // ─── Sales By Product ────────────────────────────────────────────────────
+  salesByProductReport: null,
+  salesByProductLoading: false,
+  salesByProductError: null,
+
+  fetchSalesByProductReport: async (params: SalesByProductReportParams) => {
+    set({ salesByProductLoading: true, salesByProductError: null });
+    try {
+      const response = await getSalesByProductReport(params);
+      set({ salesByProductReport: response, salesByProductLoading: false });
+    } catch {
+      set({
+        salesByProductError: "Error al cargar el reporte de ventas por producto",
+        salesByProductLoading: false,
+      });
+    }
+  },
+
+  // ─── Annual Sales ────────────────────────────────────────────────────────
+  annualSalesReport: null,
+  annualSalesLoading: false,
+  annualSalesError: null,
+
+  fetchAnnualSalesReport: async (params: AnnualSalesReportParams) => {
+    set({ annualSalesLoading: true, annualSalesError: null });
+    try {
+      const response = await getAnnualSalesReport(params);
+      set({ annualSalesReport: response, annualSalesLoading: false });
+    } catch {
+      set({
+        annualSalesError: "Error al cargar el reporte de ventas anuales",
+        annualSalesLoading: false,
       });
     }
   },

@@ -64,7 +64,7 @@ export function FormTextArea({
     return (
       <div className="flex flex-col justify-between">
         {label && (
-          <label className="flex justify-start items-center text-xs md:text-sm mb-1 leading-none h-fit font-medium text-muted-foreground">
+          <label className="flex justify-start items-center text-xs md:text-sm mb-1 leading-none h-fit font-bold uppercase text-muted-foreground">
             {label}
             {required && <RequiredField />}
             {tooltip && (
@@ -116,7 +116,7 @@ export function FormTextArea({
 
         return (
           <FormItem className="flex flex-col justify-between">
-            <FormLabel className="flex justify-start items-center text-xs md:text-sm mb-1 leading-none h-fit dark:text-muted-foreground">
+            <FormLabel className="flex justify-start items-center text-xs md:text-sm mb-1 leading-none h-fit font-bold uppercase dark:text-muted-foreground">
               {label}
               {required && <RequiredField />}
               {tooltip && (

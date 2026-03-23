@@ -57,6 +57,21 @@ export const COMMISSIONS_REPORT_ROUTE = `${ROUTE}/comisiones`;
 // Car Load Report
 export const CAR_LOAD_REPORT_ROUTE = `${ROUTE}/llenado-carros`;
 
+// Detailed Sales Report
+export const DETAILED_SALES_REPORT_ROUTE = `${ROUTE}/ventas-detallado`;
+
+// Sales By Product Report
+export const SALES_BY_PRODUCT_REPORT_ROUTE = `${ROUTE}/ventas-por-producto`;
+
+// Sales Register Report
+export const SALES_REGISTER_REPORT_ROUTE = `${ROUTE}/registro-ventas`;
+
+// Purchase Register Report
+export const PURCHASE_REGISTER_REPORT_ROUTE = `${ROUTE}/registro-compras`;
+
+// Annual Sales Report
+export const ANNUAL_SALES_REPORT_ROUTE = `${ROUTE}/ventas-anuales`;
+
 export interface CustomerAccountStatementParams {
   zone_id?: number | null;
   customer_id?: number | null;
@@ -166,16 +181,22 @@ export interface KardexItem {
   movement_date: string;
   movement_date_formatted: string;
   product_id: number;
-  product: Product;
+  product: Product1;
   warehouse_id: number;
   warehouse: Warehouse;
   quantity_in: number;
+  quantity_in_kg: number;
+  quantity_in_sacos: number;
   unit_cost_in: number;
   total_cost_in: number;
   quantity_out: number;
+  quantity_out_kg: number;
+  quantity_out_sacos: number;
   unit_cost_out: number;
   total_cost_out: number;
   balance_quantity: number;
+  balance_quantity_kg: number;
+  balance_quantity_sacos: number;
   balance_unit_cost: number;
   balance_total_cost: number;
   warehouse_document_id: null | number;
@@ -216,11 +237,11 @@ interface Warehouse {
   code: null;
 }
 
-interface Product {
+interface Product1 {
   id: number;
   name: string;
-  code: null;
-  sku: null;
+  codigo?: string;
+  sku?: string;
   unit: Unit;
 }
 
@@ -559,4 +580,117 @@ export interface CarLoadReportData {
 export interface CarLoadReportResponse {
   message: string;
   data: CarLoadReportData;
+}
+
+/**
+ * DETAILED SALES REPORT
+ */
+
+export interface DetailedSalesReportParams {
+  branch_id?: number | null;
+  customer_id?: number | null;
+  document_type?: "FACTURA" | "BOLETA" | "TICKET" | null;
+  end_date?: string | null;
+  format?: "excel" | "pdf" | null;
+  payment_type?: "CONTADO" | "CREDITO" | null;
+  start_date?: string | null;
+  user_id?: number | null;
+  warehouse_id?: number | null;
+}
+
+export interface DetailedSaleItem {
+  fecha: string;
+  nro_doc: string;
+  dni_ruc: string;
+  nombre: string;
+  direccion: string;
+  telefono: string;
+  tienda: string;
+  cod_producto: string;
+  producto: string;
+  sac: string;
+  kg: string;
+  precio: string;
+  sub_total: string;
+  igv: string;
+  total: string;
+  vendedor: string;
+}
+
+export interface DetailedSalesReportResponse {
+  data: DetailedSaleItem[];
+  total: number;
+}
+
+/**
+ * SALES BY PRODUCT REPORT
+ */
+
+export interface SalesByProductReportParams {
+  branch_id?: number | null;
+  end_date?: string | null;
+  format?: "excel" | "pdf" | null;
+  start_date?: string | null;
+  user_id?: number | null;
+  warehouse_id?: number | null;
+}
+
+export interface SalesByProductItem {
+  codigo: string;
+  producto: string;
+  sacos: number;
+  kg: number;
+  tn: number;
+  sin_igv: number;
+  con_igv: number;
+  p_prom: number;
+  is_taxed: boolean;
+}
+
+export interface SalesByProductReportResponse {
+  data: SalesByProductItem[];
+  total: number;
+}
+
+/**
+ * ANNUAL SALES REPORT
+ */
+
+export interface AnnualSalesReportParams {
+  branch_id?: number | null;
+  end_date?: string | null;
+  format?: "excel" | "pdf" | null;
+  start_date?: string | null;
+  user_id?: number | null;
+  warehouse_id?: number | null;
+  year?: number | null;
+}
+
+export interface AnnualSalesMonths {
+  "1": number;
+  "2": number;
+  "3": number;
+  "4": number;
+  "5": number;
+  "6": number;
+  "7": number;
+  "8": number;
+  "9": number;
+  "10": number;
+  "11": number;
+  "12": number;
+}
+
+export interface AnnualSalesItem {
+  zona: string;
+  vendedor: string;
+  codigo: string;
+  producto: string;
+  months: AnnualSalesMonths;
+  total: number;
+}
+
+export interface AnnualSalesReportResponse {
+  data: AnnualSalesItem[];
+  total: number;
 }

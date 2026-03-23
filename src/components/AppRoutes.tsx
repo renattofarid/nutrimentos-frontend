@@ -76,6 +76,11 @@ import SaleBySellerReportPage from "@/pages/reports/components/SaleBySellerRepor
 import DeliverySheetReportPage from "@/pages/reports/components/DeliverySheetReportPage";
 import CommissionsReportPage from "@/pages/reports/components/CommissionsReportPage";
 import CarLoadReportPage from "@/pages/reports/components/CarLoadReportPage";
+import DetailedSalesReportPage from "@/pages/reports/components/DetailedSalesReportPage";
+import SalesByProductReportPage from "@/pages/reports/components/SalesByProductReportPage";
+import AnnualSalesReportPage from "@/pages/reports/components/AnnualSalesReportPage";
+import SalesRegisterReportPage from "@/pages/reports/components/SalesRegisterReportPage";
+import PurchaseRegisterReportPage from "@/pages/reports/components/PurchaseRegisterReportPage";
 import { TYPE_USER } from "@/pages/type-users/lib/typeUser.interface";
 import { USER } from "@/pages/users/lib/User.interface";
 import { COMPANY } from "@/pages/company/lib/company.interface";
@@ -116,11 +121,16 @@ import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import {
   CAR_LOAD_REPORT_ROUTE,
   COMMISSIONS_REPORT_ROUTE,
+  ANNUAL_SALES_REPORT_ROUTE,
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
   DELIVERY_SHEET_REPORT_ROUTE,
+  DETAILED_SALES_REPORT_ROUTE,
   INVENTORY_REPORT_ROUTE,
   KARDEX_REPORT_ROUTE,
+  PURCHASE_REGISTER_REPORT_ROUTE,
   SALE_BY_SELLER_REPORT_ROUTE,
+  SALES_BY_PRODUCT_REPORT_ROUTE,
+  SALES_REGISTER_REPORT_ROUTE,
 } from "@/pages/reports/lib/reports.interface";
 import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-credit-note.interface";
 import WarehouseProductPage from "@/pages/warehouse-product/components/WarehouseProductPage";
@@ -295,6 +305,11 @@ export function AppRoutes() {
       <Route path={DELIVERY_SHEET_REPORT_ROUTE} element={<DeliverySheetReportPage />} />
       <Route path={COMMISSIONS_REPORT_ROUTE} element={<CommissionsReportPage />} />
       <Route path={CAR_LOAD_REPORT_ROUTE} element={<CarLoadReportPage />} />
+      <Route path={DETAILED_SALES_REPORT_ROUTE} element={<DetailedSalesReportPage />} />
+      <Route path={ANNUAL_SALES_REPORT_ROUTE} element={<AnnualSalesReportPage />} />
+      <Route path={SALES_BY_PRODUCT_REPORT_ROUTE} element={<SalesByProductReportPage />} />
+      <Route path={SALES_REGISTER_REPORT_ROUTE} element={<SalesRegisterReportPage />} />
+      <Route path={PURCHASE_REGISTER_REPORT_ROUTE} element={<PurchaseRegisterReportPage />} />
 
       <Route path={PurchaseInstallmentRoute} element={<PurchaseInstallmentPage />} />
 

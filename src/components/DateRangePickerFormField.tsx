@@ -85,7 +85,7 @@ export function DateRangePickerFormField<T extends FieldValues>({
                 : placeholder;
 
             return (
-              <FormItem className="flex flex-col">
+              <FormItem className="flex flex-col gap-0.5">
                 {label && (
                   <FormLabel className="flex justify-start items-center">
                     {label}

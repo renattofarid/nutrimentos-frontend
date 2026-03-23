@@ -449,6 +449,14 @@ export function ExcelGrid<T extends Record<string, any>>({
         const searchValue = row[column.accessor as string] || "";
         const datalistId = `products-name-${rowIndex}`;
 
+        // Filtrar productos que sean iguales al valor actual
+        const matchingByName = searchValue
+          ? productOptions.filter(
+              (p) =>
+                p.name.toLowerCase() === searchValue.toString().toLowerCase(),
+            )
+          : productOptions;
+
         return (
           <>
             <input
@@ -460,7 +468,7 @@ export function ExcelGrid<T extends Record<string, any>>({
               onChange={(e) => {
                 const value = e.target.value;
 
-                // Buscar el producto por nombre
+                // Buscar el producto por nombre exacto
                 const product = productOptions.find(
                   (p) => p.name.toLowerCase() === value.toLowerCase(),
                 );
@@ -477,16 +485,18 @@ export function ExcelGrid<T extends Record<string, any>>({
               onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex, column)}
               placeholder="Producto..."
               className="w-full h-full px-2 py-1 text-sm border-0 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-inset bg-transparent"
-              list={datalistId}
+              list={matchingByName.length > 0 ? datalistId : undefined}
               autoComplete="off"
             />
-            <datalist id={datalistId}>
-              {productOptions.map((product) => (
-                <option key={product.id} value={product.name}>
-                  {product.codigo}
-                </option>
-              ))}
-            </datalist>
+            {matchingByName.length > 0 && (
+              <datalist id={datalistId}>
+                {matchingByName.map((product) => (
+                  <option key={product.id} value={product.name}>
+                    {product.codigo}
+                  </option>
+                ))}
+              </datalist>
+            )}
           </>
         );
 

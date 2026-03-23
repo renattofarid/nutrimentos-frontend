@@ -205,13 +205,12 @@ export default function WarehouseDocumentForm({
       observations: "",
       total: 0,
     };
-    const updatedDetails = [...details, newDetail];
-    setDetails(updatedDetails);
-    // Actualizar el campo details del formulario para que la validación funcione
-    form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
-    if (updatedDetails.length > 0) {
+    setDetails((prev) => {
+      const updatedDetails = [...prev, newDetail];
+      form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
       form.clearErrors("details");
-    }
+      return updatedDetails;
+    });
   };
 
   const handleRemoveRow = (index: number) => {
@@ -271,13 +270,16 @@ export default function WarehouseDocumentForm({
     const callbacks = productCodeCallbacksRef.current;
     if (!callbacks) return;
 
-    if (productSearchResult?.data && productSearchResult.data.length > 0) {
-      const p = productSearchResult.data[0];
+    const productSelected = productSearchResult?.data?.find(
+      (p) => p.codigo === productCodeSearch?.code,
+    );
+
+    if (productSelected) {
       handleProductSelect(productCodeSearch.rowIndex, {
-        id: p.id.toString(),
-        codigo: p.codigo,
-        name: p.name,
-        weight: p.weight,
+        id: productSelected.id.toString(),
+        codigo: productSelected.codigo,
+        name: productSelected.name,
+        weight: productSelected.weight,
       });
       callbacks.advance();
     } else if (productSearchResult !== undefined) {

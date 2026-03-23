@@ -377,9 +377,11 @@ export const SaleForm = ({
       total_kg: 0,
       sale_mode: undefined,
     };
-    const updatedDetails = [...details, newDetail];
-    setDetails(updatedDetails);
-    form.setValue("details", updatedDetails);
+    setDetails((prev) => {
+      const updatedDetails = [...prev, newDetail];
+      form.setValue("details", updatedDetails);
+      return updatedDetails;
+    });
   };
 
   const handleRemoveRow = (index: number) => {
@@ -1118,7 +1120,7 @@ export const SaleForm = ({
                 onProductCodeTab={handleProductCodeTab}
                 onRemoveEmptyRows={handleRemoveEmptyDetailRows}
                 emptyMessage="Seleccione un almacén y cliente para comenzar."
-                disabled={!selectedWarehouseId || !form.watch("customer_id")}
+                disabled={!selectedWarehouseId}
               />
             </GroupFormSection>
 

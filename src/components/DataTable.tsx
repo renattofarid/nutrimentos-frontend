@@ -218,12 +218,18 @@ export function DataTable<TData, TValue>({
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="text-nowrap h-10">
                   {headerGroup.headers.map((header) => {
+                    const isGroupHeader = header.colSpan > 1;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const isGroupStart = (header.column.columnDef.meta as any)?.isGroupStart;
                     return (
                       <TableHead
                         key={header.id}
                         data-column-id={header.id}
+                        colSpan={header.colSpan}
                         className={cn(
                           "h-10",
+                          isGroupHeader && "text-center font-semibold text-xs tracking-wide uppercase text-muted-foreground",
+                          isGroupStart && "border-l-2 border-border",
                           hasActionsColumn &&
                             isActionsCol(header.id) &&
                             cn(
@@ -279,11 +285,15 @@ export function DataTable<TData, TValue>({
                     key={row.id}
                     className="text-nowrap hover:bg-muted bg-background group"
                   >
-                    {row.getVisibleCells().map((cell) => (
+                    {row.getVisibleCells().map((cell) => {
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      const isGroupStart = (cell.column.columnDef.meta as any)?.isGroupStart;
+                      return (
                       <TableCell
                         key={cell.id}
                         className={cn(
                           "p-2 truncate",
+                          isGroupStart && "border-l-2 border-border",
                           hasActionsColumn &&
                             isActionsCol(cell.column.id) &&
                             "sticky right-0 z-1 bg-background group-hover:bg-muted border-l border-border",
@@ -294,7 +304,8 @@ export function DataTable<TData, TValue>({
                           cell.getContext(),
                         )}
                       </TableCell>
-                    ))}
+                      );
+                    })}
                   </TableRow>
                 ))
               ) : (

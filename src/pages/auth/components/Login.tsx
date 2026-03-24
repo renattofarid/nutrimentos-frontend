@@ -4,15 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
+import { FormInput } from "@/components/FormInput";
 import { login } from "../lib/auth.actions";
 import { errorToast, successToast } from "@/lib/core.function";
 import { useNavigate } from "react-router-dom";
@@ -101,58 +94,32 @@ export default function LoginPage() {
               </h3>
 
               <div className="space-y-4">
-                <FormField
-                  control={form.control}
+                <FormInput
                   name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-foreground ">
-                        Usuario
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Ingresa usuario"
-                          className="text-sm text-foreground rounded-lg focus:outline-none focus-visible:ring-0 focus-visible:ring-transparent"
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
+                  label="Usuario"
+                  placeholder="Ingresa usuario"
+                  control={form.control}
                 />
 
-                <FormField
-                  control={form.control}
+                <FormInput
                   name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-foreground ">
-                        Contraseña
-                      </FormLabel>
-                      <div className="relative">
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type={showPassword ? "text" : "password"}
-                            placeholder="••••••••••"
-                            className="text-sm text-foreground  rounded-lg focus:outline-none focus-visible:ring-0 focus-visible:ring-transparent"
-                          />
-                        </FormControl>
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary"
-                        >
-                          {showPassword ? (
-                            <EyeOff size={18} className="text-primary" />
-                          ) : (
-                            <Eye size={18} />
-                          )}
-                        </button>
-                      </div>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
+                  label="Contraseña"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••••"
+                  control={form.control}
+                  addonEnd={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-muted-foreground hover:text-primary"
+                    >
+                      {showPassword ? (
+                        <EyeOff size={18} className="text-primary" />
+                      ) : (
+                        <Eye size={18} />
+                      )}
+                    </button>
+                  }
                 />
 
                 <FormSelect

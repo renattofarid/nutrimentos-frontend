@@ -338,9 +338,11 @@ export const PurchaseForm = ({
       total: 0,
       is_by_sack: true, // Por defecto compra por saco
     };
-    const updatedDetails = [...details, newDetail];
-    setDetails(updatedDetails);
-    form.setValue("details", updatedDetails);
+    setDetails((prev) => {
+      const updatedDetails = [...prev, newDetail];
+      form.setValue("details", updatedDetails);
+      return updatedDetails;
+    });
   };
 
   const handleRemoveRow = (index: number) => {
@@ -926,61 +928,6 @@ export const PurchaseForm = ({
             }))}
           />
 
-          <FormInput
-            control={form.control}
-            name="discount_global"
-            label="Descuento Global"
-            type="number"
-            step="0.01"
-            min={0}
-            placeholder="0.00"
-          />
-
-          <FormInput
-            control={form.control}
-            name="freight_cost"
-            label="Costo de Flete"
-            type="number"
-            step="0.01"
-            min={0}
-            placeholder="0.00"
-          />
-
-          <FormInput
-            control={form.control}
-            name="loading_cost"
-            label="Costo de Estiba"
-            type="number"
-            step="0.01"
-            min={0}
-            placeholder="0.00"
-          />
-
-          {/* IGV */}
-          <FormSwitch
-            control={form.control}
-            name="include_igv"
-            label="Incluir IGV (18%)"
-            textDescription="Los precios ingresados NO incluyen IGV"
-            className="h-auto"
-          />
-
-          <FormSwitch
-            control={form.control}
-            name="include_cost_account"
-            label="Incluir Cuenta de Costos"
-            textDescription="Activar para incluir en contabilidad"
-            className="h-auto"
-          />
-
-          <div className="md:col-span-3">
-            <FormInput
-              control={form.control}
-              name="observations"
-              label="Observaciones"
-              placeholder="Observaciones adicionales (opcional)"
-            />
-          </div>
         </GroupFormSection>
 
         {/* Detalles */}
@@ -1163,6 +1110,67 @@ export const PurchaseForm = ({
             {JSON.stringify(form.formState.errors, null, 2)}
           </code>
         </pre> */}
+
+        {/* Costos, IGV y Observaciones */}
+        <GroupFormSection
+          title="Totales y Observaciones"
+          icon={Users2}
+          gap="gap-2"
+          cols={{ sm: 1, md: 2, lg: 4 }}
+        >
+          <FormSwitch
+            control={form.control}
+            name="include_cost_account"
+            label="Incluir Cuenta de Costos"
+            textDescription="Activar para incluir en contabilidad"
+            className="h-auto"
+          />
+
+          <FormSwitch
+            control={form.control}
+            name="include_igv"
+            label="Incluir IGV (18%)"
+            textDescription="Los precios ingresados NO incluyen IGV"
+            className="h-auto"
+          />
+
+          <FormInput
+            control={form.control}
+            name="discount_global"
+            label="Descuento Global"
+            type="number"
+            step="0.01"
+            min={0}
+            placeholder="0.00"
+          />
+
+          <FormInput
+            control={form.control}
+            name="freight_cost"
+            label="Costo de Flete"
+            type="number"
+            step="0.01"
+            min={0}
+            placeholder="0.00"
+          />
+
+          <FormInput
+            control={form.control}
+            name="loading_cost"
+            label="Costo de Estiba"
+            type="number"
+            step="0.01"
+            min={0}
+            placeholder="0.00"
+          />
+
+          <FormInput
+            control={form.control}
+            name="observations"
+            label="Observaciones"
+            placeholder="Observaciones adicionales (opcional)"
+          />
+        </GroupFormSection>
 
         {/* Botones */}
         <div className="flex gap-4 w-full justify-end">

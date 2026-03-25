@@ -124,6 +124,18 @@ export const PurchaseForm = ({
   // Estados para cuotas
   const [installments, setInstallments] = useState<InstallmentRow[]>([]);
 
+  // Estados para serie y número de documento
+  const [documentSerie, setDocumentSerie] = useState<string>(() => {
+    const dn = defaultValues.document_number || "";
+    const idx = dn.indexOf("-");
+    return idx >= 0 ? dn.slice(0, idx) : "";
+  });
+  const [documentNum, setDocumentNum] = useState<string>(() => {
+    const dn = defaultValues.document_number || "";
+    const idx = dn.indexOf("-");
+    return idx >= 0 ? dn.slice(idx + 1) : "";
+  });
+
   const form = useForm({
     resolver: zodResolver(
       mode === "create" ? purchaseSchemaCreate : purchaseSchemaUpdate,
@@ -139,6 +151,26 @@ export const PurchaseForm = ({
     },
     mode: "onChange",
   });
+
+  // Sincronizar serie + número al campo document_number del formulario
+  const isFirstDocumentRender = useRef(true);
+  useEffect(() => {
+    if (isFirstDocumentRender.current) {
+      isFirstDocumentRender.current = false;
+      const combined =
+        documentSerie || documentNum
+          ? `${documentSerie}-${documentNum}`
+          : "";
+      form.setValue("document_number", combined, { shouldValidate: false });
+      return;
+    }
+    const combined =
+      documentSerie || documentNum
+        ? `${documentSerie}-${documentNum}`
+        : "";
+    form.setValue("document_number", combined, { shouldValidate: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documentSerie, documentNum]);
 
   const selectedBranchId = form.watch("branch_id");
 
@@ -382,16 +414,16 @@ export const PurchaseForm = ({
       // El precio siempre se multiplica por la cantidad ingresada (sacos o kg según el modo)
       if (quantity > 0 && unitPrice > 0) {
         if (includeIgv) {
-          // includeIgv=true: El precio NO incluye IGV, se lo agregamos
-          subtotal = quantity * unitPrice;
-          tax = subtotal * IGV_RATE;
-          total = subtotal + tax;
-        } else {
-          // includeIgv=false: El precio YA incluye IGV, lo descomponemos
+          // includeIgv=true: El precio YA incluye IGV, lo descomponemos
           const totalIncl = quantity * unitPrice;
           subtotal = totalIncl / (1 + IGV_RATE);
           tax = totalIncl - subtotal;
           total = totalIncl;
+        } else {
+          // includeIgv=false: El precio NO incluye IGV, se lo agregamos
+          subtotal = quantity * unitPrice;
+          tax = subtotal * IGV_RATE;
+          total = subtotal + tax;
         }
       }
 
@@ -544,16 +576,16 @@ export const PurchaseForm = ({
       let total = 0;
 
       if (includeIgv) {
-        // includeIgv=true: El precio NO incluye IGV, se lo agregamos
-        subtotal = q * up;
-        tax = subtotal * IGV_RATE;
-        total = subtotal + tax;
-      } else {
-        // includeIgv=false: El precio YA incluye IGV, lo descomponemos
+        // includeIgv=true: El precio YA incluye IGV, lo descomponemos
         const totalIncl = q * up;
         subtotal = totalIncl / (1 + IGV_RATE);
         tax = totalIncl - subtotal;
         total = totalIncl;
+      } else {
+        // includeIgv=false: El precio NO incluye IGV, se lo agregamos
+        subtotal = q * up;
+        tax = subtotal * IGV_RATE;
+        total = subtotal + tax;
       }
 
       return {
@@ -891,13 +923,47 @@ export const PurchaseForm = ({
             }))}
           />
 
-          <FormInput
-            control={form.control}
-            name="document_number"
-            label="Número de Documento"
-            placeholder="Ej: B001-00123"
-            uppercase
-          />
+          <div className="flex flex-col gap-0.5">
+            <label className="flex justify-start items-center text-xs md:text-sm mb-0.5 leading-none h-fit font-bold uppercase text-muted-foreground">
+              Número de Documento
+              <span className="text-destructive ml-0.5">*</span>
+            </label>
+            <div className="flex items-center gap-1.5">
+              <FormInput
+                name="document_serie"
+                value={documentSerie}
+                onChange={(e) =>
+                  setDocumentSerie(e.target.value.toUpperCase())
+                }
+                placeholder="Serie"
+                uppercase
+                maxLength={4}
+                className="w-20"
+              />
+              <span className="text-muted-foreground font-medium">-</span>
+              <FormInput
+                name="document_num"
+                value={documentNum}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setDocumentNum(val);
+                }}
+                onBlur={() => {
+                  if (documentNum) {
+                    setDocumentNum(documentNum.padStart(8, "0"));
+                  }
+                }}
+                placeholder="00000000"
+                maxLength={8}
+                className="flex-1"
+              />
+            </div>
+            {form.formState.errors.document_number && (
+              <p className="text-xs font-medium text-destructive mt-1">
+                {form.formState.errors.document_number.message as string}
+              </p>
+            )}
+          </div>
 
           <FormInput
             control={form.control}
@@ -1022,8 +1088,8 @@ export const PurchaseForm = ({
               <FormSwitch
                 control={form.control}
                 name="include_igv"
-                label="Incluir IGV (18%)"
-                text="Los precios YA incluyen IGV"
+                label="Precios incluyen IGV (18%)"
+                text="Actívalo si los precios ingresados ya incluyen IGV"
                 autoHeight
               />
 
@@ -1098,7 +1164,7 @@ export const PurchaseForm = ({
 
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">
-                    IGV (18%){watchIncludeIgv ? "" : " incl."}
+                    IGV (18%){watchIncludeIgv ? " incl." : ""}
                   </span>
                   <span className="font-semibold text-orange-600">
                     {currencySymbol}

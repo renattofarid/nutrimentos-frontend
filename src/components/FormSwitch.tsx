@@ -38,18 +38,22 @@ export function FormSwitch<T extends FieldValues>({
   const { horizontal } = useFormLayout();
 
   const sizeClasses = {
-    sm: "h-7 md:h-8 p-2 gap-2",
-    md: "h-9 md:h-10 p-3 gap-3",
-    lg: "h-11 md:h-12 p-4 gap-4",
+    sm: "h-7 md:h-8 min-h-7 md:min-h-8 p-2 gap-2",
+    md: "h-9 md:h-10 min-h-9 md:min-h-10 p-3 gap-3",
+    lg: "h-11 md:h-12 min-h-11 md:min-h-12 p-4 gap-4",
   };
 
-  const switchControl = (field: { value: boolean; onChange: (v: boolean) => void }) => (
+  const switchControl = (field: {
+    value: boolean;
+    onChange: (v: boolean) => void;
+  }) => (
     <FormLabel
       className={cn(
         "flex flex-row items-center justify-between rounded-lg border shadow-xs bg-background hover:bg-muted hover:cursor-pointer",
         horizontal ? "flex-1 min-w-0" : "",
         className,
-        autoHeight ? "h-auto" : sizeClasses[size],
+        sizeClasses[size],
+        autoHeight && "h-auto!",
       )}
     >
       <div className="flex flex-col gap-1 flex-1 min-w-0">

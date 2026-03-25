@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
-import { Loader, Users2, UserPlus } from "lucide-react";
+import { Loader, Users2, UserPlus, DollarSign } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
@@ -217,6 +217,8 @@ export const PurchaseForm = ({
   const watchDiscount = form.watch("discount_global");
   const watchFreight = form.watch("freight_cost");
   const watchLoading = form.watch("loading_cost");
+  const watchCurrency = form.watch("currency");
+  const currencySymbol = watchCurrency === "USD" ? "$ " : "S/. ";
 
   // Sincronizar el estado local includeIgv con el formulario
   useEffect(() => {
@@ -227,9 +229,15 @@ export const PurchaseForm = ({
 
   // Cuando cambia a CREDITO y no hay cuotas (create mode), agregar una por defecto
   useEffect(() => {
-    if (selectedPaymentType === "CREDITO" && installments.length === 0 && mode === "create") {
+    if (
+      selectedPaymentType === "CREDITO" &&
+      installments.length === 0 &&
+      mode === "create"
+    ) {
       const total = calculatePurchaseTotal();
-      const inst: InstallmentRow[] = [{ due_days: "30", amount: total > 0 ? total.toFixed(2) : "0.00" }];
+      const inst: InstallmentRow[] = [
+        { due_days: "30", amount: total > 0 ? total.toFixed(2) : "0.00" },
+      ];
       setInstallments(inst);
       form.setValue("installments", inst);
     }
@@ -241,7 +249,9 @@ export const PurchaseForm = ({
     if (installments.length === 1 && selectedPaymentType === "CREDITO") {
       const total = calculatePurchaseTotal();
       if (total >= 0) {
-        const updated: InstallmentRow[] = [{ ...installments[0], amount: total.toFixed(2) }];
+        const updated: InstallmentRow[] = [
+          { ...installments[0], amount: total.toFixed(2) },
+        ];
         setInstallments(updated);
         form.setValue("installments", updated);
       }
@@ -637,7 +647,11 @@ export const PurchaseForm = ({
   const productOptions: ProductOption[] = [];
 
   // Funciones para cuotas (ExcelGrid)
-  const handleInstallmentCellChange = (index: number, field: string, value: string) => {
+  const handleInstallmentCellChange = (
+    index: number,
+    field: string,
+    value: string,
+  ) => {
     const updated = [...installments];
     updated[index] = { ...updated[index], [field]: value };
     setInstallments(updated);
@@ -922,157 +936,233 @@ export const PurchaseForm = ({
             emptyMessage="Agregue productos a la compra"
             disabled={!selectedWarehouseId}
           />
-
-          {details.length > 0 && (
-            <div className="mt-4 space-y-2 p-4 bg-muted/30 rounded-lg border">
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Subtotal:</span>
-                <span className="font-bold">
-                  S/. {formatNumber(calculateSubtotalTotal())}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold text-orange-600">
-                  IGV (18%):
-                </span>
-                <span className="font-bold text-orange-600">
-                  S/. {formatNumber(calculateTaxTotal())}
-                </span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t">
-                <span className="text-lg font-bold">Total:</span>
-                <span className="text-xl font-bold text-primary">
-                  S/. {formatNumber(calculateDetailsTotal())}
-                </span>
-              </div>
-            </div>
-          )}
         </GroupFormSection>
 
-        {/* Cuotas + Totales — layout 2 columnas cuando es crédito */}
-        <div
-          className={
-            selectedPaymentType === "CREDITO"
-              ? "grid grid-cols-1 xl:grid-cols-2 gap-4 items-start"
-              : ""
-          }
-        >
-          {selectedPaymentType === "CREDITO" && (
-            <GroupFormSection title="Cuotas de Pago" icon={Users2} cols={{ sm: 1 }}>
-              <ExcelGrid
-                columns={[
-                  {
-                    id: "due_days",
-                    header: "Días",
-                    type: "number",
-                    accessor: "due_days",
-                    width: "140px",
-                  },
-                  {
-                    id: "amount",
-                    header: "Monto",
-                    type: installments.length === 1 ? "readonly" : "number",
-                    accessor: "amount",
-                    width: "180px",
-                    render: installments.length === 1
-                      ? (row) => (
-                          <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold text-muted-foreground">
-                            S/. {formatNumber(parseFloat(row.amount) || 0)}
-                          </div>
-                        )
-                      : undefined,
-                  },
-                ]}
-                data={installments}
-                onAddRow={handleAddInstallmentRow}
-                onRemoveRow={handleRemoveInstallment}
-                onCellChange={handleInstallmentCellChange}
-                emptyMessage="No hay cuotas"
+        {/* Cuotas + Totales + Resumen — grid 3 cols: izq 2 col (cuotas+inputs), der 1 col (resumen) */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
+          {/* Columna izquierda (2 cols) */}
+          <div className="xl:col-span-2 space-y-4">
+            {selectedPaymentType === "CREDITO" && (
+              <GroupFormSection
+                title="Cuotas de Pago"
+                icon={Users2}
+                cols={{ sm: 1 }}
+              >
+                <ExcelGrid
+                  columns={[
+                    {
+                      id: "due_days",
+                      header: "Días",
+                      type: "number",
+                      accessor: "due_days",
+                      width: "140px",
+                    },
+                    {
+                      id: "amount",
+                      header: "Monto",
+                      type: installments.length === 1 ? "readonly" : "number",
+                      accessor: "amount",
+                      width: "180px",
+                      render:
+                        installments.length === 1
+                          ? (row) => (
+                              <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold text-muted-foreground">
+                                {currencySymbol}
+                                {formatNumber(parseFloat(row.amount) || 0)}
+                              </div>
+                            )
+                          : undefined,
+                    },
+                  ]}
+                  data={installments}
+                  onAddRow={handleAddInstallmentRow}
+                  onRemoveRow={handleRemoveInstallment}
+                  onCellChange={handleInstallmentCellChange}
+                  emptyMessage="No hay cuotas"
+                />
+                {installments.length > 1 && (
+                  <>
+                    <div className="flex justify-between items-center px-2 py-1 font-bold text-sm">
+                      <span>TOTAL CUOTAS:</span>
+                      <span className="text-blue-600 text-base">
+                        {currencySymbol}
+                        {formatNumber(calculateInstallmentsTotal())}
+                      </span>
+                    </div>
+                    {!installmentsMatchTotal() && (
+                      <div className="p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+                        <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
+                          ⚠️ El total de cuotas (
+                          {formatNumber(calculateInstallmentsTotal())}) debe ser
+                          igual al total de la compra (
+                          {formatNumber(calculatePurchaseTotal())}).
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </GroupFormSection>
+            )}
+
+            {/* Totales y Observaciones */}
+            <GroupFormSection
+              title="Totales y Observaciones"
+              icon={Users2}
+              gap="gap-2"
+              cols={{ sm: 1, md: 2, lg: 3 }}
+            >
+              <FormSwitch
+                control={form.control}
+                name="include_cost_account"
+                label="Incluir Cuenta de Costos"
+                text="Incluir en la contabilidad"
+                autoHeight
               />
-              {installments.length > 1 && (
-                <>
-                  <div className="flex justify-between items-center px-2 py-1 font-bold text-sm">
-                    <span>TOTAL CUOTAS:</span>
-                    <span className="text-blue-600 text-base">
-                      S/. {formatNumber(calculateInstallmentsTotal())}
+
+              <FormSwitch
+                control={form.control}
+                name="include_igv"
+                label="Incluir IGV (18%)"
+                text="Los precios YA incluyen IGV"
+                autoHeight
+              />
+
+              <FormInput
+                control={form.control}
+                name="discount_global"
+                label="Descuento Global"
+                type="number"
+                step="0.01"
+                min={0}
+                placeholder="0.00"
+              />
+
+              <FormInput
+                control={form.control}
+                name="freight_cost"
+                label="Costo de Flete"
+                type="number"
+                step="0.01"
+                min={0}
+                placeholder="0.00"
+              />
+
+              <FormInput
+                control={form.control}
+                name="loading_cost"
+                label="Costo de Estiba"
+                type="number"
+                step="0.01"
+                min={0}
+                placeholder="0.00"
+              />
+
+              <FormInput
+                control={form.control}
+                name="observations"
+                label="Observaciones"
+                placeholder="Observaciones adicionales (opcional)"
+              />
+            </GroupFormSection>
+          </div>
+
+          {/* Columna derecha — Resumen Financiero (siempre visible) */}
+          <div className="xl:col-span-1">
+            <GroupFormSection
+              title="Resumen Financiero"
+              icon={DollarSign}
+              cols={{ sm: 1 }}
+            >
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">
+                    Subtotal
+                  </span>
+                  <span className="font-semibold">
+                    {currencySymbol}
+                    {formatNumber(calculateSubtotalTotal())}
+                  </span>
+                </div>
+
+                {Number(watchDiscount) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Descuento Global
+                    </span>
+                    <span className="font-semibold text-destructive">
+                      -{currencySymbol}
+                      {formatNumber(Number(watchDiscount))}
                     </span>
                   </div>
-                  {!installmentsMatchTotal() && (
-                    <div className="p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-                      <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                        ⚠️ El total de cuotas ({formatNumber(calculateInstallmentsTotal())}) debe ser igual al total de la compra ({formatNumber(calculatePurchaseTotal())}).
+                )}
+
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">
+                    IGV (18%){watchIncludeIgv ? "" : " incl."}
+                  </span>
+                  <span className="font-semibold text-orange-600">
+                    {currencySymbol}
+                    {formatNumber(calculateTaxTotal())}
+                  </span>
+                </div>
+
+                {Number(watchFreight) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Costo de Flete
+                    </span>
+                    <span className="font-semibold">
+                      +{currencySymbol}
+                      {formatNumber(Number(watchFreight))}
+                    </span>
+                  </div>
+                )}
+
+                {Number(watchLoading) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Costo de Estiba
+                    </span>
+                    <span className="font-semibold">
+                      +{currencySymbol}
+                      {formatNumber(Number(watchLoading))}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center pt-3 border-t">
+                  <span className="text-base font-bold">TOTAL</span>
+                  <span className="text-xl font-bold text-primary">
+                    {currencySymbol}
+                    {formatNumber(calculatePurchaseTotal())}
+                  </span>
+                </div>
+
+                {selectedPaymentType === "CREDITO" &&
+                  installments.length > 0 && (
+                    <div className="pt-3 border-t space-y-2">
+                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                        Cuotas ({installments.length})
                       </p>
+                      {installments.map((inst, i) => (
+                        <div
+                          key={i}
+                          className="flex justify-between items-center text-sm"
+                        >
+                          <span className="text-muted-foreground">
+                            Cuota {i + 1} · {inst.due_days}d
+                          </span>
+                          <span className="font-semibold">
+                            {currencySymbol}
+                            {formatNumber(parseFloat(inst.amount) || 0)}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   )}
-                </>
-              )}
+              </div>
             </GroupFormSection>
-          )}
-
-          {/* Totales y Observaciones */}
-          <GroupFormSection
-            title="Totales y Observaciones"
-            icon={Users2}
-            gap="gap-2"
-            cols={{
-              sm: 1,
-              md: 2,
-              lg: selectedPaymentType === "CREDITO" ? 2 : 4,
-            }}
-          >
-            <FormSwitch
-              control={form.control}
-              name="include_cost_account"
-              label="Incluir Cuenta de Costos"
-              text="Activar para incluir en contabilidad"
-              className="h-auto"
-            />
-
-            <FormSwitch
-              control={form.control}
-              name="include_igv"
-              label="Incluir IGV (18%)"
-              text="Los precios ingresados YA incluyen IGV"
-              className="h-auto"
-            />
-
-            <FormInput
-              control={form.control}
-              name="discount_global"
-              label="Descuento Global"
-              type="number"
-              step="0.01"
-              min={0}
-              placeholder="0.00"
-            />
-
-            <FormInput
-              control={form.control}
-              name="freight_cost"
-              label="Costo de Flete"
-              type="number"
-              step="0.01"
-              min={0}
-              placeholder="0.00"
-            />
-
-            <FormInput
-              control={form.control}
-              name="loading_cost"
-              label="Costo de Estiba"
-              type="number"
-              step="0.01"
-              min={0}
-              placeholder="0.00"
-            />
-
-            <FormInput
-              control={form.control}
-              name="observations"
-              label="Observaciones"
-              placeholder="Observaciones adicionales (opcional)"
-            />
-          </GroupFormSection>
+          </div>
         </div>
 
         {/* Botones */}

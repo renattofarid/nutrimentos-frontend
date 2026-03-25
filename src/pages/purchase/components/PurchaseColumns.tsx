@@ -255,7 +255,7 @@ export const getPurchaseColumns = ({
       const isPaid = row.original.status === "PAGADO";
 
       return (
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <ButtonAction
             onClick={() => onViewDetails(row.original)}
             icon={Eye}

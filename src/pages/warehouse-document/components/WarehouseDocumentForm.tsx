@@ -581,6 +581,7 @@ export default function WarehouseDocumentForm({
             onProductSelect={handleProductSelect}
             onProductCodeTab={handleProductCodeTab}
             emptyMessage="Agregue productos al documento"
+            skipColumnsOnEnter={["product"]}
           />
 
           {details.length > 0 && (

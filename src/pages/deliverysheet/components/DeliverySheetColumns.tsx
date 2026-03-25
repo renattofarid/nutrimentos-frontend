@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { ButtonAction } from "@/components/ButtonAction";
+import ExportButtons from "@/components/ExportButtons";
 import { Trash2, Eye, RefreshCcw } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { DeliverySheetResource } from "../lib/deliverysheet.interface";
@@ -8,14 +9,16 @@ interface DeliverySheetColumnsProps {
   onDelete: (id: number) => void;
   onViewDetails: (deliverySheet: DeliverySheetResource) => void;
   onUpdateStatus: (deliverySheet: DeliverySheetResource) => void;
+  onExport: (id: number) => void;
 }
 
 export const getDeliverySheetColumns = ({
   onDelete,
   onViewDetails,
   onUpdateStatus,
+  onExport,
 }: DeliverySheetColumnsProps): ColumnDef<DeliverySheetResource>[] => [
-  {
+  { 
     accessorKey: "id",
     header: "ID",
     cell: ({ row }) => (
@@ -150,6 +153,10 @@ export const getDeliverySheetColumns = ({
 
       return (
         <div className="flex items-center gap-1">
+          <ExportButtons
+            variant="separate"
+            onPdfDownload={() => onExport(row.original.id)}
+          />
           <ButtonAction
             icon={Eye}
             onClick={() => onViewDetails(row.original)}

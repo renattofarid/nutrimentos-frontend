@@ -7,8 +7,18 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 import { api } from "@/lib/config";
-import { errorToast, successToast } from "@/lib/core.function";
-import { Sheet, FileText } from "lucide-react";
+import { promiseToast } from "@/lib/core.function";
+import { Sheet, FileDown } from "lucide-react";
+
+type ButtonVariant =
+  | "default"
+  | "destructive"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "link"
+  | "neutral"
+  | "tertiary";
 
 interface ExportButtonsProps {
   excelEndpoint?: string;
@@ -20,6 +30,7 @@ interface ExportButtonsProps {
   disableExcel?: boolean;
   disablePdf?: boolean;
   variant?: "grouped" | "separate";
+  buttonVariant?: ButtonVariant;
 }
 
 export default function ExportButtons({
@@ -32,82 +43,87 @@ export default function ExportButtons({
   disableExcel = false,
   disablePdf = false,
   variant = "grouped",
+  buttonVariant = "outline",
 }: ExportButtonsProps) {
-  const handleExcelDownload = async () => {
-    // Si se proporciona una función personalizada, usarla
+  const handleExcelDownload = () => {
     if (onExcelDownload) {
-      await onExcelDownload();
+      promiseToast(Promise.resolve(onExcelDownload()), {
+        loading: "Descargando Excel...",
+        success: "Excel descargado exitosamente",
+        error: "Error al descargar el archivo Excel",
+      });
       return;
     }
 
-    // Si no, usar el endpoint por defecto
     if (!excelEndpoint) return;
 
-    try {
-      const response = await api.get(excelEndpoint, {
-        responseType: "blob",
+    const download = api
+      .get(excelEndpoint, { responseType: "blob" })
+      .then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", excelFileName);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
       });
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", excelFileName);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      successToast("Excel descargado exitosamente");
-    } catch (error) {
-      console.error("Error al descargar Excel:", error);
-      errorToast("Error al descargar el archivo Excel");
-    }
+    promiseToast(download, {
+      loading: "Descargando Excel...",
+      success: "Excel descargado exitosamente",
+      error: "Error al descargar el archivo Excel",
+    });
   };
 
-  const handlePDFDownload = async () => {
-    // Si se proporciona una función personalizada, usarla
+  const handlePDFDownload = () => {
     if (onPdfDownload) {
-      await onPdfDownload();
+      promiseToast(Promise.resolve(onPdfDownload()), {
+        loading: "Descargando PDF...",
+        success: "PDF descargado exitosamente",
+        error: "Error al descargar el archivo PDF",
+      });
       return;
     }
 
-    // Si no, usar el endpoint por defecto
     if (!pdfEndpoint) return;
 
-    try {
-      const response = await api.get(pdfEndpoint, {
-        responseType: "blob",
+    const download = api
+      .get(pdfEndpoint, { responseType: "blob" })
+      .then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", pdfFileName);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
       });
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", pdfFileName);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      successToast("PDF descargado exitosamente");
-    } catch (error) {
-      console.error("Error al descargar PDF:", error);
-      errorToast("Error al descargar el archivo PDF");
-    }
+    promiseToast(download, {
+      loading: "Descargando PDF...",
+      success: "PDF descargado exitosamente",
+      error: "Error al descargar el archivo PDF",
+    });
   };
 
   const showExcelButton = excelEndpoint || onExcelDownload;
   const showPdfButton = pdfEndpoint || onPdfDownload;
 
+  const canColored = ["ghost", "outline"].includes(buttonVariant);
+
   if (variant === "grouped") {
     return (
-      <div className="flex items-center gap-1 rounded-lg border">
+      <div className="flex items-center gap-1 bg-muted rounded-lg h-fit">
         {showExcelButton && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 size="sm"
-                variant="ghost"
-                className="gap-2 hover:bg-green-700/5 hover:text-green-700 transition-colors dark:hover:bg-green-950 dark:hover:text-green-50 dark:bg-gray-800"
+                variant={buttonVariant}
+                color={canColored ? "emerald" : undefined}
                 onClick={handleExcelDownload}
                 disabled={disableExcel}
               >
@@ -126,12 +142,12 @@ export default function ExportButtons({
             <TooltipTrigger asChild>
               <Button
                 size="sm"
-                variant="ghost"
-                className="gap-2 hover:bg-red-700/5 hover:text-red-700 transition-colors dark:hover:bg-red-950 dark:hover:text-red-50 dark:bg-gray-800"
+                variant={buttonVariant}
+                color={canColored ? "primary" : undefined}
                 onClick={handlePDFDownload}
                 disabled={disablePdf}
               >
-                <FileText className="h-4 w-4" />
+                <FileDown className="h-4 w-4" />
                 PDF
               </Button>
             </TooltipTrigger>
@@ -151,9 +167,9 @@ export default function ExportButtons({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 w-8 p-0 hover:bg-green-700/5 hover:text-green-700 transition-colors"
+              size="icon-sm"
+              variant={buttonVariant}
+              color={canColored ? "emerald" : undefined}
               onClick={handleExcelDownload}
               disabled={disableExcel}
             >
@@ -170,13 +186,13 @@ export default function ExportButtons({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 w-8 p-0 hover:bg-red-700/5 hover:text-red-700 transition-colors"
+              size="icon-sm"
+              variant={buttonVariant}
+              color={canColored ? "primary" : undefined}
               onClick={handlePDFDownload}
               disabled={disablePdf}
             >
-              <FileText className="h-4 w-4" />
+              <FileDown className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>

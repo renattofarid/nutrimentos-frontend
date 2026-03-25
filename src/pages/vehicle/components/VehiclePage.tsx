@@ -18,7 +18,7 @@ import { VEHICLE } from "../lib/vehicle.interface";
 import VehicleModal from "./VehicleModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = VEHICLE;
+const { MODEL } = VEHICLE;
 
 export default function VehiclePage() {
   const [search, setSearch] = useState("");
@@ -52,7 +52,6 @@ export default function VehiclePage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <VehicleActions />
       </div>
 

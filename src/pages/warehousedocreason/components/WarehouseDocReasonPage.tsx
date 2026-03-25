@@ -18,7 +18,7 @@ import { WAREHOUSEDOCREASON } from "../lib/warehousedocreason.interface";
 import WarehouseDocReasonModal from "./WarehouseDocReasonModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = WAREHOUSEDOCREASON;
+const { MODEL } = WAREHOUSEDOCREASON;
 
 export default function WarehouseDocReasonPage() {
   const [search, setSearch] = useState("");
@@ -48,7 +48,6 @@ export default function WarehouseDocReasonPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <WarehouseDocReasonActions />
       </div>
 

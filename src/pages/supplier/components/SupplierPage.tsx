@@ -20,7 +20,7 @@ import { PersonRoleAssignment } from "@/pages/person/components/PersonRoleAssign
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 
-const { MODEL, ICON } = SUPPLIER;
+const { MODEL } = SUPPLIER;
 
 export default function SupplierPage() {
   const navigate = useNavigate();
@@ -64,7 +64,6 @@ export default function SupplierPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <SupplierActions />
       </div>
 

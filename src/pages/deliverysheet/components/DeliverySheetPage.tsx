@@ -15,6 +15,7 @@ import { StatusUpdateDialog } from "./StatusUpdateDialog";
 import {
   findDeliverySheetById,
   exportDeliverySheets,
+  exportDeliverySheetById,
 } from "../lib/deliverysheet.actions";
 
 import PageWrapper from "@/components/PageWrapper";
@@ -149,6 +150,12 @@ export default function DeliverySheetPage() {
     }
   };
 
+  const handleExportById = async (id: number) => {
+    const blob = await exportDeliverySheetById(id);
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
+
   const handleUpdateStatus = (deliverySheet: DeliverySheetResource) => {
     setSelectedDeliverySheetForStatus(deliverySheet);
     setOpenStatusDialog(true);
@@ -186,6 +193,7 @@ export default function DeliverySheetPage() {
     onDelete: handleDelete,
     onViewDetails: handleViewDetails,
     onUpdateStatus: handleUpdateStatus,
+    onExport: handleExportById,
   });
 
   return (

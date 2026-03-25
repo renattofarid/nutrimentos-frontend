@@ -18,7 +18,7 @@ import { JOBPOSITION } from "../lib/jobposition.interface";
 import JobPositionModal from "./JobPositionModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = JOBPOSITION;
+const { MODEL } = JOBPOSITION;
 
 export default function JobPositionPage() {
   const [search, setSearch] = useState("");
@@ -48,7 +48,6 @@ export default function JobPositionPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <JobPositionActions />
       </div>
 

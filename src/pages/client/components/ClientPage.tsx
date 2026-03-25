@@ -23,7 +23,7 @@ import { CLIENT_ROLE_ID } from "../lib/client.interface";
 import ClientPriceListSheet from "./ClientPriceListSheet";
 import AssignPriceListModal from "./AssignPriceListModal";
 import ClientAddressesSheet from "./ClientAddressesSheet";
-const { MODEL, ICON } = CLIENT;
+const { MODEL } = CLIENT;
 
 export default function ClientPage() {
   const navigate = useNavigate();
@@ -99,7 +99,6 @@ export default function ClientPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <ClientActions />
       </div>
 

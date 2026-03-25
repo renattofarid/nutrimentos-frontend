@@ -19,7 +19,7 @@ import { GUIDE } from "../lib/guide.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 
-const { MODEL, ICON } = GUIDE;
+const { MODEL } = GUIDE;
 
 export default function GuidePage() {
   const navigate = useNavigate();
@@ -75,7 +75,6 @@ export default function GuidePage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <GuideActions excelEndpoint={exportEndpoint} />
       </div>
 

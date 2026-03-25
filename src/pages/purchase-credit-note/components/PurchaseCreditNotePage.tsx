@@ -18,7 +18,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { PURCHASE_CREDIT_NOTE } from "../lib/purchase-credit-note.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = PURCHASE_CREDIT_NOTE;
+const { MODEL } = PURCHASE_CREDIT_NOTE;
 
 export default function PurchaseCreditNotePage() {
   const navigate = useNavigate();
@@ -33,9 +33,7 @@ export default function PurchaseCreditNotePage() {
   }, [page, search, per_page]);
 
   const handleEdit = (id: number) => {
-    navigate(
-      PURCHASE_CREDIT_NOTE.ROUTE_UPDATE.replace(":id", id.toString()),
-    );
+    navigate(PURCHASE_CREDIT_NOTE.ROUTE_UPDATE.replace(":id", id.toString()));
   };
 
   const handleDelete = async () => {
@@ -58,7 +56,6 @@ export default function PurchaseCreditNotePage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <PurchaseCreditNoteActions />
       </div>
 

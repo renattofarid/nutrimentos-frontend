@@ -18,7 +18,7 @@ import { ZONE } from "../lib/zone.interface";
 import ZoneModal from "./ZoneModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = ZONE;
+const { MODEL } = ZONE;
 
 export default function ZonePage() {
   const [search, setSearch] = useState("");
@@ -48,7 +48,6 @@ export default function ZonePage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <ZoneActions />
       </div>
 

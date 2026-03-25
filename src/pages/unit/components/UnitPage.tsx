@@ -18,7 +18,7 @@ import { UNIT } from "../lib/unit.interface";
 import UnitModal from "./UnitModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = UNIT;
+const { MODEL } = UNIT;
 
 export default function UnitPage() {
   const [search, setSearch] = useState("");
@@ -48,7 +48,6 @@ export default function UnitPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <UnitActions />
       </div>
 

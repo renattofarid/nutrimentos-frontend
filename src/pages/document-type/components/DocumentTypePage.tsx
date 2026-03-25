@@ -18,7 +18,7 @@ import { DOCUMENT_TYPE } from "../lib/document-type.interface";
 import DocumentTypeModal from "./DocumentTypeModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = DOCUMENT_TYPE;
+const { MODEL } = DOCUMENT_TYPE;
 
 export default function DocumentTypePage() {
   const [search, setSearch] = useState("");
@@ -48,7 +48,6 @@ export default function DocumentTypePage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <DocumentTypeActions />
       </div>
 
@@ -92,4 +91,3 @@ export default function DocumentTypePage() {
     </div>
   );
 }
-

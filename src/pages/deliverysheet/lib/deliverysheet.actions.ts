@@ -25,16 +25,30 @@ export interface ExportDeliverySheetsParams {
   driver_id?: number | null;
   issue_date_from?: string | null;
   issue_date_to?: string | null;
-  status?: "PENDIENTE" | "EN_REPARTO" | "RENDIDA" | "CERRADA" | "ANULADA" | null;
+  status?:
+    | "PENDIENTE"
+    | "EN_REPARTO"
+    | "RENDIDA"
+    | "CERRADA"
+    | "ANULADA"
+    | null;
   type?: "CONTADO" | "CREDITO" | null;
   zone_id?: number | null;
 }
 
 export const exportDeliverySheets = async (
-  params: ExportDeliverySheetsParams
+  params: ExportDeliverySheetsParams,
 ): Promise<Blob> => {
   const response = await api.get<Blob>(`${DELIVERY_SHEET_ENDPOINT}/export`, {
     params,
+    responseType: "blob",
+  });
+  return response.data;
+};
+
+export const exportDeliverySheetById = async (id: number): Promise<Blob> => {
+  const response = await api.get<Blob>(`${DELIVERY_SHEET_ENDPOINT}/export`, {
+    params: { sheet_id: id, format: "pdf" },
     responseType: "blob",
   });
   return response.data;
@@ -58,11 +72,11 @@ export interface GetDeliverySheetsParams {
 }
 
 export const getDeliverySheets = async (
-  params?: GetDeliverySheetsParams
+  params?: GetDeliverySheetsParams,
 ): Promise<DeliverySheetResponse> => {
   const response = await api.get<DeliverySheetResponse>(
     DELIVERY_SHEET_ENDPOINT,
-    { params }
+    { params },
   );
   return response.data;
 };
@@ -74,46 +88,46 @@ export const getAllDeliverySheets = async (): Promise<
     DELIVERY_SHEET_ENDPOINT,
     {
       params: { all: true },
-    }
+    },
   );
   return response.data;
 };
 
 export const findDeliverySheetById = async (
-  id: number
+  id: number,
 ): Promise<DeliverySheetResourceById> => {
   const response = await api.get<DeliverySheetResourceById>(
-    `${DELIVERY_SHEET_ENDPOINT}/${id}`
+    `${DELIVERY_SHEET_ENDPOINT}/${id}`,
   );
   return response.data;
 };
 
 export const storeDeliverySheet = async (
-  data: CreateDeliverySheetRequest
+  data: CreateDeliverySheetRequest,
 ): Promise<{ message: string }> => {
   const response = await api.post<{ message: string }>(
     DELIVERY_SHEET_ENDPOINT,
-    data
+    data,
   );
   return response.data;
 };
 
 export const updateDeliverySheet = async (
   id: number,
-  data: UpdateDeliverySheetRequest
+  data: UpdateDeliverySheetRequest,
 ): Promise<{ message: string }> => {
   const response = await api.put<{ message: string }>(
     `${DELIVERY_SHEET_ENDPOINT}/${id}`,
-    data
+    data,
   );
   return response.data;
 };
 
 export const deleteDeliverySheet = async (
-  id: number
+  id: number,
 ): Promise<{ message: string }> => {
   const response = await api.delete<{ message: string }>(
-    `${DELIVERY_SHEET_ENDPOINT}/${id}`
+    `${DELIVERY_SHEET_ENDPOINT}/${id}`,
   );
   return response.data;
 };
@@ -132,11 +146,11 @@ export interface GetAvailableSalesParams {
 }
 
 export const getAvailableSales = async (
-  params: GetAvailableSalesParams
+  params: GetAvailableSalesParams,
 ): Promise<AvailableSalesResponse> => {
   const response = await api.get<AvailableSalesResponse>(
     `${DELIVERY_SHEET_ENDPOINT}/available-sales/list`,
-    { params }
+    { params },
   );
   return response.data;
 };
@@ -147,11 +161,11 @@ export const getAvailableSales = async (
 
 export const updateDeliverySheetStatus = async (
   id: number,
-  data: UpdateDeliverySheetStatusRequest
+  data: UpdateDeliverySheetStatusRequest,
 ): Promise<{ message: string }> => {
   const response = await api.patch<{ message: string }>(
     `${DELIVERY_SHEET_ENDPOINT}/${id}/status`,
-    data
+    data,
   );
   return response.data;
 };
@@ -162,11 +176,11 @@ export const updateDeliverySheetStatus = async (
 
 export const createSettlement = async (
   id: number,
-  data: CreateSettlementRequest
+  data: CreateSettlementRequest,
 ): Promise<{ message: string }> => {
   const response = await api.post<{ message: string }>(
     `${DELIVERY_SHEET_ENDPOINT}/${id}/settlement`,
-    data
+    data,
   );
   return response.data;
 };
@@ -177,11 +191,11 @@ export const createSettlement = async (
 
 export const createDeliverySheetPayment = async (
   id: number,
-  data: CreateDeliverySheetPaymentRequest
+  data: CreateDeliverySheetPaymentRequest,
 ): Promise<{ message: string }> => {
   const response = await api.post<{ message: string }>(
     `${DELIVERY_SHEET_ENDPOINT}/${id}/payment`,
-    data
+    data,
   );
   return response.data;
 };

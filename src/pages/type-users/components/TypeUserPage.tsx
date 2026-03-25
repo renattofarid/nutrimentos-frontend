@@ -19,7 +19,7 @@ import TypeUserModal from "./TypeUserModal";
 import { TypeUserAccess } from "@/pages/menu/components/TypeUserAccess";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = TYPE_USER;
+const { MODEL } = TYPE_USER;
 
 export default function TypeUserPage() {
   const [search, setSearch] = useState("");
@@ -58,7 +58,6 @@ export default function TypeUserPage() {
     <div className="space-y-4">
       {/* Encabezado */}
       <div className="flex justify-between items-center">
-       
         <TypeUserActions />
       </div>
 

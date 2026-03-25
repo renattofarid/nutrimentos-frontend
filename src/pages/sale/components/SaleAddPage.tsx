@@ -16,11 +16,25 @@ import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+
 import { format } from "date-fns";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { exportSaleById } from "../lib/sale.actions";
 
 export const SaleAddPage = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+  const [showNextDialog, setShowNextDialog] = useState(false);
   const { user } = useAuthStore();
   const { data: branches, isLoading: branchesLoading } = useAllBranches({
     company_id: user?.company_id,
@@ -56,9 +70,21 @@ export const SaleAddPage = () => {
   const handleSubmit = async (data: SaleSchema) => {
     setIsSubmitting(true);
     try {
-      await createSale(data);
+      const saleId = await createSale(data);
       successToast("Venta creada correctamente");
-      navigate("/ventas/listado");
+
+      // Abrir boleta automáticamente si se obtuvo el ID
+      if (saleId) {
+        try {
+          const blob = await exportSaleById(saleId);
+          const url = window.URL.createObjectURL(blob);
+          window.open(url, "_blank");
+        } catch {
+          // Si falla la exportación, continuamos igual
+        }
+      }
+
+      setShowNextDialog(true);
     } catch (error: any) {
       errorToast(error.response?.data?.message || ERROR_MESSAGE);
     } finally {
@@ -111,6 +137,7 @@ export const SaleAddPage = () => {
 
       {canShowForm && (
         <SaleForm
+          key={formKey}
           defaultValues={getDefaultValues()}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
@@ -120,6 +147,30 @@ export const SaleAddPage = () => {
           onCancel={() => navigate("/ventas/listado")}
         />
       )}
+
+      <AlertDialog open={showNextDialog} onOpenChange={setShowNextDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Venta registrada</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Deseas crear otra venta?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => navigate("/ventas/listado")}>
+              No, ir al listado
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowNextDialog(false);
+                setFormKey((k) => k + 1);
+              }}
+            >
+              Sí, crear otra
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageWrapper>
   );
 };

@@ -212,6 +212,23 @@ export const DeliverySheetForm = ({
     }
   }, [forSingleCustomer, zoneValue, customerValue, form]);
 
+  // Auto-buscar ventas del día al seleccionar zona o cliente
+  useEffect(() => {
+    const targetId = forSingleCustomer ? customerValue : zoneValue;
+    if (!typeValue || !targetId) return;
+
+    const today = format(new Date(), "yyyy-MM-dd");
+    setHasSearched(true);
+    onSearchSales({
+      payment_type: typeValue,
+      zone_id: !forSingleCustomer && zoneValue ? Number(zoneValue) : undefined,
+      customer_id: forSingleCustomer && customerValue ? Number(customerValue) : undefined,
+      date_from: today,
+      date_to: today,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoneValue, customerValue, forSingleCustomer, typeValue]);
+
   const totalAmount = selectedSaleIds.reduce((sum, saleId) => {
     const sale = availableSales.find((s) => s.id === saleId);
     return sum + (sale ? parseFormattedNumber(sale.current_amount) : 0);
@@ -337,6 +354,12 @@ export const DeliverySheetForm = ({
         >
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2 items-center justify-end">
+              {isLoadingAvailableSales && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Loader className="h-3 w-3 animate-spin" />
+                  Buscando ventas...
+                </span>
+              )}
               <Button
                 type="button"
                 variant="ghost"
@@ -352,19 +375,21 @@ export const DeliverySheetForm = ({
                   <ChevronDown className="h-4 w-4" />
                 )}
               </Button>
-              <Button
-                type="button"
-                onClick={handleSearchSales}
-                disabled={!searchParams.payment_type || isLoadingAvailableSales}
-                size="sm"
-              >
-                {isLoadingAvailableSales ? (
-                  <Loader className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Search className="mr-2 h-4 w-4" />
-                )}
-                Buscar Ventas
-              </Button>
+              {showDateFilter && (
+                <Button
+                  type="button"
+                  onClick={handleSearchSales}
+                  disabled={!searchParams.payment_type || isLoadingAvailableSales}
+                  size="sm"
+                >
+                  {isLoadingAvailableSales ? (
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="mr-2 h-4 w-4" />
+                  )}
+                  Buscar
+                </Button>
+              )}
             </div>
             {showDateFilter && (
               <DateRangePickerFilter

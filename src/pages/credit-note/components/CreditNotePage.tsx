@@ -17,7 +17,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { CREDIT_NOTE } from "../lib/credit-note.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = CREDIT_NOTE;
+const { MODEL } = CREDIT_NOTE;
 
 export default function CreditNotePage() {
   const [search, setSearch] = useState("");
@@ -106,7 +106,6 @@ export default function CreditNotePage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <CreditNoteActions filters={exportFilters} />
       </div>
 

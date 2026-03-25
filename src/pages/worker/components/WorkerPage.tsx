@@ -26,7 +26,7 @@ import { PersonRoleAssignment } from "@/pages/person/components/PersonRoleAssign
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 
-const { MODEL, ICON } = WORKER;
+const { MODEL } = WORKER;
 
 export default function WorkerPage() {
   const navigate = useNavigate();
@@ -71,7 +71,6 @@ export default function WorkerPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <WorkerActions />
       </div>
 

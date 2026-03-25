@@ -20,7 +20,7 @@ import { USER } from "../lib/User.interface";
 import UserModal from "./UserModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = USER;
+const { MODEL } = USER;
 
 export default function UserPage() {
   const [page, setPage] = useState(1);
@@ -56,7 +56,6 @@ export default function UserPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-       
         <UserActions />
       </div>
 

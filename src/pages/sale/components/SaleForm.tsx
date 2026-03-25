@@ -1150,6 +1150,7 @@ export const SaleForm = ({
                 onRemoveEmptyRows={handleRemoveEmptyDetailRows}
                 emptyMessage="Seleccione un almacén y cliente para comenzar."
                 disabled={!selectedWarehouseId}
+                skipColumnsOnEnter={["product"]}
               />
             </GroupFormSection>
 

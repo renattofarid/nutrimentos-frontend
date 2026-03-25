@@ -20,7 +20,7 @@ export function ButtonAction({
   if (!canRender) return null;
 
   return (
-    <Button variant={variant} size="icon-xs" color={color} {...props}>
+    <Button variant={variant} size="icon-sm" color={color} {...props}>
       <Icon />
     </Button>
   );

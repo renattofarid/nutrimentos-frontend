@@ -52,11 +52,11 @@ export interface PurchaseResource {
   reception_date: string;
   due_date: string;
   payment_type: string;
-  include_igv: boolean;
-  include_cost_account: boolean;
+  incluir_igv: boolean;
+  incluir_cuenta_costos: boolean;
   discount_global: number;
-  freight_cost: number;
-  loading_cost: number;
+  costo_flete: number;
+  costo_estiba: number;
   total_amount: string;
   current_amount: string;
   currency: string;
@@ -103,7 +103,10 @@ export interface CreatePurchaseRequest {
   document_type: string;
   document_number: string;
   payment_type: string;
-  include_igv: boolean;
+  incluir_igv: boolean;
+  incluir_cuenta_costos?: boolean;
+  costo_flete?: number;
+  costo_estiba?: number;
   currency: string;
   details: CreatePurchaseDetailRequest[];
   installments?: CreatePurchaseInstallmentRequest[];
@@ -118,6 +121,10 @@ export interface UpdatePurchaseRequest {
   document_number?: string;
   issue_date?: string;
   payment_type?: string;
+  incluir_igv?: boolean;
+  incluir_cuenta_costos?: boolean;
+  costo_flete?: number;
+  costo_estiba?: number;
   currency?: string;
   observations?: string;
   details?: CreatePurchaseDetailRequest[];
@@ -255,7 +262,7 @@ export interface UpdatePurchasePaymentRequest {
 
 export const PURCHASE_ENDPOINT = "/purchase";
 export const PURCHASE_INSTALLMENT_ENDPOINT = "/purchaseinstallment";
-export const PURCHASE_PAYMENT_ENDPOINT = "/purchasepayment";
+export const PURCHASE_PAYMENT_ENDPOINT = "/purchase-payments";
 export const PURCHASE_INSTALLMENTS_EXPIRING_ALERT_ENDPOINT =
   "/purchase-installments/expiring-alert";
 

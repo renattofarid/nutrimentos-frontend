@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
-import { Loader, Plus, Trash2, Pencil, Users2, UserPlus } from "lucide-react";
+import { Loader, Users2, UserPlus, DollarSign } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
@@ -14,18 +14,9 @@ import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { CompanyResource } from "@/pages/company/lib/company.interface";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useProduct } from "@/pages/product/lib/product.hook";
-import { Badge } from "@/components/ui/badge";
 import { SupplierDialog } from "@/pages/supplier/components/SupplierDialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
-import { errorToast } from "@/lib/core.function";
+import { errorToast, warningToast } from "@/lib/core.function";
 import { format } from "date-fns";
 import {
   purchaseSchemaCreate,
@@ -106,13 +97,13 @@ export const PurchaseForm = ({
     useProduct(
       productCodeSearch
         ? { codigo: productCodeSearch.code, direction: "asc", sort: "codigo" }
-        : undefined
+        : undefined,
     );
 
   const productSelected =
     productSearchResult?.data &&
     productSearchResult.data.filter(
-      (p) => p.codigo === productCodeSearch?.code
+      (p) => p.codigo === productCodeSearch?.code,
     )[0];
 
   const [filteredWarehouses, setFilteredWarehouses] = useState<
@@ -125,69 +116,61 @@ export const PurchaseForm = ({
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
   const [includeIgv, setIncludeIgv] = useState<boolean>(
-    defaultValues.include_igv || false
+    defaultValues.incluir_igv || false,
   );
 
   const IGV_RATE = 0.18;
 
   // Estados para cuotas
   const [installments, setInstallments] = useState<InstallmentRow[]>([]);
-  const [editingInstallmentIndex, setEditingInstallmentIndex] = useState<
-    number | null
-  >(null);
-  const [currentInstallment, setCurrentInstallment] = useState<InstallmentRow>({
-    due_days: "",
-    amount: "",
+
+  // Estados para serie y número de documento
+  const [documentSerie, setDocumentSerie] = useState<string>(() => {
+    const dn = defaultValues.document_number || "";
+    const idx = dn.indexOf("-");
+    return idx >= 0 ? dn.slice(0, idx) : "";
   });
-
-  // Formulario temporal solo para cuotas
-  const installmentTempForm = useForm({
-    defaultValues: {
-      temp_due_days: currentInstallment.due_days,
-      temp_amount: currentInstallment.amount,
-    },
+  const [documentNum, setDocumentNum] = useState<string>(() => {
+    const dn = defaultValues.document_number || "";
+    const idx = dn.indexOf("-");
+    return idx >= 0 ? dn.slice(idx + 1) : "";
   });
-
-  // Watchers para cuotas
-  const selectedDueDays = installmentTempForm.watch("temp_due_days");
-  const selectedAmount = installmentTempForm.watch("temp_amount");
-
-  // Observers para cuotas
-  useEffect(() => {
-    if (selectedDueDays !== currentInstallment.due_days) {
-      setCurrentInstallment((prev) => ({
-        ...prev,
-        due_days: selectedDueDays || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDueDays]);
-
-  useEffect(() => {
-    if (selectedAmount !== currentInstallment.amount) {
-      setCurrentInstallment((prev) => ({
-        ...prev,
-        amount: selectedAmount || "",
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAmount]);
 
   const form = useForm({
     resolver: zodResolver(
-      mode === "create" ? purchaseSchemaCreate : purchaseSchemaUpdate
+      mode === "create" ? purchaseSchemaCreate : purchaseSchemaUpdate,
     ),
     defaultValues: {
       discount_global: 0,
-      freight_cost: 0,
-      loading_cost: 0,
-      include_cost_account: true,
+      costo_flete: 0,
+      costo_estiba: 0,
+      incluir_cuenta_costos: true,
       reference_number: "",
       observations: "",
       ...defaultValues,
     },
     mode: "onChange",
   });
+
+  // Sincronizar serie + número al campo document_number del formulario
+  const isFirstDocumentRender = useRef(true);
+  useEffect(() => {
+    if (isFirstDocumentRender.current) {
+      isFirstDocumentRender.current = false;
+      const combined =
+        documentSerie || documentNum
+          ? `${documentSerie}-${documentNum}`
+          : "";
+      form.setValue("document_number", combined, { shouldValidate: false });
+      return;
+    }
+    const combined =
+      documentSerie || documentNum
+        ? `${documentSerie}-${documentNum}`
+        : "";
+    form.setValue("document_number", combined, { shouldValidate: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documentSerie, documentNum]);
 
   const selectedBranchId = form.watch("branch_id");
 
@@ -197,7 +180,7 @@ export const PurchaseForm = ({
       if (defaultValues.branch_id) {
         const filtered = warehouses.filter(
           (warehouse) =>
-            warehouse.branch_id.toString() === defaultValues.branch_id
+            warehouse.branch_id.toString() === defaultValues.branch_id,
         );
         setFilteredWarehouses(filtered);
       }
@@ -210,7 +193,7 @@ export const PurchaseForm = ({
   useEffect(() => {
     if (selectedBranchId) {
       const filtered = warehouses.filter(
-        (warehouse) => warehouse.branch_id.toString() === selectedBranchId
+        (warehouse) => warehouse.branch_id.toString() === selectedBranchId,
       );
       setFilteredWarehouses(filtered);
 
@@ -220,7 +203,7 @@ export const PurchaseForm = ({
 
       if (currentWarehouseId) {
         const isValid = filtered.some(
-          (warehouse) => warehouse.id.toString() === currentWarehouseId
+          (warehouse) => warehouse.id.toString() === currentWarehouseId,
         );
         if (!isValid) {
           form.setValue("warehouse_id", "");
@@ -230,7 +213,11 @@ export const PurchaseForm = ({
 
       // Si solo hay un almacén, seleccionarlo automáticamente
       // Esto se ejecuta si: no hay almacén seleccionado, o el almacén fue limpiado
-      if (filtered.length === 1 && mode === "create" && (!currentWarehouseId || warehouseCleared)) {
+      if (
+        filtered.length === 1 &&
+        mode === "create" &&
+        (!currentWarehouseId || warehouseCleared)
+      ) {
         form.setValue("warehouse_id", filtered[0].id.toString());
       }
     } else {
@@ -246,7 +233,7 @@ export const PurchaseForm = ({
     const timer = setTimeout(() => {
       // Buscar el primer botón del formulario (que es el trigger del FormSelect)
       const firstButton = document.querySelector(
-        'form button[role="combobox"]'
+        'form button[role="combobox"]',
       ) as HTMLButtonElement;
       if (firstButton) {
         firstButton.focus();
@@ -258,7 +245,12 @@ export const PurchaseForm = ({
 
   // Watch para el tipo de pago y el switch de IGV
   const selectedPaymentType = form.watch("payment_type");
-  const watchIncludeIgv = form.watch("include_igv");
+  const watchIncludeIgv = form.watch("incluir_igv");
+  const watchDiscount = form.watch("discount_global");
+  const watchFreight = form.watch("costo_flete");
+  const watchLoading = form.watch("costo_estiba");
+  const watchCurrency = form.watch("currency");
+  const currencySymbol = watchCurrency === "USD" ? "$ " : "S/. ";
 
   // Sincronizar el estado local includeIgv con el formulario
   useEffect(() => {
@@ -266,6 +258,38 @@ export const PurchaseForm = ({
       setIncludeIgv(watchIncludeIgv);
     }
   }, [watchIncludeIgv, includeIgv]);
+
+  // Cuando cambia a CREDITO y no hay cuotas (create mode), agregar una por defecto
+  useEffect(() => {
+    if (
+      selectedPaymentType === "CREDITO" &&
+      installments.length === 0 &&
+      mode === "create"
+    ) {
+      const total = calculatePurchaseTotal();
+      const inst: InstallmentRow[] = [
+        { due_days: "30", amount: total > 0 ? total.toFixed(2) : "0.00" },
+      ];
+      setInstallments(inst);
+      form.setValue("installments", inst);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPaymentType]);
+
+  // Cuando solo hay 1 cuota, siempre sincronizar su monto con el total de la compra
+  useEffect(() => {
+    if (installments.length === 1 && selectedPaymentType === "CREDITO") {
+      const total = calculatePurchaseTotal();
+      if (total >= 0) {
+        const updated: InstallmentRow[] = [
+          { ...installments[0], amount: total.toFixed(2) },
+        ];
+        setInstallments(updated);
+        form.setValue("installments", updated);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [details, watchDiscount, watchFreight, watchLoading]);
 
   // Establecer fechas automáticamente al cargar el formulario
   useEffect(() => {
@@ -317,8 +341,14 @@ export const PurchaseForm = ({
     }
 
     if (defaultValues.installments && defaultValues.installments.length > 0) {
-      setInstallments(defaultValues.installments);
-      form.setValue("installments", defaultValues.installments);
+      const mappedInstallments = (defaultValues.installments as any[]).map(
+        (inst) => ({
+          due_days: String(inst.due_days),
+          amount: String(inst.amount),
+        }),
+      );
+      setInstallments(mappedInstallments);
+      form.setValue("installments", mappedInstallments);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -338,9 +368,11 @@ export const PurchaseForm = ({
       total: 0,
       is_by_sack: true, // Por defecto compra por saco
     };
-    const updatedDetails = [...details, newDetail];
-    setDetails(updatedDetails);
-    form.setValue("details", updatedDetails);
+    setDetails((prev) => {
+      const updatedDetails = [...prev, newDetail];
+      form.setValue("details", updatedDetails);
+      return updatedDetails;
+    });
   };
 
   const handleRemoveRow = (index: number) => {
@@ -363,7 +395,8 @@ export const PurchaseForm = ({
       if (detail.is_by_sack) {
         // Modo SACO: calcular kg = sacos × peso
         const calculatedKg = quantity * productWeight;
-        updatedDetails[index].quantity_kg = calculatedKg > 0 ? calculatedKg.toFixed(2) : "";
+        updatedDetails[index].quantity_kg =
+          calculatedKg > 0 ? calculatedKg.toFixed(2) : "";
       } else {
         // Modo KG: la cantidad ya está en kg
         updatedDetails[index].quantity_kg = value;
@@ -381,16 +414,16 @@ export const PurchaseForm = ({
       // El precio siempre se multiplica por la cantidad ingresada (sacos o kg según el modo)
       if (quantity > 0 && unitPrice > 0) {
         if (includeIgv) {
-          // includeIgv=true: El precio NO incluye IGV, se lo agregamos
-          subtotal = quantity * unitPrice;
-          tax = subtotal * IGV_RATE;
-          total = subtotal + tax;
-        } else {
-          // includeIgv=false: El precio YA incluye IGV, lo descomponemos
+          // includeIgv=true: El precio YA incluye IGV, lo descomponemos
           const totalIncl = quantity * unitPrice;
           subtotal = totalIncl / (1 + IGV_RATE);
           tax = totalIncl - subtotal;
           total = totalIncl;
+        } else {
+          // includeIgv=false: El precio NO incluye IGV, se lo agregamos
+          subtotal = quantity * unitPrice;
+          tax = subtotal * IGV_RATE;
+          total = subtotal + tax;
         }
       }
 
@@ -406,22 +439,25 @@ export const PurchaseForm = ({
     form.setValue("details", updatedDetails);
   };
 
-  const handleProductSelect = useCallback((index: number, product: ProductOption) => {
-    const productWeight = product.weight ? parseFloat(product.weight) : 0;
+  const handleProductSelect = useCallback(
+    (index: number, product: ProductOption) => {
+      const productWeight = product.weight ? parseFloat(product.weight) : 0;
 
-    setDetails((prev) => {
-      const updatedDetails = [...prev];
-      updatedDetails[index] = {
-        ...updatedDetails[index],
-        product_id: product.id,
-        product_code: product.codigo,
-        product_name: product.name,
-        product_weight: productWeight,
-      };
-      form.setValue("details", updatedDetails);
-      return updatedDetails;
-    });
-  }, [form]);
+      setDetails((prev) => {
+        const updatedDetails = [...prev];
+        updatedDetails[index] = {
+          ...updatedDetails[index],
+          product_id: product.id,
+          product_code: product.codigo,
+          product_name: product.name,
+          product_weight: productWeight,
+        };
+        form.setValue("details", updatedDetails);
+        return updatedDetails;
+      });
+    },
+    [form],
+  );
 
   // Búsqueda async de producto por código al presionar Tab
   // Cuando useProduct retorna resultado, auto-seleccionar primer producto y avanzar celda
@@ -441,13 +477,13 @@ export const PurchaseForm = ({
       callbacks.advance();
     } else if (productSearchResult !== undefined) {
       callbacks.setError(
-        `No se encontró ningún producto con código "${productCodeSearch.code}"`
+        `No se encontró ningún producto con código "${productCodeSearch.code}"`,
       );
     }
 
     productCodeCallbacksRef.current = null;
     setProductCodeSearch(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productSearchResult, isSearchingProduct]);
 
   const handleProductCodeTab = useCallback(
@@ -455,7 +491,7 @@ export const PurchaseForm = ({
       rowIndex: number,
       code: string,
       advance: () => void,
-      setError: (msg: string) => void
+      setError: (msg: string) => void,
     ) => {
       if (!code.trim()) {
         advance();
@@ -464,7 +500,7 @@ export const PurchaseForm = ({
       productCodeCallbacksRef.current = { advance, setError };
       setProductCodeSearch({ rowIndex, code });
     },
-    []
+    [],
   );
 
   // Nueva función para cambiar el modo de compra (saco/kg)
@@ -488,7 +524,8 @@ export const PurchaseForm = ({
       }
     } else {
       // Cambió a modo KG: la cantidad es directamente kg
-      updatedDetails[index].quantity = quantityKg > 0 ? quantityKg.toFixed(2) : "";
+      updatedDetails[index].quantity =
+        quantityKg > 0 ? quantityKg.toFixed(2) : "";
     }
 
     setDetails(updatedDetails);
@@ -504,15 +541,15 @@ export const PurchaseForm = ({
   const calculatePurchaseTotal = () => {
     const detailsTotal = calculateDetailsTotal();
     const discount = form.getValues("discount_global") || 0;
-    const freight = form.getValues("freight_cost") || 0;
-    const loading = form.getValues("loading_cost") || 0;
+    const freight = form.getValues("costo_flete") || 0;
+    const loading = form.getValues("costo_estiba") || 0;
     return detailsTotal - discount + freight + loading;
   };
 
   const calculateSubtotalTotal = () => {
     const sum = details.reduce(
       (sum, detail) => sum + (detail.subtotal || 0),
-      0
+      0,
     );
     return sum;
   };
@@ -521,7 +558,7 @@ export const PurchaseForm = ({
     const sum = details.reduce(
       (sum, detail) =>
         sum + (isNaN(parseFloat(detail.tax)) ? 0 : parseFloat(detail.tax)),
-      0
+      0,
     );
     return sum;
   };
@@ -539,16 +576,16 @@ export const PurchaseForm = ({
       let total = 0;
 
       if (includeIgv) {
-        // includeIgv=true: El precio NO incluye IGV, se lo agregamos
-        subtotal = q * up;
-        tax = subtotal * IGV_RATE;
-        total = subtotal + tax;
-      } else {
-        // includeIgv=false: El precio YA incluye IGV, lo descomponemos
+        // includeIgv=true: El precio YA incluye IGV, lo descomponemos
         const totalIncl = q * up;
         subtotal = totalIncl / (1 + IGV_RATE);
         tax = totalIncl - subtotal;
         total = totalIncl;
+      } else {
+        // includeIgv=false: El precio NO incluye IGV, se lo agregamos
+        subtotal = q * up;
+        tax = subtotal * IGV_RATE;
+        total = subtotal + tax;
       }
 
       return {
@@ -587,7 +624,7 @@ export const PurchaseForm = ({
       width: "120px",
       accessor: "is_by_sack",
       onSwitchChange: handleTogglePurchaseMode,
-      getLabel: (row) => row.is_by_sack ? "SAC" : "KG",
+      getLabel: (row) => (row.is_by_sack ? "SACO" : "KG"),
     },
     {
       id: "quantity",
@@ -641,74 +678,34 @@ export const PurchaseForm = ({
   // Sin lista estática de productos: la búsqueda es async por código (handleProductCodeTab)
   const productOptions: ProductOption[] = [];
 
-  // Funciones para cuotas
-  const handleAddInstallment = () => {
-    if (!currentInstallment.due_days || !currentInstallment.amount) {
-      return;
-    }
-
-    const newAmount = parseFloat(currentInstallment.amount);
-    const purchaseTotal = calculatePurchaseTotal();
-
-    // Calcular el total de cuotas (excluyendo la que se está editando si aplica)
-    let currentInstallmentsTotal = installments.reduce((sum, inst, idx) => {
-      if (editingInstallmentIndex !== null && idx === editingInstallmentIndex) {
-        return sum; // Excluir la cuota que se está editando
-      }
-      return sum + parseFloat(inst.amount);
-    }, 0);
-
-    // Validar que no exceda el total de la compra
-    if (currentInstallmentsTotal + newAmount > purchaseTotal) {
-      errorToast(
-        `El total de cuotas no puede exceder el total de la compra (${purchaseTotal.toFixed(
-          2
-        )})`
-      );
-      return;
-    }
-
-    const newInstallment: InstallmentRow = { ...currentInstallment };
-
-    if (editingInstallmentIndex !== null) {
-      const updatedInstallments = [...installments];
-      updatedInstallments[editingInstallmentIndex] = newInstallment;
-      setInstallments(updatedInstallments);
-      form.setValue("installments", updatedInstallments);
-      setEditingInstallmentIndex(null);
-    } else {
-      const updatedInstallments = [...installments, newInstallment];
-      setInstallments(updatedInstallments);
-      form.setValue("installments", updatedInstallments);
-    }
-
-    setCurrentInstallment({
-      due_days: "",
-      amount: "",
-    });
-    installmentTempForm.setValue("temp_due_days", "");
-    installmentTempForm.setValue("temp_amount", "");
+  // Funciones para cuotas (ExcelGrid)
+  const handleInstallmentCellChange = (
+    index: number,
+    field: string,
+    value: string,
+  ) => {
+    const updated = [...installments];
+    updated[index] = { ...updated[index], [field]: value };
+    setInstallments(updated);
+    form.setValue("installments", updated);
   };
 
-  const handleEditInstallment = (index: number) => {
-    const inst = installments[index];
-    setCurrentInstallment(inst);
-    // Actualizar formulario temporal manualmente
-    installmentTempForm.setValue("temp_due_days", inst.due_days);
-    installmentTempForm.setValue("temp_amount", inst.amount);
-    setEditingInstallmentIndex(index);
+  const handleAddInstallmentRow = () => {
+    const updated = [...installments, { due_days: "30", amount: "" }];
+    setInstallments(updated);
+    form.setValue("installments", updated);
   };
 
   const handleRemoveInstallment = (index: number) => {
-    const updatedInstallments = installments.filter((_, i) => i !== index);
-    setInstallments(updatedInstallments);
-    form.setValue("installments", updatedInstallments);
+    const updated = installments.filter((_, i) => i !== index);
+    setInstallments(updated);
+    form.setValue("installments", updated);
   };
 
   const calculateInstallmentsTotal = () => {
     const sum = installments.reduce(
       (sum, inst) => sum + parseFloat(inst.amount),
-      0
+      0,
     );
     return sum;
   };
@@ -735,7 +732,7 @@ export const PurchaseForm = ({
       !installmentsMatchTotal()
     ) {
       errorToast(
-        `El total de cuotas (${calculateInstallmentsTotal()}) debe ser igual al total de la compra (${calculatePurchaseTotal()})`
+        `El total de cuotas (${calculateInstallmentsTotal()}) debe ser igual al total de la compra (${calculatePurchaseTotal()})`,
       );
       return;
     }
@@ -766,7 +763,11 @@ export const PurchaseForm = ({
     const formattedDetails = details.map((d) => ({
       product_id: parseInt(d.product_id),
       quantity_kg: d.is_by_sack ? 0 : parseFloat(d.quantity_kg),
-      quantity_sacks: d.is_by_sack ? (d.quantity === "" ? 0 : parseFloat(d.quantity)) : 0,
+      quantity_sacks: d.is_by_sack
+        ? d.quantity === ""
+          ? 0
+          : parseFloat(d.quantity)
+        : 0,
       unit_price: parseFloat(d.unit_price),
       tax: parseFloat(d.tax),
     }));
@@ -785,7 +786,29 @@ export const PurchaseForm = ({
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(handleFormSubmit)}
+        onSubmit={form.handleSubmit(handleFormSubmit, (errors) => {
+          const getFirstError = (
+            obj: any,
+            path = "",
+          ): { field: string; message: string } | null => {
+            for (const key in obj) {
+              const val = obj[key];
+              const currentPath = path ? `${path}.${key}` : key;
+              if (val?.message)
+                return { field: currentPath, message: val.message };
+              if (typeof val === "object") {
+                const nested = getFirstError(val, currentPath);
+                if (nested) return nested;
+              }
+            }
+            return null;
+          };
+          const first = getFirstError(errors);
+          warningToast(
+            first ? `Campo: ${first.field}` : "Formulario inválido",
+            first ? first.message : "Hay campos inválidos en el formulario",
+          );
+        })}
         className="space-y-6 w-full"
       >
         {/* Información General */}
@@ -900,13 +923,47 @@ export const PurchaseForm = ({
             }))}
           />
 
-          <FormInput
-            control={form.control}
-            name="document_number"
-            label="Número de Documento"
-            placeholder="Ej: B001-00123"
-            uppercase
-          />
+          <div className="flex flex-col gap-0.5">
+            <label className="flex justify-start items-center text-xs md:text-sm mb-0.5 leading-none h-fit font-bold uppercase text-muted-foreground">
+              Número de Documento
+              <span className="text-destructive ml-0.5">*</span>
+            </label>
+            <div className="flex items-center gap-1.5">
+              <FormInput
+                name="document_serie"
+                value={documentSerie}
+                onChange={(e) =>
+                  setDocumentSerie(e.target.value.toUpperCase())
+                }
+                placeholder="Serie"
+                uppercase
+                maxLength={4}
+                className="w-20"
+              />
+              <span className="text-muted-foreground font-medium">-</span>
+              <FormInput
+                name="document_num"
+                value={documentNum}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setDocumentNum(val);
+                }}
+                onBlur={() => {
+                  if (documentNum) {
+                    setDocumentNum(documentNum.padStart(8, "0"));
+                  }
+                }}
+                placeholder="00000000"
+                maxLength={8}
+                className="flex-1"
+              />
+            </div>
+            {form.formState.errors.document_number && (
+              <p className="text-xs font-medium text-destructive mt-1">
+                {form.formState.errors.document_number.message as string}
+              </p>
+            )}
+          </div>
 
           <FormInput
             control={form.control}
@@ -925,62 +982,6 @@ export const PurchaseForm = ({
               label: pt.label,
             }))}
           />
-
-          <FormInput
-            control={form.control}
-            name="discount_global"
-            label="Descuento Global"
-            type="number"
-            step="0.01"
-            min={0}
-            placeholder="0.00"
-          />
-
-          <FormInput
-            control={form.control}
-            name="freight_cost"
-            label="Costo de Flete"
-            type="number"
-            step="0.01"
-            min={0}
-            placeholder="0.00"
-          />
-
-          <FormInput
-            control={form.control}
-            name="loading_cost"
-            label="Costo de Estiba"
-            type="number"
-            step="0.01"
-            min={0}
-            placeholder="0.00"
-          />
-
-          {/* IGV */}
-          <FormSwitch
-            control={form.control}
-            name="include_igv"
-            label="Incluir IGV (18%)"
-            textDescription="Los precios ingresados NO incluyen IGV"
-            className="h-auto"
-          />
-
-          <FormSwitch
-            control={form.control}
-            name="include_cost_account"
-            label="Incluir Cuenta de Costos"
-            textDescription="Activar para incluir en contabilidad"
-            className="h-auto"
-          />
-
-          <div className="md:col-span-3">
-            <FormInput
-              control={form.control}
-              name="observations"
-              label="Observaciones"
-              placeholder="Observaciones adicionales (opcional)"
-            />
-          </div>
         </GroupFormSection>
 
         {/* Detalles */}
@@ -1001,168 +1002,234 @@ export const PurchaseForm = ({
             emptyMessage="Agregue productos a la compra"
             disabled={!selectedWarehouseId}
           />
-
-          {details.length > 0 && (
-            <div className="mt-4 space-y-2 p-4 bg-muted/30 rounded-lg border">
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Subtotal:</span>
-                <span className="font-bold">
-                  S/. {formatNumber(calculateSubtotalTotal())}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-semibold text-orange-600">
-                  IGV (18%):
-                </span>
-                <span className="font-bold text-orange-600">
-                  S/. {formatNumber(calculateTaxTotal())}
-                </span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t">
-                <span className="text-lg font-bold">Total:</span>
-                <span className="text-xl font-bold text-primary">
-                  S/. {formatNumber(calculateDetailsTotal())}
-                </span>
-              </div>
-            </div>
-          )}
         </GroupFormSection>
 
-        {/* Cuotas - Solo mostrar si es a crédito */}
-        {selectedPaymentType === "CREDITO" && (
-          <GroupFormSection
-            title="Cuotas de Pago"
-            icon={Users2}
-            cols={{ sm: 1 }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-sidebar rounded-lg">
-              <FormInput
-                control={installmentTempForm.control}
-                name="temp_due_days"
-                label="Días de Vencimiento"
-                type="number"
-                placeholder="0"
+        {/* Cuotas + Totales + Resumen — grid 3 cols: izq 2 col (cuotas+inputs), der 1 col (resumen) */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
+          {/* Columna izquierda (2 cols) */}
+          <div className="xl:col-span-2 space-y-4">
+            {selectedPaymentType === "CREDITO" && (
+              <GroupFormSection
+                title="Cuotas de Pago"
+                icon={Users2}
+                cols={{ sm: 1 }}
+              >
+                <ExcelGrid
+                  columns={[
+                    {
+                      id: "due_days",
+                      header: "Días",
+                      type: "number",
+                      accessor: "due_days",
+                      width: "140px",
+                    },
+                    {
+                      id: "amount",
+                      header: "Monto",
+                      type: installments.length === 1 ? "readonly" : "number",
+                      accessor: "amount",
+                      width: "180px",
+                      render:
+                        installments.length === 1
+                          ? (row) => (
+                              <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold text-muted-foreground">
+                                {currencySymbol}
+                                {formatNumber(parseFloat(row.amount) || 0)}
+                              </div>
+                            )
+                          : undefined,
+                    },
+                  ]}
+                  data={installments}
+                  onAddRow={handleAddInstallmentRow}
+                  onRemoveRow={handleRemoveInstallment}
+                  onCellChange={handleInstallmentCellChange}
+                  emptyMessage="No hay cuotas"
+                />
+                {installments.length > 1 && (
+                  <>
+                    <div className="flex justify-between items-center px-2 py-1 font-bold text-sm">
+                      <span>TOTAL CUOTAS:</span>
+                      <span className="text-blue-600 text-base">
+                        {currencySymbol}
+                        {formatNumber(calculateInstallmentsTotal())}
+                      </span>
+                    </div>
+                    {!installmentsMatchTotal() && (
+                      <div className="p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+                        <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
+                          ⚠️ El total de cuotas (
+                          {formatNumber(calculateInstallmentsTotal())}) debe ser
+                          igual al total de la compra (
+                          {formatNumber(calculatePurchaseTotal())}).
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </GroupFormSection>
+            )}
+
+            {/* Totales y Observaciones */}
+            <GroupFormSection
+              title="Totales y Observaciones"
+              icon={Users2}
+              gap="gap-2"
+              cols={{ sm: 1, md: 2, lg: 3 }}
+            >
+              <FormSwitch
+                control={form.control}
+                name="incluir_cuenta_costos"
+                label="Incluir Cuenta de Costos"
+                text="Incluir en la contabilidad"
+                autoHeight
+              />
+
+              <FormSwitch
+                control={form.control}
+                name="incluir_igv"
+                label="Precios incluyen IGV (18%)"
+                text="Actívalo si los precios ingresados ya incluyen IGV"
+                autoHeight
               />
 
               <FormInput
-                control={installmentTempForm.control}
-                name="temp_amount"
-                label="Monto"
+                control={form.control}
+                name="discount_global"
+                label="Descuento Global"
                 type="number"
                 step="0.01"
+                min={0}
                 placeholder="0.00"
               />
 
-              <div className="flex items-end">
-                <Button
-                  type="button"
-                  variant="default"
-                  onClick={handleAddInstallment}
-                  disabled={
-                    !currentInstallment.due_days || !currentInstallment.amount
-                  }
-                  className="w-full"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  {editingInstallmentIndex !== null ? "Actualizar" : "Agregar"}
-                </Button>
-              </div>
-            </div>
+              <FormInput
+                control={form.control}
+                name="costo_flete"
+                label="Costo de Flete"
+                type="number"
+                step="0.01"
+                min={0}
+                placeholder="0.00"
+              />
 
-            {installments.length > 0 ? (
-              <>
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Cuota #</TableHead>
-                        <TableHead className="text-right">
-                          Días Vencimiento
-                        </TableHead>
-                        <TableHead className="text-right">Monto</TableHead>
-                        <TableHead className="text-center">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {installments.map((inst, index) => (
-                        <TableRow key={index}>
-                          <TableCell>Cuota {index + 1}</TableCell>
-                          <TableCell className="text-right">
-                            {inst.due_days} días
-                          </TableCell>
-                          <TableCell className="text-right font-semibold">
-                            {parseFloat(inst.amount).toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex justify-center gap-2">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditInstallment(index)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveInstallment(index)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow>
-                        <TableCell colSpan={2} className="text-right font-bold">
-                          TOTAL CUOTAS:
-                        </TableCell>
-                        <TableCell className="text-right font-bold text-lg text-blue-600">
-                          {calculateInstallmentsTotal().toFixed(2)}
-                        </TableCell>
-                        <TableCell></TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+              <FormInput
+                control={form.control}
+                name="costo_estiba"
+                label="Costo de Estiba"
+                type="number"
+                step="0.01"
+                min={0}
+                placeholder="0.00"
+              />
+
+              <FormInput
+                control={form.control}
+                name="observations"
+                label="Observaciones"
+                placeholder="Observaciones adicionales (opcional)"
+              />
+            </GroupFormSection>
+          </div>
+
+          {/* Columna derecha — Resumen Financiero (siempre visible) */}
+          <div className="xl:col-span-1">
+            <GroupFormSection
+              title="Resumen Financiero"
+              icon={DollarSign}
+              cols={{ sm: 1 }}
+            >
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">
+                    Subtotal
+                  </span>
+                  <span className="font-semibold">
+                    {currencySymbol}
+                    {formatNumber(calculateSubtotalTotal())}
+                  </span>
                 </div>
-                {/* Advertencia de validación */}
-                {!installmentsMatchTotal() && (
-                  <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-                    <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                      ⚠️ El total de cuotas (
-                      {calculateInstallmentsTotal().toFixed(2)}) debe ser igual
-                      al total de la compra (
-                      {calculatePurchaseTotal().toFixed(2)}).
-                    </p>
+
+                {Number(watchDiscount) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Descuento Global
+                    </span>
+                    <span className="font-semibold text-destructive">
+                      -{currencySymbol}
+                      {formatNumber(Number(watchDiscount))}
+                    </span>
                   </div>
                 )}
-              </>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Badge variant="outline" className="text-lg p-3">
-                  No hay cuotas agregadas
-                </Badge>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">
+                    IGV (18%){watchIncludeIgv ? " incl." : ""}
+                  </span>
+                  <span className="font-semibold text-orange-600">
+                    {currencySymbol}
+                    {formatNumber(calculateTaxTotal())}
+                  </span>
+                </div>
+
+                {Number(watchFreight) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Costo de Flete
+                    </span>
+                    <span className="font-semibold">
+                      +{currencySymbol}
+                      {formatNumber(Number(watchFreight))}
+                    </span>
+                  </div>
+                )}
+
+                {Number(watchLoading) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Costo de Estiba
+                    </span>
+                    <span className="font-semibold">
+                      +{currencySymbol}
+                      {formatNumber(Number(watchLoading))}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center pt-3 border-t">
+                  <span className="text-base font-bold">TOTAL</span>
+                  <span className="text-xl font-bold text-primary">
+                    {currencySymbol}
+                    {formatNumber(calculatePurchaseTotal())}
+                  </span>
+                </div>
+
+                {selectedPaymentType === "CREDITO" &&
+                  installments.length > 0 && (
+                    <div className="pt-3 border-t space-y-2">
+                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                        Cuotas ({installments.length})
+                      </p>
+                      {installments.map((inst, i) => (
+                        <div
+                          key={i}
+                          className="flex justify-between items-center text-sm"
+                        >
+                          <span className="text-muted-foreground">
+                            Cuota {i + 1} · {inst.due_days}d
+                          </span>
+                          <span className="font-semibold">
+                            {currencySymbol}
+                            {formatNumber(parseFloat(inst.amount) || 0)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
               </div>
-            )}
-          </GroupFormSection>
-          // <Card>
-          //   <CardHeader>
-          //     <CardTitle>Cuotas (Obligatorio)</CardTitle>
-          //   </CardHeader>
-          //   <CardContent className="space-y-4">
-
-          //   </CardContent>
-          // </Card>
-        )}
-
-        {/* <pre>
-          <code>
-            {JSON.stringify(form.getValues(), null, 2)}
-            {JSON.stringify(form.formState.errors, null, 2)}
-          </code>
-        </pre> */}
+            </GroupFormSection>
+          </div>
+        </div>
 
         {/* Botones */}
         <div className="flex gap-4 w-full justify-end">

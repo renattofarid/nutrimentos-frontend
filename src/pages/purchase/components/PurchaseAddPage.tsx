@@ -15,6 +15,7 @@ import { PURCHASE } from "../lib/purchase.interface";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
+import { DEFAULT_BRANCH_ID, DEFAULT_WAREHOUSE_ID } from "@/lib/core.constants";
 
 export default function PurchaseAddPage() {
   const navigate = useNavigate();
@@ -47,8 +48,9 @@ export default function PurchaseAddPage() {
   const isLoading = !suppliers || warehousesLoading || branchesLoading;
 
   const getDefaultValues = (): Partial<PurchaseSchema> => ({
+    branch_id: DEFAULT_BRANCH_ID,
     supplier_id: "",
-    warehouse_id: "",
+    warehouse_id: DEFAULT_WAREHOUSE_ID,
     purchase_order_id: "",
     document_type: "FACTURA",
     document_number: "",
@@ -56,7 +58,7 @@ export default function PurchaseAddPage() {
     reception_date: "",
     due_date: "",
     payment_type: "CONTADO",
-    include_igv: false,
+    incluir_igv: false,
     currency: "PEN",
     details: [],
     installments: [],

@@ -11,3 +11,6 @@ export const ACTIONS: Record<string, string> = {
   update: "actualizar",
   delete: "eliminar",
 };
+
+export const DEFAULT_WAREHOUSE_ID = "12";
+export const DEFAULT_BRANCH_ID = "1";

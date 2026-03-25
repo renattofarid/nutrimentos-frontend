@@ -33,7 +33,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { formatDecimalTrunc, parseFormattedNumber } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatCurrency";
 import { DOCUMENT_TYPES, PAYMENT_TYPES } from "../lib/sale.interface";
-import { errorToast } from "@/lib/core.function";
+import { errorToast, warningToast } from "@/lib/core.function";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { ClientDialog } from "@/pages/client/components/ClientDialog";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
@@ -925,7 +925,25 @@ export const SaleForm = ({
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(handleFormSubmit)}
+        onSubmit={form.handleSubmit(handleFormSubmit, (errors) => {
+          const getFirstError = (obj: any, path = ""): { field: string; message: string } | null => {
+            for (const key in obj) {
+              const val = obj[key];
+              const currentPath = path ? `${path}.${key}` : key;
+              if (val?.message) return { field: currentPath, message: val.message };
+              if (typeof val === "object") {
+                const nested = getFirstError(val, currentPath);
+                if (nested) return nested;
+              }
+            }
+            return null;
+          };
+          const first = getFirstError(errors);
+          warningToast(
+            first ? `Campo: ${first.field}` : "Formulario inválido",
+            first ? first.message : "Hay campos inválidos en el formulario",
+          );
+        })}
         className="space-y-2 w-full"
       >
         {/* Información General */}

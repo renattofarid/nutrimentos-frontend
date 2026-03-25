@@ -90,12 +90,12 @@ export const purchaseSchemaCreate = z.object({
   payment_type: z
     .string()
     .min(1, { message: "Debe seleccionar un tipo de pago" }),
-  include_igv: z.boolean(),
-  include_cost_account: z.boolean().optional().default(true),
+  incluir_igv: z.boolean(),
+  incluir_cuenta_costos: z.boolean().optional().default(true),
   currency: z.string().min(1, { message: "Debe seleccionar una moneda" }),
   discount_global: z.number().optional().default(0),
-  freight_cost: z.number().optional().default(0),
-  loading_cost: z.number().optional().default(0),
+  costo_flete: z.number().optional().default(0),
+  costo_estiba: z.number().optional().default(0),
   observations: z.string().optional().default(""),
   details: z
     .array(purchaseDetailSchema)

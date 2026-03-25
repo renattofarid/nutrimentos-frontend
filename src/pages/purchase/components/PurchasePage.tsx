@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import TitleComponent from "@/components/TitleComponent";
+
 import { PurchaseActions } from "./PurchaseActions";
 import { PurchaseOptions } from "./PurchaseOptions";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
@@ -288,11 +288,6 @@ export default function PurchasePage() {
   return (
     <PageWrapper>
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title="Compras"
-          subtitle="Gestión de compras y pagos"
-          icon="ShoppingCart"
-        />
         <PurchaseActions
           onCreatePurchase={handleCreatePurchase}
           excelEndpoint={exportEndpoint}

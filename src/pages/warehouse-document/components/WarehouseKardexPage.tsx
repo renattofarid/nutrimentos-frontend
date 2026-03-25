@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useWarehouseKardex } from "../lib/warehouse-kardex.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
@@ -18,6 +18,7 @@ import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
 import { SearchableSelectAsync } from "@/components/SearchableSelectAsync";
 import { useProduct } from "@/pages/product/lib/product.hook";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
+import PageWrapper from "@/components/PageWrapper";
 
 const kardexColumns: ColumnDef<WarehouseKardexResource>[] = [
   {
@@ -214,15 +215,7 @@ export default function WarehouseKardexPage() {
   ]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <TitleComponent
-          title="Kardex de Almacén"
-          subtitle="Historial de movimientos de inventario"
-          icon="Activity"
-        />
-      </div>
-
+    <PageWrapper>
       <div className="border-none text-muted-foreground max-w-full">
         <DataTable
           columns={kardexColumns}
@@ -302,6 +295,6 @@ export default function WarehouseKardexPage() {
         setPerPage={setPerPage}
         totalData={meta?.total || 0}
       />
-    </div>
+    </PageWrapper>
   );
 }

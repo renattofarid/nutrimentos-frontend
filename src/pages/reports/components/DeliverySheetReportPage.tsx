@@ -6,7 +6,7 @@ import {
   useVehicleAsyncSearch,
   useWarehouseAsyncSearch,
 } from "../lib/reports.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import type {
@@ -333,11 +333,6 @@ export default function DeliverySheetReportPage() {
 
   return (
     <PageWrapper size="3xl">
-      <TitleComponent
-        title="Reporte de Planilla de Cobranza"
-        subtitle="Consulta las guías de remisión por vehículo, cliente y estado"
-        icon="BookOpen"
-      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">

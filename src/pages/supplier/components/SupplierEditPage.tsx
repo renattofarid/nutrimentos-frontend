@@ -14,14 +14,12 @@ import {
   successToast,
   errorToast,
 } from "@/lib/core.function";
-import { SUPPLIER, SUPPLIER_ROLE_ID } from "../lib/supplier.interface";
+import { SUPPLIER_ROLE_ID } from "../lib/supplier.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import FormWrapper from "@/components/FormWrapper";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
 import FormSkeleton from "@/components/FormSkeleton";
-
-const { MODEL, ICON } = SUPPLIER;
 
 export default function SupplierEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -100,7 +98,7 @@ export default function SupplierEditPage() {
 
       await updatePerson(personData.id, updatePersonData);
       successToast(
-        SUCCESS_MESSAGE({ name: "Proveedor", gender: false }, "update")
+        SUCCESS_MESSAGE({ name: "Proveedor", gender: false }, "update"),
       );
       navigate("/proveedores");
     } catch (error: unknown) {
@@ -118,7 +116,7 @@ export default function SupplierEditPage() {
 
       errorToast(
         errorMessage,
-        ERROR_MESSAGE({ name: "Proveedor", gender: false }, "update")
+        ERROR_MESSAGE({ name: "Proveedor", gender: false }, "update"),
       );
     } finally {
       setIsSubmitting(false);
@@ -128,15 +126,6 @@ export default function SupplierEditPage() {
   if (isLoading) {
     return (
       <FormWrapper>
-        <div className="flex items-center gap-4 mb-6">
-          <TitleFormComponent
-            title={MODEL.name}
-            mode="edit"
-            icon={ICON}
-            handleBack={() => navigate("/proveedores")}
-          />
-        </div>
-
         <FormSkeleton />
       </FormWrapper>
     );
@@ -144,15 +133,6 @@ export default function SupplierEditPage() {
 
   return (
     <FormWrapper>
-      <div className="flex items-center gap-4 mb-6">
-        <TitleFormComponent
-          title={MODEL.name}
-          mode="edit"
-          icon={ICON}
-          handleBack={() => navigate("/proveedores")}
-        />
-      </div>
-
       <PersonForm
         initialData={personData}
         onSubmit={handleSubmit}

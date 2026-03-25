@@ -14,13 +14,11 @@ import {
   successToast,
   errorToast,
 } from "@/lib/core.function";
-import { CLIENT, CLIENT_ROLE_ID } from "../lib/client.interface";
+import { CLIENT_ROLE_ID } from "../lib/client.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import FormWrapper from "@/components/FormWrapper";
-import TitleFormComponent from "@/components/TitleFormComponent";
-import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
 
-const { MODEL, ICON } = CLIENT;
+import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
 
 export default function ClientEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -139,12 +137,6 @@ export default function ClientEditPage() {
 
   return (
     <FormWrapper>
-      <div className="mb-6">
-        <div className="flex items-center gap-4 mb-6">
-          <TitleFormComponent icon={ICON} title={MODEL.name} mode="edit" />
-        </div>
-      </div>
-
       <PersonForm
         initialData={personData}
         onSubmit={handleSubmit}

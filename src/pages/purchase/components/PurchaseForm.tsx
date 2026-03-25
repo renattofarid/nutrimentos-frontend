@@ -1017,6 +1017,7 @@ export const PurchaseForm = ({
             onProductCodeTab={handleProductCodeTab}
             emptyMessage="Agregue productos a la compra"
             disabled={!selectedWarehouseId}
+            skipColumnsOnEnter={["product"]}
           />
         </GroupFormSection>
 

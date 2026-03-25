@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { Button } from "@/components/ui/button";
 import { List } from "lucide-react";
 import { SaleForm } from "./SaleForm";
@@ -12,17 +12,20 @@ import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
-import { SALE } from "../lib/sale.interface";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+
 import { format } from "date-fns";
+import { ConfirmationDialog } from "@/components/ConfirmationDialog";
+import { exportBulkTickets } from "../lib/sale.actions";
 
 export const SaleAddPage = () => {
-  const { ICON } = SALE;
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+  const [showNextDialog, setShowNextDialog] = useState(false);
   const { user } = useAuthStore();
   const { data: branches, isLoading: branchesLoading } = useAllBranches({
     company_id: user?.company_id,
@@ -58,9 +61,21 @@ export const SaleAddPage = () => {
   const handleSubmit = async (data: SaleSchema) => {
     setIsSubmitting(true);
     try {
-      await createSale(data);
+      const saleId = await createSale(data);
       successToast("Venta creada correctamente");
-      navigate("/ventas/listado");
+
+      // Abrir boleta automáticamente si se obtuvo el ID
+      if (saleId) {
+        try {
+          const blob = await exportBulkTickets([saleId]);
+          const url = window.URL.createObjectURL(blob);
+          window.open(url, "_blank");
+        } catch {
+          // Si falla la exportación, continuamos igual
+        }
+      }
+
+      setShowNextDialog(true);
     } catch (error: any) {
       errorToast(error.response?.data?.message || ERROR_MESSAGE);
     } finally {
@@ -71,11 +86,6 @@ export const SaleAddPage = () => {
   if (isLoading) {
     return (
       <PageWrapper size="3xl">
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <TitleFormComponent title="Venta" mode="create" icon={ICON} />
-          </div>
-        </div>
         <FormSkeleton />
       </PageWrapper>
     );
@@ -92,7 +102,6 @@ export const SaleAddPage = () => {
   return (
     <PageWrapper size="3xl">
       <div className="flex items-center justify-between">
-        <TitleFormComponent title="Venta" mode="create" icon={ICON} />
         <Button
           size="sm"
           variant="outline"
@@ -119,6 +128,7 @@ export const SaleAddPage = () => {
 
       {canShowForm && (
         <SaleForm
+          key={formKey}
           defaultValues={getDefaultValues()}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
@@ -128,6 +138,18 @@ export const SaleAddPage = () => {
           onCancel={() => navigate("/ventas/listado")}
         />
       )}
+
+      <ConfirmationDialog
+        open={showNextDialog}
+        onOpenChange={setShowNextDialog}
+        icon="info"
+        title="Venta registrada"
+        description="¿Deseas crear otra venta?"
+        confirmText="Sí, crear otra"
+        cancelText="No, ir al listado"
+        onConfirm={() => setFormKey((k) => k + 1)}
+        onCancel={() => navigate("/ventas/listado")}
+      />
     </PageWrapper>
   );
 };

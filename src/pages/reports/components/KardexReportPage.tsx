@@ -5,7 +5,7 @@ import {
   useProductAsyncSearch,
   useWarehouseAsyncSearch,
 } from "../lib/reports.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { KardexItem, KardexReportParams } from "../lib/reports.interface";
@@ -344,11 +344,6 @@ export default function KardexReportPage() {
 
   return (
     <PageWrapper size="3xl">
-      <TitleComponent
-        title="Reporte de Kardex"
-        subtitle="Consulta los movimientos de inventario por producto y almacén"
-        icon="BookOpen"
-      />
 
       <Form {...form}>
         <form className="space-y-6">

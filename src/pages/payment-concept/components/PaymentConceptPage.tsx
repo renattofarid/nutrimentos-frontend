@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePaymentConcept } from "../lib/payment-concept.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import PaymentConceptActions from "./PaymentConceptActions";
 import PaymentConceptTable from "./PaymentConceptTable";
 import PaymentConceptModal from "./PaymentConceptModal";
@@ -18,7 +18,7 @@ import { PAYMENT_CONCEPT } from "../lib/payment-concept.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import PaymentConceptOptions from "./PaymentConceptOptions";
 
-const { MODEL, ICON, TITLES } = PAYMENT_CONCEPT;
+const { MODEL, TITLES } = PAYMENT_CONCEPT;
 
 export default function PaymentConceptPage() {
   const [search, setSearch] = useState("");
@@ -82,11 +82,6 @@ export default function PaymentConceptPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.plural!}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <PaymentConceptActions
           onCreatePaymentConcept={handleCreatePaymentConcept}
         />

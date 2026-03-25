@@ -6,7 +6,7 @@ import {
   useWarehouseAsyncSearch,
   useBranchAsyncSearch,
 } from "../lib/reports.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import type {
@@ -140,12 +140,6 @@ export default function AnnualSalesReportPage() {
 
   return (
     <PageWrapper>
-      <TitleComponent
-        title="Reporte de Ventas Anuales"
-        subtitle="Consulta las ventas mensuales por zona, vendedor y producto"
-        icon="BookOpen"
-      />
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">
           <GroupFormSection

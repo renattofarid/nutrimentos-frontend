@@ -5,7 +5,7 @@ import {
   useWarehouseAsyncSearch,
   useUserAsyncSearch,
 } from "../lib/reports.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import type {
@@ -322,11 +322,6 @@ export default function SaleBySellerReportPage() {
 
   return (
     <PageWrapper size="3xl">
-      <TitleComponent
-        title="Reporte de Ventas por Vendedor"
-        subtitle="Consulta las ventas por vendedor y producto"
-        icon="BookOpen"
-      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">

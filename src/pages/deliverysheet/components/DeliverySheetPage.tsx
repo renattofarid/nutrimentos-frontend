@@ -15,8 +15,9 @@ import { StatusUpdateDialog } from "./StatusUpdateDialog";
 import {
   findDeliverySheetById,
   exportDeliverySheets,
+  exportDeliverySheetById,
 } from "../lib/deliverysheet.actions";
-import TitleComponent from "@/components/TitleComponent";
+
 import PageWrapper from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet } from "lucide-react";
@@ -149,6 +150,12 @@ export default function DeliverySheetPage() {
     }
   };
 
+  const handleExportById = async (id: number) => {
+    const blob = await exportDeliverySheetById(id);
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
+
   const handleUpdateStatus = (deliverySheet: DeliverySheetResource) => {
     setSelectedDeliverySheetForStatus(deliverySheet);
     setOpenStatusDialog(true);
@@ -180,22 +187,18 @@ export default function DeliverySheetPage() {
     }
   };
 
-  const { MODEL, ICON, ROUTE_ADD } = DELIVERY_SHEET;
+  const { ROUTE_ADD } = DELIVERY_SHEET;
 
   const columns = getDeliverySheetColumns({
     onDelete: handleDelete,
     onViewDetails: handleViewDetails,
     onUpdateStatus: handleUpdateStatus,
+    onExport: handleExportById,
   });
 
   return (
     <PageWrapper>
       <div className="flex items-center justify-between">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle="Administrar todas las planillas de reparto registradas en el sistema"
-          icon={ICON}
-        />
         <div className="flex gap-2">
           <Button
             size={"sm"}

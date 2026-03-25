@@ -36,7 +36,7 @@ interface SaleStore {
   fetchAllSales: () => Promise<void>;
   fetchSales: (params?: GetSalesParams) => Promise<void>;
   fetchSale: (id: number) => Promise<void>;
-  createSale: (data: SaleSchema) => Promise<void>;
+  createSale: (data: SaleSchema) => Promise<number | undefined>;
   updateSale: (id: number, data: Partial<SaleUpdateSchema>) => Promise<void>;
   removeSale: (id: number) => Promise<void>;
   resetSale: () => void;
@@ -132,8 +132,9 @@ export const useSaleStore = create<SaleStore>((set) => ({
             : undefined,
       };
 
-      await storeSale(request);
+      const result = await storeSale(request);
       set({ isSubmitting: false });
+      return result.data?.id;
     } catch (error) {
       const errorMsg =
         error instanceof Error ? error.message : ERROR_MESSAGE(MODEL, "create");

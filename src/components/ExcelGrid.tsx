@@ -61,6 +61,7 @@ interface ExcelGridProps<T> {
   className?: string;
   emptyMessage?: string;
   disabled?: boolean;
+  skipColumnsOnEnter?: string[];
 }
 
 export function ExcelGrid<T extends Record<string, any>>({
@@ -76,6 +77,7 @@ export function ExcelGrid<T extends Record<string, any>>({
   className,
   emptyMessage = "No hay datos. Agregue una nueva fila para comenzar.",
   disabled = false,
+  skipColumnsOnEnter = [],
 }: ExcelGridProps<T>) {
   const [focusedCell, setFocusedCell] = React.useState<{
     row: number;
@@ -92,6 +94,7 @@ export function ExcelGrid<T extends Record<string, any>>({
   const getNextEditableCell = (
     currentRow: number,
     currentCol: number,
+    skipColumnIds: string[] = [],
   ): { row: number; col: number } | null => {
     const currentRowData = data[currentRow];
 
@@ -100,7 +103,8 @@ export function ExcelGrid<T extends Record<string, any>>({
       const column = columns[col];
       if (
         column.type !== "readonly" &&
-        !isColumnHidden(column, currentRowData)
+        !isColumnHidden(column, currentRowData) &&
+        !skipColumnIds.includes(column.id)
       ) {
         return { row: currentRow, col };
       }
@@ -113,7 +117,8 @@ export function ExcelGrid<T extends Record<string, any>>({
         const column = columns[col];
         if (
           column.type !== "readonly" &&
-          !isColumnHidden(column, nextRowData)
+          !isColumnHidden(column, nextRowData) &&
+          !skipColumnIds.includes(column.id)
         ) {
           return { row: currentRow + 1, col };
         }
@@ -289,79 +294,53 @@ export function ExcelGrid<T extends Record<string, any>>({
     } else if (e.key === "Enter") {
       e.preventDefault();
 
+      // Helper: avanzar como Tab pero saltando skipColumnsOnEnter
+      const advanceEnter = () => {
+        const nextCell = getNextEditableCell(rowIndex, colIndex, skipColumnsOnEnter);
+
+        if (nextCell) {
+          setFocusedCell(nextCell);
+          setTimeout(() => {
+            const key = `${nextCell.row}-${nextCell.col}`;
+            const input = inputRefs.current[key];
+            if (input) {
+              input.focus();
+              input.select();
+            }
+          }, 0);
+        } else if (!disabled) {
+          // Fin de la tabla: agregar nueva fila y enfocar primera celda editable (sin skip)
+          onAddRow();
+          setTimeout(() => {
+            const firstEditableCol = columns.findIndex(
+              (col) => col.type !== "readonly" && !skipColumnsOnEnter.includes(col.id),
+            );
+            const targetCol = firstEditableCol !== -1 ? firstEditableCol : 0;
+            const key = `${data.length}-${targetCol}`;
+            const input = inputRefs.current[key];
+            if (input) {
+              input.focus();
+              input.select();
+            }
+            setFocusedCell({ row: data.length, col: targetCol });
+          }, 50);
+        }
+      };
+
       // Si es un campo de código de producto con callback async, hacer lookup primero
       if (column.type === "product-code" && onProductCodeTab) {
         const inputEl = e.target as HTMLInputElement;
         const code = inputEl.value.trim();
-
-        const advance = () => {
-          const nextRow = rowIndex + 1;
-
-          if (nextRow < data.length) {
-            setFocusedCell({ row: nextRow, col: colIndex });
-            setTimeout(() => {
-              const key = `${nextRow}-${colIndex}`;
-              const input = inputRefs.current[key];
-              if (input) {
-                input.focus();
-                input.select();
-              }
-            }, 0);
-          } else if (!disabled) {
-            onAddRow();
-            setTimeout(() => {
-              const key = `${data.length}-${colIndex}`;
-              const input = inputRefs.current[key];
-              if (input) {
-                input.focus();
-                input.select();
-              }
-              setFocusedCell({ row: data.length, col: colIndex });
-            }, 50);
-          }
-        };
-
         const setError = (msg: string) => {
           inputEl.setCustomValidity(msg);
           inputEl.reportValidity();
           setTimeout(() => inputEl.setCustomValidity(""), 2500);
         };
-
-        onProductCodeTab(rowIndex, code, advance, setError);
+        onProductCodeTab(rowIndex, code, advanceEnter, setError);
         return;
       }
 
-      // Enter siempre va a la primera columna editable de la siguiente fila
-      const firstEditableCol = columns.findIndex(
-        (col) => col.type !== "readonly",
-      );
-      const targetCol = firstEditableCol !== -1 ? firstEditableCol : 0;
-
-      if (rowIndex === data.length - 1 && !disabled) {
-        // Última fila: agregar nueva y enfocar primera columna editable
-        onAddRow();
-        setTimeout(() => {
-          const key = `${data.length}-${targetCol}`;
-          const input = inputRefs.current[key];
-          if (input) {
-            input.focus();
-            input.select();
-          }
-          setFocusedCell({ row: data.length, col: targetCol });
-        }, 50);
-      } else {
-        // Ir a la primera columna editable de la siguiente fila
-        const nextRow = rowIndex + 1;
-        setFocusedCell({ row: nextRow, col: targetCol });
-        setTimeout(() => {
-          const key = `${nextRow}-${targetCol}`;
-          const input = inputRefs.current[key];
-          if (input) {
-            input.focus();
-            input.select();
-          }
-        }, 0);
-      }
+      advanceEnter();
     } else if (e.key === "Delete" && !disabled) {
       // Si presiona Delete/Suprimir en una celda vacía, eliminar la fila
       const currentValue = data[rowIndex][column.accessor as string];

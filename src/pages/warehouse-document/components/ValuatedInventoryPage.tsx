@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useValuatedInventory } from "../lib/warehouse-kardex.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
@@ -47,9 +47,7 @@ const inventoryColumns: ColumnDef<ValuatedInventoryItem>[] = [
     header: "Costo Unitario",
     cell: ({ getValue }) => {
       const value = getValue() as number;
-      return (
-        <span className="font-medium">S/ {Number(value).toFixed(2)}</span>
-      );
+      return <span className="font-medium">S/ {Number(value).toFixed(2)}</span>;
     },
   },
   {
@@ -58,7 +56,9 @@ const inventoryColumns: ColumnDef<ValuatedInventoryItem>[] = [
     cell: ({ getValue }) => {
       const value = getValue() as number;
       return (
-        <span className="font-medium text-blue-600">S/ {Number(value).toFixed(2)}</span>
+        <span className="font-medium text-blue-600">
+          S/ {Number(value).toFixed(2)}
+        </span>
       );
     },
   },
@@ -68,7 +68,9 @@ const inventoryColumns: ColumnDef<ValuatedInventoryItem>[] = [
     cell: ({ getValue }) => {
       const value = getValue() as number;
       return (
-        <span className="font-bold text-lg text-primary">S/ {Number(value).toFixed(2)}</span>
+        <span className="font-bold text-lg text-primary">
+          S/ {Number(value).toFixed(2)}
+        </span>
       );
     },
   },
@@ -110,20 +112,14 @@ export default function ValuatedInventoryPage() {
   }, [page, per_page, selectedWarehouse]);
 
   // Calculate totals
-  const totalValue = data?.reduce((sum, item) => sum + item.total_cost_balance, 0) || 0;
-  const totalStock = data?.reduce((sum, item) => sum + item.quantity_balance, 0) || 0;
+  const totalValue =
+    data?.reduce((sum, item) => sum + item.total_cost_balance, 0) || 0;
+  const totalStock =
+    data?.reduce((sum, item) => sum + item.quantity_balance, 0) || 0;
   const totalItems = data?.length || 0;
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <TitleComponent
-          title="Inventario Valorizado"
-          subtitle="Valorización actual del inventario por almacén"
-          icon="Warehouse"
-        />
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -154,7 +150,9 @@ export default function ValuatedInventoryPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">S/ {totalValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-primary">
+              S/ {totalValue.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
 
@@ -166,7 +164,8 @@ export default function ValuatedInventoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              S/ {totalItems > 0 ? (totalValue / totalItems).toFixed(2) : "0.00"}
+              S/{" "}
+              {totalItems > 0 ? (totalValue / totalItems).toFixed(2) : "0.00"}
             </div>
           </CardContent>
         </Card>

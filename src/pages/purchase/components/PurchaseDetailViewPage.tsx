@@ -24,7 +24,7 @@ import {
 import type { PurchaseInstallmentResource } from "../lib/purchase.interface";
 import { usePurchaseStore } from "../lib/purchase.store";
 import { GroupFormSection } from "@/components/GroupFormSection";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import PageWrapper from "@/components/PageWrapper";
 
 export const PurchaseDetailViewPage = () => {
@@ -54,7 +54,7 @@ export const PurchaseDetailViewPage = () => {
   };
 
   const handleViewInstallmentPayments = (
-    installment: PurchaseInstallmentResource
+    installment: PurchaseInstallmentResource,
   ) => {
     setSelectedInstallment(installment);
     setIsPaymentSheetOpen(true);
@@ -62,7 +62,7 @@ export const PurchaseDetailViewPage = () => {
 
   const handleSyncInstallment = async (
     installmentId: number,
-    newAmount: number
+    newAmount: number,
   ) => {
     if (!purchase) return;
 
@@ -74,7 +74,7 @@ export const PurchaseDetailViewPage = () => {
       fetchInstallments(Number(id));
     } catch (error: any) {
       errorToast(
-        error.response?.data?.message || "Error al sincronizar la cuota"
+        error.response?.data?.message || "Error al sincronizar la cuota",
       );
     }
   };
@@ -86,7 +86,7 @@ export const PurchaseDetailViewPage = () => {
       parseFloat(installment.pending_amount) === parseFloat(installment.amount);
     const hasDifference =
       Math.abs(
-        parseFloat(installment.amount) - parseFloat(purchase.total_amount)
+        parseFloat(installment.amount) - parseFloat(purchase.total_amount),
       ) > 0.01;
     return isCash && hasNoPayments && hasDifference;
   };
@@ -95,21 +95,12 @@ export const PurchaseDetailViewPage = () => {
     purchase?.currency === "PEN"
       ? "S/."
       : purchase?.currency === "USD"
-      ? "$"
-      : "€";
+        ? "$"
+        : "€";
 
   if (isFinding) {
     return (
       <PageWrapper>
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <TitleFormComponent
-              handleBack={() => navigate("/compras")}
-              title="Detalle de Compra"
-              mode="view"
-            />
-          </div>
-        </div>
         <FormSkeleton />
       </PageWrapper>
     );
@@ -118,13 +109,6 @@ export const PurchaseDetailViewPage = () => {
   if (!purchase) {
     return (
       <PageWrapper>
-        <div className="flex items-center gap-4 mb-6">
-          <TitleFormComponent
-            handleBack={() => navigate("/compras")}
-            title="Detalle de Compra"
-            mode="view"
-          />
-        </div>
         <div className="text-center py-8">
           <p className="text-muted-foreground">Compra no encontrada</p>
         </div>
@@ -136,11 +120,6 @@ export const PurchaseDetailViewPage = () => {
     <PageWrapper>
       <div className="mb-6">
         <div className="flex items-center justify-between">
-          <TitleFormComponent
-            handleBack={() => navigate("/compras")}
-            title={`Compra ${purchase.correlativo}`}
-            mode="view"
-          />
           <Button
             onClick={handleEditPurchase}
             variant="outline"
@@ -173,22 +152,32 @@ export const PurchaseDetailViewPage = () => {
             </div>
             <div>
               <span className="text-sm text-muted-foreground">Almacén</span>
-              <p className="font-semibold">{purchase.warehouse_name || "N/A"}</p>
+              <p className="font-semibold">
+                {purchase.warehouse_name || "N/A"}
+              </p>
             </div>
             <div>
               <span className="text-sm text-muted-foreground">Usuario</span>
               <p className="font-semibold">{purchase.user_name}</p>
             </div>
             <div>
-              <span className="text-sm text-muted-foreground">Tipo de Documento</span>
+              <span className="text-sm text-muted-foreground">
+                Tipo de Documento
+              </span>
               <p className="font-semibold">{purchase.document_type}</p>
             </div>
             <div>
-              <span className="text-sm text-muted-foreground">Número de Documento</span>
-              <p className="font-semibold font-mono">{purchase.document_number}</p>
+              <span className="text-sm text-muted-foreground">
+                Número de Documento
+              </span>
+              <p className="font-semibold font-mono">
+                {purchase.document_number}
+              </p>
             </div>
             <div>
-              <span className="text-sm text-muted-foreground">Fecha de Emisión</span>
+              <span className="text-sm text-muted-foreground">
+                Fecha de Emisión
+              </span>
               <p className="font-semibold">
                 {new Date(purchase.issue_date).toLocaleDateString("es-ES", {
                   day: "2-digit",
@@ -203,16 +192,20 @@ export const PurchaseDetailViewPage = () => {
                 {purchase.currency === "PEN"
                   ? "Soles (S/.)"
                   : purchase.currency === "USD"
-                  ? "Dólares ($)"
-                  : "Euros (€)"}
+                    ? "Dólares ($)"
+                    : "Euros (€)"}
               </p>
             </div>
             <div>
-              <span className="text-sm text-muted-foreground">Tipo de Pago</span>
+              <span className="text-sm text-muted-foreground">
+                Tipo de Pago
+              </span>
               <div className="mt-1">
                 <Badge
                   color={
-                    purchase.payment_type === "CONTADO" ? "default" : "secondary"
+                    purchase.payment_type === "CONTADO"
+                      ? "default"
+                      : "secondary"
                   }
                 >
                   {purchase.payment_type}
@@ -227,8 +220,8 @@ export const PurchaseDetailViewPage = () => {
                     purchase.status === "PAGADA"
                       ? "default"
                       : purchase.status === "CANCELADO"
-                      ? "destructive"
-                      : "secondary"
+                        ? "destructive"
+                        : "secondary"
                   }
                 >
                   {purchase.status}
@@ -238,7 +231,9 @@ export const PurchaseDetailViewPage = () => {
 
             {purchase.observations && (
               <div className="col-span-2 md:col-span-3 xl:col-span-6">
-                <span className="text-sm text-muted-foreground">Observaciones</span>
+                <span className="text-sm text-muted-foreground">
+                  Observaciones
+                </span>
                 <p className="mt-1 text-sm bg-sidebar p-3 rounded-md">
                   {purchase.observations}
                 </p>
@@ -273,7 +268,7 @@ export const PurchaseDetailViewPage = () => {
                 (() => {
                   const totalAmount = parseFloat(purchase.total_amount);
                   const installmentAmount = parseFloat(
-                    installments[0]?.amount || "0"
+                    installments[0]?.amount || "0",
                   );
                   const hasNoPayments =
                     parseFloat(installments[0]?.pending_amount || "0") ===
@@ -314,8 +309,8 @@ export const PurchaseDetailViewPage = () => {
                               installment.status === "PAGADO"
                                 ? "default"
                                 : installment.status === "VENCIDO"
-                                ? "destructive"
-                                : "secondary"
+                                  ? "destructive"
+                                  : "secondary"
                             }
                           >
                             {installment.status}
@@ -332,7 +327,9 @@ export const PurchaseDetailViewPage = () => {
                                     onClick={() =>
                                       handleSyncInstallment(
                                         installment.id,
-                                        parseFloat(purchase?.total_amount || "0")
+                                        parseFloat(
+                                          purchase?.total_amount || "0",
+                                        ),
                                       )
                                     }
                                     className="text-blue-600 hover:text-blue-700"
@@ -366,14 +363,20 @@ export const PurchaseDetailViewPage = () => {
                     <div className="p-4">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <span className="text-muted-foreground">Fecha Vencimiento:</span>
+                          <span className="text-muted-foreground">
+                            Fecha Vencimiento:
+                          </span>
                           <p className="font-semibold">
-                            {new Date(installment.due_date).toLocaleDateString("es-ES")}
+                            {new Date(installment.due_date).toLocaleDateString(
+                              "es-ES",
+                            )}
                           </p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Días:</span>
-                          <p className="font-semibold">{installment.due_days} días</p>
+                          <p className="font-semibold">
+                            {installment.due_days} días
+                          </p>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Monto:</span>
@@ -416,7 +419,9 @@ export const PurchaseDetailViewPage = () => {
                 <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-5 shadow-sm hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Compra</p>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Total Compra
+                      </p>
                       <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">
                         {currencySymbol} {total.toFixed(2)}
                       </p>
@@ -444,7 +449,9 @@ export const PurchaseDetailViewPage = () => {
                 <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-50 to-sky-100 dark:from-sky-950 dark:to-sky-900 p-5 shadow-sm hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pagado</p>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Pagado
+                      </p>
                       <p className="text-3xl font-bold text-sky-600 dark:text-sky-400">
                         {currencySymbol} {paid.toFixed(2)}
                       </p>
@@ -459,7 +466,9 @@ export const PurchaseDetailViewPage = () => {
                 <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900 p-5 shadow-sm hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pendiente</p>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Pendiente
+                      </p>
                       <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
                         {currencySymbol} {pending.toFixed(2)}
                       </p>
@@ -476,15 +485,23 @@ export const PurchaseDetailViewPage = () => {
                     <div className="rounded-full bg-slate-200/50 dark:bg-slate-700/50 p-2">
                       <PackageOpen className="h-5 w-5 text-slate-600 dark:text-slate-400" />
                     </div>
-                    <p className="text-2xl font-bold">{purchase.details?.length || 0}</p>
-                    <span className="text-xs text-muted-foreground">Productos</span>
+                    <p className="text-2xl font-bold">
+                      {purchase.details?.length || 0}
+                    </p>
+                    <span className="text-xs text-muted-foreground">
+                      Productos
+                    </span>
                   </div>
                   <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4 shadow-sm hover:shadow-md transition-all flex flex-col items-center gap-1">
                     <div className="rounded-full bg-slate-200/50 dark:bg-slate-700/50 p-2">
                       <CreditCard className="h-5 w-5 text-slate-600 dark:text-slate-400" />
                     </div>
-                    <p className="text-2xl font-bold">{installments?.length || 0}</p>
-                    <span className="text-xs text-muted-foreground">Cuotas</span>
+                    <p className="text-2xl font-bold">
+                      {installments?.length || 0}
+                    </p>
+                    <span className="text-xs text-muted-foreground">
+                      Cuotas
+                    </span>
                   </div>
                 </div>
               </>

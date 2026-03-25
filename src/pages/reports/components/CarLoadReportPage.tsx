@@ -6,7 +6,7 @@ import {
   useZoneAsyncSearch,
   useBranchAsyncSearch,
 } from "../lib/reports.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { CarLoadReportParams, CarLoadRow } from "../lib/reports.interface";
@@ -281,11 +281,6 @@ export default function CarLoadReportPage() {
 
   return (
     <PageWrapper size="3xl">
-      <TitleComponent
-        title="Llenado de Carros"
-        subtitle="Consulta los productos cargados por zona y período"
-        icon="BookOpen"
-      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-4">

@@ -9,7 +9,6 @@ import { getSaleColumns } from "./SaleColumns";
 import { useSaleStore } from "../lib/sales.store";
 import { useNavigate } from "react-router-dom";
 import {
-  SALE,
   type SaleResource,
   type SaleInstallmentResource,
 } from "../lib/sale.interface";
@@ -17,8 +16,8 @@ import { CreditNoteAddRoute } from "@/pages/credit-note/lib/credit-note.interfac
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import SaleDetailSheet from "./SaleDetailSheet";
 import { findSaleById, exportBulkTickets } from "../lib/sale.actions";
-import TitleComponent from "@/components/TitleComponent";
-import { errorToast, successToast } from "@/lib/core.function";
+
+import { errorToast, promiseToast } from "@/lib/core.function";
 import { InstallmentPaymentManagementSheet } from "@/pages/accounts-receivable/components";
 import PageWrapper from "@/components/PageWrapper";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
@@ -161,17 +160,17 @@ export default function SalePage() {
     if (Math.abs(totalAmount - sumOfInstallments) > 0.01) {
       errorToast(
         `No se puede realizar el pago rápido. La suma de las cuotas (${sumOfInstallments.toFixed(
-          2
+          2,
         )}) no coincide con el total de la venta (${totalAmount.toFixed(
-          2
-        )}). Por favor, sincronice las cuotas.`
+          2,
+        )}). Por favor, sincronice las cuotas.`,
       );
       return;
     }
 
     // Tomar la primera cuota pendiente si existe
     const pendingInstallment = sale.installments?.find(
-      (inst) => inst.pending_amount > 0
+      (inst) => inst.pending_amount > 0,
     );
 
     if (pendingInstallment) {
@@ -199,41 +198,28 @@ export default function SalePage() {
     }
   };
 
-  const handleExportTickets = async () => {
-    try {
-      // Get selected IDs from rowSelection state
-      const selectedIds = Object.keys(rowSelection)
-        .filter((key) => rowSelection[key])
-        .map((id) => parseInt(id));
+  const handleExportTickets = () => {
+    const selectedIds = Object.keys(rowSelection)
+      .filter((key) => rowSelection[key])
+      .map((id) => parseInt(id));
 
-      if (selectedIds.length === 0) {
-        errorToast("No hay ventas seleccionadas");
-        return;
-      }
-
-      const blob = await exportBulkTickets(selectedIds);
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `tickets_${new Date().toISOString().split("T")[0]}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      successToast(`${selectedIds.length} ticket(s) exportado(s) correctamente`);
-
-      // Clear selection after export
-      setRowSelection({});
-    } catch (error) {
-      console.error("Error al exportar tickets", error);
-      errorToast("Error al exportar tickets");
+    if (selectedIds.length === 0) {
+      errorToast("No hay ventas seleccionadas");
+      return;
     }
-  };
 
-  const { MODEL, ICON } = SALE;
+    const downloadPromise = exportBulkTickets(selectedIds).then((blob) => {
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setRowSelection({});
+    });
+
+    promiseToast(downloadPromise, {
+      loading: "Descargando tickets...",
+      success: `${selectedIds.length} ticket(s) exportado(s) correctamente`,
+      error: "Error al exportar tickets",
+    });
+  };
 
   const columns = getSaleColumns({
     onEdit: handleEdit,
@@ -294,17 +280,12 @@ export default function SalePage() {
 
   // Calculate number of selected rows
   const selectedCount = Object.keys(rowSelection).filter(
-    (key) => rowSelection[key]
+    (key) => rowSelection[key],
   ).length;
 
   return (
     <PageWrapper>
       <div className="flex items-center justify-between">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle="Administrar todas las ventas registradas en el sistema"
-          icon={ICON}
-        />
         <SaleActions
           excelEndpoint={exportEndpoint}
           selectedCount={selectedCount}

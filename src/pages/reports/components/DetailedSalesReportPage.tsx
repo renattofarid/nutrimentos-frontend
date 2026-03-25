@@ -7,7 +7,7 @@ import {
   useCustomerAsyncSearch,
   useBranchAsyncSearch,
 } from "../lib/reports.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import type {
@@ -231,11 +231,6 @@ export default function DetailedSalesReportPage() {
 
   return (
     <PageWrapper>
-      <TitleComponent
-        title="Reporte de Ventas Detallado"
-        subtitle="Consulta las ventas por cliente, vendedor, tipo de documento y período"
-        icon="BookOpen"
-      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">

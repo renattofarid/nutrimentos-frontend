@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRoles } from "../lib/role.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import RoleActions from "./RoleActions";
 import RoleTable from "./RoleTable";
 import RoleOptions from "./RoleOptions";
@@ -18,7 +18,7 @@ import { ROLE } from "../lib/role.interface";
 import RoleModal from "./RoleModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = ROLE;
+const { MODEL } = ROLE;
 
 export default function RolePage() {
   const [search, setSearch] = useState("");
@@ -48,11 +48,6 @@ export default function RolePage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <RoleActions />
       </div>
 

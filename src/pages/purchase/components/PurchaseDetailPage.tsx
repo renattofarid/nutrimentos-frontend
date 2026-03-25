@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import TitleComponent from "@/components/TitleComponent";
+
 import {
   Loader,
   ArrowLeft,
@@ -28,7 +28,7 @@ export default function PurchaseDetailPage() {
   const navigate = useNavigate();
   const { data: purchase, isFinding } = usePurchaseById(Number(id));
 
-  const { MODEL, ICON, ROUTE } = PURCHASE;
+  const { ROUTE } = PURCHASE;
 
   if (isFinding || !purchase) {
     return (
@@ -51,11 +51,6 @@ export default function PurchaseDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={`${MODEL.name} - ${purchase.correlativo}`}
-          subtitle={`Detalle de la ${MODEL.name.toLowerCase()}`}
-          icon={ICON}
-        />
         <Button variant="outline" onClick={() => navigate(ROUTE)}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Volver
@@ -176,8 +171,12 @@ export default function PurchaseDetailPage() {
                   {detail.product.codigo}
                 </TableCell>
                 <TableCell>{detail.product.name}</TableCell>
-                <TableCell className="text-right">{detail.quantity_kg.toFixed(2)}</TableCell>
-                <TableCell className="text-right">{detail.quantity_sacks.toFixed(2)}</TableCell>
+                <TableCell className="text-right">
+                  {detail.quantity_kg.toFixed(2)}
+                </TableCell>
+                <TableCell className="text-right">
+                  {detail.quantity_sacks.toFixed(2)}
+                </TableCell>
                 <TableCell className="text-right">
                   {purchase.currency === "PEN" ? "S/." : "$"}{" "}
                   {detail.unit_price.toFixed(2)}

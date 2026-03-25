@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePriceList } from "../lib/pricelist.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import PriceListActions from "./PriceListActions";
 import PriceListTable from "./PriceListTable";
 import PriceListOptions from "./PriceListOptions";
@@ -20,7 +20,7 @@ import AssignClientModal from "./AssignClientModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import { PriceListDetailsSheet } from "./PriceListDetailsSheet";
 
-const { MODEL, ICON } = PRICELIST;
+const { MODEL } = PRICELIST;
 
 export default function PriceListPage() {
   const navigate = useNavigate();
@@ -49,10 +49,7 @@ export default function PriceListPage() {
       await refetch();
       successToast(SUCCESS_MESSAGE(MODEL, "delete"));
     } catch (error: any) {
-      errorToast(
-        error.response?.data?.message,
-        ERROR_MESSAGE(MODEL, "delete")
-      );
+      errorToast(error.response?.data?.message, ERROR_MESSAGE(MODEL, "delete"));
     } finally {
       setDeleteId(null);
     }
@@ -61,11 +58,6 @@ export default function PriceListPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <PriceListActions />
       </div>
 

@@ -5,7 +5,7 @@ import {
   useUserAsyncSearch,
   useWarehouseAsyncSearch,
 } from "../lib/reports.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import type {
@@ -254,12 +254,6 @@ export default function CommissionsReportPage() {
 
   return (
     <PageWrapper size="3xl">
-      <TitleComponent
-        title="Reporte de Comisiones"
-        subtitle="Consulta las comisiones por vendedor, tipo de documento y período"
-        icon="BookOpen"
-      />
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">
           <GroupFormSection

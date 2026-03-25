@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
 import { useWarehouseProduct } from "../lib/warehouse-product.hook";
-import TitleComponent from "@/components/TitleComponent";
 import WarehouseProductTable from "./WarehouseProductTable";
 import WarehouseProductOptions from "./WarehouseProductOptions";
 import { WarehouseProductColumns } from "./WarehouseProductColumns";
 import DataTablePagination from "@/components/DataTablePagination";
-import { WAREHOUSE_PRODUCT } from "../lib/warehouse-product.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
-
-const { MODEL, ICON } = WAREHOUSE_PRODUCT;
+import PageWrapper from "@/components/PageWrapper";
 
 export default function WarehouseProductPage() {
   const [search, setSearch] = useState("");
@@ -21,15 +18,7 @@ export default function WarehouseProductPage() {
   }, [page, search, per_page]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.plural ?? MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
-      </div>
-
+    <PageWrapper>
       <WarehouseProductTable
         isLoading={isLoading}
         columns={WarehouseProductColumns()}
@@ -46,6 +35,6 @@ export default function WarehouseProductPage() {
         setPerPage={setPerPage}
         totalData={meta?.total || 0}
       />
-    </div>
+    </PageWrapper>
   );
 }

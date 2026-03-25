@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTypeUsers } from "../lib/typeUser.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import TypeUserActions from "./TypeUserActions";
 import TypeUserTable from "./TypeUserTable";
 import TypeUserOptions from "./TypeUserOptions";
@@ -19,7 +19,7 @@ import TypeUserModal from "./TypeUserModal";
 import { TypeUserAccess } from "@/pages/menu/components/TypeUserAccess";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = TYPE_USER;
+const { MODEL } = TYPE_USER;
 
 export default function TypeUserPage() {
   const [search, setSearch] = useState("");
@@ -58,11 +58,6 @@ export default function TypeUserPage() {
     <div className="space-y-4">
       {/* Encabezado */}
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <TypeUserActions />
       </div>
 

@@ -122,6 +122,9 @@ export const SaleForm = ({
     { id: number; zone_name: string; address: string; is_primary: boolean }[]
   >([]);
 
+  // Referencia al zone_id actual para detectar cambio de zona al cambiar cliente
+  const currentZoneIdRef = useRef<number | null>(null);
+
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
 
   const { fetchDynamicPrice } = useDynamicPrice();
@@ -303,14 +306,22 @@ export const SaleForm = ({
     if (item && item.person_zones && item.person_zones.length > 0) {
       setCustomerAddresses(item.person_zones);
       const primary = item.person_zones.find((pz) => pz.is_primary);
-      if (primary) {
-        form.setValue("person_zone_id", primary.id.toString());
-      } else {
-        form.setValue("person_zone_id", item.person_zones[0].id.toString());
+      const selectedZone = primary || item.person_zones[0];
+      form.setValue("person_zone_id", selectedZone.id.toString());
+
+      // Limpiar vendedor solo si la zona cambia respecto a la anterior
+      const newZoneId = selectedZone.zone_id;
+      if (currentZoneIdRef.current !== null && currentZoneIdRef.current !== newZoneId) {
+        form.setValue("vendedor_id", "");
       }
+      currentZoneIdRef.current = newZoneId;
     } else {
       setCustomerAddresses([]);
       form.setValue("person_zone_id", "");
+      if (currentZoneIdRef.current !== null) {
+        form.setValue("vendedor_id", "");
+      }
+      currentZoneIdRef.current = null;
     }
   };
 
@@ -1139,6 +1150,7 @@ export const SaleForm = ({
                 onRemoveEmptyRows={handleRemoveEmptyDetailRows}
                 emptyMessage="Seleccione un almacén y cliente para comenzar."
                 disabled={!selectedWarehouseId}
+                skipColumnsOnEnter={["product"]}
               />
             </GroupFormSection>
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBoxShift } from "../lib/box-shift.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import BoxShiftActions from "./BoxShiftActions";
 import BoxShiftTable from "./BoxShiftTable";
 import BoxShiftOptions from "./BoxShiftOptions";
@@ -19,7 +19,7 @@ import { BOX_SHIFT } from "../lib/box-shift.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import BoxShiftCloseModal from "./BoxShiftCloseModal";
 
-const { MODEL, ICON } = BOX_SHIFT;
+const { MODEL } = BOX_SHIFT;
 
 export default function BoxShiftPage() {
   const navigate = useNavigate();
@@ -71,11 +71,6 @@ export default function BoxShiftPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.plural || ""}
-          subtitle={MODEL.description || ""}
-          icon={ICON}
-        />
         <BoxShiftActions refetch={refetch} />
       </div>
 

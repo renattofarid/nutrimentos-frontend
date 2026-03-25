@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBox } from "../lib/box.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import BoxActions from "./BoxActions";
 import BoxTable from "./BoxTable";
 import BoxOptions from "./BoxOptions";
@@ -21,7 +21,7 @@ import UserBoxAssignmentModal from "@/pages/userboxassignment/components/UserBox
 import BoxAssignmentsSheet from "./BoxAssignmentsSheet";
 import { StatusChangeDialog } from "./StatusChangeDialog";
 
-const { MODEL, ICON } = BOX;
+const { MODEL } = BOX;
 
 export default function BoxPage() {
   const [search, setSearch] = useState("");
@@ -30,7 +30,9 @@ export default function BoxPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [assignBoxId, setAssignBoxId] = useState<number | null>(null);
-  const [viewAssignmentsBoxId, setViewAssignmentsBoxId] = useState<number | null>(null);
+  const [viewAssignmentsBoxId, setViewAssignmentsBoxId] = useState<
+    number | null
+  >(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
   const [statusChangeData, setStatusChangeData] = useState<{
     id: number;
@@ -64,12 +66,16 @@ export default function BoxPage() {
 
     setUpdatingStatusId(statusChangeData.id);
     try {
-      const newStatus = statusChangeData.currentStatus === "Activo" ? "Inactivo" : "Activo";
+      const newStatus =
+        statusChangeData.currentStatus === "Activo" ? "Inactivo" : "Activo";
       await updateBox(statusChangeData.id, { status: newStatus });
       await refetch();
       successToast(`Estado actualizado a ${newStatus}`);
     } catch (error: any) {
-      errorToast(error.response?.data?.message || "Error al actualizar el estado", ERROR_MESSAGE(MODEL, "update"));
+      errorToast(
+        error.response?.data?.message || "Error al actualizar el estado",
+        ERROR_MESSAGE(MODEL, "update"),
+      );
     } finally {
       setUpdatingStatusId(null);
       setStatusChangeData(null);
@@ -78,14 +84,7 @@ export default function BoxPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
-        <BoxActions />
-      </div>
+      <BoxActions />
 
       <BoxTable
         isLoading={isLoading}
@@ -136,7 +135,7 @@ export default function BoxPage() {
           title="Asignar Usuario a Caja"
           mode="create"
           preselectedBoxId={assignBoxId}
-          preselectedBoxName={data?.find(box => box.id === assignBoxId)?.name}
+          preselectedBoxName={data?.find((box) => box.id === assignBoxId)?.name}
         />
       )}
 
@@ -145,7 +144,9 @@ export default function BoxPage() {
           open={true}
           onOpenChange={(open) => !open && setViewAssignmentsBoxId(null)}
           boxId={viewAssignmentsBoxId}
-          boxName={data?.find(box => box.id === viewAssignmentsBoxId)?.name || ""}
+          boxName={
+            data?.find((box) => box.id === viewAssignmentsBoxId)?.name || ""
+          }
         />
       )}
 
@@ -155,7 +156,9 @@ export default function BoxPage() {
           onOpenChange={(open) => !open && setStatusChangeData(null)}
           onConfirm={confirmStatusChange}
           currentStatus={statusChangeData.currentStatus}
-          newStatus={statusChangeData.currentStatus === "Activo" ? "Inactivo" : "Activo"}
+          newStatus={
+            statusChangeData.currentStatus === "Activo" ? "Inactivo" : "Activo"
+          }
         />
       )}
     </div>

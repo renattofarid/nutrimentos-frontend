@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCategory } from "../lib/category.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import CategoryActions from "./CategoryActions";
 import CategoryTable from "./CategoryTable";
 import CategoryOptions from "./CategoryOptions";
@@ -18,7 +18,7 @@ import { CATEGORY } from "../lib/category.interface";
 import CategoryModal from "./CategoryModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = CATEGORY;
+const { MODEL } = CATEGORY;
 
 export default function CategoryPage() {
   const [search, setSearch] = useState("");
@@ -48,11 +48,6 @@ export default function CategoryPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <CategoryActions />
       </div>
 

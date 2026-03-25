@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useZone } from "../lib/zone.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import ZoneActions from "./ZoneActions";
 import ZoneTable from "./ZoneTable";
 import ZoneOptions from "./ZoneOptions";
@@ -18,7 +18,7 @@ import { ZONE } from "../lib/zone.interface";
 import ZoneModal from "./ZoneModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = ZONE;
+const { MODEL } = ZONE;
 
 export default function ZonePage() {
   const [search, setSearch] = useState("");
@@ -48,11 +48,6 @@ export default function ZonePage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <ZoneActions />
       </div>
 

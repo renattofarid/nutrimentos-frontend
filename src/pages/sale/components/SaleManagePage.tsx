@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useSaleById } from "../lib/sale.hook";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,15 +20,13 @@ import {
 import type { SaleInstallmentResource } from "../lib/sale.interface";
 import InstallmentPaymentDialog from "./InstallmentPaymentDialog";
 import InstallmentPaymentsSheet from "./InstallmentPaymentsSheet";
-import TitleComponent from "@/components/TitleComponent";
-import { BackButton } from "@/components/BackButton";
+
 import FormSkeleton from "@/components/FormSkeleton";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 
 export default function SaleManagePage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { data: sale, isFinding, refetch } = useSaleById(Number(id));
 
   const [selectedInstallment, setSelectedInstallment] =
@@ -96,14 +94,6 @@ export default function SaleManagePage() {
     <PageWrapper>
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4">
-          <BackButton onClick={() => navigate("/ventas")} />
-          <TitleComponent
-            title={`Gestionar Venta #${sale.id}`}
-            subtitle={`${sale.full_document_number} - ${getCustomerName()}`}
-            icon={"CreditCard"}
-          />
-        </div>
         <Badge
           color={
             sale.status === "PAGADA"

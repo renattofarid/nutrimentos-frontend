@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGuides } from "../lib/guide.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import GuideActions from "./GuideActions";
 import GuideTable from "./GuideTable";
 import GuideOptions from "./GuideOptions";
@@ -19,7 +19,7 @@ import { GUIDE } from "../lib/guide.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 
-const { MODEL, ICON } = GUIDE;
+const { MODEL } = GUIDE;
 
 export default function GuidePage() {
   const navigate = useNavigate();
@@ -75,11 +75,6 @@ export default function GuidePage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <GuideActions excelEndpoint={exportEndpoint} />
       </div>
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNationality } from "../lib/nationality.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import NationalityActions from "./NationalityActions";
 import NationalityTable from "./NationalityTable";
 import NationalityModal from "./NationalityModal";
@@ -18,7 +18,7 @@ import { NATIONALITY } from "../lib/nationality.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import NationalityOptions from "./NationalityOptions";
 
-const { MODEL, ICON, TITLES } = NATIONALITY;
+const { MODEL, TITLES } = NATIONALITY;
 
 export default function NationalityPage() {
   const [search, setSearch] = useState("");
@@ -82,11 +82,6 @@ export default function NationalityPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.plural!}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <NationalityActions onCreateNationality={handleCreateNationality} />
       </div>
 

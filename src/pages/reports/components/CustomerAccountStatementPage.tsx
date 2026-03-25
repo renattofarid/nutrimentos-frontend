@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useCustomerAccountStatement } from "../lib/reports.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import type {
@@ -13,7 +13,13 @@ import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { FileSpreadsheet, Search, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  FileSpreadsheet,
+  Search,
+  DollarSign,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useClients } from "@/pages/client/lib/client.hook";
@@ -249,7 +255,8 @@ export default function CustomerAccountStatementPage() {
   });
 
   const zoneOptions: Option[] =
-    zones?.map((zone) => ({ value: zone.id.toString(), label: zone.name })) || [];
+    zones?.map((zone) => ({ value: zone.id.toString(), label: zone.name })) ||
+    [];
 
   const workerOptions: Option[] =
     workers?.map((worker) => ({
@@ -330,12 +337,6 @@ export default function CustomerAccountStatementPage() {
 
   return (
     <PageWrapper size="3xl">
-      <TitleComponent
-        title={CustomerAccountStatementTitle}
-        subtitle="Consulta el estado de cuenta y deudas de los clientes"
-        icon="FileBarChart2"
-      />
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">
           <div className="space-y-3">

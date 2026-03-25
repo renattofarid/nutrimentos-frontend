@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useWarehouse } from "../lib/warehouse.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import WarehouseActions from "./WarehouseActions";
 import WarehouseTable from "./WarehouseTable";
 import WarehouseOptions from "./WarehouseOptions";
@@ -18,7 +18,7 @@ import { WAREHOUSE } from "../lib/warehouse.interface";
 import WarehouseModal from "./WarehouseModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = WAREHOUSE;
+const { MODEL } = WAREHOUSE;
 
 export default function WarehousePage() {
   const [search, setSearch] = useState("");
@@ -48,11 +48,6 @@ export default function WarehousePage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <WarehouseActions />
       </div>
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useClients } from "../lib/client.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import ClientActions from "./ClientActions";
 import PersonTable from "@/pages/person/components/PersonTable";
 import PersonOptions from "@/pages/person/components/PersonOptions";
@@ -23,7 +23,7 @@ import { CLIENT_ROLE_ID } from "../lib/client.interface";
 import ClientPriceListSheet from "./ClientPriceListSheet";
 import AssignPriceListModal from "./AssignPriceListModal";
 import ClientAddressesSheet from "./ClientAddressesSheet";
-const { MODEL, ICON } = CLIENT;
+const { MODEL } = CLIENT;
 
 export default function ClientPage() {
   const navigate = useNavigate();
@@ -99,11 +99,6 @@ export default function ClientPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <ClientActions />
       </div>
 

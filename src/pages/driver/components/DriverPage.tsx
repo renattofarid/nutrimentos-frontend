@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDrivers } from "../lib/driver.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import DriverActions from "./DriverActions";
 import PersonTable from "@/pages/person/components/PersonTable";
 import PersonOptions from "@/pages/person/components/PersonOptions";
@@ -26,7 +26,7 @@ import { PersonRoleAssignment } from "@/pages/person/components/PersonRoleAssign
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 
-const { MODEL, ICON } = DRIVER;
+const { MODEL } = DRIVER;
 
 export default function DriverPage() {
   const navigate = useNavigate();
@@ -74,11 +74,6 @@ export default function DriverPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <DriverActions />
       </div>
 

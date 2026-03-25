@@ -5,7 +5,7 @@ import {
   useProductAsyncSearch,
   useWarehouseAsyncSearch,
 } from "../lib/reports.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import type {
@@ -187,11 +187,6 @@ export default function InventoryReportPage() {
 
   return (
     <PageWrapper size="3xl">
-      <TitleComponent
-        title="Reporte de Inventario"
-        subtitle="Consulta el stock actual de productos por almacén"
-        icon="Box"
-      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import TitleComponent from "@/components/TitleComponent";
+
 import PageWrapper from "@/components/PageWrapper";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import ExportButtons from "@/components/ExportButtons";
@@ -68,11 +68,6 @@ export default function SalesRegisterReportPage() {
 
   return (
     <PageWrapper>
-      <TitleComponent
-        title="Registro de Ventas"
-        subtitle="Descarga el registro de ventas en formato Excel con los filtros aplicados"
-        icon="ShoppingBag"
-      />
 
       <GroupFormSection title="Descripción" icon={Info} cols={{ sm: 1 }}>
         <p className="text-sm text-muted-foreground">

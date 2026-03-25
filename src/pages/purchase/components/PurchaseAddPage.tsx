@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { PurchaseForm } from "./PurchaseForm";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
@@ -11,7 +11,6 @@ import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { usePurchaseStore } from "../lib/purchase.store";
 import type { PurchaseSchema } from "../lib/purchase.schema";
-import { PURCHASE } from "../lib/purchase.interface";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
@@ -21,7 +20,6 @@ export default function PurchaseAddPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { MODEL, ICON } = PURCHASE;
   const { data: suppliers, refetch: refetchSuppliers } = useAllPersons({
     role_names: [SUPPLIER_ROLE_CODE],
   });
@@ -80,11 +78,6 @@ export default function PurchaseAddPage() {
   if (isLoading) {
     return (
       <PageWrapper size="3xl">
-        <div className="mb-6 h-full">
-          <div className="flex items-center gap-4 mb-4">
-            <TitleFormComponent title={MODEL.name} mode="create" icon={ICON} />
-          </div>
-        </div>
         <FormSkeleton />
       </PageWrapper>
     );
@@ -92,10 +85,6 @@ export default function PurchaseAddPage() {
 
   return (
     <PageWrapper size="3xl">
-      <div className="flex items-center gap-4 mb-4">
-        <TitleFormComponent title={MODEL.name} mode="create" icon={ICON} />
-      </div>
-
       {suppliers &&
         suppliers.length > 0 &&
         warehouses &&

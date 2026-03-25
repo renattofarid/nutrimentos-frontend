@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCompany } from "../lib/company.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import CompanyActions from "./CompanyActions";
 import CompanyTable from "./CompanyTable";
 import CompanyOptions from "./CompanyOptions";
@@ -18,7 +18,7 @@ import { COMPANY } from "../lib/company.interface";
 import CompanyModal from "./CompanyModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = COMPANY;
+const { MODEL } = COMPANY;
 
 export default function CompanyPage() {
   const [search, setSearch] = useState("");
@@ -48,11 +48,6 @@ export default function CompanyPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <CompanyActions />
       </div>
 

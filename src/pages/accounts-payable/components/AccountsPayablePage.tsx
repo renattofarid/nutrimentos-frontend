@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import { getAllPurchaseInstallments } from "../lib/accounts-payable.actions";
 import {
-  ACCOUNTS_PAYABLE,
   type PurchaseInstallmentResource,
 } from "../lib/accounts-payable.interface";
 import AccountsPayableOptions from "./AccountsPayableOptions";
@@ -130,13 +129,6 @@ export default function AccountsPayablePage() {
 
   return (
     <PageWrapper>
-      {/* Header */}
-      <TitleComponent
-        title={ACCOUNTS_PAYABLE.MODEL.plural}
-        subtitle="Gestión y seguimiento de cuotas pendientes a proveedores"
-        icon="FileText"
-      />
-
       {/* Summary - Minimalista */}
       {Object.keys(summaryByCurrency).length > 0 ? (
         <div className="space-y-2">

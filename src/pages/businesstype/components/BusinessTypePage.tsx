@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBusinessType } from "../lib/businesstype.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import BusinessTypeActions from "./BusinessTypeActions";
 import BusinessTypeTable from "./BusinessTypeTable";
 import BusinessTypeOptions from "./BusinessTypeOptions";
@@ -18,7 +18,7 @@ import { BUSINESSTYPE } from "../lib/businesstype.interface";
 import BusinessTypeModal from "./BusinessTypeModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = BUSINESSTYPE;
+const { MODEL } = BUSINESSTYPE;
 
 export default function BusinessTypePage() {
   const [search, setSearch] = useState("");
@@ -48,11 +48,6 @@ export default function BusinessTypePage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <BusinessTypeActions />
       </div>
 

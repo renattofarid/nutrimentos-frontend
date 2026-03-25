@@ -116,7 +116,7 @@ export const PurchaseForm = ({
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
   const [includeIgv, setIncludeIgv] = useState<boolean>(
-    defaultValues.include_igv || false,
+    defaultValues.incluir_igv || false,
   );
 
   const IGV_RATE = 0.18;
@@ -142,9 +142,9 @@ export const PurchaseForm = ({
     ),
     defaultValues: {
       discount_global: 0,
-      freight_cost: 0,
-      loading_cost: 0,
-      include_cost_account: true,
+      costo_flete: 0,
+      costo_estiba: 0,
+      incluir_cuenta_costos: true,
       reference_number: "",
       observations: "",
       ...defaultValues,
@@ -245,10 +245,10 @@ export const PurchaseForm = ({
 
   // Watch para el tipo de pago y el switch de IGV
   const selectedPaymentType = form.watch("payment_type");
-  const watchIncludeIgv = form.watch("include_igv");
+  const watchIncludeIgv = form.watch("incluir_igv");
   const watchDiscount = form.watch("discount_global");
-  const watchFreight = form.watch("freight_cost");
-  const watchLoading = form.watch("loading_cost");
+  const watchFreight = form.watch("costo_flete");
+  const watchLoading = form.watch("costo_estiba");
   const watchCurrency = form.watch("currency");
   const currencySymbol = watchCurrency === "USD" ? "$ " : "S/. ";
 
@@ -541,8 +541,8 @@ export const PurchaseForm = ({
   const calculatePurchaseTotal = () => {
     const detailsTotal = calculateDetailsTotal();
     const discount = form.getValues("discount_global") || 0;
-    const freight = form.getValues("freight_cost") || 0;
-    const loading = form.getValues("loading_cost") || 0;
+    const freight = form.getValues("costo_flete") || 0;
+    const loading = form.getValues("costo_estiba") || 0;
     return detailsTotal - discount + freight + loading;
   };
 
@@ -1079,7 +1079,7 @@ export const PurchaseForm = ({
             >
               <FormSwitch
                 control={form.control}
-                name="include_cost_account"
+                name="incluir_cuenta_costos"
                 label="Incluir Cuenta de Costos"
                 text="Incluir en la contabilidad"
                 autoHeight
@@ -1087,7 +1087,7 @@ export const PurchaseForm = ({
 
               <FormSwitch
                 control={form.control}
-                name="include_igv"
+                name="incluir_igv"
                 label="Precios incluyen IGV (18%)"
                 text="Actívalo si los precios ingresados ya incluyen IGV"
                 autoHeight
@@ -1105,7 +1105,7 @@ export const PurchaseForm = ({
 
               <FormInput
                 control={form.control}
-                name="freight_cost"
+                name="costo_flete"
                 label="Costo de Flete"
                 type="number"
                 step="0.01"
@@ -1115,7 +1115,7 @@ export const PurchaseForm = ({
 
               <FormInput
                 control={form.control}
-                name="loading_cost"
+                name="costo_estiba"
                 label="Costo de Estiba"
                 type="number"
                 step="0.01"

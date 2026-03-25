@@ -10,11 +10,11 @@ import {
 import {
   Trash2,
   Eye,
-  Settings,
   Wallet,
   AlertTriangle,
   Pencil,
   FileMinus,
+  PanelRightOpen,
 } from "lucide-react";
 import { ButtonAction } from "@/components/ButtonAction";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -323,13 +323,13 @@ export const getSaleColumns = ({
         <div className="flex items-center gap-1">
           <ButtonAction
             icon={Eye}
-            onClick={() => onViewDetails(row.original)}
-            tooltip="Ver Detalles"
-          />
-          <ButtonAction
-            icon={Settings}
             onClick={() => onManage(row.original)}
             tooltip="Gestionar Venta"
+          />
+          <ButtonAction
+            icon={PanelRightOpen}
+            onClick={() => onViewDetails(row.original)}
+            tooltip="Ver Detalles"
           />
           <ButtonAction
             icon={Pencil}

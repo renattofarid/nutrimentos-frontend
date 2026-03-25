@@ -113,10 +113,10 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
         document_type: data.document_type,
         document_number: data.document_number,
         payment_type: data.payment_type,
-        include_igv: data.include_igv,
-        include_cost_account: data.include_cost_account ?? true,
-        freight_cost: data.freight_cost ?? 0,
-        loading_cost: data.loading_cost ?? 0,
+        incluir_igv: data.incluir_igv,
+        incluir_cuenta_costos: data.incluir_cuenta_costos ?? true,
+        costo_flete: data.costo_flete ?? 0,
+        costo_estiba: data.costo_estiba ?? 0,
         currency: data.currency,
         details: data.details.map((detail) => ({
           product_id: Number(detail.product_id),
@@ -147,17 +147,17 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
         ...(data.branch_id && { branch_id: Number(data.branch_id) }),
         ...(data.supplier_id && { supplier_id: Number(data.supplier_id) }),
         ...(data.warehouse_id && { warehouse_id: Number(data.warehouse_id) }),
-        ...(data.include_igv !== undefined && {
-          include_igv: data.include_igv,
+        ...(data.incluir_igv !== undefined && {
+          incluir_igv: data.incluir_igv,
         }),
-        ...(data.include_cost_account !== undefined && {
-          include_cost_account: data.include_cost_account,
+        ...(data.incluir_cuenta_costos !== undefined && {
+          incluir_cuenta_costos: data.incluir_cuenta_costos,
         }),
-        ...(data.freight_cost !== undefined && {
-          freight_cost: data.freight_cost ?? 0,
+        ...(data.costo_flete !== undefined && {
+          costo_flete: data.costo_flete ?? 0,
         }),
-        ...(data.loading_cost !== undefined && {
-          loading_cost: data.loading_cost ?? 0,
+        ...(data.costo_estiba !== undefined && {
+          costo_estiba: data.costo_estiba ?? 0,
         }),
         ...(data.purchase_order_id !== undefined && {
           purchase_order_id: data.purchase_order_id

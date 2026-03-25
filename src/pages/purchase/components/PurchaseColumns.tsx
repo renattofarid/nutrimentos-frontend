@@ -6,7 +6,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Pencil, Eye, Settings, Wallet, AlertTriangle } from "lucide-react";
+import {
+  Pencil,
+  Eye,
+  Wallet,
+  AlertTriangle,
+  PanelRightOpen,
+} from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { PurchaseResource } from "../lib/purchase.interface";
 import { ButtonAction } from "@/components/ButtonAction";
@@ -263,7 +269,7 @@ export const getPurchaseColumns = ({
           />
           <ButtonAction
             onClick={() => onManage(row.original)}
-            icon={Settings}
+            icon={PanelRightOpen}
             tooltip="Gestionar"
           />
           <ButtonAction

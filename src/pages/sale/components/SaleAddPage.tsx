@@ -28,7 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { exportSaleById } from "../lib/sale.actions";
+import { exportBulkTickets } from "../lib/sale.actions";
 
 export const SaleAddPage = () => {
   const navigate = useNavigate();
@@ -76,7 +76,7 @@ export const SaleAddPage = () => {
       // Abrir boleta automáticamente si se obtuvo el ID
       if (saleId) {
         try {
-          const blob = await exportSaleById(saleId);
+          const blob = await exportBulkTickets([saleId]);
           const url = window.URL.createObjectURL(blob);
           window.open(url, "_blank");
         } catch {

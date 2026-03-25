@@ -18,16 +18,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
 import { format } from "date-fns";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmationDialog } from "@/components/ConfirmationDialog";
 import { exportBulkTickets } from "../lib/sale.actions";
 
 export const SaleAddPage = () => {
@@ -148,29 +139,17 @@ export const SaleAddPage = () => {
         />
       )}
 
-      <AlertDialog open={showNextDialog} onOpenChange={setShowNextDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Venta registrada</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Deseas crear otra venta?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => navigate("/ventas/listado")}>
-              No, ir al listado
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setShowNextDialog(false);
-                setFormKey((k) => k + 1);
-              }}
-            >
-              Sí, crear otra
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmationDialog
+        open={showNextDialog}
+        onOpenChange={setShowNextDialog}
+        icon="info"
+        title="Venta registrada"
+        description="¿Deseas crear otra venta?"
+        confirmText="Sí, crear otra"
+        cancelText="No, ir al listado"
+        onConfirm={() => setFormKey((k) => k + 1)}
+        onCancel={() => navigate("/ventas/listado")}
+      />
     </PageWrapper>
   );
 };

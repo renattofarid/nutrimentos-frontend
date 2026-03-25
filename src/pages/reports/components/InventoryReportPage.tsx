@@ -187,11 +187,6 @@ export default function InventoryReportPage() {
 
   return (
     <PageWrapper size="3xl">
-      <TitleComponent
-        title="Reporte de Inventario"
-        subtitle="Consulta el stock actual de productos por almacén"
-        icon="Box"
-      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">

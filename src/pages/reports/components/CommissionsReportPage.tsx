@@ -254,12 +254,6 @@ export default function CommissionsReportPage() {
 
   return (
     <PageWrapper size="3xl">
-      <TitleComponent
-        title="Reporte de Comisiones"
-        subtitle="Consulta las comisiones por vendedor, tipo de documento y período"
-        icon="BookOpen"
-      />
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">
           <GroupFormSection

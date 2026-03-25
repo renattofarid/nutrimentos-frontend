@@ -9,7 +9,6 @@ import { getSaleColumns } from "./SaleColumns";
 import { useSaleStore } from "../lib/sales.store";
 import { useNavigate } from "react-router-dom";
 import {
-  SALE,
   type SaleResource,
   type SaleInstallmentResource,
 } from "../lib/sale.interface";
@@ -161,17 +160,17 @@ export default function SalePage() {
     if (Math.abs(totalAmount - sumOfInstallments) > 0.01) {
       errorToast(
         `No se puede realizar el pago rápido. La suma de las cuotas (${sumOfInstallments.toFixed(
-          2
+          2,
         )}) no coincide con el total de la venta (${totalAmount.toFixed(
-          2
-        )}). Por favor, sincronice las cuotas.`
+          2,
+        )}). Por favor, sincronice las cuotas.`,
       );
       return;
     }
 
     // Tomar la primera cuota pendiente si existe
     const pendingInstallment = sale.installments?.find(
-      (inst) => inst.pending_amount > 0
+      (inst) => inst.pending_amount > 0,
     );
 
     if (pendingInstallment) {
@@ -221,8 +220,6 @@ export default function SalePage() {
       error: "Error al exportar tickets",
     });
   };
-
-  const { MODEL, ICON } = SALE;
 
   const columns = getSaleColumns({
     onEdit: handleEdit,
@@ -283,17 +280,12 @@ export default function SalePage() {
 
   // Calculate number of selected rows
   const selectedCount = Object.keys(rowSelection).filter(
-    (key) => rowSelection[key]
+    (key) => rowSelection[key],
   ).length;
 
   return (
     <PageWrapper>
       <div className="flex items-center justify-between">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle="Administrar todas las ventas registradas en el sistema"
-          icon={ICON}
-        />
         <SaleActions
           excelEndpoint={exportEndpoint}
           selectedCount={selectedCount}

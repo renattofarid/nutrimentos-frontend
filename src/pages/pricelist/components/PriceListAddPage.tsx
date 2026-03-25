@@ -12,7 +12,7 @@ import {
 } from "@/lib/core.function";
 import FormWrapper from "@/components/FormWrapper";
 
-const { MODEL, ICON, TITLES } = PRICELIST;
+const { MODEL } = PRICELIST;
 
 export default function PriceListAddPage() {
   const navigate = useNavigate();
@@ -34,12 +34,6 @@ export default function PriceListAddPage() {
 
   return (
     <FormWrapper>
-      <TitleComponent
-        title={TITLES.create.title}
-        subtitle={TITLES.create.subtitle}
-        icon={ICON}
-      />
-
       <PriceListForm
         onSubmit={handleSubmit}
         onCancel={handleCancel}

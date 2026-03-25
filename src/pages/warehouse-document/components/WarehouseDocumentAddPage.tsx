@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import WarehouseDocumentForm from "./WarehouseDocumentForm";
 
-import { BackButton } from "@/components/BackButton";
 import { WAREHOUSE_DOCUMENT } from "../lib/warehouse-document.interface";
 import type { WarehouseDocumentSchema } from "../lib/warehouse-document.schema";
 import { storeWarehouseDocument } from "../lib/warehouse-document.actions";
@@ -12,7 +11,7 @@ import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { useAllPurchases } from "@/pages/purchase/lib/purchase.hook";
 import PageWrapper from "@/components/PageWrapper";
 
-const { ICON, EMPTY, TITLES } = WAREHOUSE_DOCUMENT;
+const { EMPTY } = WAREHOUSE_DOCUMENT;
 
 export default function WarehouseDocumentAddPage() {
   const navigate = useNavigate();
@@ -69,15 +68,6 @@ export default function WarehouseDocumentAddPage() {
   return (
     <PageWrapper>
       <div className="space-y-4">
-        <div className="flex items-center gap-4">
-          <BackButton />
-          <TitleComponent
-            title={TITLES.create.title}
-            subtitle={TITLES.create.subtitle}
-            icon={ICON}
-          />
-        </div>
-
         {warehouses && persons && (
           <WarehouseDocumentForm
             onSubmit={handleSubmit}

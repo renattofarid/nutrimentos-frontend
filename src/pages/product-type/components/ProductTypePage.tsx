@@ -18,7 +18,7 @@ import { PRODUCT_TYPE } from "../lib/product-type.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import ProductTypeOptions from "./ProductTypeOptions";
 
-const { MODEL, ICON, TITLES } = PRODUCT_TYPE;
+const { MODEL, TITLES } = PRODUCT_TYPE;
 
 export default function ProductTypePage() {
   const [search, setSearch] = useState("");
@@ -82,11 +82,6 @@ export default function ProductTypePage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.plural!}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <ProductTypeActions onCreateProductType={handleCreateProductType} />
       </div>
 

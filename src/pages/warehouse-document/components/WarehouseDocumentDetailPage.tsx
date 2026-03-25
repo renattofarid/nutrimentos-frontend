@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { BackButton } from "@/components/BackButton";
-
 import FormWrapper from "@/components/FormWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
 import { GroupFormSection } from "@/components/GroupFormSection";
@@ -43,7 +41,7 @@ export default function WarehouseDocumentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [document, setDocument] = useState<WarehouseDocumentResource | null>(
-    null
+    null,
   );
   const [isLoading, setIsLoading] = useState(true);
   const [confirmId, setConfirmId] = useState<number | null>(null);
@@ -164,12 +162,6 @@ export default function WarehouseDocumentDetailPage() {
   if (isLoading) {
     return (
       <FormWrapper>
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <BackButton to={`${ROUTE}`} />
-            <TitleComponent title="Detalle del Documento" />
-          </div>
-        </div>
         <FormSkeleton />
       </FormWrapper>
     );
@@ -178,10 +170,6 @@ export default function WarehouseDocumentDetailPage() {
   if (!document) {
     return (
       <FormWrapper>
-        <div className="flex items-center gap-4 mb-6">
-          <BackButton to={`${ROUTE}`} />
-          <TitleComponent title="Detalle del Documento" />
-        </div>
         <div className="text-center py-8">
           <p className="text-muted-foreground">Documento no encontrado</p>
         </div>
@@ -195,13 +183,6 @@ export default function WarehouseDocumentDetailPage() {
     <FormWrapper>
       <div className="mb-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <BackButton to={`${ROUTE}`} />
-            <TitleComponent
-              title={`Documento ${document.document_number}`}
-              subtitle={getDocumentTypeLabel(document.document_type)}
-            />
-          </div>
           <div className="flex gap-2">
             {document.status === "BORRADOR" && (
               <>
@@ -305,7 +286,7 @@ export default function WarehouseDocumentDetailPage() {
               {parse(
                 document.movement_date,
                 "yyyy-MM-dd",
-                new Date()
+                new Date(),
               ).toLocaleDateString("es-ES", {
                 day: "2-digit",
                 month: "2-digit",
@@ -374,7 +355,7 @@ export default function WarehouseDocumentDetailPage() {
                         .reduce(
                           (sum, detail) =>
                             sum + detail.quantity_kg * detail.unit_price,
-                          0
+                          0,
                         )
                         .toFixed(2)}
                     </span>

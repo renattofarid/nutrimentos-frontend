@@ -288,11 +288,6 @@ export default function PurchasePage() {
   return (
     <PageWrapper>
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title="Compras"
-          subtitle="Gestión de compras y pagos"
-          icon="ShoppingCart"
-        />
         <PurchaseActions
           onCreatePurchase={handleCreatePurchase}
           excelEndpoint={exportEndpoint}

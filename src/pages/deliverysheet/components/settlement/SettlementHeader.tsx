@@ -1,7 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-
 interface SettlementHeaderProps {
   sheetNumber?: string;
   onBack: () => void;
@@ -10,7 +9,6 @@ interface SettlementHeaderProps {
 export const SettlementTitle = "Pago Planilla Cobranza";
 
 export function SettlementHeader({
-  sheetNumber,
   onBack,
 }: SettlementHeaderProps) {
   return (
@@ -18,15 +16,6 @@ export function SettlementHeader({
       <Button variant="outline" size="icon" onClick={onBack}>
         <ArrowLeft className="h-4 w-4" />
       </Button>
-      <TitleComponent
-        title={SettlementTitle}
-        subtitle={
-          sheetNumber
-            ? `Planilla ${sheetNumber} - Registre el estado y cobro de cada boleta`
-            : "Seleccione una planilla para comenzar la rendición"
-        }
-        icon="Receipt"
-      />
     </div>
   );
 }

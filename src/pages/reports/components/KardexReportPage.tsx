@@ -344,11 +344,6 @@ export default function KardexReportPage() {
 
   return (
     <PageWrapper size="3xl">
-      <TitleComponent
-        title="Reporte de Kardex"
-        subtitle="Consulta los movimientos de inventario por producto y almacén"
-        icon="BookOpen"
-      />
 
       <Form {...form}>
         <form className="space-y-6">

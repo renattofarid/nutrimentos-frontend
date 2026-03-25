@@ -17,7 +17,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { ListCheck, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const { MODEL, ICON, TITLES } = PRICELIST;
+const { MODEL } = PRICELIST;
 
 export default function PriceListEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -77,7 +77,7 @@ export default function PriceListEditPage() {
           product_name: price.product.name,
           product_code: price.product.codigo,
           weight_range_index: priceList.weight_ranges.findIndex(
-            (r) => r.id === price.weight_range_id
+            (r) => r.id === price.weight_range_id,
           ),
           price: parseFloat(price.price as string),
           currency: price.currency,
@@ -90,11 +90,6 @@ export default function PriceListEditPage() {
   if (isFinding) {
     return (
       <div className="space-y-4">
-        <TitleComponent
-          title={TITLES.update.title}
-          subtitle={TITLES.update.subtitle}
-          icon={ICON}
-        />
         <Card>
           <CardContent className="pt-6">
             <FormSkeleton />
@@ -107,11 +102,6 @@ export default function PriceListEditPage() {
   if (!priceList) {
     return (
       <div className="space-y-4">
-        <TitleComponent
-          title={TITLES.update.title}
-          subtitle={TITLES.update.subtitle}
-          icon={ICON}
-        />
         <EmptyState
           icon={ListCheck}
           title="No hay lista de precios encontrada"
@@ -135,12 +125,6 @@ export default function PriceListEditPage() {
 
   return (
     <div className="space-y-4">
-      <TitleComponent
-        title={TITLES.update.title}
-        subtitle={TITLES.update.subtitle}
-        icon={ICON}
-      />
-
       <PriceListForm
         defaultValues={getDefaultValues()}
         onSubmit={handleSubmit}

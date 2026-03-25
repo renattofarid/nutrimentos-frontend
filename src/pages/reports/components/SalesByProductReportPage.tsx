@@ -184,11 +184,6 @@ export default function SalesByProductReportPage() {
 
   return (
     <PageWrapper>
-      <TitleComponent
-        title="Reporte de Ventas por Producto"
-        subtitle="Consulta las ventas agrupadas por producto, almacén, vendedor y período"
-        icon="BookOpen"
-      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">

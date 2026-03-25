@@ -58,11 +58,7 @@ export default function PurchaseCreditNotePage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
+       
         <PurchaseCreditNoteActions />
       </div>
 

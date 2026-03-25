@@ -21,7 +21,7 @@ import { PRODUCT } from "../lib/product.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
 
-const { MODEL, ICON } = PRODUCT;
+const { MODEL } = PRODUCT;
 
 export default function ProductPage() {
   const navigate = useNavigate();
@@ -93,11 +93,6 @@ export default function ProductPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.plural!}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <ProductActions onCreateProduct={handleCreateProduct} />
       </div>
 

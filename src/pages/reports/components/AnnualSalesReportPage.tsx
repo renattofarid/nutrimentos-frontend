@@ -140,12 +140,6 @@ export default function AnnualSalesReportPage() {
 
   return (
     <PageWrapper>
-      <TitleComponent
-        title="Reporte de Ventas Anuales"
-        subtitle="Consulta las ventas mensuales por zona, vendedor y producto"
-        icon="BookOpen"
-      />
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">
           <GroupFormSection

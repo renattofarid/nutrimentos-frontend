@@ -40,36 +40,45 @@ export default function PurchaseRegisterReportPage() {
   const [end_date, setEndDate] = useState<Date | undefined>();
 
   const { data: warehouses } = useAllWarehouses();
-  const warehouseOptions = warehouses?.map((w) => ({ value: String(w.id), label: w.name })) ?? [];
+  const warehouseOptions =
+    warehouses?.map((w) => ({ value: String(w.id), label: w.name })) ?? [];
 
   const exportEndpoint = useMemo(() => {
     const params = new URLSearchParams();
-    if (user?.company_id) params.append("company_id", user.company_id.toString());
+    if (user?.company_id)
+      params.append("company_id", user.company_id.toString());
     if (document_type) params.append("document_type", document_type);
     if (document_number) params.append("document_number", document_number);
     if (reference_number) params.append("reference_number", reference_number);
     if (payment_type) params.append("payment_type", payment_type);
     if (status) params.append("status", status);
     if (warehouse_id) params.append("warehouse_id", warehouse_id);
-    if (start_date) params.append("start_date", start_date.toISOString().split("T")[0]);
-    if (end_date) params.append("end_date", end_date.toISOString().split("T")[0]);
+    if (start_date)
+      params.append("start_date", start_date.toISOString().split("T")[0]);
+    if (end_date)
+      params.append("end_date", end_date.toISOString().split("T")[0]);
     const qs = params.toString();
     return qs ? `/purchase/export?${qs}` : "/purchase/export";
-  }, [user?.company_id, document_type, document_number, reference_number, payment_type, status, warehouse_id, start_date, end_date]);
+  }, [
+    user?.company_id,
+    document_type,
+    document_number,
+    reference_number,
+    payment_type,
+    status,
+    warehouse_id,
+    start_date,
+    end_date,
+  ]);
 
   return (
     <PageWrapper>
-      <TitleComponent
-        title="Registro de Compras"
-        subtitle="Descarga el registro de compras en formato Excel con los filtros aplicados"
-        icon="ShoppingCart"
-      />
-
       <GroupFormSection title="Descripción" icon={Info} cols={{ sm: 1 }}>
         <p className="text-sm text-muted-foreground">
-          Este reporte genera un archivo Excel con el listado completo de compras registradas en el
-          sistema. Puedes aplicar los filtros a continuación para acotar el período, almacén, tipo
-          de documento, tipo de pago o estado antes de descargar.
+          Este reporte genera un archivo Excel con el listado completo de
+          compras registradas en el sistema. Puedes aplicar los filtros a
+          continuación para acotar el período, almacén, tipo de documento, tipo
+          de pago o estado antes de descargar.
         </p>
       </GroupFormSection>
 
@@ -85,7 +94,9 @@ export default function PurchaseRegisterReportPage() {
         }
       >
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">N° Documento</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            N° Documento
+          </label>
           <Input
             value={document_number}
             onChange={(e) => setDocumentNumber(e.target.value)}
@@ -95,7 +106,9 @@ export default function PurchaseRegisterReportPage() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">N° Referencia</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            N° Referencia
+          </label>
           <Input
             value={reference_number}
             onChange={(e) => setReferenceNumber(e.target.value)}
@@ -105,7 +118,9 @@ export default function PurchaseRegisterReportPage() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Almacén</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Almacén
+          </label>
           <SearchableSelect
             options={warehouseOptions}
             value={warehouse_id}
@@ -116,7 +131,9 @@ export default function PurchaseRegisterReportPage() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Tipo de documento</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Tipo de documento
+          </label>
           <SearchableSelect
             options={DOCUMENT_TYPE_OPTIONS}
             value={document_type}
@@ -127,7 +144,9 @@ export default function PurchaseRegisterReportPage() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Tipo de pago</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Tipo de pago
+          </label>
           <SearchableSelect
             options={PAYMENT_TYPE_OPTIONS}
             value={payment_type}
@@ -138,7 +157,9 @@ export default function PurchaseRegisterReportPage() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Estado</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Estado
+          </label>
           <SearchableSelect
             options={STATUS_OPTIONS}
             value={status}
@@ -149,7 +170,9 @@ export default function PurchaseRegisterReportPage() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Rango de fechas</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Rango de fechas
+          </label>
           <DateRangePickerFilter
             dateFrom={start_date}
             dateTo={end_date}

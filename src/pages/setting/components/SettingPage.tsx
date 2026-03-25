@@ -15,14 +15,14 @@ import { SettingColumns } from "./SettingColumns";
 import { SETTING } from "../lib/setting.interface";
 import SettingActions from "./SettingActions";
 
-const { MODEL, ICON, TITLES } = SETTING;
+const { MODEL, TITLES } = SETTING;
 
 export default function SettingPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "update">("create");
   const [selectedSettingId, setSelectedSettingId] = useState<number | null>(
-    null
+    null,
   );
 
   const { data, isLoading, refetch } = useSettings();
@@ -62,11 +62,6 @@ export default function SettingPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.plural!}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <SettingActions onCreateSetting={handleCreateSetting} />
       </div>
 

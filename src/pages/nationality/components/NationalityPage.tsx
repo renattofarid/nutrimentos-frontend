@@ -18,7 +18,7 @@ import { NATIONALITY } from "../lib/nationality.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import NationalityOptions from "./NationalityOptions";
 
-const { MODEL, ICON, TITLES } = NATIONALITY;
+const { MODEL, TITLES } = NATIONALITY;
 
 export default function NationalityPage() {
   const [search, setSearch] = useState("");
@@ -82,11 +82,6 @@ export default function NationalityPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.plural!}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <NationalityActions onCreateNationality={handleCreateNationality} />
       </div>
 

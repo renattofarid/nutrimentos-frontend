@@ -58,11 +58,7 @@ export default function TypeUserPage() {
     <div className="space-y-4">
       {/* Encabezado */}
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
+       
         <TypeUserActions />
       </div>
 

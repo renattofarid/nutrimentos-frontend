@@ -6,10 +6,7 @@ import PurchaseInstallmentTable from "./PurchaseInstallmentTable";
 import PurchaseInstallmentOptions from "./PurchaseInstallmentOptions";
 import { PurchaseInstallmentColumns } from "./PurchaseInstallmentColumns";
 import DataTablePagination from "@/components/DataTablePagination";
-import { PURCHASE_INSTALLMENT } from "../lib/purchaseinstallment.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
-
-const { MODEL, ICON } = PURCHASE_INSTALLMENT;
 
 export default function PurchaseInstallmentPage() {
   const navigate = useNavigate();
@@ -28,14 +25,6 @@ export default function PurchaseInstallmentPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.plural || "Cuotas de Compra"}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
-      </div>
-
       <PurchaseInstallmentTable
         isLoading={isLoading}
         columns={PurchaseInstallmentColumns({

@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { GeneralModal } from "@/components/GeneralModal";
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import { type PersonSchema } from "@/pages/person/lib/person.schema";
 import { createPersonWithRole } from "@/pages/person/lib/person.actions";
 import { errorToast, successToast } from "@/lib/core.function";
 import { SUPPLIER_ROLE_ID } from "../lib/supplier.interface";
+import GeneralSheet from "@/components/GeneralSheet";
 
 interface SupplierDialogProps {
   open: boolean;
@@ -91,12 +91,13 @@ export function SupplierDialog({
   };
 
   return (
-    <GeneralModal
+    <GeneralSheet
       open={open}
       onClose={() => onOpenChange(false)}
       title="Agregar Proveedor"
       subtitle="Complete los campos para crear un nuevo proveedor"
-      maxWidth="max-w-(--breakpoint-lg)!"
+      icon="Users2"
+      size="2xl"
     >
       <PersonForm
         onSubmit={handleSubmit}
@@ -106,6 +107,6 @@ export function SupplierDialog({
         showBusinessType={true}
         showZone={true}
       />
-    </GeneralModal>
+    </GeneralSheet>
   );
 }

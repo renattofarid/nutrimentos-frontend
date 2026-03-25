@@ -17,13 +17,13 @@ import { format } from "date-fns";
 
 const paymentFormSchema = z.object({
   payment_date: dateStringSchema("Fecha de Pago"),
-  amount_cash: z.string().optional(),
-  amount_card: z.string().optional(),
-  amount_yape: z.string().optional(),
-  amount_plin: z.string().optional(),
-  amount_deposit: z.string().optional(),
-  amount_transfer: z.string().optional(),
-  amount_other: z.string().optional(),
+  amount_cash: z.coerce.string().optional(),
+  amount_card: z.coerce.string().optional(),
+  amount_yape: z.coerce.string().optional(),
+  amount_plin: z.coerce.string().optional(),
+  amount_deposit: z.coerce.string().optional(),
+  amount_transfer: z.coerce.string().optional(),
+  amount_other: z.coerce.string().optional(),
   observation: z.string().optional(),
 });
 
@@ -45,7 +45,7 @@ export default function InstallmentPaymentDialog({
   onSuccess,
 }: InstallmentPaymentDialogProps) {
   const form = useForm<PaymentFormValues>({
-    resolver: zodResolver(paymentFormSchema),
+    resolver: zodResolver(paymentFormSchema) as any,
     defaultValues: {
       payment_date: format(new Date(), "yyyy-MM-dd"),
       amount_cash: "",

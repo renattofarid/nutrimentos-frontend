@@ -441,31 +441,31 @@ export const PurchaseDetailViewPage = () => {
                 </div>
 
                 {/* Pagado */}
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 p-5 shadow-sm hover:shadow-md transition-all">
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-50 to-sky-100 dark:from-sky-950 dark:to-sky-900 p-5 shadow-sm hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pagado</p>
-                      <p className="text-3xl font-bold text-primary">
+                      <p className="text-3xl font-bold text-sky-600 dark:text-sky-400">
                         {currencySymbol} {paid.toFixed(2)}
                       </p>
                     </div>
-                    <div className="rounded-full bg-primary/20 p-3">
-                      <Wallet className="h-6 w-6 text-primary" />
+                    <div className="rounded-full bg-sky-200/50 dark:bg-sky-800/50 p-3">
+                      <Wallet className="h-6 w-6 text-sky-600 dark:text-sky-400" />
                     </div>
                   </div>
                 </div>
 
                 {/* Pendiente */}
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 p-5 shadow-sm hover:shadow-md transition-all">
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900 p-5 shadow-sm hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Pendiente</p>
-                      <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+                      <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
                         {currencySymbol} {pending.toFixed(2)}
                       </p>
                     </div>
-                    <div className="rounded-full bg-orange-200/50 dark:bg-orange-800/50 p-3">
-                      <CreditCard className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                    <div className="rounded-full bg-indigo-200/50 dark:bg-indigo-800/50 p-3">
+                      <CreditCard className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
                     </div>
                   </div>
                 </div>

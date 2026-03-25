@@ -6,16 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import GeneralSheet from "@/components/GeneralSheet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
+import { FormInput } from "@/components/FormInput";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import type { SaleInstallmentResource } from "../lib/sale.interface";
 import { createSalePayment } from "../lib/sale.actions";
@@ -70,7 +62,6 @@ export default function InstallmentPaymentDialog({
   const { watch, reset } = form;
   const formValues = watch();
 
-  // Reset form when installment changes
   useEffect(() => {
     if (open) {
       reset({
@@ -154,7 +145,8 @@ export default function InstallmentPaymentDialog({
       open={open}
       onClose={onClose}
       title={`Registrar Pago - Cuota ${installment.installment_number}`}
-      className="w-full sm:max-w-2xl overflow-y-auto p-4"
+      subtitle="Ingresa los detalles del pago para esta cuota"
+      size="2xl"
       icon="Wallet"
     >
       <Form {...form}>
@@ -185,148 +177,80 @@ export default function InstallmentPaymentDialog({
             name="payment_date"
             label="Fecha de Pago"
             placeholder="Selecciona la fecha de pago"
-            disabledRange={{
-              after: new Date(),
-            }}
+            disabledRange={{ after: new Date() }}
           />
 
           {/* Payment Methods */}
           <div className="space-y-3">
-            <Label>Métodos de Pago</Label>
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
+            <p className="text-xs font-bold uppercase text-muted-foreground">
+              Métodos de Pago
+            </p>
+            <div className="grid grid-cols-4 gap-4">
+              <FormInput
                 control={form.control}
                 name="amount_cash"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">Efectivo</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+                label="Efectivo"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
               />
-
-              <FormField
+              <FormInput
                 control={form.control}
                 name="amount_card"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">Tarjeta</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+                label="Tarjeta"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
               />
-
-              <FormField
+              <FormInput
                 control={form.control}
                 name="amount_yape"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">Yape</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+                label="Yape"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
               />
-
-              <FormField
+              <FormInput
                 control={form.control}
                 name="amount_plin"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">Plin</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+                label="Plin"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
               />
-
-              <FormField
+              <FormInput
                 control={form.control}
                 name="amount_deposit"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">Depósito</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+                label="Depósito"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
               />
-
-              <FormField
+              <FormInput
                 control={form.control}
                 name="amount_transfer"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">Transferencia</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+                label="Transferencia"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
               />
-
-              <FormField
-                control={form.control}
-                name="amount_other"
-                render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel className="text-sm">Otro</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              <div className="col-span-2">
+                <FormInput
+                  control={form.control}
+                  name="amount_other"
+                  label="Otro"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                />
+              </div>
             </div>
           </div>
 
@@ -356,21 +280,11 @@ export default function InstallmentPaymentDialog({
           </div>
 
           {/* Observation */}
-          <FormField
+          <FormInput
             control={form.control}
             name="observation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Observación</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Ingrese una observación (opcional)"
-                    rows={3}
-                    {...field}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
+            label="Observación"
+            placeholder="Ingrese una observación (opcional)"
           />
 
           {/* Actions */}

@@ -74,8 +74,9 @@ export default function InstallmentPaymentsSheet({
       open={open}
       onClose={onClose}
       title={`Pagos de Cuota ${installment.installment_number}`}
+      subtitle="Revisa el historial de pagos realizados para esta cuota"
       icon="CreditCard"
-      className="overflow-y-auto w-full p-4 sm:max-w-2xl"
+      className="overflow-y-auto w-full sm:max-w-2xl"
     >
       <div className="space-y-6">
         {/* Installment Summary */}

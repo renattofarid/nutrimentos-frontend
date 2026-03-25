@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
-import { Loader, Plus, Trash2, Pencil, Users2, UserPlus } from "lucide-react";
+import { Loader, Users2, UserPlus } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
@@ -14,10 +14,7 @@ import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { CompanyResource } from "@/pages/company/lib/company.interface";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useProduct } from "@/pages/product/lib/product.hook";
-import { Badge } from "@/components/ui/badge";
 import { SupplierDialog } from "@/pages/supplier/components/SupplierDialog";
-import { DataTable } from "@/components/DataTable";
-import type { ColumnDef } from "@tanstack/react-table";
 
 import { errorToast, warningToast } from "@/lib/core.function";
 import { format } from "date-fns";
@@ -126,44 +123,6 @@ export const PurchaseForm = ({
 
   // Estados para cuotas
   const [installments, setInstallments] = useState<InstallmentRow[]>([]);
-  const [editingInstallmentIndex, setEditingInstallmentIndex] = useState<
-    number | null
-  >(null);
-  const [currentInstallment, setCurrentInstallment] = useState<InstallmentRow>({
-    due_days: "",
-    amount: "",
-  });
-  const [calcNumInstallments, setCalcNumInstallments] = useState("");
-  const [calcDayInterval, setCalcDayInterval] = useState("30");
-
-  // Formulario temporal solo para cuotas
-  const installmentTempForm = useForm({
-    defaultValues: {
-      temp_due_days: currentInstallment.due_days,
-      temp_amount: currentInstallment.amount,
-    },
-  });
-
-  // Watchers para cuotas
-  const selectedDueDays = installmentTempForm.watch("temp_due_days");
-  const selectedAmount = installmentTempForm.watch("temp_amount");
-
-  // Observers para cuotas — convertir siempre a string (FormInput type="number" devuelve number)
-  useEffect(() => {
-    const strVal = selectedDueDays != null ? String(selectedDueDays) : "";
-    if (strVal !== currentInstallment.due_days) {
-      setCurrentInstallment((prev) => ({ ...prev, due_days: strVal }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDueDays]);
-
-  useEffect(() => {
-    const strVal = selectedAmount != null ? String(selectedAmount) : "";
-    if (strVal !== currentInstallment.amount) {
-      setCurrentInstallment((prev) => ({ ...prev, amount: strVal }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAmount]);
 
   const form = useForm({
     resolver: zodResolver(
@@ -255,6 +214,9 @@ export const PurchaseForm = ({
   // Watch para el tipo de pago y el switch de IGV
   const selectedPaymentType = form.watch("payment_type");
   const watchIncludeIgv = form.watch("include_igv");
+  const watchDiscount = form.watch("discount_global");
+  const watchFreight = form.watch("freight_cost");
+  const watchLoading = form.watch("loading_cost");
 
   // Sincronizar el estado local includeIgv con el formulario
   useEffect(() => {
@@ -262,6 +224,30 @@ export const PurchaseForm = ({
       setIncludeIgv(watchIncludeIgv);
     }
   }, [watchIncludeIgv, includeIgv]);
+
+  // Cuando cambia a CREDITO y no hay cuotas (create mode), agregar una por defecto
+  useEffect(() => {
+    if (selectedPaymentType === "CREDITO" && installments.length === 0 && mode === "create") {
+      const total = calculatePurchaseTotal();
+      const inst: InstallmentRow[] = [{ due_days: "30", amount: total > 0 ? total.toFixed(2) : "0.00" }];
+      setInstallments(inst);
+      form.setValue("installments", inst);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPaymentType]);
+
+  // Cuando solo hay 1 cuota, siempre sincronizar su monto con el total de la compra
+  useEffect(() => {
+    if (installments.length === 1 && selectedPaymentType === "CREDITO") {
+      const total = calculatePurchaseTotal();
+      if (total >= 0) {
+        const updated: InstallmentRow[] = [{ ...installments[0], amount: total.toFixed(2) }];
+        setInstallments(updated);
+        form.setValue("installments", updated);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [details, watchDiscount, watchFreight, watchLoading]);
 
   // Establecer fechas automáticamente al cargar el formulario
   useEffect(() => {
@@ -650,97 +636,24 @@ export const PurchaseForm = ({
   // Sin lista estática de productos: la búsqueda es async por código (handleProductCodeTab)
   const productOptions: ProductOption[] = [];
 
-  // Funciones para cuotas
-  const handleAddInstallment = () => {
-    if (!currentInstallment.due_days || !currentInstallment.amount) {
-      return;
-    }
-
-    const newAmount = parseFloat(currentInstallment.amount);
-    const purchaseTotal = calculatePurchaseTotal();
-
-    // Calcular el total de cuotas (excluyendo la que se está editando si aplica)
-    let currentInstallmentsTotal = installments.reduce((sum, inst, idx) => {
-      if (editingInstallmentIndex !== null && idx === editingInstallmentIndex) {
-        return sum; // Excluir la cuota que se está editando
-      }
-      return sum + parseFloat(inst.amount);
-    }, 0);
-
-    // Validar que no exceda el total de la compra
-    if (currentInstallmentsTotal + newAmount > purchaseTotal) {
-      errorToast(
-        `El total de cuotas no puede exceder el total de la compra (${purchaseTotal.toFixed(
-          2,
-        )})`,
-      );
-      return;
-    }
-
-    const newInstallment: InstallmentRow = {
-      due_days: String(currentInstallment.due_days),
-      amount: String(currentInstallment.amount),
-    };
-
-    if (editingInstallmentIndex !== null) {
-      const updatedInstallments = [...installments];
-      updatedInstallments[editingInstallmentIndex] = newInstallment;
-      setInstallments(updatedInstallments);
-      form.setValue("installments", updatedInstallments);
-      setEditingInstallmentIndex(null);
-    } else {
-      const updatedInstallments = [...installments, newInstallment];
-      setInstallments(updatedInstallments);
-      form.setValue("installments", updatedInstallments);
-    }
-
-    setCurrentInstallment({
-      due_days: "",
-      amount: "",
-    });
-    installmentTempForm.setValue("temp_due_days", "");
-    installmentTempForm.setValue("temp_amount", "");
+  // Funciones para cuotas (ExcelGrid)
+  const handleInstallmentCellChange = (index: number, field: string, value: string) => {
+    const updated = [...installments];
+    updated[index] = { ...updated[index], [field]: value };
+    setInstallments(updated);
+    form.setValue("installments", updated);
   };
 
-  const handleEditInstallment = (index: number) => {
-    const inst = installments[index];
-    setCurrentInstallment(inst);
-    // Actualizar formulario temporal manualmente
-    installmentTempForm.setValue("temp_due_days", inst.due_days);
-    installmentTempForm.setValue("temp_amount", inst.amount);
-    setEditingInstallmentIndex(index);
+  const handleAddInstallmentRow = () => {
+    const updated = [...installments, { due_days: "30", amount: "" }];
+    setInstallments(updated);
+    form.setValue("installments", updated);
   };
 
   const handleRemoveInstallment = (index: number) => {
-    const updatedInstallments = installments.filter((_, i) => i !== index);
-    setInstallments(updatedInstallments);
-    form.setValue("installments", updatedInstallments);
-  };
-
-  const handleCalculateInstallments = () => {
-    const n = parseInt(calcNumInstallments);
-    const interval = parseInt(calcDayInterval) || 30;
-    if (!n || n <= 0) return;
-
-    const purchaseTotal = calculatePurchaseTotal();
-    if (purchaseTotal <= 0) {
-      warningToast("Agregue productos antes de calcular las cuotas");
-      return;
-    }
-
-    const baseAmount = Math.floor((purchaseTotal / n) * 100) / 100;
-    const lastAmount = purchaseTotal - baseAmount * (n - 1);
-
-    const newInstallments: InstallmentRow[] = Array.from(
-      { length: n },
-      (_, i) => ({
-        due_days: String((i + 1) * interval),
-        amount: i === n - 1 ? lastAmount.toFixed(2) : baseAmount.toFixed(2),
-      }),
-    );
-
-    setInstallments(newInstallments);
-    form.setValue("installments", newInstallments);
+    const updated = installments.filter((_, i) => i !== index);
+    setInstallments(updated);
+    form.setValue("installments", updated);
   };
 
   const calculateInstallmentsTotal = () => {
@@ -1044,193 +957,57 @@ export const PurchaseForm = ({
               : ""
           }
         >
-          {selectedPaymentType === "CREDITO" &&
-            (() => {
-              const installmentColumns: ColumnDef<
-                InstallmentRow & { _idx: number }
-              >[] = [
-                {
-                  header: "Cuota",
-                  accessorKey: "_idx",
-                  enableSorting: false,
-                  cell: ({ row }) => `Cuota ${row.original._idx + 1}`,
-                },
-                {
-                  header: "Días",
-                  accessorKey: "due_days",
-                  enableSorting: false,
-                  cell: ({ row }) => `${row.original.due_days} días`,
-                },
-                {
-                  header: "Monto",
-                  accessorKey: "amount",
-                  enableSorting: false,
-                  cell: ({ row }) => (
-                    <span className="font-semibold">
-                      S/. {formatNumber(parseFloat(row.original.amount))}
-                    </span>
-                  ),
-                },
-                {
-                  id: "actions",
-                  header: "Acciones",
-                  enableSorting: false,
-                  cell: ({ row }) => (
-                    <div className="flex gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditInstallment(row.original._idx)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          handleRemoveInstallment(row.original._idx)
-                        }
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  ),
-                },
-              ];
-              const installmentTableData = installments.map((inst, i) => ({
-                ...inst,
-                _idx: i,
-              }));
-
-              return (
-                <GroupFormSection
-                  title="Cuotas de Pago"
-                  icon={Users2}
-                  cols={{ sm: 1 }}
-                >
-                  {/* Cálculo rápido */}
-                  <div className="grid grid-cols-3 gap-2 p-3 bg-muted/40 rounded-lg border">
-                    <FormInput
-                      name="calc_num"
-                      label="Nro. cuotas"
-                      type="number"
-                      min={1}
-                      placeholder="3"
-                      value={calcNumInstallments}
-                      onChange={(e) =>
-                        setCalcNumInstallments(String((e.target as any).value))
-                      }
-                    />
-                    <FormInput
-                      name="calc_days"
-                      label="Días/cuota"
-                      type="number"
-                      min={1}
-                      placeholder="30"
-                      value={calcDayInterval}
-                      onChange={(e) =>
-                        setCalcDayInterval(String((e.target as any).value))
-                      }
-                    />
-                    <div className="flex items-end">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        className="w-full"
-                        disabled={
-                          !calcNumInstallments ||
-                          parseInt(calcNumInstallments) <= 0
-                        }
-                        onClick={handleCalculateInstallments}
-                      >
-                        Calcular
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Agregar cuota individual */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-sidebar rounded-lg">
-                    <FormInput
-                      control={installmentTempForm.control}
-                      name="temp_due_days"
-                      label="Días de Vencimiento"
-                      type="number"
-                      placeholder="0"
-                    />
-                    <FormInput
-                      control={installmentTempForm.control}
-                      name="temp_amount"
-                      label="Monto"
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                    />
-                    <div className="flex items-end">
-                      <Button
-                        type="button"
-                        variant="default"
-                        onClick={handleAddInstallment}
-                        disabled={
-                          !currentInstallment.due_days ||
-                          !currentInstallment.amount
-                        }
-                        className="w-full"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        {editingInstallmentIndex !== null
-                          ? "Actualizar"
-                          : "Agregar"}
-                      </Button>
-                    </div>
-                  </div>
-
-                  {installments.length > 0 ? (
-                    <>
-                      <DataTable
-                        columns={installmentColumns}
-                        data={installmentTableData}
-                        variant="outline"
-                        isVisibleColumnFilter={false}
-                        mobileCardRender={(row) => (
-                          <div className="flex justify-between items-center px-3 py-2 text-sm">
-                            <span className="font-medium">
-                              Cuota {row._idx + 1} — {row.due_days} días
-                            </span>
-                            <span className="font-semibold">
-                              S/. {formatNumber(parseFloat(row.amount))}
-                            </span>
+          {selectedPaymentType === "CREDITO" && (
+            <GroupFormSection title="Cuotas de Pago" icon={Users2} cols={{ sm: 1 }}>
+              <ExcelGrid
+                columns={[
+                  {
+                    id: "due_days",
+                    header: "Días",
+                    type: "number",
+                    accessor: "due_days",
+                    width: "140px",
+                  },
+                  {
+                    id: "amount",
+                    header: "Monto",
+                    type: installments.length === 1 ? "readonly" : "number",
+                    accessor: "amount",
+                    width: "180px",
+                    render: installments.length === 1
+                      ? (row) => (
+                          <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold text-muted-foreground">
+                            S/. {formatNumber(parseFloat(row.amount) || 0)}
                           </div>
-                        )}
-                      />
-                      <div className="flex justify-between items-center px-2 py-1 font-bold text-sm">
-                        <span>TOTAL CUOTAS:</span>
-                        <span className="text-blue-600 text-base">
-                          S/. {formatNumber(calculateInstallmentsTotal())}
-                        </span>
-                      </div>
-                      {!installmentsMatchTotal() && (
-                        <div className="p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-                          <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                            ⚠️ El total de cuotas (
-                            {formatNumber(calculateInstallmentsTotal())}) debe
-                            ser igual al total de la compra (
-                            {formatNumber(calculatePurchaseTotal())}).
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Badge variant="outline" className="text-lg p-3">
-                        No hay cuotas agregadas
-                      </Badge>
+                        )
+                      : undefined,
+                  },
+                ]}
+                data={installments}
+                onAddRow={handleAddInstallmentRow}
+                onRemoveRow={handleRemoveInstallment}
+                onCellChange={handleInstallmentCellChange}
+                emptyMessage="No hay cuotas"
+              />
+              {installments.length > 1 && (
+                <>
+                  <div className="flex justify-between items-center px-2 py-1 font-bold text-sm">
+                    <span>TOTAL CUOTAS:</span>
+                    <span className="text-blue-600 text-base">
+                      S/. {formatNumber(calculateInstallmentsTotal())}
+                    </span>
+                  </div>
+                  {!installmentsMatchTotal() && (
+                    <div className="p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+                      <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
+                        ⚠️ El total de cuotas ({formatNumber(calculateInstallmentsTotal())}) debe ser igual al total de la compra ({formatNumber(calculatePurchaseTotal())}).
+                      </p>
                     </div>
                   )}
-                </GroupFormSection>
-              );
-            })()}
+                </>
+              )}
+            </GroupFormSection>
+          )}
 
           {/* Totales y Observaciones */}
           <GroupFormSection

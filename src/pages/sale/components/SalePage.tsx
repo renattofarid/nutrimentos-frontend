@@ -18,7 +18,7 @@ import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import SaleDetailSheet from "./SaleDetailSheet";
 import { findSaleById, exportBulkTickets } from "../lib/sale.actions";
 import TitleComponent from "@/components/TitleComponent";
-import { errorToast, successToast } from "@/lib/core.function";
+import { errorToast, promiseToast } from "@/lib/core.function";
 import { InstallmentPaymentManagementSheet } from "@/pages/accounts-receivable/components";
 import PageWrapper from "@/components/PageWrapper";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
@@ -199,38 +199,27 @@ export default function SalePage() {
     }
   };
 
-  const handleExportTickets = async () => {
-    try {
-      // Get selected IDs from rowSelection state
-      const selectedIds = Object.keys(rowSelection)
-        .filter((key) => rowSelection[key])
-        .map((id) => parseInt(id));
+  const handleExportTickets = () => {
+    const selectedIds = Object.keys(rowSelection)
+      .filter((key) => rowSelection[key])
+      .map((id) => parseInt(id));
 
-      if (selectedIds.length === 0) {
-        errorToast("No hay ventas seleccionadas");
-        return;
-      }
-
-      const blob = await exportBulkTickets(selectedIds);
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `tickets_${new Date().toISOString().split("T")[0]}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      successToast(`${selectedIds.length} ticket(s) exportado(s) correctamente`);
-
-      // Clear selection after export
-      setRowSelection({});
-    } catch (error) {
-      console.error("Error al exportar tickets", error);
-      errorToast("Error al exportar tickets");
+    if (selectedIds.length === 0) {
+      errorToast("No hay ventas seleccionadas");
+      return;
     }
+
+    const downloadPromise = exportBulkTickets(selectedIds).then((blob) => {
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setRowSelection({});
+    });
+
+    promiseToast(downloadPromise, {
+      loading: "Descargando tickets...",
+      success: `${selectedIds.length} ticket(s) exportado(s) correctamente`,
+      error: "Error al exportar tickets",
+    });
   };
 
   const { MODEL, ICON } = SALE;

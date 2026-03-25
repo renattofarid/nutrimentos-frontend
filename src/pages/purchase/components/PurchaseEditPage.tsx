@@ -91,6 +91,7 @@ export default function PurchaseEditPage() {
         tax: detail.tax.toString(),
       })),
       installments: data.installments.map((installment) => ({
+        id: installment.id,
         due_days: installment.due_days.toString(),
         amount: installment.amount.toString(),
       })),

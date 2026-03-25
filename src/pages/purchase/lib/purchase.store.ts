@@ -180,6 +180,7 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
         ...(data.installments !== undefined && data.installments?.length > 0
           ? {
               installments: data.installments.map((installment) => ({
+                ...(installment.id !== undefined && { id: installment.id }),
                 due_days: Number(installment.due_days),
                 amount: Number(installment.amount),
               })),

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWarehouseDocuments } from "../lib/warehouse-document.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import WarehouseDocumentActions from "./WarehouseDocumentActions";
 import WarehouseDocumentTable from "./WarehouseDocumentTable";
 import WarehouseDocumentOptions from "./WarehouseDocumentOptions";

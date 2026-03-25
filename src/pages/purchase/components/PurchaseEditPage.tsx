@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { PurchaseForm } from "./PurchaseForm";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import FormSkeleton from "@/components/FormSkeleton";
@@ -10,14 +10,13 @@ import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 import { usePurchaseStore } from "../lib/purchase.store";
-import { PURCHASE, type PurchaseResource } from "../lib/purchase.interface";
+import { type PurchaseResource } from "../lib/purchase.interface";
 import type { PurchaseSchema } from "../lib/purchase.schema";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
 
 export default function PurchaseEditPage() {
-  const { ICON } = PURCHASE;
   const { user } = useAuthStore();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -46,7 +45,6 @@ export default function PurchaseEditPage() {
     refetchWarehouses();
     refetchBranches();
   }, []);
-
 
   const isLoading =
     !suppliers || warehousesLoading || branchesLoading || isFinding;
@@ -116,11 +114,6 @@ export default function PurchaseEditPage() {
   if (isLoading) {
     return (
       <PageWrapper size="3xl">
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <TitleFormComponent title="Compra" mode="edit" icon={ICON} />
-          </div>
-        </div>
         <FormSkeleton />
       </PageWrapper>
     );
@@ -129,9 +122,6 @@ export default function PurchaseEditPage() {
   if (!purchase) {
     return (
       <PageWrapper size="3xl">
-        <div className="flex items-center gap-4 mb-6">
-          <TitleFormComponent title="Compra" mode="edit" icon={ICON} />
-        </div>
         <div className="text-center py-8">
           <p className="text-muted-foreground">Compra no encontrada</p>
         </div>
@@ -141,12 +131,6 @@ export default function PurchaseEditPage() {
 
   return (
     <PageWrapper size="3xl">
-      <div className="mb-6">
-        <div className="flex items-center gap-4 mb-4">
-          <TitleFormComponent title="Compra" mode="edit" icon={ICON} />
-        </div>
-      </div>
-
       {suppliers &&
         suppliers.length > 0 &&
         warehouses &&

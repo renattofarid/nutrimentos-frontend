@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDocumentType } from "../lib/document-type.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import DocumentTypeActions from "./DocumentTypeActions";
 import DocumentTypeTable from "./DocumentTypeTable";
 import DocumentTypeOptions from "./DocumentTypeOptions";

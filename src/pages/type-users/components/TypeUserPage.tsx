@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTypeUsers } from "../lib/typeUser.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import TypeUserActions from "./TypeUserActions";
 import TypeUserTable from "./TypeUserTable";
 import TypeUserOptions from "./TypeUserOptions";

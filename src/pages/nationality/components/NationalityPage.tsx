@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNationality } from "../lib/nationality.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import NationalityActions from "./NationalityActions";
 import NationalityTable from "./NationalityTable";
 import NationalityModal from "./NationalityModal";

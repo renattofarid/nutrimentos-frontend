@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { Button } from "@/components/ui/button";
 import { List } from "lucide-react";
 import { SaleForm } from "./SaleForm";
@@ -12,7 +12,6 @@ import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
-import { SALE } from "../lib/sale.interface";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -20,7 +19,6 @@ import { AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 
 export const SaleAddPage = () => {
-  const { ICON } = SALE;
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuthStore();
@@ -71,11 +69,6 @@ export const SaleAddPage = () => {
   if (isLoading) {
     return (
       <PageWrapper size="3xl">
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <TitleFormComponent title="Venta" mode="create" icon={ICON} />
-          </div>
-        </div>
         <FormSkeleton />
       </PageWrapper>
     );
@@ -92,7 +85,6 @@ export const SaleAddPage = () => {
   return (
     <PageWrapper size="3xl">
       <div className="flex items-center justify-between">
-        <TitleFormComponent title="Venta" mode="create" icon={ICON} />
         <Button
           size="sm"
           variant="outline"

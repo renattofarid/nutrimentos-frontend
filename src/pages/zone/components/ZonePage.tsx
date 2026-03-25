@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useZone } from "../lib/zone.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import ZoneActions from "./ZoneActions";
 import ZoneTable from "./ZoneTable";
 import ZoneOptions from "./ZoneOptions";

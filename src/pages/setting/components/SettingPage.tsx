@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSettings } from "../lib/setting.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import SettingTable from "./SettingTable";
 import SettingModal from "./SettingModal";
 import { deleteSetting } from "../lib/setting.actions";

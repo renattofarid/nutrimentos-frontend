@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import TitleComponent from "@/components/TitleComponent";
+
 import PriceListForm from "./PriceListForm";
 import { usePriceListStore } from "../lib/pricelist.store";
 import { PRICELIST } from "../lib/pricelist.interface";

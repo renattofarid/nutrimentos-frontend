@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import { type PersonSchemaClient } from "@/pages/person/lib/person.schema";
 import { createPersonWithRoleAndPriceList } from "@/pages/person/lib/person.actions";
@@ -12,11 +12,9 @@ import {
   SUCCESS_MESSAGE,
   successToast,
 } from "@/lib/core.function";
-import { CLIENT, CLIENT_ROLE_ID } from "../lib/client.interface";
+import { CLIENT_ROLE_ID } from "../lib/client.interface";
 import FormWrapper from "@/components/FormWrapper";
 import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
-
-const { MODEL, ICON } = CLIENT;
 
 export default function ClientAddPage() {
   const navigate = useNavigate();
@@ -74,7 +72,7 @@ export default function ClientAddPage() {
       await createPersonWithRoleAndPriceList(
         createPersonData,
         Number(data.role_id),
-        data.client_category_id ? Number(data.client_category_id) : undefined
+        data.client_category_id ? Number(data.client_category_id) : undefined,
       );
       successToast(
         SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "create"),
@@ -106,10 +104,6 @@ export default function ClientAddPage() {
 
   return (
     <FormWrapper>
-      <div className="mb-6">
-        <TitleFormComponent icon={ICON} title={MODEL.name} mode="edit" />
-      </div>
-
       <PersonForm
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}

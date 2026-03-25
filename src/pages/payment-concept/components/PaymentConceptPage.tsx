@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePaymentConcept } from "../lib/payment-concept.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import PaymentConceptActions from "./PaymentConceptActions";
 import PaymentConceptTable from "./PaymentConceptTable";
 import PaymentConceptModal from "./PaymentConceptModal";

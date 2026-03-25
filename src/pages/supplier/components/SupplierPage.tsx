@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSuppliers } from "../lib/supplier.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import SupplierActions from "./SupplierActions";
 import PersonTable from "@/pages/person/components/PersonTable";
 import PersonOptions from "@/pages/person/components/PersonOptions";

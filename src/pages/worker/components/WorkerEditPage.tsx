@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { BackButton } from "@/components/BackButton";
 import { type PersonSchema } from "@/pages/person/lib/person.schema";
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import {
@@ -15,13 +14,11 @@ import {
   successToast,
   errorToast,
 } from "@/lib/core.function";
-import { WORKER, WORKER_ROLE_ID } from "../lib/worker.interface";
+import { WORKER_ROLE_ID } from "../lib/worker.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import FormWrapper from "@/components/FormWrapper";
 import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
-
-const { MODEL } = WORKER;
 
 export default function WorkerEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -100,7 +97,7 @@ export default function WorkerEditPage() {
 
       await updatePerson(personData.id, updatePersonData);
       successToast(
-        SUCCESS_MESSAGE({ name: "Trabajador", gender: false }, "update")
+        SUCCESS_MESSAGE({ name: "Trabajador", gender: false }, "update"),
       );
       navigate("/trabajadores");
     } catch (error: unknown) {
@@ -118,7 +115,7 @@ export default function WorkerEditPage() {
 
       errorToast(
         errorMessage,
-        ERROR_MESSAGE({ name: "Trabajador", gender: false }, "update")
+        ERROR_MESSAGE({ name: "Trabajador", gender: false }, "update"),
       );
     } finally {
       setIsSubmitting(false);
@@ -137,11 +134,6 @@ export default function WorkerEditPage() {
 
   return (
     <FormWrapper>
-      <div className="flex items-center gap-4 mb-6">
-        <BackButton to="/trabajadores" />
-        <TitleFormComponent title={MODEL.name} mode="edit" />
-      </div>
-
       <PersonForm
         initialData={personData}
         onSubmit={handleSubmit}

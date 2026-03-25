@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useBoxShiftById } from "../lib/box-shift.hook";
 import { useBoxMovement } from "@/pages/box-movement/lib/box-movement.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { BOX_SHIFT } from "../lib/box-shift.interface";
@@ -61,11 +61,6 @@ export default function BoxShiftDetailPage() {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <TitleComponent
-            title={`Turno #${shift.id}`}
-            subtitle="Detalle del turno de caja"
-            icon={BOX_SHIFT.ICON}
-          />
         </div>
         <Badge
           color={shift.is_open ? "default" : "secondary"}

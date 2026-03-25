@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { ProductForm } from "./ProductForm";
 import { type ProductSchema } from "../lib/product.schema";
 import {
@@ -24,7 +24,7 @@ import FormSkeleton from "@/components/FormSkeleton";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 import PageWrapper from "@/components/PageWrapper";
 
-const { MODEL, ROUTE, ICON } = PRODUCT;
+const { MODEL, ROUTE } = PRODUCT;
 
 export default function ProductAddPage() {
   const navigate = useNavigate();
@@ -97,13 +97,6 @@ export default function ProductAddPage() {
 
   return (
     <PageWrapper size="3xl">
-      <TitleFormComponent
-        title={MODEL.name}
-        icon={ICON}
-        mode="create"
-        handleBack={() => navigate(ROUTE)}
-      />
-
       {isLoading ? (
         <FormSkeleton />
       ) : (

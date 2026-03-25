@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import TitleComponent from "@/components/TitleComponent";
+
 import UserOptions from "./UserOptions";
 import UserTable from "./UserTable";
 import { UserColumns } from "./UserColumns";

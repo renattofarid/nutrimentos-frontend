@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePurchaseCreditNote } from "../lib/purchase-credit-note.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import PurchaseCreditNoteActions from "./PurchaseCreditNoteActions";
 import PurchaseCreditNoteTable from "./PurchaseCreditNoteTable";
 import PurchaseCreditNoteOptions from "./PurchaseCreditNoteOptions";

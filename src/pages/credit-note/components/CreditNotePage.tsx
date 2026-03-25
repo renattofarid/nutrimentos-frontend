@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCreditNote } from "../lib/credit-note.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import CreditNoteActions from "./CreditNoteActions";
 import CreditNoteTable from "./CreditNoteTable";
 import CreditNoteOptions from "./CreditNoteOptions";

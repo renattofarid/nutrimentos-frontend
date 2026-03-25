@@ -2,20 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { SaleForm } from "./SaleForm";
 import { type SaleUpdateSchema } from "../lib/sale.schema";
 import { useSaleStore } from "../lib/sales.store";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
-import { SALE, type SaleResource } from "../lib/sale.interface";
+import { type SaleResource } from "../lib/sale.interface";
 import FormSkeleton from "@/components/FormSkeleton";
 import { errorToast } from "@/lib/core.function";
 import PageWrapper from "@/components/PageWrapper";
 
 export const SaleEditPage = () => {
-  const { ICON } = SALE;
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,11 +109,6 @@ export const SaleEditPage = () => {
   if (isLoading) {
     return (
       <PageWrapper size="3xl">
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <TitleFormComponent title="Venta" mode="edit" icon={ICON} />
-          </div>
-        </div>
         <FormSkeleton />
       </PageWrapper>
     );
@@ -123,9 +117,6 @@ export const SaleEditPage = () => {
   if (!sale) {
     return (
       <PageWrapper size="3xl">
-        <div className="flex items-center gap-4 mb-6">
-          <TitleFormComponent title="Venta" mode="edit" icon={ICON} />
-        </div>
         <div className="text-center py-8">
           <p className="text-muted-foreground">Venta no encontrada</p>
         </div>
@@ -135,12 +126,6 @@ export const SaleEditPage = () => {
 
   return (
     <PageWrapper size="3xl">
-      <div className="mb-6">
-        <div className="flex items-center gap-4 mb-4">
-          <TitleFormComponent title="Venta" mode="edit" icon={ICON} />
-        </div>
-      </div>
-
       <div className="space-y-6">
         {/* Main Form */}
         {companies &&

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUserBoxAssignment } from "../lib/userboxassignment.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import UserBoxAssignmentActions from "./UserBoxAssignmentActions";
 import UserBoxAssignmentTable from "./UserBoxAssignmentTable";
 import UserBoxAssignmentOptions from "./UserBoxAssignmentOptions";

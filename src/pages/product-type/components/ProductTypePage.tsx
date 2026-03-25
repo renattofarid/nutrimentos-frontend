@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useProductType } from "../lib/product-type.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import ProductTypeActions from "./ProductTypeActions";
 import ProductTypeTable from "./ProductTypeTable";
 import ProductTypeModal from "./ProductTypeModal";

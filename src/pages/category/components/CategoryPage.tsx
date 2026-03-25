@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCategory } from "../lib/category.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import CategoryActions from "./CategoryActions";
 import CategoryTable from "./CategoryTable";
 import CategoryOptions from "./CategoryOptions";

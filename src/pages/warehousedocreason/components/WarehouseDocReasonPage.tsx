@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useWarehouseDocReason } from "../lib/warehousedocreason.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import WarehouseDocReasonActions from "./WarehouseDocReasonActions";
 import WarehouseDocReasonTable from "./WarehouseDocReasonTable";
 import WarehouseDocReasonOptions from "./WarehouseDocReasonOptions";

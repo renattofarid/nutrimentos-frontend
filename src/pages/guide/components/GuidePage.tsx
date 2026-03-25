@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGuides } from "../lib/guide.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import GuideActions from "./GuideActions";
 import GuideTable from "./GuideTable";
 import GuideOptions from "./GuideOptions";

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import TitleComponent from "@/components/TitleComponent";
+
 import {
   Loader,
   ArrowLeft,

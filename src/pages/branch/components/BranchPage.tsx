@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBranch } from "../lib/branch.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import BranchActions from "./BranchActions";
 import BranchTable from "./BranchTable";
 import BranchOptions from "./BranchOptions";
@@ -18,7 +18,7 @@ import { BRANCH } from "../lib/branch.interface";
 import BranchModal from "./BranchModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
-const { MODEL, ICON } = BRANCH;
+const { MODEL } = BRANCH;
 
 export default function BranchPage() {
   const [search, setSearch] = useState("");
@@ -48,11 +48,6 @@ export default function BranchPage() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <TitleComponent
-          title={MODEL.name}
-          subtitle={MODEL.description}
-          icon={ICON}
-        />
         <BranchActions />
       </div>
 

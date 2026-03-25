@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useProduct } from "../lib/product.hook";
 import { useAllCategories } from "@/pages/category/lib/category.hook";
 import { useAllBrands } from "@/pages/brand/lib/brand.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import ProductActions from "./ProductActions";
 import ProductTable from "./ProductTable";
 import ProductOptions from "./ProductOptions";

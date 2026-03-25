@@ -14,18 +14,16 @@ import {
   successToast,
   errorToast,
 } from "@/lib/core.function";
-import { DRIVER, DRIVER_ROLE_ID } from "../lib/driver.interface";
+import { DRIVER_ROLE_ID } from "../lib/driver.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import FormWrapper from "@/components/FormWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
 import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
 
-const { MODEL, ICON } = DRIVER;
-
 // Helper function to map document_type_id to type_document name
 const getDocumentTypeName = (
-  documentTypeId: string
+  documentTypeId: string,
 ): "DNI" | "RUC" | "CE" | "PASAPORTE" => {
   if (documentTypeId === TYPE_DOCUMENT.DNI.id) return "DNI";
   if (documentTypeId === TYPE_DOCUMENT.RUC.id) return "RUC";
@@ -91,7 +89,7 @@ export default function DriverEditPage() {
 
       await updatePerson(personData.id, updatePersonData);
       successToast(
-        SUCCESS_MESSAGE({ name: "Conductor", gender: false }, "update")
+        SUCCESS_MESSAGE({ name: "Conductor", gender: false }, "update"),
       );
       navigate("/conductores");
     } catch (error: any) {
@@ -102,7 +100,7 @@ export default function DriverEditPage() {
 
       errorToast(
         errorMessage,
-        ERROR_MESSAGE({ name: "Conductor", gender: false }, "update")
+        ERROR_MESSAGE({ name: "Conductor", gender: false }, "update"),
       );
     } finally {
       setIsSubmitting(false);
@@ -112,10 +110,6 @@ export default function DriverEditPage() {
   if (isLoading) {
     return (
       <FormWrapper>
-        <div className="flex items-center gap-4 mb-6">
-          <TitleFormComponent title={MODEL.name} mode="edit" icon={ICON} />
-        </div>
-
         <FormSkeleton />
       </FormWrapper>
     );
@@ -123,10 +117,6 @@ export default function DriverEditPage() {
 
   return (
     <FormWrapper>
-      <div className="flex items-center gap-4 mb-6">
-        <TitleFormComponent title={MODEL.name} mode="edit" icon={ICON} />
-      </div>
-
       <PersonForm
         initialData={personData}
         onSubmit={handleSubmit}

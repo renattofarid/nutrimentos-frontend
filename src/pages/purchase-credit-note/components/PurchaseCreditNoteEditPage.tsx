@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { PurchaseCreditNoteForm } from "./PurchaseCreditNoteForm";
 import { type PurchaseCreditNoteSchema } from "../lib/purchase-credit-note.schema";
 import {
@@ -23,7 +23,7 @@ import {
   usePurchaseCreditNoteById,
 } from "../lib/purchase-credit-note.hook";
 
-const { MODEL, ROUTE, ICON } = PURCHASE_CREDIT_NOTE;
+const { MODEL, ROUTE } = PURCHASE_CREDIT_NOTE;
 
 export default function PurchaseCreditNoteEditPage() {
   const navigate = useNavigate();
@@ -97,9 +97,7 @@ export default function PurchaseCreditNoteEditPage() {
       currency: creditNote.currency || "PEN",
       observations: creditNote.observations || "",
       subtotal: creditNote.subtotal ? parseFloat(creditNote.subtotal) : 0,
-      tax_amount: creditNote.tax_amount
-        ? parseFloat(creditNote.tax_amount)
-        : 0,
+      tax_amount: creditNote.tax_amount ? parseFloat(creditNote.tax_amount) : 0,
       total_amount: creditNote.total_amount
         ? parseFloat(creditNote.total_amount)
         : 0,
@@ -175,10 +173,6 @@ export default function PurchaseCreditNoteEditPage() {
   ) {
     return (
       <FormWrapper>
-        <TitleFormComponent
-          title={PURCHASE_CREDIT_NOTE.TITLES.update.title}
-          icon={ICON}
-        />
         <FormSkeleton />
       </FormWrapper>
     );
@@ -187,10 +181,6 @@ export default function PurchaseCreditNoteEditPage() {
   if (!creditNote) {
     return (
       <FormWrapper>
-        <TitleFormComponent
-          title={PURCHASE_CREDIT_NOTE.TITLES.update.title}
-          icon={ICON}
-        />
         <p className="text-muted-foreground">
           No se encontró la nota de crédito.
         </p>
@@ -200,11 +190,6 @@ export default function PurchaseCreditNoteEditPage() {
 
   return (
     <FormWrapper>
-      <TitleFormComponent
-        title={PURCHASE_CREDIT_NOTE.TITLES.update.title}
-        icon={ICON}
-      />
-
       <PurchaseCreditNoteForm
         defaultValues={defaultValues}
         onSubmit={handleSubmit}

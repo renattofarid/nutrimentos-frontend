@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useWarehouseKardex } from "../lib/warehouse-kardex.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";

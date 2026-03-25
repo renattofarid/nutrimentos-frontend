@@ -5,7 +5,7 @@ import {
   useWarehouseAsyncSearch,
   useUserAsyncSearch,
 } from "../lib/reports.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import type {

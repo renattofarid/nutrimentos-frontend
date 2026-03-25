@@ -20,7 +20,7 @@ import {
 import type { SaleInstallmentResource } from "../lib/sale.interface";
 import InstallmentPaymentDialog from "./InstallmentPaymentDialog";
 import InstallmentPaymentsSheet from "./InstallmentPaymentsSheet";
-import TitleComponent from "@/components/TitleComponent";
+
 import { BackButton } from "@/components/BackButton";
 import FormSkeleton from "@/components/FormSkeleton";
 import { GroupFormSection } from "@/components/GroupFormSection";

@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { CreditNoteForm } from "./CreditNoteForm";
 import { type CreditNoteSchema } from "../lib/credit-note.schema";
 import {
@@ -19,7 +19,7 @@ import FormSkeleton from "@/components/FormSkeleton";
 import { useAllSales } from "@/pages/sale/lib/sale.hook";
 import { useAllCreditNoteMotives } from "@/pages/credit-note-motive/lib/credit-note-motive.hook";
 
-const { MODEL, ROUTE, ICON } = CREDIT_NOTE;
+const { MODEL, ROUTE } = CREDIT_NOTE;
 
 export default function CreditNoteAddPage() {
   const navigate = useNavigate();
@@ -40,7 +40,10 @@ export default function CreditNoteAddPage() {
 
   // Obtener la venta seleccionada
   const selectedSale = useMemo(
-    () => preselectedSale || sales?.find((sale) => sale.id === selectedSaleId) || null,
+    () =>
+      preselectedSale ||
+      sales?.find((sale) => sale.id === selectedSaleId) ||
+      null,
     [preselectedSale, sales, selectedSaleId],
   );
 
@@ -108,10 +111,6 @@ export default function CreditNoteAddPage() {
   if ((isReadOnlySale ? false : isLoadingSales) || isLoadingMotives) {
     return (
       <FormWrapper>
-        <TitleFormComponent
-          title={CREDIT_NOTE.TITLES.create.title}
-          icon={ICON}
-        />
         <FormSkeleton />
       </FormWrapper>
     );
@@ -119,10 +118,10 @@ export default function CreditNoteAddPage() {
 
   return (
     <FormWrapper>
-      <TitleFormComponent title={CREDIT_NOTE.TITLES.create.title} icon={ICON} />
-
       <CreditNoteForm
-        defaultValues={preselectedSale ? { sale_id: preselectedSale.id.toString() } : {}}
+        defaultValues={
+          preselectedSale ? { sale_id: preselectedSale.id.toString() } : {}
+        }
         onSubmit={handleSubmit}
         onCancel={() => navigate(ROUTE)}
         isSubmitting={isSubmitting}

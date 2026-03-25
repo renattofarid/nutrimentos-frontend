@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBrand } from "../lib/brand.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import BrandActions from "./BrandActions";
 import BrandTable from "./BrandTable";
 import BrandOptions from "./BrandOptions";

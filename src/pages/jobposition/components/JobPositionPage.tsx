@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useJobPosition } from "../lib/jobposition.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import JobPositionActions from "./JobPositionActions";
 import JobPositionTable from "./JobPositionTable";
 import JobPositionOptions from "./JobPositionOptions";

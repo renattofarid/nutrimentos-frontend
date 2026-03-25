@@ -7,8 +7,6 @@ import { ArrowLeft, Info } from "lucide-react";
 import { ProductImageGallery } from "./ProductImageGallery";
 import FormSkeleton from "@/components/FormSkeleton";
 import FormWrapper from "@/components/FormWrapper";
-import TitleFormComponent from "@/components/TitleFormComponent";
-import { PRODUCT } from "../lib/product.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
 
 interface DetailFieldProps {
@@ -35,7 +33,6 @@ function DetailField({
 }
 
 export default function ProductDetail() {
-  const { ICON } = PRODUCT;
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { product, isFinding, fetchProduct } = useProductStore();
@@ -76,7 +73,6 @@ export default function ProductDetail() {
 
   return (
     <FormWrapper>
-      <TitleFormComponent title="Detalle del Producto" icon={ICON} />
       <GroupFormSection
         title="Información General"
         icon={Info}

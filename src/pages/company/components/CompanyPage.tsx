@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCompany } from "../lib/company.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import CompanyActions from "./CompanyActions";
 import CompanyTable from "./CompanyTable";
 import CompanyOptions from "./CompanyOptions";

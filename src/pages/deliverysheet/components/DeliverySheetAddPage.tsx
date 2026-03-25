@@ -4,8 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { DeliverySheetForm } from "./DeliverySheetForm";
 import { useDeliverySheetStore } from "../lib/deliverysheet.store";
 import type { DeliverySheetSchema } from "../lib/deliverysheet.schema";
-import { DELIVERY_SHEET } from "../lib/deliverysheet.interface";
-import TitleFormComponent from "@/components/TitleFormComponent";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import { useEffect } from "react";
@@ -63,16 +61,10 @@ export default function DeliverySheetAddPage() {
     });
   };
 
-  const { TITLES, ICON } = DELIVERY_SHEET;
 
   return (
     <PageWrapper>
       <div className="flex items-center justify-between mb-6">
-        <TitleFormComponent
-          title={TITLES.create.title}
-          mode="create"
-          icon={ICON}
-        />
         <Button
           size="sm"
           variant="outline"

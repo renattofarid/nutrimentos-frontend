@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useWarehouseProduct } from "../lib/warehouse-product.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import WarehouseProductTable from "./WarehouseProductTable";
 import WarehouseProductOptions from "./WarehouseProductOptions";
 import { WarehouseProductColumns } from "./WarehouseProductColumns";

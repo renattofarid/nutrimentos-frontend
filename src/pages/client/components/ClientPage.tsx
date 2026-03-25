@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useClients } from "../lib/client.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import ClientActions from "./ClientActions";
 import PersonTable from "@/pages/person/components/PersonTable";
 import PersonOptions from "@/pages/person/components/PersonOptions";

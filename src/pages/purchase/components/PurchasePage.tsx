@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import TitleComponent from "@/components/TitleComponent";
+
 import { PurchaseActions } from "./PurchaseActions";
 import { PurchaseOptions } from "./PurchaseOptions";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";

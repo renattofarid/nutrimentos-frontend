@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import TitleComponent from "@/components/TitleComponent";
+
 import { DataTable } from "@/components/DataTable";
 import { getAllInstallments } from "../lib/accounts-receivable.actions";
 import type { SaleInstallmentResource } from "@/pages/sale/lib/sale.interface";
@@ -10,7 +10,6 @@ import InstallmentPaymentsSheet from "@/pages/sale/components/InstallmentPayment
 import AccountsReceivableOptions from "./AccountsReceivableOptions";
 import { getAccountsReceivableColumns } from "./AccountsReceivableColumns";
 import PageWrapper from "@/components/PageWrapper";
-import { ACCOUNTS_RECEIVABLE } from "../lib/accounts-receivable.interface";
 
 export default function AccountsReceivablePage() {
   const [installments, setInstallments] = useState<SaleInstallmentResource[]>(
@@ -137,13 +136,6 @@ export default function AccountsReceivablePage() {
 
   return (
     <PageWrapper>
-      {/* Header */}
-      <TitleComponent
-        title={ACCOUNTS_RECEIVABLE.MODEL.plural}
-        subtitle="Gestión y seguimiento de cuotas pendientes"
-        icon="DollarSign"
-      />
-
       {/* Summary - Minimalista */}
       {Object.keys(summaryByCurrency).length > 0 ? (
         <div className="space-y-2">

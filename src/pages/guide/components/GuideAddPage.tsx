@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { GuideForm } from "./GuideForm";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
@@ -27,7 +27,7 @@ import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
 
 export default function GuideAddPage() {
-  const { ROUTE, MODEL, ICON } = GUIDE;
+  const { ROUTE, MODEL } = GUIDE;
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuthStore();
@@ -89,7 +89,6 @@ export default function GuideAddPage() {
     refetchVehicles();
   }, []);
 
-
   const isLoading =
     branchesLoading ||
     warehousesLoading ||
@@ -147,11 +146,6 @@ export default function GuideAddPage() {
   if (isLoading) {
     return (
       <PageWrapper size="3xl">
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <TitleFormComponent title={MODEL.name} mode="create" icon={ICON} />
-          </div>
-        </div>
         <FormSkeleton />
       </PageWrapper>
     );
@@ -159,12 +153,6 @@ export default function GuideAddPage() {
 
   return (
     <PageWrapper size="3xl">
-      <div className="mb-6">
-        <div className="flex items-center gap-4 mb-4">
-          <TitleFormComponent title={MODEL.name} mode="create" icon={ICON} />
-        </div>
-      </div>
-
       {branches &&
         branches.length > 0 &&
         warehouses &&

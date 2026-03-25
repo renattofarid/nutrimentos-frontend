@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePurchaseInstallment } from "../lib/purchaseinstallment.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import PurchaseInstallmentTable from "./PurchaseInstallmentTable";
 import PurchaseInstallmentOptions from "./PurchaseInstallmentOptions";
 import { PurchaseInstallmentColumns } from "./PurchaseInstallmentColumns";

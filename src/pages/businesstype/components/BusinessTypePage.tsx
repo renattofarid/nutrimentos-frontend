@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBusinessType } from "../lib/businesstype.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import BusinessTypeActions from "./BusinessTypeActions";
 import BusinessTypeTable from "./BusinessTypeTable";
 import BusinessTypeOptions from "./BusinessTypeOptions";

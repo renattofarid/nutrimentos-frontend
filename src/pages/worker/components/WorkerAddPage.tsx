@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import { type PersonSchema } from "@/pages/person/lib/person.schema";
 import { createPersonWithRole } from "@/pages/person/lib/person.actions";
@@ -12,11 +12,9 @@ import {
   SUCCESS_MESSAGE,
   successToast,
 } from "@/lib/core.function";
-import { WORKER, WORKER_ROLE_ID } from "../lib/worker.interface";
+import { WORKER_ROLE_ID } from "../lib/worker.interface";
 import FormWrapper from "@/components/FormWrapper";
 import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
-
-const { MODEL, ICON } = WORKER;
 
 export default function WorkerAddPage() {
   const navigate = useNavigate();
@@ -42,7 +40,10 @@ export default function WorkerAddPage() {
       };
 
       // Only include names when NATURAL or when the document type is DNI
-      if (data.type_person === "NATURAL" || data.document_type_id === TYPE_DOCUMENT.DNI.id) {
+      if (
+        data.type_person === "NATURAL" ||
+        data.document_type_id === TYPE_DOCUMENT.DNI.id
+      ) {
         createPersonData.names = namesOnly;
       }
 
@@ -70,7 +71,7 @@ export default function WorkerAddPage() {
 
       await createPersonWithRole(createPersonData, Number(data.role_id));
       successToast(
-        SUCCESS_MESSAGE({ name: "Trabajador", gender: false }, "create")
+        SUCCESS_MESSAGE({ name: "Trabajador", gender: false }, "create"),
       );
       navigate("/trabajadores");
     } catch (error: unknown) {
@@ -88,7 +89,7 @@ export default function WorkerAddPage() {
 
       errorToast(
         errorMessage,
-        ERROR_MESSAGE({ name: "Trabajador", gender: false }, "create")
+        ERROR_MESSAGE({ name: "Trabajador", gender: false }, "create"),
       );
       // Propagate error so the form container can avoid resetting the form
       throw error;
@@ -99,17 +100,6 @@ export default function WorkerAddPage() {
 
   return (
     <FormWrapper>
-      <div className="mb-6">
-        <div className="flex items-center gap-4 mb-4">
-          <TitleFormComponent
-            handleBack={() => navigate("/trabajadores")}
-            icon={ICON}
-            title={MODEL.name}
-            mode="create"
-          />
-        </div>
-      </div>
-
       <PersonForm
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}

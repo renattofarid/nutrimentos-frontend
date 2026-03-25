@@ -1,5 +1,5 @@
-import { useParams, useNavigate } from "react-router-dom";
-import TitleFormComponent from "@/components/TitleFormComponent";
+import { useParams } from "react-router-dom";
+
 import {
   FileText,
   Calendar,
@@ -17,17 +17,13 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useGuideById } from "../lib/guide.hook";
-import { GUIDE } from "../lib/guide.interface";
 import FormSkeleton from "@/components/FormSkeleton";
 import PageWrapper from "@/components/PageWrapper";
 import { GroupFormSection } from "@/components/GroupFormSection";
 
 export default function GuideDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { data: guide, isFinding } = useGuideById(Number(id));
-
-  const { MODEL, ROUTE } = GUIDE;
 
   if (isFinding || !guide) {
     return (
@@ -90,22 +86,11 @@ export default function GuideDetailPage() {
     return guide.customer.number_document || "-";
   };
 
-  const totalSalesAmount = guide.sales?.reduce(
-    (acc, sale) => acc + sale.total_amount,
-    0
-  ) || 0;
+  const totalSalesAmount =
+    guide.sales?.reduce((acc, sale) => acc + sale.total_amount, 0) || 0;
 
   return (
     <PageWrapper>
-      <div className="mb-6">
-        <TitleFormComponent
-          handleBack={() => navigate(ROUTE)}
-          title={`${MODEL.name} - ${guide.full_document_number}`}
-          mode="view"
-          icon="Truck"
-        />
-      </div>
-
       <div className="space-y-4">
         {/* Cards de resumen */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -136,7 +121,9 @@ export default function GuideDetailPage() {
           <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Total Bultos</p>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Total Bultos
+                </p>
                 <p className="text-xl font-bold text-primary">
                   {guide.total_packages}
                 </p>
@@ -149,7 +136,9 @@ export default function GuideDetailPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Modalidad</p>
-                <Badge color={guide.modality === "PUBLICO" ? "default" : "secondary"}>
+                <Badge
+                  color={guide.modality === "PUBLICO" ? "default" : "secondary"}
+                >
                   {guide.modality === "PUBLICO" ? "Público" : "Privado"}
                 </Badge>
               </div>
@@ -165,8 +154,12 @@ export default function GuideDetailPage() {
           cols={{ sm: 2, md: 3, lg: 4 }}
         >
           <div>
-            <span className="text-sm text-muted-foreground">Número de Documento</span>
-            <p className="font-mono font-bold text-lg">{guide.full_document_number}</p>
+            <span className="text-sm text-muted-foreground">
+              Número de Documento
+            </span>
+            <p className="font-mono font-bold text-lg">
+              {guide.full_document_number}
+            </p>
           </div>
           <div>
             <span className="text-sm text-muted-foreground">Serie</span>
@@ -190,7 +183,9 @@ export default function GuideDetailPage() {
           </div>
           {guide.sale_document_number && (
             <div className="col-span-full">
-              <span className="text-sm text-muted-foreground">Documentos de Venta Asociados</span>
+              <span className="text-sm text-muted-foreground">
+                Documentos de Venta Asociados
+              </span>
               <p className="font-mono text-sm mt-1 p-2 bg-muted/50 rounded">
                 {guide.sale_document_number}
               </p>
@@ -205,11 +200,15 @@ export default function GuideDetailPage() {
           cols={{ sm: 2, md: 4 }}
         >
           <div>
-            <span className="text-sm text-muted-foreground">Fecha de Emisión</span>
+            <span className="text-sm text-muted-foreground">
+              Fecha de Emisión
+            </span>
             <p className="font-semibold">{formatDate(guide.issue_date)}</p>
           </div>
           <div>
-            <span className="text-sm text-muted-foreground">Fecha de Traslado</span>
+            <span className="text-sm text-muted-foreground">
+              Fecha de Traslado
+            </span>
             <p className="font-semibold">{formatDate(guide.transfer_date)}</p>
           </div>
           <div>
@@ -224,13 +223,11 @@ export default function GuideDetailPage() {
 
         {/* Cliente y Almacén */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <GroupFormSection
-            title="Cliente"
-            icon={User}
-            cols={{ sm: 1, md: 2 }}
-          >
+          <GroupFormSection title="Cliente" icon={User} cols={{ sm: 1, md: 2 }}>
             <div>
-              <span className="text-sm text-muted-foreground">Razón Social / Nombre</span>
+              <span className="text-sm text-muted-foreground">
+                Razón Social / Nombre
+              </span>
               <p className="font-semibold">{getCustomerName()}</p>
             </div>
             <div>
@@ -282,12 +279,16 @@ export default function GuideDetailPage() {
           {guide.carrier_mtc_number && (
             <div>
               <span className="text-sm text-muted-foreground">Número MTC</span>
-              <p className="font-mono font-semibold">{guide.carrier_mtc_number}</p>
+              <p className="font-mono font-semibold">
+                {guide.carrier_mtc_number}
+              </p>
             </div>
           )}
           {guide.carrier_document_type && (
             <div>
-              <span className="text-sm text-muted-foreground">Tipo Documento</span>
+              <span className="text-sm text-muted-foreground">
+                Tipo Documento
+              </span>
               <div className="mt-1">
                 <Badge variant="outline">{guide.carrier_document_type}</Badge>
               </div>
@@ -295,15 +296,23 @@ export default function GuideDetailPage() {
           )}
           {guide.carrier_document_number && (
             <div>
-              <span className="text-sm text-muted-foreground">Nº Documento</span>
-              <p className="font-mono font-semibold">{guide.carrier_document_number}</p>
+              <span className="text-sm text-muted-foreground">
+                Nº Documento
+              </span>
+              <p className="font-mono font-semibold">
+                {guide.carrier_document_number}
+              </p>
             </div>
           )}
           {guide.vehicle && (
             <div>
               <span className="text-sm text-muted-foreground">Vehículo</span>
-              <p className="font-mono font-bold text-lg text-primary">{guide.vehicle.plate}</p>
-              <p className="text-sm text-muted-foreground">{guide.vehicle.brand} {guide.vehicle.model}</p>
+              <p className="font-mono font-bold text-lg text-primary">
+                {guide.vehicle.plate}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {guide.vehicle.brand} {guide.vehicle.model}
+              </p>
             </div>
           )}
         </GroupFormSection>
@@ -321,7 +330,9 @@ export default function GuideDetailPage() {
             </div>
             {guide.driver_document_type && (
               <div>
-                <span className="text-sm text-muted-foreground">Tipo Documento</span>
+                <span className="text-sm text-muted-foreground">
+                  Tipo Documento
+                </span>
                 <div className="mt-1">
                   <Badge variant="outline">{guide.driver_document_type}</Badge>
                 </div>
@@ -329,14 +340,20 @@ export default function GuideDetailPage() {
             )}
             {guide.driver_document_number && (
               <div>
-                <span className="text-sm text-muted-foreground">Nº Documento</span>
-                <p className="font-mono font-semibold">{guide.driver_document_number}</p>
+                <span className="text-sm text-muted-foreground">
+                  Nº Documento
+                </span>
+                <p className="font-mono font-semibold">
+                  {guide.driver_document_number}
+                </p>
               </div>
             )}
             {guide.driver_license && (
               <div>
                 <span className="text-sm text-muted-foreground">Licencia</span>
-                <p className="font-mono font-semibold">{guide.driver_license}</p>
+                <p className="font-mono font-semibold">
+                  {guide.driver_license}
+                </p>
               </div>
             )}
           </GroupFormSection>
@@ -368,9 +385,13 @@ export default function GuideDetailPage() {
               </div>
               {guide.ubigeo_origin && (
                 <div>
-                  <span className="text-xs text-muted-foreground">Ubicación</span>
+                  <span className="text-xs text-muted-foreground">
+                    Ubicación
+                  </span>
                   <p className="text-sm">
-                    {guide.ubigeo_origin.province?.department?.name} / {guide.ubigeo_origin.province?.name} / {guide.ubigeo_origin.name}
+                    {guide.ubigeo_origin.province?.department?.name} /{" "}
+                    {guide.ubigeo_origin.province?.name} /{" "}
+                    {guide.ubigeo_origin.name}
                   </p>
                 </div>
               )}
@@ -385,7 +406,9 @@ export default function GuideDetailPage() {
             <div className="space-y-2">
               <div>
                 <span className="text-xs text-muted-foreground">Dirección</span>
-                <p className="font-medium">{guide.destination_address || "-"}</p>
+                <p className="font-medium">
+                  {guide.destination_address || "-"}
+                </p>
               </div>
               <div>
                 <span className="text-xs text-muted-foreground">Ubigeo</span>
@@ -397,9 +420,13 @@ export default function GuideDetailPage() {
               </div>
               {guide.ubigeo_destination && (
                 <div>
-                  <span className="text-xs text-muted-foreground">Ubicación</span>
+                  <span className="text-xs text-muted-foreground">
+                    Ubicación
+                  </span>
                   <p className="text-sm">
-                    {guide.ubigeo_destination.province?.department?.name} / {guide.ubigeo_destination.province?.name} / {guide.ubigeo_destination.name}
+                    {guide.ubigeo_destination.province?.department?.name} /{" "}
+                    {guide.ubigeo_destination.province?.name} /{" "}
+                    {guide.ubigeo_destination.name}
                   </p>
                 </div>
               )}
@@ -423,7 +450,9 @@ export default function GuideDetailPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-muted-foreground">
-                    <th className="text-left py-2 px-2 font-medium">Documento</th>
+                    <th className="text-left py-2 px-2 font-medium">
+                      Documento
+                    </th>
                     <th className="text-left py-2 px-2 font-medium">Tipo</th>
                     <th className="text-left py-2 px-2 font-medium">Fecha</th>
                     <th className="text-left py-2 px-2 font-medium">Pago</th>
@@ -433,14 +462,29 @@ export default function GuideDetailPage() {
                 </thead>
                 <tbody>
                   {guide.sales.map((sale) => (
-                    <tr key={sale.id} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="py-1.5 px-2 font-mono text-xs">{sale.full_document_number}</td>
-                      <td className="py-1.5 px-2">
-                        <Badge color="secondary" className="text-xs">{sale.document_type}</Badge>
+                    <tr
+                      key={sale.id}
+                      className="border-b last:border-0 hover:bg-muted/30"
+                    >
+                      <td className="py-1.5 px-2 font-mono text-xs">
+                        {sale.full_document_number}
                       </td>
-                      <td className="py-1.5 px-2 text-muted-foreground">{formatDate(sale.issue_date)}</td>
                       <td className="py-1.5 px-2">
-                        <Badge color={paymentTypeVariants[sale.payment_type] || "secondary"} className="text-xs">
+                        <Badge color="secondary" className="text-xs">
+                          {sale.document_type}
+                        </Badge>
+                      </td>
+                      <td className="py-1.5 px-2 text-muted-foreground">
+                        {formatDate(sale.issue_date)}
+                      </td>
+                      <td className="py-1.5 px-2">
+                        <Badge
+                          color={
+                            paymentTypeVariants[sale.payment_type] ||
+                            "secondary"
+                          }
+                          className="text-xs"
+                        >
                           {sale.payment_type}
                         </Badge>
                       </td>
@@ -450,8 +494,8 @@ export default function GuideDetailPage() {
                             sale.status === "PAGADA"
                               ? "default"
                               : sale.status === "ANULADA"
-                              ? "destructive"
-                              : "secondary"
+                                ? "destructive"
+                                : "secondary"
                           }
                           className="text-xs"
                         >
@@ -482,26 +526,45 @@ export default function GuideDetailPage() {
                   <tr className="border-b text-muted-foreground">
                     <th className="text-left py-2 px-2 font-medium w-10">#</th>
                     <th className="text-left py-2 px-2 font-medium">Código</th>
-                    <th className="text-left py-2 px-2 font-medium">Producto</th>
+                    <th className="text-left py-2 px-2 font-medium">
+                      Producto
+                    </th>
                     <th className="text-right py-2 px-2 font-medium">Sacos</th>
                     <th className="text-right py-2 px-2 font-medium">Kg</th>
-                    <th className="text-center py-2 px-2 font-medium">Unidad</th>
+                    <th className="text-center py-2 px-2 font-medium">
+                      Unidad
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {guide.details.map((detail, index) => (
-                    <tr key={detail.id} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="py-1.5 px-2 text-muted-foreground">{index + 1}</td>
-                      <td className="py-1.5 px-2 font-mono text-xs">{detail.product?.codigo || "-"}</td>
-                      <td className="py-1.5 px-2 font-medium">{detail.product?.name || detail.description}</td>
-                      <td className="py-1.5 px-2 text-right font-semibold text-primary">
-                        {parseFloat(detail.quantity_sacks) > 0 ? parseFloat(detail.quantity_sacks) : "-"}
+                    <tr
+                      key={detail.id}
+                      className="border-b last:border-0 hover:bg-muted/30"
+                    >
+                      <td className="py-1.5 px-2 text-muted-foreground">
+                        {index + 1}
+                      </td>
+                      <td className="py-1.5 px-2 font-mono text-xs">
+                        {detail.product?.codigo || "-"}
+                      </td>
+                      <td className="py-1.5 px-2 font-medium">
+                        {detail.product?.name || detail.description}
                       </td>
                       <td className="py-1.5 px-2 text-right font-semibold text-primary">
-                        {parseFloat(detail.quantity_kg) > 0 ? parseFloat(detail.quantity_kg) : "-"}
+                        {parseFloat(detail.quantity_sacks) > 0
+                          ? parseFloat(detail.quantity_sacks)
+                          : "-"}
+                      </td>
+                      <td className="py-1.5 px-2 text-right font-semibold text-primary">
+                        {parseFloat(detail.quantity_kg) > 0
+                          ? parseFloat(detail.quantity_kg)
+                          : "-"}
                       </td>
                       <td className="py-1.5 px-2 text-center">
-                        <Badge color="secondary" className="text-xs">{detail.unit_code}</Badge>
+                        <Badge color="secondary" className="text-xs">
+                          {detail.unit_code}
+                        </Badge>
                       </td>
                     </tr>
                   ))}

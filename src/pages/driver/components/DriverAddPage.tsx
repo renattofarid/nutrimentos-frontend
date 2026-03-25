@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import { type PersonSchema } from "@/pages/person/lib/person.schema";
 import { createPersonWithRole } from "@/pages/person/lib/person.actions";
@@ -12,14 +12,14 @@ import {
   SUCCESS_MESSAGE,
   successToast,
 } from "@/lib/core.function";
-import { DRIVER, DRIVER_ROLE_ID } from "../lib/driver.interface";
+import { DRIVER_ROLE_ID } from "../lib/driver.interface";
 import FormWrapper from "@/components/FormWrapper";
 import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
 
-const { MODEL, ICON } = DRIVER;
-
 // Helper function to map document_type_id to type_document name
-const getDocumentTypeName = (documentTypeId: string): "DNI" | "RUC" | "CE" | "PASAPORTE" => {
+const getDocumentTypeName = (
+  documentTypeId: string,
+): "DNI" | "RUC" | "CE" | "PASAPORTE" => {
   if (documentTypeId === TYPE_DOCUMENT.DNI.id) return "DNI";
   if (documentTypeId === TYPE_DOCUMENT.RUC.id) return "RUC";
   return "DNI"; // Default fallback
@@ -34,7 +34,7 @@ export default function DriverAddPage() {
     try {
       // Ensure number_document is not undefined
       const numberDocument = data.number_document || "";
-      
+
       // Transform PersonSchema to CreatePersonRequest
       const createPersonData = {
         username: numberDocument, // Use document number as username
@@ -60,7 +60,7 @@ export default function DriverAddPage() {
 
       await createPersonWithRole(createPersonData, Number(data.role_id));
       successToast(
-        SUCCESS_MESSAGE({ name: "Conductor", gender: false }, "create")
+        SUCCESS_MESSAGE({ name: "Conductor", gender: false }, "create"),
       );
       navigate("/conductores");
     } catch (error: any) {
@@ -70,7 +70,7 @@ export default function DriverAddPage() {
 
       errorToast(
         errorMessage,
-        ERROR_MESSAGE({ name: "Conductor", gender: false }, "create")
+        ERROR_MESSAGE({ name: "Conductor", gender: false }, "create"),
       );
     } finally {
       setIsSubmitting(false);
@@ -79,12 +79,6 @@ export default function DriverAddPage() {
 
   return (
     <FormWrapper>
-      <div className="mb-6">
-        <div className="flex items-center gap-4 mb-4">
-          <TitleFormComponent title={MODEL.name} mode="create" icon={ICON} />
-        </div>
-      </div>
-
       <PersonForm
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}

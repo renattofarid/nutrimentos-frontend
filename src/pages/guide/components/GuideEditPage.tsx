@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { GuideForm } from "./GuideForm";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
@@ -27,7 +27,7 @@ export default function GuideEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { MODEL, ROUTE, ICON } = GUIDE;
+  const { ROUTE } = GUIDE;
   const {
     data: branches,
     isLoading: branchesLoading,
@@ -89,7 +89,6 @@ export default function GuideEditPage() {
     refetchNationalities();
     refetchVehicles();
   }, []);
-
 
   const isLoading =
     branchesLoading ||
@@ -163,11 +162,6 @@ export default function GuideEditPage() {
   if (isLoading) {
     return (
       <PageWrapper size="3xl">
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <TitleFormComponent title={MODEL.name} mode="edit" icon={ICON} />
-          </div>
-        </div>
         <FormSkeleton />
       </PageWrapper>
     );
@@ -175,12 +169,6 @@ export default function GuideEditPage() {
 
   return (
     <PageWrapper size="3xl">
-      <div className="mb-6">
-        <div className="flex items-center gap-4 mb-4">
-          <TitleFormComponent title={MODEL.name} mode="edit" icon={ICON} />
-        </div>
-      </div>
-
       {branches &&
         branches.length > 0 &&
         warehouses &&

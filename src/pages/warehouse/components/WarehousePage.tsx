@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useWarehouse } from "../lib/warehouse.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import WarehouseActions from "./WarehouseActions";
 import WarehouseTable from "./WarehouseTable";
 import WarehouseOptions from "./WarehouseOptions";

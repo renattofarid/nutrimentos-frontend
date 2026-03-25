@@ -17,7 +17,7 @@ import { CreditNoteAddRoute } from "@/pages/credit-note/lib/credit-note.interfac
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import SaleDetailSheet from "./SaleDetailSheet";
 import { findSaleById, exportBulkTickets } from "../lib/sale.actions";
-import TitleComponent from "@/components/TitleComponent";
+
 import { errorToast, promiseToast } from "@/lib/core.function";
 import { InstallmentPaymentManagementSheet } from "@/pages/accounts-receivable/components";
 import PageWrapper from "@/components/PageWrapper";

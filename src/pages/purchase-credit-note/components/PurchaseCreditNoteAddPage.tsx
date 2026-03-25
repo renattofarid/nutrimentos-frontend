@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { PurchaseCreditNoteForm } from "./PurchaseCreditNoteForm";
 import { type PurchaseCreditNoteSchema } from "../lib/purchase-credit-note.schema";
 import {
@@ -20,7 +20,7 @@ import { useAllPurchases } from "@/pages/purchase/lib/purchase.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllPurchaseCreditNoteTypes } from "../lib/purchase-credit-note.hook";
 
-const { MODEL, ROUTE, ICON } = PURCHASE_CREDIT_NOTE;
+const { MODEL, ROUTE } = PURCHASE_CREDIT_NOTE;
 
 export default function PurchaseCreditNoteAddPage() {
   const navigate = useNavigate();
@@ -119,17 +119,9 @@ export default function PurchaseCreditNoteAddPage() {
     }
   };
 
-  if (
-    isLoadingPurchases ||
-    isLoadingWarehouses ||
-    isLoadingTypes
-  ) {
+  if (isLoadingPurchases || isLoadingWarehouses || isLoadingTypes) {
     return (
       <FormWrapper>
-        <TitleFormComponent
-          title={PURCHASE_CREDIT_NOTE.TITLES.create.title}
-          icon={ICON}
-        />
         <FormSkeleton />
       </FormWrapper>
     );
@@ -137,11 +129,6 @@ export default function PurchaseCreditNoteAddPage() {
 
   return (
     <FormWrapper>
-      <TitleFormComponent
-        title={PURCHASE_CREDIT_NOTE.TITLES.create.title}
-        icon={ICON}
-      />
-
       <PurchaseCreditNoteForm
         defaultValues={{}}
         onSubmit={handleSubmit}

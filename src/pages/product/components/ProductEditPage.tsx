@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import TitleFormComponent from "@/components/TitleFormComponent";
+
 import { ProductForm } from "./ProductForm";
 import { type ProductSchema } from "../lib/product.schema";
 import {
@@ -39,7 +39,6 @@ export default function ProductEditPage() {
   const { data: nationalities } = useAllNationalities();
   const { data: suppliers } = useAllPersons();
 
-
   useEffect(() => {
     const loadProductData = async () => {
       if (!id) {
@@ -62,7 +61,7 @@ export default function ProductEditPage() {
   }, [id, navigate, fetchProduct]);
 
   const mapProductToFormValues = (
-    product: ProductResource
+    product: ProductResource,
   ): Partial<ProductSchema> => ({
     codigo: product.codigo,
     name: product.name,
@@ -125,8 +124,6 @@ export default function ProductEditPage() {
 
   return (
     <PageWrapper size="3xl">
-      <TitleFormComponent title={MODEL.name} mode="edit" />
-
       {isLoading ? (
         <FormSkeleton />
       ) : (

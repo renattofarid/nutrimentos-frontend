@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWorkers } from "../lib/worker.hook";
-import TitleComponent from "@/components/TitleComponent";
+
 import WorkerActions from "./WorkerActions";
 import PersonTable from "@/pages/person/components/PersonTable";
 import PersonOptions from "@/pages/person/components/PersonOptions";

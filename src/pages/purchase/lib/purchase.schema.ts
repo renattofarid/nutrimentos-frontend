@@ -36,6 +36,7 @@ export type PurchaseDetailSchema = z.infer<typeof purchaseDetailSchema>;
 // ===== INSTALLMENT SCHEMA =====
 
 export const purchaseInstallmentSchema = z.object({
+  id: z.number().optional(),
   due_days: z
     .string()
     .min(1, { message: "Los días de vencimiento son requeridos" })

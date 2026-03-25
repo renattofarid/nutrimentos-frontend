@@ -181,14 +181,25 @@ export const getPurchaseColumns = ({
         (inst) => parseFloat(inst.pending_amount) > 0,
       );
 
-      // Validar que la suma de cuotas sea igual al total de la compra
-      const totalAmount = parseFloat(row.original.total_amount);
+      // Recalcular el total esperado desde detalles aplicando lógica de IGV (igual que el form)
+      const IGV_RATE = 0.18;
+      const includeIgv = row.original.include_igv;
+      const computedTotal =
+        (row.original.details?.reduce((sum, d) => {
+          const qty =
+            d.quantity_sacks > 0 ? d.quantity_sacks : d.quantity_kg;
+          const price = Number(d.unit_price);
+          const subtotal = qty * price;
+          return sum + (includeIgv ? subtotal : subtotal * (1 + IGV_RATE));
+        }, 0) ?? parseFloat(row.original.total_amount)) -
+        (row.original.discount_global || 0);
+
       const sumOfInstallments =
         row.original.installments?.reduce(
           (sum, inst) => sum + parseFloat(inst.amount),
           0,
         ) || 0;
-      const isValid = Math.abs(totalAmount - sumOfInstallments) < 0.01;
+      const isValid = Math.abs(computedTotal - sumOfInstallments) < 0.01;
 
       return (
         <TooltipProvider>
@@ -215,7 +226,7 @@ export const getPurchaseColumns = ({
                 <TooltipContent>
                   <p className="text-xs">
                     La suma de cuotas ({sumOfInstallments.toFixed(2)}) no
-                    coincide con el total ({totalAmount.toFixed(2)}).
+                    coincide con el total ({computedTotal.toFixed(2)}).
                     <br />
                     Por favor, sincronice las cuotas.
                   </p>

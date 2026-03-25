@@ -89,6 +89,7 @@ export interface CreatePurchaseDetailRequest {
 }
 
 export interface CreatePurchaseInstallmentRequest {
+  id?: number;
   due_days: number;
   amount: number;
 }

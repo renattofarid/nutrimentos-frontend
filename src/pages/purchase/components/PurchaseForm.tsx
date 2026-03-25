@@ -68,6 +68,7 @@ interface DetailRow {
 }
 
 interface InstallmentRow {
+  id?: number;
   due_days: string;
   amount: string;
 }
@@ -314,13 +315,26 @@ export const PurchaseForm = ({
         const quantityKg = parseFloat(detail.quantity_kg) || 0;
         const quantitySacks = parseFloat(detail.quantity_sacks) || 0;
         const unitPrice = parseFloat(detail.unit_price);
-        const tax = parseFloat(detail.tax);
 
         const isBySack = quantitySacks > 0;
         const quantity = isBySack ? quantitySacks : quantityKg;
 
-        const subtotal = quantity * unitPrice;
-        const total = subtotal + tax;
+        let subtotal = 0;
+        let tax = 0;
+        let total = 0;
+
+        if (quantity > 0 && unitPrice > 0) {
+          if (includeIgv) {
+            const totalIncl = quantity * unitPrice;
+            subtotal = totalIncl / (1 + IGV_RATE);
+            tax = totalIncl - subtotal;
+            total = totalIncl;
+          } else {
+            subtotal = quantity * unitPrice;
+            tax = subtotal * IGV_RATE;
+            total = subtotal + tax;
+          }
+        }
 
         return {
           product_id: detail.product_id,
@@ -330,7 +344,7 @@ export const PurchaseForm = ({
           quantity: quantity > 0 ? quantity.toString() : "",
           quantity_kg: quantityKg > 0 ? quantityKg.toString() : "",
           unit_price: detail.unit_price,
-          tax: detail.tax,
+          tax: tax.toFixed(2),
           subtotal,
           total,
           is_by_sack: isBySack,
@@ -343,6 +357,7 @@ export const PurchaseForm = ({
     if (defaultValues.installments && defaultValues.installments.length > 0) {
       const mappedInstallments = (defaultValues.installments as any[]).map(
         (inst) => ({
+          ...(inst.id !== undefined && { id: inst.id }),
           due_days: String(inst.due_days),
           amount: String(inst.amount),
         }),
@@ -736,13 +751,15 @@ export const PurchaseForm = ({
     }
 
     // Preparar cuotas según el tipo de pago
-    let validInstallments: { due_days: string; amount: number }[] | undefined;
+    let validInstallments: { id?: number; due_days: string; amount: number }[] | undefined;
 
     if (selectedPaymentType === "CONTADO") {
       // Cuando es al contado, enviar una sola cuota con el monto total
       const purchaseTotal = calculatePurchaseTotal();
+      const existingInstallmentId = installments[0]?.id;
       validInstallments = [
         {
+          ...(existingInstallmentId !== undefined && { id: existingInstallmentId }),
           due_days: "1",
           amount: purchaseTotal,
         },
@@ -752,6 +769,7 @@ export const PurchaseForm = ({
       validInstallments = installments
         .filter((inst) => inst.due_days && inst.amount)
         .map((inst) => ({
+          ...(inst.id !== undefined && { id: inst.id }),
           due_days: inst.due_days,
           amount: parseFloat(inst.amount),
         }));

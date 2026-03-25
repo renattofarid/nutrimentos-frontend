@@ -58,7 +58,7 @@ export default function PurchaseAddPage() {
     reception_date: "",
     due_date: "",
     payment_type: "CONTADO",
-    incluir_igv: false,
+    include_igv: false,
     currency: "PEN",
     details: [],
     installments: [],

@@ -114,6 +114,9 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
         document_number: data.document_number,
         payment_type: data.payment_type,
         include_igv: data.include_igv,
+        include_cost_account: data.include_cost_account ?? true,
+        freight_cost: data.freight_cost ?? 0,
+        loading_cost: data.loading_cost ?? 0,
         currency: data.currency,
         details: data.details.map((detail) => ({
           product_id: Number(detail.product_id),
@@ -146,6 +149,15 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
         ...(data.warehouse_id && { warehouse_id: Number(data.warehouse_id) }),
         ...(data.include_igv !== undefined && {
           include_igv: data.include_igv,
+        }),
+        ...(data.include_cost_account !== undefined && {
+          include_cost_account: data.include_cost_account,
+        }),
+        ...(data.freight_cost !== undefined && {
+          freight_cost: data.freight_cost ?? 0,
+        }),
+        ...(data.loading_cost !== undefined && {
+          loading_cost: data.loading_cost ?? 0,
         }),
         ...(data.purchase_order_id !== undefined && {
           purchase_order_id: data.purchase_order_id

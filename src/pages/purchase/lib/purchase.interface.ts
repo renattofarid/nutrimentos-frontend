@@ -104,6 +104,9 @@ export interface CreatePurchaseRequest {
   document_number: string;
   payment_type: string;
   include_igv: boolean;
+  include_cost_account?: boolean;
+  freight_cost?: number;
+  loading_cost?: number;
   currency: string;
   details: CreatePurchaseDetailRequest[];
   installments?: CreatePurchaseInstallmentRequest[];
@@ -118,6 +121,10 @@ export interface UpdatePurchaseRequest {
   document_number?: string;
   issue_date?: string;
   payment_type?: string;
+  include_igv?: boolean;
+  include_cost_account?: boolean;
+  freight_cost?: number;
+  loading_cost?: number;
   currency?: string;
   observations?: string;
   details?: CreatePurchaseDetailRequest[];

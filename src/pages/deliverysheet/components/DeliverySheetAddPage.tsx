@@ -11,9 +11,12 @@ import { format } from "date-fns";
 import PageWrapper from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
 import { List } from "lucide-react";
+import { previewDeliverySheet } from "../lib/deliverysheet.actions";
+import { promiseToast } from "@/lib/core.function";
 
 export default function DeliverySheetAddPage() {
   const navigate = useNavigate();
+
   const {
     createDeliverySheet,
     isSubmitting,
@@ -41,6 +44,25 @@ export default function DeliverySheetAddPage() {
 
   const handleCancel = () => {
     navigate("/planillas/listado");
+  };
+
+  const handlePreview = (data: DeliverySheetSchema) => {
+    const preview = previewDeliverySheet({
+      sale_ids: data.sale_ids,
+      type: data.type as "CONTADO" | "CREDITO",
+      zone_id: data.zone_id ? Number(data.zone_id) : undefined,
+      branch_id: data.branch_id ? Number(data.branch_id) : undefined,
+    }).then((blob) => {
+      const url = window.URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+      window.open(url, "_blank");
+      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+    });
+
+    promiseToast(preview, {
+      loading: "Generando vista previa...",
+      success: "Vista previa generada",
+      error: "Error al generar la vista previa",
+    });
   };
 
   const handleSearchSales = (params: {
@@ -80,7 +102,9 @@ export default function DeliverySheetAddPage() {
         }}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
+        onPreview={handlePreview}
         isSubmitting={isSubmitting}
+
         mode="create"
         branches={allBranches || []}
         zones={zones || []}

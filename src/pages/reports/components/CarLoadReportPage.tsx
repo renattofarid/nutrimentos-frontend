@@ -19,7 +19,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  FileText,
   Search,
   Truck,
   Scale,
@@ -29,10 +28,10 @@ import {
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportCarLoadReport } from "../lib/reports.actions";
+import ExportButtons from "@/components/ExportButtons";
 
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
-import { errorToast, successToast } from "@/lib/core.function";
 
 interface FilterFormValues {
   branch_id: string;
@@ -182,7 +181,6 @@ function formatDateParam(v: Date | string | undefined | null): string | null {
 }
 
 export default function CarLoadReportPage() {
-  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [selectedZones, setSelectedZones] = useState<string[]>([]);
   const [zoneSearch, setZoneSearch] = useState("");
@@ -200,7 +198,7 @@ export default function CarLoadReportPage() {
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
-      branch_id: "",
+      branch_id: "1",
       date_from: today,
       date_to: today,
     },
@@ -240,26 +238,15 @@ export default function CarLoadReportPage() {
 
   const handleExportPdf = async () => {
     const values = form.getValues();
-    setIsExportingPdf(true);
-    try {
-      const blob = await exportCarLoadReport(
-        buildParams(values, selectedZones),
-        "pdf",
-      );
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "reporte-llenado-carros.pdf";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      successToast("Reporte de Llenado de Carros exportado exitosamente");
-    } catch {
-      errorToast("Error al exportar el reporte de Llenado de Carros");
-    } finally {
-      setIsExportingPdf(false);
-    }
+    const blob = await exportCarLoadReport(buildParams(values, selectedZones), "pdf");
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "reporte-llenado-carros.pdf";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   };
 
   const toggleZone = (value: string) => {
@@ -311,16 +298,7 @@ export default function CarLoadReportPage() {
                 <Search className="mr-2 h-4 w-4" />
                 Buscar
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleExportPdf}
-                disabled={isExportingPdf || rows.length === 0}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                PDF
-              </Button>
+              <ExportButtons onPdfDownload={handleExportPdf} />
               <Button
                 type="button"
                 variant="outline"

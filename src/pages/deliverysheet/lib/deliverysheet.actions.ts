@@ -54,6 +54,24 @@ export const exportDeliverySheetById = async (id: number): Promise<Blob> => {
   return response.data;
 };
 
+export interface PreviewDeliverySheetParams {
+  sale_ids: number[];
+  type: "CONTADO" | "CREDITO";
+  zone_id?: number;
+  branch_id?: number;
+}
+
+export const previewDeliverySheet = async (
+  params: PreviewDeliverySheetParams,
+): Promise<Blob> => {
+  const response = await api.post<Blob>(
+    `${DELIVERY_SHEET_ENDPOINT}/preview-pdf`,
+    params,
+    { responseType: "blob" },
+  );
+  return response.data;
+};
+
 // ============================================
 // DELIVERY SHEET - Main CRUD Actions
 // ============================================

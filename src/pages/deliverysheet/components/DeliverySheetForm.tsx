@@ -18,6 +18,7 @@ import {
   ChevronUp,
   Calendar,
   ListX,
+  Eye,
 } from "lucide-react";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
@@ -52,7 +53,9 @@ interface DeliverySheetFormProps {
   defaultValues: Partial<DeliverySheetSchema>;
   onSubmit: (data: DeliverySheetSchema) => void;
   onCancel?: () => void;
+  onPreview?: (data: DeliverySheetSchema) => void;
   isSubmitting?: boolean;
+  isPreviewing?: boolean;
   mode?: "create" | "update";
   branches: BranchResource[];
   zones: ZoneResource[];
@@ -72,7 +75,9 @@ export const DeliverySheetForm = ({
   onCancel,
   defaultValues,
   onSubmit,
+  onPreview,
   isSubmitting = false,
+  isPreviewing = false,
   mode = "create",
   branches,
   zones,
@@ -595,6 +600,22 @@ export const DeliverySheetForm = ({
                 onClick={onCancel}
               >
                 Cancelar
+              </Button>
+            )}
+            {onPreview && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isPreviewing || selectedSaleIds.length === 0}
+                onClick={() => onPreview(form.getValues())}
+              >
+                {isPreviewing ? (
+                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Eye className="mr-2 h-4 w-4" />
+                )}
+                Ver Planilla
               </Button>
             )}
             <Button

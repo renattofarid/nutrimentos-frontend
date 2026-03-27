@@ -73,6 +73,15 @@ export function ClientManagementModal({
   );
   const [updatingZoneId, setUpdatingZoneId] = useState<number | null>(null);
 
+  // Al abrir el modal, pre-llenar búsqueda con el cliente seleccionado
+  useEffect(() => {
+    if (open) {
+      setSearch(selectedClientName ?? "");
+      setDebouncedSearch(selectedClientName ?? "");
+      setPage(1);
+    }
+  }, [open, selectedClientName]);
+
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -166,7 +175,7 @@ export function ClientManagementModal({
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsExpanded((v) => !v)}
-                title={isExpanded ? "Reducir" : "Expandir"}
+                tooltip={isExpanded ? "Reducir" : "Expandir"}
               >
                 {isExpanded ? (
                   <Minimize2 className="size-4" />
@@ -178,6 +187,7 @@ export function ClientManagementModal({
                 <Button
                   variant="ghost"
                   size="icon"
+                  tooltip="Cerrar"
                   onClick={() => onOpenChange(false)}
                 >
                   <X className="size-4" />
@@ -194,8 +204,17 @@ export function ClientManagementModal({
                 placeholder="Buscar cliente..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
+                className={search ? "pl-9 pr-9" : "pl-9"}
               />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => { setSearch(""); setDebouncedSearch(""); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
             </div>
             <Button size="sm" onClick={() => setIsCreateOpen(true)}>
               <Plus className="size-4 mr-2" />
@@ -310,13 +329,14 @@ export function ClientManagementModal({
                             variant={isSelected ? "default" : "outline"}
                             size="sm"
                             className="h-8 px-2 text-xs"
-                            onClick={() =>
+                            onClick={() => {
                               onSelectClient(
                                 person.id,
                                 getPersonName(person),
                                 person,
-                              )
-                            }
+                              );
+                              onOpenChange(false);
+                            }}
                             tooltip="Seleccionar cliente"
                           >
                             <Check className="size-3.5 mr-1" />

@@ -10,7 +10,6 @@ import {
   type SaleSchema,
 } from "../lib/sale.schema";
 import {
-  Loader,
   Users2,
   CreditCard,
   ListChecks,
@@ -49,8 +48,6 @@ import { FormInput } from "@/components/FormInput";
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
   onSubmit: (data: any) => void;
-  onCancel?: () => void;
-  isSubmitting?: boolean;
   mode?: "create" | "update";
   branches: BranchResource[];
   warehouses: WarehouseResource[];
@@ -81,10 +78,8 @@ interface InstallmentRow {
 }
 
 export const SaleForm = ({
-  onCancel,
   defaultValues,
   onSubmit,
-  isSubmitting = false,
   mode = "create",
   branches,
   warehouses,
@@ -320,6 +315,12 @@ export const SaleForm = ({
         ? pendingExternalPersonRef.current
         : undefined);
     pendingExternalPersonRef.current = null;
+    if (resolvedItem) {
+      setSelectedCustomerName(
+        resolvedItem.business_name ||
+          `${resolvedItem.names ?? ""} ${resolvedItem.father_surname ?? ""} ${resolvedItem.mother_surname ?? ""}`.trim(),
+      );
+    }
     if (resolvedItem && resolvedItem.person_zones && resolvedItem.person_zones.length > 0) {
       setCustomerAddresses(resolvedItem.person_zones);
       const primary = resolvedItem.person_zones.find((pz) => pz.is_primary);
@@ -884,6 +885,12 @@ export const SaleForm = ({
   const handleFormSubmit = (data: any) => {
     const currencySymbol = getCurrencySymbol();
 
+    // Validar que haya al menos un producto
+    if (details.length === 0 || details.every((d) => !d.product_id)) {
+      errorToast("Debe agregar al menos un producto a la venta");
+      return;
+    }
+
     // Validar que si es a crédito, debe tener cuotas
     if (selectedPaymentType === "CREDITO" && installments.length === 0) {
       errorToast("Para pagos a crédito, debe agregar al menos una cuota");
@@ -972,6 +979,7 @@ export const SaleForm = ({
             first ? first.message : "Hay campos inválidos en el formulario",
           );
         })}
+        id="sale-form"
         className="space-y-2 w-full"
       >
         {/* Información General */}
@@ -1336,32 +1344,6 @@ export const SaleForm = ({
         {/* <pre>
           <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
         </pre> */}
-        {/* Botones */}
-        <div className="flex gap-4 w-full justify-end">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-            Cancelar
-          </Button>
-
-          <Button
-            size="sm"
-            type="submit"
-            disabled={
-              isSubmitting ||
-              (mode === "create" && details.length === 0) ||
-              (mode === "create" &&
-                selectedPaymentType === "CREDITO" &&
-                installments.length === 0) ||
-              (mode === "create" &&
-                installments.length > 0 &&
-                !installmentsMatchTotal())
-            }
-          >
-            <Loader
-              className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`}
-            />
-            {isSubmitting ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
       </form>
 
       {/* Modal de gestión de clientes */}

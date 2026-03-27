@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
-import { List } from "lucide-react";
+import { List, Loader, Save } from "lucide-react";
 import { SaleForm } from "./SaleForm";
 import { type SaleSchema } from "../lib/sale.schema";
 import { useSaleStore } from "../lib/sales.store";
@@ -116,13 +116,22 @@ export const SaleAddPage = () => {
 
   return (
     <PageWrapper size="3xl">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant="outline"
           onClick={() => navigate("/ventas/listado")}
         >
           <List className="size-4 mr-2" /> Ver Listado
+        </Button>
+        <Button
+          size="sm"
+          type="submit"
+          form="sale-form"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+          {isSubmitting ? "Guardando..." : "Guardar"}
         </Button>
       </div>
 
@@ -146,11 +155,9 @@ export const SaleAddPage = () => {
           key={formKey}
           defaultValues={getDefaultValues()}
           onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
           mode="create"
           branches={branches!}
           warehouses={warehouses!}
-          onCancel={() => navigate("/ventas/listado")}
         />
       )}
 
@@ -174,7 +181,10 @@ export const SaleAddPage = () => {
         description="¿Deseas registrar otra venta?"
         confirmText="Sí, crear otra"
         cancelText="No, ir al listado"
-        onConfirm={() => { setFormKey((k) => k + 1); setShowNextDialog(false); }}
+        onConfirm={() => {
+          setFormKey((k) => k + 1);
+          setShowNextDialog(false);
+        }}
         onCancel={() => navigate("/ventas/listado")}
       />
     </PageWrapper>

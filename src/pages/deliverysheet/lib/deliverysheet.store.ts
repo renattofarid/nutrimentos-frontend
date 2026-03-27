@@ -173,7 +173,6 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
 
       await storeDeliverySheet(request);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "create"));
     } catch (error) {
       set({ error: ERROR_MESSAGE(MODEL, "create"), isSubmitting: false });
       throw error;

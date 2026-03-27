@@ -33,13 +33,30 @@ export default function DeliverySheetAddPage() {
     refetchZones();
   }, []);
 
-  const handleSubmit = async (data: DeliverySheetSchema) => {
-    try {
-      await createDeliverySheet(data);
-      navigate("/planillas/listado");
-    } catch (error) {
-      console.error("Error al crear planilla", error);
-    }
+  const handleSubmit = (data: DeliverySheetSchema) => {
+    const promise = createDeliverySheet(data)
+      .then(() =>
+        previewDeliverySheet({
+          sale_ids: data.sale_ids,
+          type: data.type as "CONTADO" | "CREDITO",
+          zone_id: data.zone_id ? Number(data.zone_id) : undefined,
+          branch_id: data.branch_id ? Number(data.branch_id) : undefined,
+        })
+      )
+      .then((blob) => {
+        const url = window.URL.createObjectURL(
+          new Blob([blob], { type: "application/pdf" })
+        );
+        window.open(url, "_blank");
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+        navigate("/planillas/listado");
+      });
+
+    promiseToast(promise, {
+      loading: "Guardando planilla...",
+      success: "Planilla creada. PDF abierto correctamente",
+      error: "Error al crear la planilla",
+    });
   };
 
   const handleCancel = () => {

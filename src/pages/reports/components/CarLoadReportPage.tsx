@@ -185,6 +185,7 @@ export default function CarLoadReportPage() {
   const [selectedZones, setSelectedZones] = useState<string[]>([]);
   const [zoneSearch, setZoneSearch] = useState("");
   const hasSearchedRef = useRef(false);
+  const isAutoSelectingRef = useRef(false);
 
   const { data: rawData, isLoading, fetch } = useCarLoadReport();
   const { data: zonesData } = useZoneAsyncSearch({ per_page: 100 });
@@ -196,6 +197,8 @@ export default function CarLoadReportPage() {
     value: String(z.id),
   }));
 
+  const reportData = rawData?.data;
+
   const form = useForm<FilterFormValues>({
     defaultValues: {
       branch_id: "1",
@@ -203,23 +206,6 @@ export default function CarLoadReportPage() {
       date_to: today,
     },
   });
-
-  // Pre-select all zones once they load
-  useEffect(() => {
-    if (zoneOptions.length > 0 && selectedZones.length === 0) {
-      setSelectedZones(zoneOptions.map((z) => z.value));
-    }
-  }, [zoneOptions.length]);
-
-  // Auto-refetch when zones change (only after first search)
-  useEffect(() => {
-    if (!hasSearchedRef.current) return;
-    const timer = setTimeout(() => {
-      const values = form.getValues();
-      fetch(buildParams(values, selectedZones));
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [selectedZones]);
 
   const buildParams = (
     values: FilterFormValues,
@@ -230,6 +216,36 @@ export default function CarLoadReportPage() {
     date_from: formatDateParam(values.date_from),
     date_to: formatDateParam(values.date_to),
   });
+
+  // Auto-search on mount with today's date (no zone filter = all zones)
+  useEffect(() => {
+    hasSearchedRef.current = true;
+    fetch(buildParams(form.getValues(), []));
+  }, []);
+
+  // When a search result arrives, auto-select only zones that appear in the result
+  useEffect(() => {
+    if (!rawData || !reportData?.zones || zoneOptions.length === 0) return;
+    const matched = zoneOptions
+      .filter((z) => (reportData.zones as string[]).includes(z.label))
+      .map((z) => z.value);
+    isAutoSelectingRef.current = true;
+    setSelectedZones(matched);
+  }, [rawData, zoneOptions.length]);
+
+  // Auto-refetch when zones change (only after first search, skip auto-selections)
+  useEffect(() => {
+    if (!hasSearchedRef.current) return;
+    if (isAutoSelectingRef.current) {
+      isAutoSelectingRef.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      const values = form.getValues();
+      fetch(buildParams(values, selectedZones));
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [selectedZones]);
 
   const handleSearch = (values: FilterFormValues) => {
     hasSearchedRef.current = true;
@@ -255,14 +271,20 @@ export default function CarLoadReportPage() {
     );
   };
 
-  const filteredZones = zoneOptions.filter((z) =>
+  // Only show zones that appear in the last search result
+  const displayedZones = rawData
+    ? zoneOptions.filter((z) =>
+        (reportData?.zones ?? []).includes(z.label)
+      )
+    : [];
+
+  const filteredZones = displayedZones.filter((z) =>
     z.label.toLowerCase().includes(zoneSearch.toLowerCase())
   );
 
   const allSelected =
-    zoneOptions.length > 0 && selectedZones.length === zoneOptions.length;
-
-  const reportData = rawData?.data;
+    displayedZones.length > 0 &&
+    displayedZones.every((z) => selectedZones.includes(z.value));
   const rows = reportData?.rows ?? [];
   const totals = reportData?.totals;
 
@@ -298,7 +320,7 @@ export default function CarLoadReportPage() {
                 <Search className="mr-2 h-4 w-4" />
                 Buscar
               </Button>
-              <ExportButtons onPdfDownload={handleExportPdf} />
+              <ExportButtons onPdfDownload={handleExportPdf} pdfLabel="Imprimir" />
               <Button
                 type="button"
                 variant="outline"
@@ -323,7 +345,7 @@ export default function CarLoadReportPage() {
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() =>
                     setSelectedZones(
-                      allSelected ? [] : zoneOptions.map((z) => z.value),
+                      allSelected ? [] : displayedZones.map((z) => z.value),
                     )
                   }
                 >
@@ -356,15 +378,20 @@ export default function CarLoadReportPage() {
                     />
                   </label>
                 ))}
-                {zoneOptions.length === 0 && (
+                {!rawData && (
                   <p className="text-xs text-muted-foreground py-2 text-center">
-                    Cargando...
+                    Realiza una búsqueda para ver las zonas disponibles.
+                  </p>
+                )}
+                {rawData && displayedZones.length === 0 && (
+                  <p className="text-xs text-muted-foreground py-2 text-center">
+                    Sin zonas para este período.
                   </p>
                 )}
               </div>
-              {zoneOptions.length > 0 && (
+              {displayedZones.length > 0 && (
                 <p className="text-xs text-muted-foreground pt-2">
-                  {selectedZones.length}/{zoneOptions.length} seleccionadas
+                  {selectedZones.filter((id) => displayedZones.some((z) => z.value === id)).length}/{displayedZones.length} seleccionadas
                 </p>
               )}
             </GroupFormSection>

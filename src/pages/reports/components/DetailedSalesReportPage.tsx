@@ -298,8 +298,11 @@ export default function DetailedSalesReportPage() {
               placeholder="Buscar cliente..."
               useQueryHook={useCustomerAsyncSearch}
               mapOptionFn={(item) => ({
-                label: item.name,
+                label:
+                  item.business_name ??
+                  `${item.names} ${item.father_surname} ${item.mother_surname}`.trim(),
                 value: String(item.id),
+                description: item.number_document ?? undefined,
               })}
             />
 

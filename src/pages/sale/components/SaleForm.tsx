@@ -14,7 +14,7 @@ import {
   Users2,
   CreditCard,
   ListChecks,
-  UserPlus,
+  Users,
   FileText,
 } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
@@ -35,7 +35,7 @@ import { formatNumber } from "@/lib/formatCurrency";
 import { DOCUMENT_TYPES, PAYMENT_TYPES } from "../lib/sale.interface";
 import { errorToast, warningToast } from "@/lib/core.function";
 import { GroupFormSection } from "@/components/GroupFormSection";
-import { ClientDialog } from "@/pages/client/components/ClientDialog";
+import { ClientManagementModal } from "@/pages/client/components/ClientManagementModal";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { getNextSeries } from "../lib/sale.actions";
 import { useDynamicPrice } from "../lib/dynamic-price.hook";
@@ -122,10 +122,12 @@ export const SaleForm = ({
     { id: number; zone_name: string; address: string; is_primary: boolean }[]
   >([]);
 
+  
+
   // Referencia al zone_id actual para detectar cambio de zona al cambiar cliente
   const currentZoneIdRef = useRef<number | null>(null);
 
-  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [isClientManagementOpen, setIsClientManagementOpen] = useState(false);
 
   const { fetchDynamicPrice } = useDynamicPrice();
   const queryClient = useQueryClient();
@@ -1094,10 +1096,10 @@ export const SaleForm = ({
               type="button"
               variant="outline"
               size="icon-sm"
-              onClick={() => setIsClientDialogOpen(true)}
-              title="Agregar nuevo cliente"
+              onClick={() => setIsClientManagementOpen(true)}
+              title="Gestión de clientes"
             >
-              <UserPlus className="h-4 w-4" />
+              <Users className="h-4 w-4" />
             </Button>
           </div>
 
@@ -1346,11 +1348,11 @@ export const SaleForm = ({
         </div>
       </form>
 
-      {/* Diálogo para agregar proveedor */}
-      <ClientDialog
-        open={isClientDialogOpen}
-        onOpenChange={setIsClientDialogOpen}
-        onClientCreated={() => {
+      {/* Modal de gestión de clientes */}
+      <ClientManagementModal
+        open={isClientManagementOpen}
+        onOpenChange={setIsClientManagementOpen}
+        onClientChange={() => {
           queryClient.invalidateQueries({ queryKey: [CLIENT.QUERY_KEY] });
         }}
       />

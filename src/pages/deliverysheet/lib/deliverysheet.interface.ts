@@ -21,6 +21,11 @@ export interface SaleCustomer {
   document_number: string | null;
 }
 
+export interface DeliverySheetCreateResponse {
+  message: string;
+  data: DeliverySheetResource;
+}
+
 export interface DeliverySheetById {
   id: number;
   sheet_number: string;

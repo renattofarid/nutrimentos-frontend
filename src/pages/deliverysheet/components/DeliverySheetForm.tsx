@@ -19,6 +19,7 @@ import {
   Calendar,
   ListX,
   Eye,
+  Save,
 } from "lucide-react";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
@@ -227,11 +228,12 @@ export const DeliverySheetForm = ({
     onSearchSales({
       payment_type: typeValue,
       zone_id: !forSingleCustomer && zoneValue ? Number(zoneValue) : undefined,
-      customer_id: forSingleCustomer && customerValue ? Number(customerValue) : undefined,
+      customer_id:
+        forSingleCustomer && customerValue ? Number(customerValue) : undefined,
       date_from: today,
       date_to: today,
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoneValue, customerValue, forSingleCustomer, typeValue]);
 
   const totalAmount = selectedSaleIds.reduce((sum, saleId) => {
@@ -254,48 +256,38 @@ export const DeliverySheetForm = ({
         onSubmit={form.handleSubmit(handleFormSubmit)}
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
-        <div className="flex justify-between items-center gap-4 col-span-full">
-          <div className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{user?.name}</span>
-            <span className="mx-2">·</span>
-            <span>{format(now, "dd/MM/yyyy HH:mm:ss")}</span>
-          </div>
-          <div className="flex gap-4">
-            {onCancel && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onCancel}
-              >
-                Cancelar
-              </Button>
-            )}
-            {onPreview && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={isPreviewing || selectedSaleIds.length === 0}
-                onClick={() => onPreview(form.getValues())}
-              >
-                {isPreviewing ? (
-                  <Loader className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Eye className="mr-2 h-4 w-4" />
-                )}
-                Ver Planilla
-              </Button>
-            )}
+        <div className="flex items-center gap-4 col-span-full">
+          {onCancel && (
             <Button
+              type="button"
+              variant="outline"
               size="sm"
-              type="submit"
-              disabled={isSubmitting || selectedSaleIds.length === 0}
+              onClick={onCancel}
             >
-              {isSubmitting && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-              {mode === "create" ? "Crear Planilla" : "Actualizar Planilla"}
+              <List />
+              Ver Listado
             </Button>
-          </div>
+          )}
+          {onPreview && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isPreviewing || selectedSaleIds.length === 0}
+              onClick={() => onPreview(form.getValues())}
+            >
+              {isPreviewing ? <Loader className="animate-spin" /> : <Eye />}
+              Ver Planilla
+            </Button>
+          )}
+          <Button
+            size="sm"
+            type="submit"
+            disabled={isSubmitting || selectedSaleIds.length === 0}
+          >
+            {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+            {mode === "create" ? "Guardar Planilla" : "Actualizar Planilla"}
+          </Button>
         </div>
 
         <GroupFormSection
@@ -428,7 +420,9 @@ export const DeliverySheetForm = ({
                 <Button
                   type="button"
                   onClick={handleSearchSales}
-                  disabled={!searchParams.payment_type || isLoadingAvailableSales}
+                  disabled={
+                    !searchParams.payment_type || isLoadingAvailableSales
+                  }
                   size="sm"
                 >
                   {isLoadingAvailableSales ? (
@@ -629,6 +623,11 @@ export const DeliverySheetForm = ({
           </GroupFormSection>
         )}
 
+        <div className="col-span-full text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">{user?.name}</span>
+          <span className="mx-2">·</span>
+          <span>{format(now, "dd/MM/yyyy HH:mm:ss")}</span>
+        </div>
       </form>
 
       <GeneralModal

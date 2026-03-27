@@ -128,6 +128,15 @@ export const SaleForm = ({
   const currentZoneIdRef = useRef<number | null>(null);
 
   const [isClientManagementOpen, setIsClientManagementOpen] = useState(false);
+  const [externalCustomerOption, setExternalCustomerOption] = useState<{ value: string; label: string } | null>(null);
+  const pendingExternalPersonRef = useRef<PersonResource | null>(null);
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string>(() => {
+    if (mode === "update" && sale?.customer) {
+      return sale.customer.business_name ||
+        `${sale.customer.names ?? ""} ${sale.customer.father_surname ?? ""} ${sale.customer.mother_surname ?? ""}`.trim();
+    }
+    return "";
+  });
 
   const { fetchDynamicPrice } = useDynamicPrice();
   const queryClient = useQueryClient();
@@ -305,10 +314,16 @@ export const SaleForm = ({
 
   // Actualizar direcciones al seleccionar un cliente en el FormSelectAsync
   const handleCustomerChange = (_value: string, item?: PersonResource) => {
-    if (item && item.person_zones && item.person_zones.length > 0) {
-      setCustomerAddresses(item.person_zones);
-      const primary = item.person_zones.find((pz) => pz.is_primary);
-      const selectedZone = primary || item.person_zones[0];
+    const resolvedItem =
+      item ??
+      (pendingExternalPersonRef.current?.id.toString() === _value
+        ? pendingExternalPersonRef.current
+        : undefined);
+    pendingExternalPersonRef.current = null;
+    if (resolvedItem && resolvedItem.person_zones && resolvedItem.person_zones.length > 0) {
+      setCustomerAddresses(resolvedItem.person_zones);
+      const primary = resolvedItem.person_zones.find((pz) => pz.is_primary);
+      const selectedZone = primary || resolvedItem.person_zones[0];
       form.setValue("person_zone_id", selectedZone.id.toString());
 
       // Limpiar vendedor solo si la zona cambia respecto a la anterior
@@ -1090,6 +1105,7 @@ export const SaleForm = ({
                 }
                 disabled={mode === "update"}
                 uppercase
+                externalOption={externalCustomerOption}
               />
             </div>
             <Button
@@ -1352,8 +1368,15 @@ export const SaleForm = ({
       <ClientManagementModal
         open={isClientManagementOpen}
         onOpenChange={setIsClientManagementOpen}
+        selectedClientId={form.watch("customer_id")}
+        selectedClientName={selectedCustomerName}
         onClientChange={() => {
           queryClient.invalidateQueries({ queryKey: [CLIENT.QUERY_KEY] });
+        }}
+        onSelectClient={(id, name, person) => {
+          setSelectedCustomerName(name);
+          if (person) pendingExternalPersonRef.current = person;
+          setExternalCustomerOption({ value: id.toString(), label: name });
         }}
       />
     </Form>

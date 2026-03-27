@@ -9,8 +9,6 @@ import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import { useEffect } from "react";
 import { format } from "date-fns";
 import PageWrapper from "@/components/PageWrapper";
-import { Button } from "@/components/ui/button";
-import { List } from "lucide-react";
 import { previewDeliverySheet } from "../lib/deliverysheet.actions";
 import { promiseToast } from "@/lib/core.function";
 
@@ -103,16 +101,6 @@ export default function DeliverySheetAddPage() {
 
   return (
     <PageWrapper>
-      <div className="flex items-center justify-between mb-6">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => navigate("/planillas/listado")}
-        >
-          <List className="size-4 mr-2" /> Ver Listado
-        </Button>
-      </div>
-
       <DeliverySheetForm
         defaultValues={{
           issue_date: format(new Date(), "yyyy-MM-dd"),

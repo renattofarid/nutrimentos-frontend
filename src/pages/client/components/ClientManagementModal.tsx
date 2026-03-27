@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Users,
   Plus,
@@ -14,12 +14,10 @@ import {
   Loader2,
   AlertCircle,
   User,
+  Star,
+  Check,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogClose,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { useClients } from "../lib/client.hook";
 import { CLIENT, CLIENT_ROLE_ID } from "../lib/client.interface";
 import { deletePerson } from "@/pages/person/lib/person.actions";
+import { setPersonZonePrimary } from "../lib/personzone.actions";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import { useQueryClient } from "@tanstack/react-query";
 import { ClientDialog } from "./ClientDialog";
@@ -47,12 +46,18 @@ interface ClientManagementModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onClientChange?: () => void;
+  selectedClientId?: string | number | null;
+  selectedClientName?: string | null;
+  onSelectClient?: (id: number, name: string, person?: PersonResource) => void;
 }
 
 export function ClientManagementModal({
   open,
   onOpenChange,
   onClientChange,
+  selectedClientId,
+  selectedClientName,
+  onSelectClient,
 }: ClientManagementModalProps) {
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -62,7 +67,23 @@ export function ClientManagementModal({
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editPersonId, setEditPersonId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [addressesPerson, setAddressesPerson] = useState<PersonResource | null>(null);
+  const [addressesPerson, setAddressesPerson] = useState<PersonResource | null>(
+    null,
+  );
+  const [updatingZoneId, setUpdatingZoneId] = useState<number | null>(null);
+
+  // Inicializar búsqueda con el nombre del cliente seleccionado al abrir
+  useEffect(() => {
+    if (open) {
+      const initial = selectedClientName ?? "";
+      setSearch(initial);
+      setDebouncedSearch(initial);
+      setPage(1);
+    } else {
+      setSearch("");
+      setDebouncedSearch("");
+    }
+  }, [open, selectedClientName]);
 
   // Debounce search
   useEffect(() => {
@@ -85,16 +106,30 @@ export function ClientManagementModal({
     onClientChange?.();
   };
 
+  const handleSetPrimaryZone = useCallback(async (zoneId: number) => {
+    setUpdatingZoneId(zoneId);
+    try {
+      await setPersonZonePrimary(zoneId);
+      handleRefresh();
+    } catch {
+      errorToast(undefined, "No se pudo actualizar la zona primaria");
+    } finally {
+      setUpdatingZoneId(null);
+    }
+  }, []);
+
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
       await deletePerson(deleteId, CLIENT_ROLE_ID);
-      successToast(SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "delete"));
+      successToast(
+        SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "delete"),
+      );
       handleRefresh();
     } catch (error: any) {
       errorToast(
         error?.response?.data?.message,
-        ERROR_MESSAGE({ name: "Cliente", gender: false }, "delete")
+        ERROR_MESSAGE({ name: "Cliente", gender: false }, "delete"),
       );
     } finally {
       setDeleteId(null);
@@ -114,11 +149,12 @@ export function ClientManagementModal({
         }}
       >
         <DialogContent
+          showCloseButton={false}
           className={cn(
             isExpanded
               ? "w-screen! max-w-screen! h-screen! max-h-screen! rounded-none! top-0! left-0! translate-x-0! translate-y-0! m-0!"
               : "max-w-4xl! w-[95vw] max-h-[90vh]",
-            "flex flex-col overflow-hidden p-0 gap-0"
+            "flex flex-col overflow-hidden p-0 gap-0",
           )}
           onInteractOutside={(e) => e.preventDefault()}
         >
@@ -129,7 +165,9 @@ export function ClientManagementModal({
                 <Users className="size-5" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold leading-none">Gestión de Clientes</h2>
+                <h2 className="text-lg font-semibold leading-none">
+                  Gestión de Clientes
+                </h2>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   {data?.meta?.total ?? 0} clientes registrados
                 </p>
@@ -149,7 +187,11 @@ export function ClientManagementModal({
                 )}
               </Button>
               <DialogClose asChild>
-                <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onOpenChange(false)}
+                >
                   <X className="size-4" />
                 </Button>
               </DialogClose>
@@ -182,76 +224,148 @@ export function ClientManagementModal({
             ) : !data?.data || data.data.length === 0 ? (
               <div className="text-center py-16 space-y-3">
                 <AlertCircle className="size-14 mx-auto text-muted-foreground opacity-40" />
-                <p className="text-lg font-semibold">No se encontraron clientes</p>
+                <p className="text-lg font-semibold">
+                  No se encontraron clientes
+                </p>
                 <p className="text-sm text-muted-foreground">
                   {debouncedSearch
                     ? "Intenta con otro término de búsqueda"
-                    : "Agrega un cliente con el botón \"Nuevo Cliente\""}
+                    : 'Agrega un cliente con el botón "Nuevo Cliente"'}
                 </p>
               </div>
             ) : (
               <div className="space-y-2">
-                {data.data.map((person) => (
-                  <div
-                    key={person.id}
-                    className="bg-sidebar rounded-lg border p-4 flex items-center justify-between gap-4"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="bg-primary/10 text-primary rounded-md p-2 flex-shrink-0">
-                        <User className="size-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium truncate">{getPersonName(person)}</p>
-                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                          {person.number_document && (
-                            <span className="text-xs text-muted-foreground">
-                              {person.number_document}
-                            </span>
+                {data.data.map((person) => {
+                  const isSelected =
+                    selectedClientId != null &&
+                    String(person.id) === String(selectedClientId);
+                  return (
+                    <div
+                      key={person.id}
+                      className={cn(
+                        "rounded-lg border p-4 flex items-center justify-between gap-4",
+                        isSelected
+                          ? "bg-primary/5 border-primary/40"
+                          : "bg-sidebar",
+                      )}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className={cn(
+                            "rounded-md p-2 flex-shrink-0",
+                            isSelected
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-primary/10 text-primary",
                           )}
-                          {person.zone_name && (
-                            <Badge variant="outline" className="text-xs">
-                              {person.zone_name}
-                            </Badge>
-                          )}
-                          {person.client_category && (
-                            <Badge variant="secondary" className="text-xs">
-                              {person.client_category.name}
-                            </Badge>
-                          )}
+                        >
+                          <User className="size-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">
+                            {getPersonName(person)}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            {person.number_document && (
+                              <span className="text-xs text-muted-foreground">
+                                {person.number_document}
+                              </span>
+                            )}
+                            {person.person_zones &&
+                            person.person_zones.length > 0
+                              ? person.person_zones.map((zone) => (
+                                  <button
+                                    key={zone.id}
+                                    type="button"
+                                    disabled={
+                                      zone.is_primary ||
+                                      updatingZoneId === zone.id
+                                    }
+                                    onClick={() =>
+                                      handleSetPrimaryZone(zone.id)
+                                    }
+                                    className="inline-flex items-center gap-1 cursor-pointer disabled:cursor-default"
+                                    title={
+                                      zone.is_primary
+                                        ? "Zona primaria"
+                                        : "Establecer como zona primaria"
+                                    }
+                                  >
+                                    <Badge
+                                      variant={
+                                        zone.is_primary ? "default" : "outline"
+                                      }
+                                      className="text-xs gap-1 pointer-events-none"
+                                    >
+                                      {zone.is_primary && (
+                                        <Star className="size-2.5 fill-current" />
+                                      )}
+                                      {zone.zone_name}
+                                    </Badge>
+                                  </button>
+                                ))
+                              : person.zone_name && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {person.zone_name}
+                                  </Badge>
+                                )}
+                            {person.client_category && (
+                              <Badge variant="outline" className="text-xs">
+                                {person.client_category.name}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {onSelectClient && (
+                          <Button
+                            variant={isSelected ? "default" : "outline"}
+                            size="sm"
+                            className="h-8 px-2 text-xs"
+                            onClick={() =>
+                              onSelectClient(
+                                person.id,
+                                getPersonName(person),
+                                person,
+                              )
+                            }
+                            tooltip="Seleccionar cliente"
+                          >
+                            <Check className="size-3.5 mr-1" />
+                            Seleccionar
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8"
+                          onClick={() => setEditPersonId(person.id)}
+                          tooltip="Editar"
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-destructive hover:text-destructive"
+                          onClick={() => setDeleteId(person.id)}
+                          tooltip="Eliminar"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8"
+                          onClick={() => setAddressesPerson(person)}
+                          tooltip="Gestionar direcciones"
+                        >
+                          <MapPin className="size-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8"
-                        onClick={() => setEditPersonId(person.id)}
-                        tooltip="Editar"
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 text-destructive hover:text-destructive"
-                        onClick={() => setDeleteId(person.id)}
-                        tooltip="Eliminar"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8"
-                        onClick={() => setAddressesPerson(person)}
-                        tooltip="Gestionar direcciones"
-                      >
-                        <MapPin className="size-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -276,7 +390,12 @@ export function ClientManagementModal({
       <ClientDialog
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
-        onClientCreated={handleRefresh}
+        onClientCreated={(personId, personName) => {
+          handleRefresh();
+          if (personId && personName && onSelectClient) {
+            onSelectClient(personId, personName, undefined);
+          }
+        }}
       />
 
       {/* Edit client */}

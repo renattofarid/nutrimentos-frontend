@@ -18,7 +18,6 @@ import {
 } from "./reports.actions";
 import { errorToast, successToast } from "@/lib/core.function";
 import { VEHICLE } from "@/pages/vehicle/lib/vehicle.interface";
-import { CLIENT } from "@/pages/client/lib/client.interface";
 import { ZONE } from "@/pages/zone/lib/zone.interface";
 import { BRANCH } from "@/pages/branch/lib/branch.interface";
 
@@ -143,20 +142,6 @@ export const useWarehouseAsyncSearch = (params: {
   return useQuery({
     queryKey: ["warehouses-async-search", params],
     queryFn: () => fetchSearchEndpoint("/warehouse", params),
-    staleTime: 30 * 1000,
-    refetchOnWindowFocus: false,
-  });
-};
-
-export const useCustomerAsyncSearch = (params: {
-  search?: string;
-  page?: number;
-  per_page?: number;
-  [key: string]: any;
-}) => {
-  return useQuery({
-    queryKey: ["customers-async-search", params],
-    queryFn: () => fetchSearchEndpoint(CLIENT.ENDPOINT, params),
     staleTime: 30 * 1000,
     refetchOnWindowFocus: false,
   });

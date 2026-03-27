@@ -186,6 +186,7 @@ export default function CarLoadReportPage() {
   const [zoneSearch, setZoneSearch] = useState("");
   const hasSearchedRef = useRef(false);
   const isAutoSelectingRef = useRef(false);
+  const initialFetchDoneRef = useRef(false);
 
   const { data: rawData, isLoading, fetch } = useCarLoadReport();
   const { data: zonesData } = useZoneAsyncSearch({ per_page: 100 });
@@ -217,11 +218,13 @@ export default function CarLoadReportPage() {
     date_to: formatDateParam(values.date_to),
   });
 
-  // Auto-search on mount with today's date (no zone filter = all zones)
+  // Auto-search once zones are loaded, sending all zone IDs
   useEffect(() => {
+    if (initialFetchDoneRef.current || zoneOptions.length === 0) return;
+    initialFetchDoneRef.current = true;
     hasSearchedRef.current = true;
-    fetch(buildParams(form.getValues(), []));
-  }, []);
+    fetch(buildParams(form.getValues(), zoneOptions.map((z) => z.value)));
+  }, [zoneOptions.length]);
 
   // When a search result arrives, auto-select only zones that appear in the result
   useEffect(() => {

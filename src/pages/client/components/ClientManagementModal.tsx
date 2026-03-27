@@ -26,6 +26,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import {
   successToast,
   errorToast,
+  promiseToast,
   SUCCESS_MESSAGE,
   ERROR_MESSAGE,
 } from "@/lib/core.function";
@@ -61,8 +62,8 @@ export function ClientManagementModal({
 }: ClientManagementModalProps) {
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [search, setSearch] = useState(selectedClientName ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(selectedClientName ?? "");
   const [page, setPage] = useState(1);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editPersonId, setEditPersonId] = useState<number | null>(null);
@@ -71,19 +72,6 @@ export function ClientManagementModal({
     null,
   );
   const [updatingZoneId, setUpdatingZoneId] = useState<number | null>(null);
-
-  // Inicializar búsqueda con el nombre del cliente seleccionado al abrir
-  useEffect(() => {
-    if (open) {
-      const initial = selectedClientName ?? "";
-      setSearch(initial);
-      setDebouncedSearch(initial);
-      setPage(1);
-    } else {
-      setSearch("");
-      setDebouncedSearch("");
-    }
-  }, [open, selectedClientName]);
 
   // Debounce search
   useEffect(() => {
@@ -108,14 +96,14 @@ export function ClientManagementModal({
 
   const handleSetPrimaryZone = useCallback(async (zoneId: number) => {
     setUpdatingZoneId(zoneId);
-    try {
-      await setPersonZonePrimary(zoneId);
-      handleRefresh();
-    } catch {
-      errorToast(undefined, "No se pudo actualizar la zona primaria");
-    } finally {
-      setUpdatingZoneId(null);
-    }
+    promiseToast(
+      setPersonZonePrimary(zoneId).then(() => handleRefresh()).finally(() => setUpdatingZoneId(null)),
+      {
+        loading: "Actualizando zona primaria...",
+        success: "Zona primaria actualizada",
+        error: "No se pudo actualizar la zona primaria",
+      },
+    );
   }, []);
 
   const handleDelete = async () => {

@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import {
   useCarLoadReport,
-  useZoneAsyncSearch,
+  useZonesToday,
   useBranchAsyncSearch,
 } from "../lib/reports.hook";
 
@@ -189,10 +189,10 @@ export default function CarLoadReportPage() {
   const initialFetchDoneRef = useRef(false);
 
   const { data: rawData, isLoading, fetch } = useCarLoadReport();
-  const { data: zonesData } = useZoneAsyncSearch({ per_page: 100 });
+  const { data: zonesData } = useZonesToday();
 
   const zoneOptions = (
-    (zonesData?.data ?? []) as { id: number; name: string }[]
+    (Array.isArray(zonesData) ? zonesData : (zonesData?.data ?? [])) as { id: number; name: string }[]
   ).map((z) => ({
     label: z.name,
     value: String(z.id),

@@ -18,7 +18,6 @@ import {
 } from "./reports.actions";
 import { errorToast, successToast } from "@/lib/core.function";
 import { VEHICLE } from "@/pages/vehicle/lib/vehicle.interface";
-import { ZONE } from "@/pages/zone/lib/zone.interface";
 import { BRANCH } from "@/pages/branch/lib/branch.interface";
 
 export function useCustomerAccountStatement(
@@ -226,15 +225,10 @@ export function useCarLoadReport(params?: CarLoadReportParams) {
   };
 }
 
-export const useZoneAsyncSearch = (params: {
-  search?: string;
-  page?: number;
-  per_page?: number;
-  [key: string]: any;
-}) => {
+export const useZonesToday = () => {
   return useQuery({
-    queryKey: ["zones-async-search", params],
-    queryFn: () => fetchSearchEndpoint(ZONE.ENDPOINT, params),
+    queryKey: ["zones-today"],
+    queryFn: () => fetchSelectOptions("/sales/zones-today"),
     staleTime: 30 * 1000,
     refetchOnWindowFocus: false,
   });

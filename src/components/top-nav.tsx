@@ -476,7 +476,7 @@ export function TopNav() {
                 {item.title}
               </NavigationMenuTrigger>
               <NavigationMenuContent>
-                <ul className="grid min-w-48 w-auto gap-0 p-1">
+                <ul className="grid min-w-52 w-auto gap-0 p-1">
                   {item.items.map((sub) => (
                     <li key={sub.title}>
                       <NavigationMenuLink
@@ -486,7 +486,7 @@ export function TopNav() {
                         <button
                           onClick={() => openTab(sub.url, sub.title)}
                           className={cn(
-                            "w-full flex flex-row justify-start text-start items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground uppercase",
+                            "w-full flex flex-row justify-start text-start items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground uppercase",
                             isSubItemActive(sub.url) &&
                               "bg-accent/50 text-accent-foreground font-medium",
                           )}

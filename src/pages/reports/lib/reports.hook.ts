@@ -225,10 +225,10 @@ export function useCarLoadReport(params?: CarLoadReportParams) {
   };
 }
 
-export const useZonesToday = () => {
+export const useZonesToday = (params?: { date_from?: string | null; date_to?: string | null }) => {
   return useQuery({
-    queryKey: ["zones-today"],
-    queryFn: () => fetchSelectOptions("/sales/zones-today"),
+    queryKey: ["zones-today", params],
+    queryFn: () => fetchSearchEndpoint("/sales/zones-by-date", params ?? {}),
     staleTime: 30 * 1000,
     refetchOnWindowFocus: false,
   });

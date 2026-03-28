@@ -184,21 +184,9 @@ export default function CarLoadReportPage() {
   const [showSummary, setShowSummary] = useState(false);
   const [selectedZones, setSelectedZones] = useState<string[]>([]);
   const [zoneSearch, setZoneSearch] = useState("");
-  const hasSearchedRef = useRef(false);
-  const isAutoSelectingRef = useRef(false);
-  const initialFetchDoneRef = useRef(false);
+  const isZoneAutoSelectRef = useRef(false);
 
   const { data: rawData, isLoading, fetch } = useCarLoadReport();
-  const { data: zonesData } = useZonesToday();
-
-  const zoneOptions = (
-    (Array.isArray(zonesData) ? zonesData : (zonesData?.data ?? [])) as { id: number; name: string }[]
-  ).map((z) => ({
-    label: z.name,
-    value: String(z.id),
-  }));
-
-  const reportData = rawData?.data;
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
@@ -207,6 +195,23 @@ export default function CarLoadReportPage() {
       date_to: today,
     },
   });
+
+  const watchedDateFrom = form.watch("date_from");
+  const watchedDateTo = form.watch("date_to");
+
+  const { data: zonesData } = useZonesToday({
+    date_from: formatDateParam(watchedDateFrom),
+    date_to: formatDateParam(watchedDateTo),
+  });
+
+  const zoneOptions = (
+    (zonesData?.data ?? []) as { zone_id: number; zone_name: string }[]
+  ).map((z) => ({
+    label: z.zone_name,
+    value: String(z.zone_id),
+  }));
+
+  const reportData = rawData?.data;
 
   const buildParams = (
     values: FilterFormValues,
@@ -218,40 +223,26 @@ export default function CarLoadReportPage() {
     date_to: formatDateParam(values.date_to),
   });
 
-  // Auto-search once zones are loaded, sending all zone IDs
+  // Cuando cambian las zonas del API (nuevo rango de fechas), seleccionar todas
   useEffect(() => {
-    if (initialFetchDoneRef.current || zoneOptions.length === 0) return;
-    initialFetchDoneRef.current = true;
-    hasSearchedRef.current = true;
-    fetch(buildParams(form.getValues(), zoneOptions.map((z) => z.value)));
-  }, [zoneOptions.length]);
+    if (zoneOptions.length === 0) return;
+    isZoneAutoSelectRef.current = true;
+    setSelectedZones(zoneOptions.map((z) => z.value));
+  }, [zonesData]);
 
-  // When a search result arrives, auto-select only zones that appear in the result
+  // Cuando cambia la selección de zonas, re-fetchar el reporte
   useEffect(() => {
-    if (!rawData || !reportData?.zones || zoneOptions.length === 0) return;
-    const matched = zoneOptions
-      .filter((z) => (reportData.zones as string[]).includes(z.label))
-      .map((z) => z.value);
-    isAutoSelectingRef.current = true;
-    setSelectedZones(matched);
-  }, [rawData, zoneOptions.length]);
-
-  // Auto-refetch when zones change (only after first search, skip auto-selections)
-  useEffect(() => {
-    if (!hasSearchedRef.current) return;
-    if (isAutoSelectingRef.current) {
-      isAutoSelectingRef.current = false;
-      return;
+    if (selectedZones.length === 0) return;
+    if (isZoneAutoSelectRef.current) {
+      isZoneAutoSelectRef.current = false;
     }
     const timer = setTimeout(() => {
-      const values = form.getValues();
-      fetch(buildParams(values, selectedZones));
-    }, 400);
+      fetch(buildParams(form.getValues(), selectedZones));
+    }, 300);
     return () => clearTimeout(timer);
   }, [selectedZones]);
 
   const handleSearch = (values: FilterFormValues) => {
-    hasSearchedRef.current = true;
     fetch(buildParams(values, selectedZones));
   };
 

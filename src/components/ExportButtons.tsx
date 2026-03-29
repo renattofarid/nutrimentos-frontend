@@ -31,6 +31,7 @@ interface ExportButtonsProps {
   disablePdf?: boolean;
   variant?: "grouped" | "separate";
   buttonVariant?: ButtonVariant;
+  pdfLabel?: string;
 }
 
 export default function ExportButtons({
@@ -44,6 +45,7 @@ export default function ExportButtons({
   disablePdf = false,
   variant = "grouped",
   buttonVariant = "outline",
+  pdfLabel = "PDF",
 }: ExportButtonsProps) {
   const handleExcelDownload = () => {
     if (onExcelDownload) {
@@ -148,7 +150,7 @@ export default function ExportButtons({
                 disabled={disablePdf}
               >
                 <FileDown className="h-4 w-4" />
-                PDF
+                {pdfLabel}
               </Button>
             </TooltipTrigger>
             <TooltipContent>

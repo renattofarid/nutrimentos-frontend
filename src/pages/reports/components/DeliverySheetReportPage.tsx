@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   useDeliverySheetReport,
-  useCustomerAsyncSearch,
   useVehicleAsyncSearch,
   useWarehouseAsyncSearch,
 } from "../lib/reports.hook";
@@ -42,6 +41,7 @@ import { exportDeliverySheetReport } from "../lib/reports.actions";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
 import { errorToast, successToast } from "@/lib/core.function";
+import { useClients } from "@/pages/client/lib/client.hook";
 
 interface FilterFormValues {
   customer_id: string;
@@ -333,7 +333,6 @@ export default function DeliverySheetReportPage() {
 
   return (
     <PageWrapper size="3xl">
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">
           <GroupFormSection
@@ -375,7 +374,7 @@ export default function DeliverySheetReportPage() {
               name="customer_id"
               label="Cliente"
               placeholder="Buscar cliente..."
-              useQueryHook={useCustomerAsyncSearch}
+              useQueryHook={useClients}
               mapOptionFn={(item) => ({
                 label: item.name,
                 value: String(item.id),

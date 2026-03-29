@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import { PurchaseActions } from "./PurchaseActions";
 import { PurchaseOptions } from "./PurchaseOptions";
@@ -20,6 +21,8 @@ import type {
 } from "../lib/purchase.interface";
 import { usePurchase } from "../lib/purchase.hook";
 import { usePurchaseStore } from "../lib/purchase.store";
+import { exportPurchaseById } from "../lib/purchase.actions";
+import { promiseToast } from "@/lib/core.function";
 import { PurchaseTable } from "./PurchaseTable";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
@@ -39,6 +42,7 @@ export default function PurchasePage() {
   const [start_date, setStartDate] = useState<Date | undefined>();
   const [end_date, setEndDate] = useState<Date | undefined>();
 
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [selectedPurchase, setSelectedPurchase] =
     useState<PurchaseResource | null>(null);
@@ -221,6 +225,23 @@ export default function PurchasePage() {
     });
   };
 
+  const selectedPurchaseId = parseInt(Object.keys(rowSelection)[0]);
+
+  const handlePrint = () => {
+    const downloadPromise = exportPurchaseById(selectedPurchaseId).then(
+      (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, "_blank");
+        setRowSelection({});
+      }
+    );
+    promiseToast(downloadPromise, {
+      loading: "Generando PDF...",
+      success: "PDF generado correctamente",
+      error: "Error al generar el PDF",
+    });
+  };
+
   const handlePaymentSuccess = async () => {
     await refetch({
       company_id: user?.company_id,
@@ -291,6 +312,8 @@ export default function PurchasePage() {
         <PurchaseActions
           onCreatePurchase={handleCreatePurchase}
           excelEndpoint={exportEndpoint}
+          onPrint={handlePrint}
+          selectedCount={Object.keys(rowSelection).length}
         />
       </div>
 
@@ -302,6 +325,8 @@ export default function PurchasePage() {
         onManage={handleManage}
         onQuickPay={handleQuickPay}
         isLoading={isLoading}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
       >
         <PurchaseOptions
           document_type={document_type}

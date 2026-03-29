@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import {
   useCarLoadReport,
-  useZoneAsyncSearch,
+  useZonesToday,
   useBranchAsyncSearch,
 } from "../lib/reports.hook";
 
@@ -184,17 +184,9 @@ export default function CarLoadReportPage() {
   const [showSummary, setShowSummary] = useState(false);
   const [selectedZones, setSelectedZones] = useState<string[]>([]);
   const [zoneSearch, setZoneSearch] = useState("");
-  const hasSearchedRef = useRef(false);
+  const isZoneAutoSelectRef = useRef(false);
 
   const { data: rawData, isLoading, fetch } = useCarLoadReport();
-  const { data: zonesData } = useZoneAsyncSearch({ per_page: 100 });
-
-  const zoneOptions = (
-    (zonesData?.data ?? []) as { id: number; name: string }[]
-  ).map((z) => ({
-    label: z.name,
-    value: String(z.id),
-  }));
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
@@ -204,22 +196,22 @@ export default function CarLoadReportPage() {
     },
   });
 
-  // Pre-select all zones once they load
-  useEffect(() => {
-    if (zoneOptions.length > 0 && selectedZones.length === 0) {
-      setSelectedZones(zoneOptions.map((z) => z.value));
-    }
-  }, [zoneOptions.length]);
+  const watchedDateFrom = form.watch("date_from");
+  const watchedDateTo = form.watch("date_to");
 
-  // Auto-refetch when zones change (only after first search)
-  useEffect(() => {
-    if (!hasSearchedRef.current) return;
-    const timer = setTimeout(() => {
-      const values = form.getValues();
-      fetch(buildParams(values, selectedZones));
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [selectedZones]);
+  const { data: zonesData } = useZonesToday({
+    date_from: formatDateParam(watchedDateFrom),
+    date_to: formatDateParam(watchedDateTo),
+  });
+
+  const zoneOptions = (
+    (zonesData?.data ?? []) as { zone_id: number; zone_name: string }[]
+  ).map((z) => ({
+    label: z.zone_name,
+    value: String(z.zone_id),
+  }));
+
+  const reportData = rawData?.data;
 
   const buildParams = (
     values: FilterFormValues,
@@ -231,8 +223,26 @@ export default function CarLoadReportPage() {
     date_to: formatDateParam(values.date_to),
   });
 
+  // Cuando cambian las zonas del API (nuevo rango de fechas), seleccionar todas
+  useEffect(() => {
+    if (zoneOptions.length === 0) return;
+    isZoneAutoSelectRef.current = true;
+    setSelectedZones(zoneOptions.map((z) => z.value));
+  }, [zonesData]);
+
+  // Cuando cambia la selección de zonas, re-fetchar el reporte
+  useEffect(() => {
+    if (selectedZones.length === 0) return;
+    if (isZoneAutoSelectRef.current) {
+      isZoneAutoSelectRef.current = false;
+    }
+    const timer = setTimeout(() => {
+      fetch(buildParams(form.getValues(), selectedZones));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [selectedZones]);
+
   const handleSearch = (values: FilterFormValues) => {
-    hasSearchedRef.current = true;
     fetch(buildParams(values, selectedZones));
   };
 
@@ -255,14 +265,15 @@ export default function CarLoadReportPage() {
     );
   };
 
-  const filteredZones = zoneOptions.filter((z) =>
+  const displayedZones = rawData ? zoneOptions : [];
+
+  const filteredZones = displayedZones.filter((z) =>
     z.label.toLowerCase().includes(zoneSearch.toLowerCase())
   );
 
   const allSelected =
-    zoneOptions.length > 0 && selectedZones.length === zoneOptions.length;
-
-  const reportData = rawData?.data;
+    displayedZones.length > 0 &&
+    displayedZones.every((z) => selectedZones.includes(z.value));
   const rows = reportData?.rows ?? [];
   const totals = reportData?.totals;
 
@@ -298,7 +309,7 @@ export default function CarLoadReportPage() {
                 <Search className="mr-2 h-4 w-4" />
                 Buscar
               </Button>
-              <ExportButtons onPdfDownload={handleExportPdf} />
+              <ExportButtons onPdfDownload={handleExportPdf} pdfLabel="Imprimir" />
               <Button
                 type="button"
                 variant="outline"
@@ -323,7 +334,7 @@ export default function CarLoadReportPage() {
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() =>
                     setSelectedZones(
-                      allSelected ? [] : zoneOptions.map((z) => z.value),
+                      allSelected ? [] : displayedZones.map((z) => z.value),
                     )
                   }
                 >
@@ -356,15 +367,20 @@ export default function CarLoadReportPage() {
                     />
                   </label>
                 ))}
-                {zoneOptions.length === 0 && (
+                {!rawData && (
                   <p className="text-xs text-muted-foreground py-2 text-center">
-                    Cargando...
+                    Realiza una búsqueda para ver las zonas disponibles.
+                  </p>
+                )}
+                {rawData && displayedZones.length === 0 && (
+                  <p className="text-xs text-muted-foreground py-2 text-center">
+                    Sin zonas para este período.
                   </p>
                 )}
               </div>
-              {zoneOptions.length > 0 && (
+              {displayedZones.length > 0 && (
                 <p className="text-xs text-muted-foreground pt-2">
-                  {selectedZones.length}/{zoneOptions.length} seleccionadas
+                  {selectedZones.filter((id) => displayedZones.some((z) => z.value === id)).length}/{displayedZones.length} seleccionadas
                 </p>
               )}
             </GroupFormSection>

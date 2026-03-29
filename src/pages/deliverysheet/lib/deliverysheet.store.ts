@@ -9,6 +9,7 @@ import type {
   UpdateDeliverySheetStatusRequest,
   CreateSettlementRequest,
   CreateDeliverySheetPaymentRequest,
+  DeliverySheetCreateResponse,
 } from "./deliverysheet.interface";
 import {
   getDeliverySheets,
@@ -60,17 +61,19 @@ interface DeliverySheetStore {
   fetchDeliverySheets: (params?: GetDeliverySheetsParams) => Promise<void>;
   fetchDeliverySheet: (id: number) => Promise<void>;
   fetchAvailableSales: (params: GetAvailableSalesParams) => Promise<void>;
-  createDeliverySheet: (data: DeliverySheetSchema) => Promise<void>;
+  createDeliverySheet: (
+    data: DeliverySheetSchema,
+  ) => Promise<DeliverySheetCreateResponse>;
   updateDeliverySheet: (
     id: number,
-    data: Partial<DeliverySheetUpdateSchema>
+    data: Partial<DeliverySheetUpdateSchema>,
   ) => Promise<void>;
   removeDeliverySheet: (id: number) => Promise<void>;
   updateStatus: (id: number, data: DeliverySheetStatusSchema) => Promise<void>;
   submitSettlement: (id: number, data: SettlementSchema) => Promise<void>;
   submitPayment: (
     id: number,
-    data: DeliverySheetPaymentSchema
+    data: DeliverySheetPaymentSchema,
   ) => Promise<void>;
   resetDeliverySheet: () => void;
 }
@@ -171,9 +174,9 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
         observations: data.observations,
       };
 
-      await storeDeliverySheet(request);
+      const response = await storeDeliverySheet(request);
       set({ isSubmitting: false });
-      successToast(SUCCESS_MESSAGE(MODEL, "create"));
+      return response;
     } catch (error) {
       set({ error: ERROR_MESSAGE(MODEL, "create"), isSubmitting: false });
       throw error;
@@ -183,7 +186,7 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
   // Update delivery sheet
   updateDeliverySheet: async (
     id: number,
-    data: Partial<DeliverySheetUpdateSchema>
+    data: Partial<DeliverySheetUpdateSchema>,
   ) => {
     set({ isSubmitting: true, error: null });
     try {
@@ -267,7 +270,7 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
       errorToast(
         error.response.data.message ??
           error.response.data.error ??
-          "Error al registrar la rendición"
+          "Error al registrar la rendición",
       );
       throw error;
     }
@@ -297,7 +300,7 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
       errorToast(
         error.response.data.error ??
           error.response.data.message ??
-          "Error al registrar el pago"
+          "Error al registrar el pago",
       );
       throw error;
     }

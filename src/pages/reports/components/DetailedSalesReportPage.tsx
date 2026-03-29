@@ -4,7 +4,6 @@ import {
   useDetailedSalesReport,
   useUserAsyncSearch,
   useWarehouseAsyncSearch,
-  useCustomerAsyncSearch,
   useBranchAsyncSearch,
 } from "../lib/reports.hook";
 
@@ -24,6 +23,7 @@ import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { FormSelect } from "@/components/FormSelect";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
 import { errorToast, successToast } from "@/lib/core.function";
+import { useClients } from "@/pages/client/lib/client.hook";
 
 interface FilterFormValues {
   branch_id: string;
@@ -231,7 +231,6 @@ export default function DetailedSalesReportPage() {
 
   return (
     <PageWrapper>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">
           <GroupFormSection
@@ -296,10 +295,13 @@ export default function DetailedSalesReportPage() {
               name="customer_id"
               label="Cliente"
               placeholder="Buscar cliente..."
-              useQueryHook={useCustomerAsyncSearch}
+              useQueryHook={useClients}
               mapOptionFn={(item) => ({
-                label: item.name,
+                label:
+                  item.business_name ??
+                  `${item.names} ${item.father_surname} ${item.mother_surname}`.trim(),
                 value: String(item.id),
+                description: item.number_document ?? undefined,
               })}
             />
 

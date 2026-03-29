@@ -10,11 +10,10 @@ import {
   type SaleSchema,
 } from "../lib/sale.schema";
 import {
-  Loader,
   Users2,
   CreditCard,
   ListChecks,
-  UserPlus,
+  Users,
   FileText,
 } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
@@ -35,7 +34,7 @@ import { formatNumber } from "@/lib/formatCurrency";
 import { DOCUMENT_TYPES, PAYMENT_TYPES } from "../lib/sale.interface";
 import { errorToast, warningToast } from "@/lib/core.function";
 import { GroupFormSection } from "@/components/GroupFormSection";
-import { ClientDialog } from "@/pages/client/components/ClientDialog";
+import { ClientManagementModal } from "@/pages/client/components/ClientManagementModal";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { getNextSeries } from "../lib/sale.actions";
 import { useDynamicPrice } from "../lib/dynamic-price.hook";
@@ -49,8 +48,6 @@ import { FormInput } from "@/components/FormInput";
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
   onSubmit: (data: any) => void;
-  onCancel?: () => void;
-  isSubmitting?: boolean;
   mode?: "create" | "update";
   branches: BranchResource[];
   warehouses: WarehouseResource[];
@@ -81,10 +78,8 @@ interface InstallmentRow {
 }
 
 export const SaleForm = ({
-  onCancel,
   defaultValues,
   onSubmit,
-  isSubmitting = false,
   mode = "create",
   branches,
   warehouses,
@@ -122,10 +117,21 @@ export const SaleForm = ({
     { id: number; zone_name: string; address: string; is_primary: boolean }[]
   >([]);
 
+  
+
   // Referencia al zone_id actual para detectar cambio de zona al cambiar cliente
   const currentZoneIdRef = useRef<number | null>(null);
 
-  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [isClientManagementOpen, setIsClientManagementOpen] = useState(false);
+  const [externalCustomerOption, setExternalCustomerOption] = useState<{ value: string; label: string } | null>(null);
+  const pendingExternalPersonRef = useRef<PersonResource | null>(null);
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string>(() => {
+    if (mode === "update" && sale?.customer) {
+      return sale.customer.business_name ||
+        `${sale.customer.names ?? ""} ${sale.customer.father_surname ?? ""} ${sale.customer.mother_surname ?? ""}`.trim();
+    }
+    return "";
+  });
 
   const { fetchDynamicPrice } = useDynamicPrice();
   const queryClient = useQueryClient();
@@ -303,10 +309,22 @@ export const SaleForm = ({
 
   // Actualizar direcciones al seleccionar un cliente en el FormSelectAsync
   const handleCustomerChange = (_value: string, item?: PersonResource) => {
-    if (item && item.person_zones && item.person_zones.length > 0) {
-      setCustomerAddresses(item.person_zones);
-      const primary = item.person_zones.find((pz) => pz.is_primary);
-      const selectedZone = primary || item.person_zones[0];
+    const resolvedItem =
+      item ??
+      (pendingExternalPersonRef.current?.id.toString() === _value
+        ? pendingExternalPersonRef.current
+        : undefined);
+    pendingExternalPersonRef.current = null;
+    if (resolvedItem) {
+      setSelectedCustomerName(
+        resolvedItem.business_name ||
+          `${resolvedItem.names ?? ""} ${resolvedItem.father_surname ?? ""} ${resolvedItem.mother_surname ?? ""}`.trim(),
+      );
+    }
+    if (resolvedItem && resolvedItem.person_zones && resolvedItem.person_zones.length > 0) {
+      setCustomerAddresses(resolvedItem.person_zones);
+      const primary = resolvedItem.person_zones.find((pz) => pz.is_primary);
+      const selectedZone = primary || resolvedItem.person_zones[0];
       form.setValue("person_zone_id", selectedZone.id.toString());
 
       // Limpiar vendedor solo si la zona cambia respecto a la anterior
@@ -867,6 +885,12 @@ export const SaleForm = ({
   const handleFormSubmit = (data: any) => {
     const currencySymbol = getCurrencySymbol();
 
+    // Validar que haya al menos un producto
+    if (details.length === 0 || details.every((d) => !d.product_id)) {
+      errorToast("Debe agregar al menos un producto a la venta");
+      return;
+    }
+
     // Validar que si es a crédito, debe tener cuotas
     if (selectedPaymentType === "CREDITO" && installments.length === 0) {
       errorToast("Para pagos a crédito, debe agregar al menos una cuota");
@@ -955,6 +979,7 @@ export const SaleForm = ({
             first ? first.message : "Hay campos inválidos en el formulario",
           );
         })}
+        id="sale-form"
         className="space-y-2 w-full"
       >
         {/* Información General */}
@@ -1088,16 +1113,17 @@ export const SaleForm = ({
                 }
                 disabled={mode === "update"}
                 uppercase
+                externalOption={externalCustomerOption}
               />
             </div>
             <Button
               type="button"
               variant="outline"
               size="icon-sm"
-              onClick={() => setIsClientDialogOpen(true)}
-              title="Agregar nuevo cliente"
+              onClick={() => setIsClientManagementOpen(true)}
+              title="Gestión de clientes"
             >
-              <UserPlus className="h-4 w-4" />
+              <Users className="h-4 w-4" />
             </Button>
           </div>
 
@@ -1318,40 +1344,21 @@ export const SaleForm = ({
         {/* <pre>
           <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
         </pre> */}
-        {/* Botones */}
-        <div className="flex gap-4 w-full justify-end">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-            Cancelar
-          </Button>
-
-          <Button
-            size="sm"
-            type="submit"
-            disabled={
-              isSubmitting ||
-              (mode === "create" && details.length === 0) ||
-              (mode === "create" &&
-                selectedPaymentType === "CREDITO" &&
-                installments.length === 0) ||
-              (mode === "create" &&
-                installments.length > 0 &&
-                !installmentsMatchTotal())
-            }
-          >
-            <Loader
-              className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`}
-            />
-            {isSubmitting ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
       </form>
 
-      {/* Diálogo para agregar proveedor */}
-      <ClientDialog
-        open={isClientDialogOpen}
-        onOpenChange={setIsClientDialogOpen}
-        onClientCreated={() => {
+      {/* Modal de gestión de clientes */}
+      <ClientManagementModal
+        open={isClientManagementOpen}
+        onOpenChange={setIsClientManagementOpen}
+        selectedClientId={form.watch("customer_id")}
+        selectedClientName={selectedCustomerName}
+        onClientChange={() => {
           queryClient.invalidateQueries({ queryKey: [CLIENT.QUERY_KEY] });
+        }}
+        onSelectClient={(id, name, person) => {
+          setSelectedCustomerName(name);
+          if (person) pendingExternalPersonRef.current = person;
+          setExternalCustomerOption({ value: id.toString(), label: name });
         }}
       />
     </Form>

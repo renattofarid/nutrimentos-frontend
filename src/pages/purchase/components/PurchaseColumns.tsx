@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
   TooltipContent,
@@ -33,6 +34,19 @@ export const getPurchaseColumns = ({
   onManage,
   onQuickPay,
 }: PurchaseColumnsProps): ColumnDef<PurchaseResource>[] => [
+  {
+    id: "select",
+    header: "",
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Seleccionar fila"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: "correlativo",
     header: "Correlativo",

@@ -104,6 +104,7 @@ interface DataTableProps<TData, TValue> extends VariantProps<
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
   enableRowSelection?: boolean;
+  enableMultiRowSelection?: boolean;
   getRowId?: (originalRow: TData, index: number) => string;
 }
 
@@ -123,6 +124,7 @@ export function DataTable<TData, TValue>({
   rowSelection,
   onRowSelectionChange,
   enableRowSelection = false,
+  enableMultiRowSelection = true,
   getRowId,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -157,6 +159,7 @@ export function DataTable<TData, TValue>({
     enableSortingRemoval: true,
     enableMultiSort: false,
     enableRowSelection,
+    enableMultiRowSelection,
     getRowId,
     state: {
       columnFilters,

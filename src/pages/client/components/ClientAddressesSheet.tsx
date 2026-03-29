@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { CLIENT } from "../lib/client.interface";
 import {
   Loader2,
   MapPin,
@@ -36,6 +38,7 @@ export default function ClientAddressesSheet({
   personId,
   personName,
 }: ClientAddressesSheetProps) {
+  const queryClient = useQueryClient();
   const { data: addresses, isLoading, fetch, refetch } = usePersonZones(personId);
   const { create, update, setPrimary, remove, isSubmitting } =
     usePersonZoneMutations();
@@ -82,6 +85,7 @@ export default function ClientAddressesSheet({
       setShowFormModal(false);
       setEditingAddress(null);
       await refetch();
+      queryClient.invalidateQueries({ queryKey: [CLIENT.QUERY_KEY] });
     } catch (error: any) {
       const action = editingAddress ? "update" : "create";
       errorToast(
@@ -96,6 +100,7 @@ export default function ClientAddressesSheet({
       await setPrimary(id);
       successToast("Dirección establecida como principal");
       await refetch();
+      queryClient.invalidateQueries({ queryKey: [CLIENT.QUERY_KEY] });
     } catch (error: any) {
       errorToast(
         error.response?.data?.message,
@@ -110,6 +115,7 @@ export default function ClientAddressesSheet({
       await remove(deleteId);
       successToast(SUCCESS_MESSAGE({ name: "Dirección", gender: false }, "delete"));
       await refetch();
+      queryClient.invalidateQueries({ queryKey: [CLIENT.QUERY_KEY] });
     } catch (error: any) {
       errorToast(
         error.response?.data?.message,

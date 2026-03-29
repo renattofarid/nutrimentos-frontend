@@ -18,8 +18,6 @@ import {
 } from "./reports.actions";
 import { errorToast, successToast } from "@/lib/core.function";
 import { VEHICLE } from "@/pages/vehicle/lib/vehicle.interface";
-import { CLIENT } from "@/pages/client/lib/client.interface";
-import { ZONE } from "@/pages/zone/lib/zone.interface";
 import { BRANCH } from "@/pages/branch/lib/branch.interface";
 
 export function useCustomerAccountStatement(
@@ -148,20 +146,6 @@ export const useWarehouseAsyncSearch = (params: {
   });
 };
 
-export const useCustomerAsyncSearch = (params: {
-  search?: string;
-  page?: number;
-  per_page?: number;
-  [key: string]: any;
-}) => {
-  return useQuery({
-    queryKey: ["customers-async-search", params],
-    queryFn: () => fetchSearchEndpoint(CLIENT.ENDPOINT, params),
-    staleTime: 30 * 1000,
-    refetchOnWindowFocus: false,
-  });
-};
-
 export const useVehicleAsyncSearch = (params: {
   search?: string;
   page?: number;
@@ -225,12 +209,8 @@ export function useCommissionsReport(params?: CommissionsReportParams) {
 }
 
 export function useCarLoadReport(params?: CarLoadReportParams) {
-  const {
-    carLoadReport,
-    carLoadLoading,
-    carLoadError,
-    fetchCarLoadReport,
-  } = useReportsStore();
+  const { carLoadReport, carLoadLoading, carLoadError, fetchCarLoadReport } =
+    useReportsStore();
 
   return {
     data: carLoadReport,
@@ -241,17 +221,13 @@ export function useCarLoadReport(params?: CarLoadReportParams) {
   };
 }
 
-export const useZoneAsyncSearch = (params: {
-  search?: string;
-  page?: number;
-  per_page?: number;
-  [key: string]: any;
+export const useZonesToday = (params?: {
+  date_from?: string | null;
+  date_to?: string | null;
 }) => {
   return useQuery({
-    queryKey: ["zones-async-search", params],
-    queryFn: () => fetchSearchEndpoint(ZONE.ENDPOINT, params),
-    staleTime: 30 * 1000,
-    refetchOnWindowFocus: false,
+    queryKey: ["zones-today", params],
+    queryFn: () => fetchSearchEndpoint("/sales/zones-by-date", params ?? {}),
   });
 };
 

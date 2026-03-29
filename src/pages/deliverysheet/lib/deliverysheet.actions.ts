@@ -9,6 +9,7 @@ import type {
   UpdateDeliverySheetStatusRequest,
   CreateSettlementRequest,
   CreateDeliverySheetPaymentRequest,
+  DeliverySheetCreateResponse,
 } from "./deliverysheet.interface";
 import { DELIVERY_SHEET_ENDPOINT } from "./deliverysheet.interface";
 
@@ -122,8 +123,8 @@ export const findDeliverySheetById = async (
 
 export const storeDeliverySheet = async (
   data: CreateDeliverySheetRequest,
-): Promise<{ message: string }> => {
-  const response = await api.post<{ message: string }>(
+): Promise<DeliverySheetCreateResponse> => {
+  const response = await api.post<DeliverySheetCreateResponse>(
     DELIVERY_SHEET_ENDPOINT,
     data,
   );

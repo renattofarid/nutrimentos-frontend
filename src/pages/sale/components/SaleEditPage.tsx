@@ -13,6 +13,8 @@ import { type SaleResource } from "../lib/sale.interface";
 import FormSkeleton from "@/components/FormSkeleton";
 import { errorToast } from "@/lib/core.function";
 import PageWrapper from "@/components/PageWrapper";
+import { Button } from "@/components/ui/button";
+import { List, Loader } from "lucide-react";
 
 export const SaleEditPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -126,6 +128,15 @@ export const SaleEditPage = () => {
 
   return (
     <PageWrapper size="3xl">
+      <div className="flex items-center justify-between">
+        <Button size="sm" variant="outline" onClick={() => navigate("/ventas")}>
+          <List className="size-4 mr-2" /> Ver Listado
+        </Button>
+        <Button size="sm" type="submit" form="sale-form" disabled={isSubmitting}>
+          <Loader className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`} />
+          {isSubmitting ? "Guardando..." : "Guardar"}
+        </Button>
+      </div>
       <div className="space-y-6">
         {/* Main Form */}
         {companies &&
@@ -137,12 +148,10 @@ export const SaleEditPage = () => {
             <SaleForm
               defaultValues={mapSaleToForm(sale)}
               onSubmit={handleSubmit}
-              isSubmitting={isSubmitting}
               mode="update"
               branches={branches}
               warehouses={warehouses}
               sale={sale}
-              onCancel={() => navigate("/ventas")}
             />
           )}
       </div>

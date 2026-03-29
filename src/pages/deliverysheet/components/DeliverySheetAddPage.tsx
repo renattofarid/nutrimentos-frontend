@@ -9,10 +9,12 @@ import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import { useEffect } from "react";
 import { format } from "date-fns";
 import PageWrapper from "@/components/PageWrapper";
-import { Button } from "@/components/ui/button";
-import { List } from "lucide-react";
-import { previewDeliverySheet } from "../lib/deliverysheet.actions";
+import {
+  exportDeliverySheetById,
+  previewDeliverySheet,
+} from "../lib/deliverysheet.actions";
 import { promiseToast } from "@/lib/core.function";
+import type { DeliverySheetCreateResponse } from "../lib/deliverysheet.interface";
 
 export default function DeliverySheetAddPage() {
   const navigate = useNavigate();
@@ -33,13 +35,26 @@ export default function DeliverySheetAddPage() {
     refetchZones();
   }, []);
 
-  const handleSubmit = async (data: DeliverySheetSchema) => {
-    try {
-      await createDeliverySheet(data);
-      navigate("/planillas/listado");
-    } catch (error) {
-      console.error("Error al crear planilla", error);
-    }
+  const handleExportById = async (id: number) => {
+    const blob = await exportDeliverySheetById(id);
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
+
+  const handleSubmit = (data: DeliverySheetSchema) => {
+    const promise = createDeliverySheet(data)
+      .then((response: DeliverySheetCreateResponse) => {
+        (handleExportById(response.data.id), navigate("/planillas/listado"));
+      })
+      .catch((error) => {
+        console.error("Error creating delivery sheet:", error);
+        throw error;
+      });
+    promiseToast(promise, {
+      loading: "Guardando planilla...",
+      success: "Planilla creada. PDF abierto correctamente",
+      error: "Error al crear la planilla",
+    });
   };
 
   const handleCancel = () => {
@@ -53,7 +68,9 @@ export default function DeliverySheetAddPage() {
       zone_id: data.zone_id ? Number(data.zone_id) : undefined,
       branch_id: data.branch_id ? Number(data.branch_id) : undefined,
     }).then((blob) => {
-      const url = window.URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+      const url = window.URL.createObjectURL(
+        new Blob([blob], { type: "application/pdf" }),
+      );
       window.open(url, "_blank");
       setTimeout(() => window.URL.revokeObjectURL(url), 10000);
     });
@@ -83,19 +100,8 @@ export default function DeliverySheetAddPage() {
     });
   };
 
-
   return (
     <PageWrapper>
-      <div className="flex items-center justify-between mb-6">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => navigate("/planillas/listado")}
-        >
-          <List className="size-4 mr-2" /> Ver Listado
-        </Button>
-      </div>
-
       <DeliverySheetForm
         defaultValues={{
           issue_date: format(new Date(), "yyyy-MM-dd"),
@@ -104,7 +110,6 @@ export default function DeliverySheetAddPage() {
         onCancel={handleCancel}
         onPreview={handlePreview}
         isSubmitting={isSubmitting}
-
         mode="create"
         branches={allBranches || []}
         zones={zones || []}

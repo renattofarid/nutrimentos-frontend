@@ -11,7 +11,7 @@ import { CLIENT_ROLE_ID } from "../lib/client.interface";
 interface ClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onClientCreated?: () => void;
+  onClientCreated?: (personId?: number, personName?: string) => void;
 }
 
 export function ClientDialog({
@@ -69,10 +69,14 @@ export function ClientDialog({
         createPersonData.client_category_id = Number(data.client_category_id);
       }
 
-      await createPersonWithRole(createPersonData, Number(data.role_id));
+      const response = await createPersonWithRole(createPersonData, Number(data.role_id));
+      const personName =
+        data.type_person === "JURIDICA"
+          ? data.business_name || ""
+          : `${data.names ?? ""} ${data.father_surname ?? ""} ${data.mother_surname ?? ""}`.trim();
       successToast("Cliente creado exitosamente");
       onOpenChange(false);
-      onClientCreated?.();
+      onClientCreated?.(response.data?.id, personName);
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error &&

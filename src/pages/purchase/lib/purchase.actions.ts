@@ -294,3 +294,11 @@ export const exportPurchases = async (
   });
   return response.data;
 };
+
+export const exportPurchaseById = async (id: number): Promise<Blob> => {
+  const response = await api.get<Blob>(`${PURCHASE_ENDPOINT}/export`, {
+    params: { purchase_id: id, format: "pdf" },
+    responseType: "blob",
+  });
+  return response.data;
+};

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
-import { List } from "lucide-react";
+import { List, Loader, Save } from "lucide-react";
 import { SaleForm } from "./SaleForm";
 import { type SaleSchema } from "../lib/sale.schema";
 import { useSaleStore } from "../lib/sales.store";
@@ -25,7 +25,9 @@ export const SaleAddPage = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [showNextDialog, setShowNextDialog] = useState(false);
+  const [pendingSaleId, setPendingSaleId] = useState<number | null>(null);
   const { user } = useAuthStore();
   const { data: branches, isLoading: branchesLoading } = useAllBranches({
     company_id: user?.company_id,
@@ -64,23 +66,36 @@ export const SaleAddPage = () => {
       const saleId = await createSale(data);
       successToast("Venta creada correctamente");
 
-      // Abrir boleta automáticamente si se obtuvo el ID
       if (saleId) {
-        try {
-          const blob = await exportBulkTickets([saleId]);
-          const url = window.URL.createObjectURL(blob);
-          window.open(url, "_blank");
-        } catch {
-          // Si falla la exportación, continuamos igual
-        }
+        setPendingSaleId(saleId);
+        setShowPrintDialog(true);
+      } else {
+        setShowNextDialog(true);
       }
-
-      setShowNextDialog(true);
     } catch (error: any) {
       errorToast(error.response?.data?.message || ERROR_MESSAGE);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePrintConfirm = async () => {
+    if (pendingSaleId) {
+      try {
+        const blob = await exportBulkTickets([pendingSaleId]);
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, "_blank");
+      } catch {
+        // Si falla la exportación, continuamos igual
+      }
+    }
+    setShowPrintDialog(false);
+    setShowNextDialog(true);
+  };
+
+  const handlePrintCancel = () => {
+    setShowPrintDialog(false);
+    setShowNextDialog(true);
   };
 
   if (isLoading) {
@@ -101,13 +116,22 @@ export const SaleAddPage = () => {
 
   return (
     <PageWrapper size="3xl">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
         <Button
           size="sm"
           variant="outline"
           onClick={() => navigate("/ventas/listado")}
         >
           <List className="size-4 mr-2" /> Ver Listado
+        </Button>
+        <Button
+          size="sm"
+          type="submit"
+          form="sale-form"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+          {isSubmitting ? "Guardando..." : "Guardar"}
         </Button>
       </div>
 
@@ -131,23 +155,36 @@ export const SaleAddPage = () => {
           key={formKey}
           defaultValues={getDefaultValues()}
           onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
           mode="create"
           branches={branches!}
           warehouses={warehouses!}
-          onCancel={() => navigate("/ventas/listado")}
         />
       )}
+
+      <ConfirmationDialog
+        open={showPrintDialog}
+        onOpenChange={setShowPrintDialog}
+        icon="info"
+        title="Venta registrada"
+        description="¿Deseas imprimir la boleta?"
+        confirmText="Sí, imprimir"
+        cancelText="No, omitir"
+        onConfirm={handlePrintConfirm}
+        onCancel={handlePrintCancel}
+      />
 
       <ConfirmationDialog
         open={showNextDialog}
         onOpenChange={setShowNextDialog}
         icon="info"
-        title="Venta registrada"
-        description="¿Deseas crear otra venta?"
+        title="¿Crear otra venta?"
+        description="¿Deseas registrar otra venta?"
         confirmText="Sí, crear otra"
         cancelText="No, ir al listado"
-        onConfirm={() => setFormKey((k) => k + 1)}
+        onConfirm={() => {
+          setFormKey((k) => k + 1);
+          setShowNextDialog(false);
+        }}
         onCancel={() => navigate("/ventas/listado")}
       />
     </PageWrapper>

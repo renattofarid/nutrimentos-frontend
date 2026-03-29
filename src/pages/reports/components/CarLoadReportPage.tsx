@@ -265,12 +265,7 @@ export default function CarLoadReportPage() {
     );
   };
 
-  // Only show zones that appear in the last search result
-  const displayedZones = rawData
-    ? zoneOptions.filter((z) =>
-        (reportData?.zones ?? []).includes(z.label)
-      )
-    : [];
+  const displayedZones = rawData ? zoneOptions : [];
 
   const filteredZones = displayedZones.filter((z) =>
     z.label.toLowerCase().includes(zoneSearch.toLowerCase())

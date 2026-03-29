@@ -209,12 +209,8 @@ export function useCommissionsReport(params?: CommissionsReportParams) {
 }
 
 export function useCarLoadReport(params?: CarLoadReportParams) {
-  const {
-    carLoadReport,
-    carLoadLoading,
-    carLoadError,
-    fetchCarLoadReport,
-  } = useReportsStore();
+  const { carLoadReport, carLoadLoading, carLoadError, fetchCarLoadReport } =
+    useReportsStore();
 
   return {
     data: carLoadReport,
@@ -225,12 +221,13 @@ export function useCarLoadReport(params?: CarLoadReportParams) {
   };
 }
 
-export const useZonesToday = (params?: { date_from?: string | null; date_to?: string | null }) => {
+export const useZonesToday = (params?: {
+  date_from?: string | null;
+  date_to?: string | null;
+}) => {
   return useQuery({
     queryKey: ["zones-today", params],
     queryFn: () => fetchSearchEndpoint("/sales/zones-by-date", params ?? {}),
-    staleTime: 30 * 1000,
-    refetchOnWindowFocus: false,
   });
 };
 

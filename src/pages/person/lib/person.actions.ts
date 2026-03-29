@@ -62,7 +62,7 @@ export async function createPerson(
 export async function createPersonWithRole(
   data: CreatePersonRequest,
   roleId: number
-): Promise<{ message: string }> {
+): Promise<{ message: string; data?: { id: number } }> {
   // First create the person
   const createResponse = await createPerson(data);
 

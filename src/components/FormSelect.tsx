@@ -48,6 +48,7 @@ interface FormSelectProps {
   enableCodeSearch?: boolean;
   autoSelectSingle?: boolean;
   uppercase?: boolean;
+  tabIndex?: number;
 }
 
 function getOptionLabel(opt: Option): string {
@@ -69,6 +70,7 @@ export function FormSelect({
   enableCodeSearch = false,
   autoSelectSingle = false,
   uppercase = false,
+  tabIndex,
 }: FormSelectProps) {
   const { horizontal } = useFormLayout();
   const [open, setOpen] = useState(false);
@@ -263,6 +265,7 @@ export function FormSelect({
                         uppercase && "uppercase",
                       )}
                       autoComplete="off"
+                      tabIndex={tabIndex}
                     />
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
                       {field.value && !disabled && (

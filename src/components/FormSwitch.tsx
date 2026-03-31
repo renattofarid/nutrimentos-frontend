@@ -21,6 +21,7 @@ interface FormSwitchProps<T extends FieldValues> {
   disabled?: boolean;
   size?: "sm" | "md" | "lg";
   autoHeight?: boolean;
+  tabIndex?: number;
 }
 
 export function FormSwitch<T extends FieldValues>({
@@ -34,6 +35,7 @@ export function FormSwitch<T extends FieldValues>({
   disabled,
   size = "sm",
   autoHeight = false,
+  tabIndex,
 }: FormSwitchProps<T>) {
   const { horizontal } = useFormLayout();
 
@@ -70,6 +72,7 @@ export function FormSwitch<T extends FieldValues>({
           onCheckedChange={field.onChange}
           disabled={disabled}
           className="shrink-0"
+          tabIndex={tabIndex}
         />
       </FormControl>
     </FormLabel>

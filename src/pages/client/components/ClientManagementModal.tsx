@@ -168,7 +168,7 @@ export function ClientManagementModal({
 
   const clientParams: Record<string, unknown> = { page, per_page: PER_PAGE };
   if (searchField === "zone_id") {
-    if (selectedZoneId) clientParams.zone_id = selectedZoneId;
+    if (selectedZoneId) clientParams.personZones$zone_id = selectedZoneId;
   } else if (debouncedSearch) {
     clientParams[searchField] = debouncedSearch;
   }

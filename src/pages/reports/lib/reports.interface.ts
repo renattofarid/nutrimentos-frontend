@@ -72,6 +72,9 @@ export const PURCHASE_REGISTER_REPORT_ROUTE = `${ROUTE}/registro-compras`;
 // Annual Sales Report
 export const ANNUAL_SALES_REPORT_ROUTE = `${ROUTE}/ventas-anuales`;
 
+// Sale Tickets Print Report
+export const SALE_TICKETS_PRINT_ROUTE = `${ROUTE}/imprimir-tickets`;
+
 export interface CustomerAccountStatementParams {
   zone_id?: number | null;
   customer_id?: number | null;

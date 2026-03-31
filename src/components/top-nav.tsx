@@ -70,6 +70,7 @@ import {
   PURCHASE_REGISTER_REPORT_ROUTE,
   REPORTS,
   SALE_BY_SELLER_REPORT_ROUTE,
+  SALE_TICKETS_PRINT_ROUTE,
   SALES_BY_PRODUCT_REPORT_ROUTE,
   SALES_REGISTER_REPORT_ROUTE,
 } from "@/pages/reports/lib/reports.interface";
@@ -334,6 +335,7 @@ export const navData: NavItem[] = [
     url: "#",
     icon: ReportsIcon,
     items: [
+      { title: "Imprimir Tickets", url: SALE_TICKETS_PRINT_ROUTE, icon: ReportsIcon },
       { title: "Inventario", url: INVENTORY_REPORT_ROUTE, icon: ReportsIcon },
       { title: "Kardex", url: KARDEX_REPORT_ROUTE, icon: ReportsIcon },
       {

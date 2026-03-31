@@ -81,6 +81,7 @@ import SalesByProductReportPage from "@/pages/reports/components/SalesByProductR
 import AnnualSalesReportPage from "@/pages/reports/components/AnnualSalesReportPage";
 import SalesRegisterReportPage from "@/pages/reports/components/SalesRegisterReportPage";
 import PurchaseRegisterReportPage from "@/pages/reports/components/PurchaseRegisterReportPage";
+import SaleTicketsPrintPage from "@/pages/reports/components/SaleTicketsPrintPage";
 import { TYPE_USER } from "@/pages/type-users/lib/typeUser.interface";
 import { USER } from "@/pages/users/lib/User.interface";
 import { COMPANY } from "@/pages/company/lib/company.interface";
@@ -131,6 +132,7 @@ import {
   SALE_BY_SELLER_REPORT_ROUTE,
   SALES_BY_PRODUCT_REPORT_ROUTE,
   SALES_REGISTER_REPORT_ROUTE,
+  SALE_TICKETS_PRINT_ROUTE,
 } from "@/pages/reports/lib/reports.interface";
 import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-credit-note.interface";
 import WarehouseProductPage from "@/pages/warehouse-product/components/WarehouseProductPage";
@@ -298,6 +300,7 @@ export function AppRoutes() {
       <Route path={DeliverySheetSettlementRoute} element={<SettlementPage />} />
 
       {/* Reportes */}
+      <Route path={SALE_TICKETS_PRINT_ROUTE} element={<SaleTicketsPrintPage />} />
       <Route path={CUSTOMER_ACCOUNT_STATEMENT_ROUTE} element={<CustomerAccountStatementPage />} />
       <Route path={INVENTORY_REPORT_ROUTE} element={<InventoryReportPage />} />
       <Route path={KARDEX_REPORT_ROUTE} element={<KardexReportPage />} />

@@ -12,7 +12,6 @@ import { useAllBrands } from "@/pages/brand/lib/brand.hook";
 import { useAllUnits } from "@/pages/unit/lib/unit.hook";
 import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
 import { useAllNationalities } from "@/pages/nationality/lib/nationality.hook";
-import { useAllVehicles } from "@/pages/vehicle/lib/vehicle.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import {
   ERROR_MESSAGE,
@@ -69,11 +68,6 @@ export default function GuideAddPage() {
     useAllProductTypes();
   const { data: nationalities, refetch: refetchNationalities } =
     useAllNationalities();
-  const {
-    data: vehicles,
-    isLoading: vehiclesLoading,
-    refetch: refetchVehicles,
-  } = useAllVehicles();
 
   const { createGuide } = useGuideStore();
 
@@ -86,7 +80,6 @@ export default function GuideAddPage() {
     refetchUnits();
     refetchProductTypes();
     refetchNationalities();
-    refetchVehicles();
   }, []);
 
   const isLoading =
@@ -97,8 +90,7 @@ export default function GuideAddPage() {
     brandsLoading ||
     unitsLoading ||
     !productTypes ||
-    !nationalities ||
-    vehiclesLoading;
+    !nationalities;
 
   const getDefaultValues = (): Partial<GuideSchema> => ({
     branch_id: "1",
@@ -125,7 +117,6 @@ export default function GuideAddPage() {
     destination_address: "",
     ubigeo_destination_id: "",
     unit_measurement: "KGM",
-    total_weight: 0,
     total_packages: 0,
     observations: "",
   });
@@ -168,8 +159,7 @@ export default function GuideAddPage() {
         productTypes &&
         productTypes.length > 0 &&
         nationalities &&
-        nationalities.length > 0 &&
-        vehicles && (
+        nationalities.length > 0 && (
           <GuideForm
             defaultValues={getDefaultValues()}
             onSubmit={handleSubmit}
@@ -179,7 +169,6 @@ export default function GuideAddPage() {
             branches={branches}
             warehouses={warehouses}
             motives={motives}
-            vehicles={vehicles}
           />
         )}
     </PageWrapper>

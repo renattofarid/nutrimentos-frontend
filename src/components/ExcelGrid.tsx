@@ -628,7 +628,7 @@ export function ExcelGrid<T extends Record<string, any>>({
                 <TableHead
                   key={column.id}
                   style={{ width: column.width }}
-                  className="font-semibold border-r h-10 bg-muted/50"
+                  className="font-medium uppercase border-r h-10 bg-muted/50 text-gray-500"
                 >
                   {column.header}
                 </TableHead>

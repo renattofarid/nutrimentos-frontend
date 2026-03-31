@@ -180,7 +180,6 @@ export const useGuideStore = create<GuideStore>((set) => ({
         ...(data.unit_measurement && {
           unit_measurement: data.unit_measurement,
         }),
-        ...(data.total_weight && { total_weight: Number(data.total_weight) }),
         ...(data.total_packages && {
           total_packages: Number(data.total_packages),
         }),

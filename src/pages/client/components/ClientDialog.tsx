@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { GeneralModal } from "@/components/GeneralModal";
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import { type PersonSchemaClient } from "@/pages/person/lib/person.schema";
 import { createPersonWithRole } from "@/pages/person/lib/person.actions";
 import { errorToast, successToast } from "@/lib/core.function";
 import { CLIENT_ROLE_ID } from "../lib/client.interface";
+import GeneralSheet from "@/components/GeneralSheet";
 
 interface ClientDialogProps {
   open: boolean;
@@ -69,7 +69,10 @@ export function ClientDialog({
         createPersonData.client_category_id = Number(data.client_category_id);
       }
 
-      const response = await createPersonWithRole(createPersonData, Number(data.role_id));
+      const response = await createPersonWithRole(
+        createPersonData,
+        Number(data.role_id),
+      );
       const personName =
         data.type_person === "JURIDICA"
           ? data.business_name || ""
@@ -98,12 +101,14 @@ export function ClientDialog({
   };
 
   return (
-    <GeneralModal
+    <GeneralSheet
       open={open}
       onClose={() => onOpenChange(false)}
+      icon="UserPlus"
       title="Agregar Cliente"
       subtitle="Complete los campos para crear un nuevo cliente"
       size="4xl"
+      side="left"
     >
       <PersonForm
         onSubmit={handleSubmit}
@@ -115,6 +120,6 @@ export function ClientDialog({
         showZone={true}
         showPriceList={true}
       />
-    </GeneralModal>
+    </GeneralSheet>
   );
 }

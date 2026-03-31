@@ -68,14 +68,17 @@ import {
   INVENTORY_REPORT_ROUTE,
   KARDEX_REPORT_ROUTE,
   PURCHASE_REGISTER_REPORT_ROUTE,
+  REAL_CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
   REPORTS,
   SALE_BY_SELLER_REPORT_ROUTE,
+  SALE_TICKETS_PRINT_ROUTE,
   SALES_BY_PRODUCT_REPORT_ROUTE,
   SALES_REGISTER_REPORT_ROUTE,
 } from "@/pages/reports/lib/reports.interface";
 import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-credit-note.interface";
 import { SettlementTitle } from "@/pages/deliverysheet/components/settlement/SettlementHeader";
 import { CustomerAccountStatementTitle } from "@/pages/reports/components/CustomerAccountStatementPage";
+import { RealCustomerAccountStatementTitle } from "@/pages/reports/components/RealCustomerAccountStatementPage";
 import type { LucideIcon } from "lucide-react";
 import { useWindowManager } from "@/stores/window-manager.store";
 
@@ -334,6 +337,12 @@ export const navData: NavItem[] = [
     url: "#",
     icon: ReportsIcon,
     items: [
+      { title: "Imprimir Tickets", url: SALE_TICKETS_PRINT_ROUTE, icon: ReportsIcon },
+      {
+        title: RealCustomerAccountStatementTitle,
+        url: REAL_CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+        icon: ReportsIcon,
+      },
       { title: "Inventario", url: INVENTORY_REPORT_ROUTE, icon: ReportsIcon },
       { title: "Kardex", url: KARDEX_REPORT_ROUTE, icon: ReportsIcon },
       {
@@ -427,7 +436,7 @@ export function TopNav() {
   const activeTab = tabs.find((t) => t.id === activeTabId);
   const activePath = activeTab?.path ?? "";
 
-  useEffect(() => {
+useEffect(() => {
     if (!ENABLE_PERMISSION_VALIDATION) {
       setFilteredNav(navData);
       return;

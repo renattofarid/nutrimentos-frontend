@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GeneralModal } from "@/components/GeneralModal";
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import { type PersonSchemaClient } from "@/pages/person/lib/person.schema";
 import {
@@ -18,6 +17,7 @@ import { CLIENT_ROLE_ID } from "../lib/client.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import { TYPE_DOCUMENT } from "@/pages/person/lib/person.constants";
 import { Loader2 } from "lucide-react";
+import GeneralSheet from "@/components/GeneralSheet";
 
 interface ClientEditDialogProps {
   open: boolean;
@@ -99,7 +99,9 @@ export function ClientEditDialog({
       }
 
       await updatePerson(personData.id, updatePersonData);
-      successToast(SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "update"));
+      successToast(
+        SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "update"),
+      );
       onOpenChange(false);
       onClientUpdated?.();
     } catch (error: unknown) {
@@ -117,7 +119,7 @@ export function ClientEditDialog({
 
       errorToast(
         errorMessage,
-        ERROR_MESSAGE({ name: "Cliente", gender: false }, "update")
+        ERROR_MESSAGE({ name: "Cliente", gender: false }, "update"),
       );
     } finally {
       setIsSubmitting(false);
@@ -125,12 +127,14 @@ export function ClientEditDialog({
   };
 
   return (
-    <GeneralModal
+    <GeneralSheet
       open={open}
       onClose={() => onOpenChange(false)}
       title="Editar Cliente"
       subtitle="Modifica los datos del cliente"
       size="4xl"
+      icon="UserPen"
+      side="left"
     >
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
@@ -150,6 +154,6 @@ export function ClientEditDialog({
           showDirection={false}
         />
       )}
-    </GeneralModal>
+    </GeneralSheet>
   );
 }

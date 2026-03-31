@@ -106,6 +106,7 @@ interface DataTableProps<TData, TValue> extends VariantProps<
   enableRowSelection?: boolean;
   enableMultiRowSelection?: boolean;
   getRowId?: (originalRow: TData, index: number) => string;
+  onRowClick?: (row: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -126,6 +127,7 @@ export function DataTable<TData, TValue>({
   enableRowSelection = false,
   enableMultiRowSelection = true,
   getRowId,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -286,7 +288,25 @@ export function DataTable<TData, TValue>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className="text-nowrap hover:bg-muted bg-background group"
+                    className={cn(
+                      "text-nowrap hover:bg-muted bg-background group",
+                      (onRowClick || enableRowSelection) && "cursor-pointer",
+                      row.getIsSelected() &&
+                        "bg-primary/10 hover:bg-primary/15 border-l-2 border-primary",
+                    )}
+                    onClick={(e) => {
+                      const isInteractive = (
+                        e.target as HTMLElement
+                      ).closest('button, a, input, [role="checkbox"]');
+                      if (!isInteractive) {
+                        if (enableRowSelection) {
+                          row.toggleSelected();
+                        }
+                        if (onRowClick) {
+                          onRowClick(row.original);
+                        }
+                      }
+                    }}
                   >
                     {row.getVisibleCells().map((cell) => {
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any

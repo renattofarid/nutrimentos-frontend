@@ -15,16 +15,16 @@ export function TabBar() {
           className={cn(
             "group flex items-center gap-2 px-4 py-2 rounded-t-md text-sm cursor-pointer border border-b-0 transition-colors shrink-0 max-w-56 select-none",
             tab.id === activeTabId
-              ? "bg-background border-border text-foreground font-medium -mb-px pb-[9px]"
-              : "bg-muted/60 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
+              ? "bg-primary border-primary text-primary-foreground font-medium -mb-px pb-[9px]"
+              : "bg-primary/20 border-transparent text-primary hover:text-primary hover:bg-primary/30"
           )}
           onClick={() => setActiveTab(tab.id)}
         >
           <span className="truncate">{tab.title}</span>
           <button
             className={cn(
-              "shrink-0 rounded p-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/20 hover:text-destructive",
-              tab.id === activeTabId && "opacity-50 hover:opacity-100"
+              "shrink-0 rounded p-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20",
+              tab.id === activeTabId && "opacity-60 hover:opacity-100"
             )}
             onClick={(e) => {
               e.stopPropagation();

@@ -39,6 +39,9 @@ export const REPORTS: ModelComplete<any> = {
 // Customer Account Statement Report
 export const CUSTOMER_ACCOUNT_STATEMENT_ROUTE = `${ROUTE}/estado-cuenta-clientes`;
 
+// Real Customer Account Statement Report
+export const REAL_CUSTOMER_ACCOUNT_STATEMENT_ROUTE = `${ROUTE}/estado-cuenta-real`;
+
 // Inventory Report
 export const INVENTORY_REPORT_ROUTE = `${ROUTE}/inventario`;
 
@@ -71,6 +74,9 @@ export const PURCHASE_REGISTER_REPORT_ROUTE = `${ROUTE}/registro-compras`;
 
 // Annual Sales Report
 export const ANNUAL_SALES_REPORT_ROUTE = `${ROUTE}/ventas-anuales`;
+
+// Sale Tickets Print Report
+export const SALE_TICKETS_PRINT_ROUTE = `${ROUTE}/imprimir-tickets`;
 
 export interface CustomerAccountStatementParams {
   zone_id?: number | null;

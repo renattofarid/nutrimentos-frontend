@@ -71,7 +71,7 @@ export interface VehicleResource {
   owner: {
     id: number;
     full_name: string;
-    document_number: string | null;
+    number_document: string | null;
   } | null;
   created_at: string;
 }

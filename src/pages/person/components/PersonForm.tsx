@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
 import { useFormLayout } from "@/components/GroupFormSection";
-import { Loader, Search, Paperclip, IdCard } from "lucide-react";
+import { Loader, Search, Paperclip, IdCard, ChevronDown, ChevronUp } from "lucide-react";
 import {
   personCreateSchema,
   personCreateSchemaClient,
@@ -227,6 +227,7 @@ export const PersonForm = ({
   const type_person = form.watch("type_person");
   const document_type_id = form.watch("document_type_id");
   const [isSearching, setIsSearching] = useState(false);
+  const [showExtraFields, setShowExtraFields] = useState(false);
 
   // Ref to track if document type change triggered person type change
   const documentChangeRef = useRef(false);
@@ -492,17 +493,19 @@ export const PersonForm = ({
                 className={fieldsFromSearch.mother_surname ? "bg-blue-50" : ""}
               />
 
-              <FormSelect
-                control={form.control}
-                name="gender"
-                label="Género"
-                placeholder="Seleccione género"
-                options={[
-                  { value: "M", label: "Masculino" },
-                  { value: "F", label: "Femenino" },
-                  { value: "O", label: "Otro" },
-                ]}
-              />
+              {(!isClient || showExtraFields) && (
+                <FormSelect
+                  control={form.control}
+                  name="gender"
+                  label="Género"
+                  placeholder="Seleccione género"
+                  options={[
+                    { value: "M", label: "Masculino" },
+                    { value: "F", label: "Femenino" },
+                    { value: "O", label: "Otro" },
+                  ]}
+                />
+              )}
 
               <DatePickerFormField
                 control={form.control}
@@ -549,14 +552,34 @@ export const PersonForm = ({
             icon={Paperclip}
             cols={{ sm: 1 }}
             horizontal
+            headerExtra={
+              isClient ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowExtraFields(!showExtraFields)}
+                  className="text-xs gap-1 text-muted-foreground hover:text-foreground h-7 px-2"
+                >
+                  {showExtraFields ? (
+                    <ChevronUp className="h-3 w-3" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3" />
+                  )}
+                  {showExtraFields ? "Ocultar" : "Mostrar más campos"}
+                </Button>
+              ) : undefined
+            }
           >
-            <FormInput
-              control={form.control}
-              name="email"
-              label="Correo Electrónico"
-              type="email"
-              placeholder="ejemplo@correo.com"
-            />
+            {(!isClient || showExtraFields) && (
+              <FormInput
+                control={form.control}
+                name="email"
+                label="Correo Electrónico"
+                type="email"
+                placeholder="ejemplo@correo.com"
+              />
+            )}
 
             <FormInput
               control={form.control}
@@ -594,7 +617,7 @@ export const PersonForm = ({
               />
             )}
 
-            {showBusinessType && (
+            {showBusinessType && (!isClient || showExtraFields) && (
               <FormSelect
                 control={form.control}
                 name="business_type_id"

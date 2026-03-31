@@ -1,5 +1,17 @@
 import { useEffect } from "react";
 import { useVehicleStore } from "./vehicle.store";
+import { useQuery } from "@tanstack/react-query";
+import { VEHICLE } from "./vehicle.interface";
+import { getVehicle } from "./vehicle.actions";
+
+const { QUERY_KEY } = VEHICLE;
+
+export function useVehiclesSearch(params?: Record<string, unknown>) {
+  return useQuery({
+    queryKey: [QUERY_KEY, params],
+    queryFn: () => getVehicle({ params }),
+  });
+}
 
 export function useVehicle(params?: Record<string, unknown>) {
   const { vehicles, meta, isLoading, error, fetchVehicles } =

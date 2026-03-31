@@ -71,6 +71,7 @@ import {
   KARDEX_REPORT_ROUTE,
   REPORTS,
   SALE_BY_SELLER_REPORT_ROUTE,
+  SALE_TICKETS_PRINT_ROUTE,
   SALES_BY_PRODUCT_REPORT_ROUTE,
 } from "@/pages/reports/lib/reports.interface";
 import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-credit-note.interface";
@@ -404,6 +405,11 @@ const data = {
       url: "#",
       icon: ReportsIcon,
       items: [
+        {
+          title: "Imprimir Tickets",
+          url: SALE_TICKETS_PRINT_ROUTE,
+          icon: ReportsIcon,
+        },
         {
           title: "Inventario",
           url: INVENTORY_REPORT_ROUTE,

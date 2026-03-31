@@ -1,9 +1,13 @@
 import { useEffect } from "react";
 import { useZoneStore } from "./zone.store";
+import { useQuery } from "@tanstack/react-query";
+import { ZONE } from "./zone.interface";
+import { getZone } from "./zone.actions";
+
+const { QUERY_KEY } = ZONE;
 
 export function useZone(params?: Record<string, unknown>) {
-  const { zones, meta, isLoading, error, fetchZones } =
-    useZoneStore();
+  const { zones, meta, isLoading, error, fetchZones } = useZoneStore();
 
   useEffect(() => {
     if (!zones) fetchZones(params);
@@ -18,9 +22,18 @@ export function useZone(params?: Record<string, unknown>) {
   };
 }
 
+export function useZoneSearch(params?: Record<string, unknown>) {
+  return useQuery({
+    queryKey: [QUERY_KEY, params],
+    queryFn: () =>
+      getZone({
+        params: { params },
+      }),
+  });
+}
+
 export function useAllZones() {
-  const { allZones, isLoadingAll, error, fetchAllZones } =
-    useZoneStore();
+  const { allZones, isLoadingAll, error, fetchAllZones } = useZoneStore();
 
   useEffect(() => {
     if (!allZones) fetchAllZones();

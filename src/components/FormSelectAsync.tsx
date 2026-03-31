@@ -32,6 +32,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { Option } from "@/lib/core.interface";
 import RequiredField from "./RequiredField";
+import { useFormLayout } from "./GroupFormSection";
 
 interface FormSelectAsyncProps {
   name: string;
@@ -96,6 +97,7 @@ export function FormSelectAsync({
   uppercase = false,
   externalOption,
 }: FormSelectAsyncProps) {
+  const { horizontal } = useFormLayout();
   const { field: controlField } = useController({ name, control });
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -132,7 +134,8 @@ export function FormSelectAsync({
       appliedExternalRef.current = externalOption.value;
       setSelectedOption(externalOption);
       controlFieldRef.current.onChange(externalOption.value);
-      if (onValueChangeRef.current) onValueChangeRef.current(externalOption.value);
+      if (onValueChangeRef.current)
+        onValueChangeRef.current(externalOption.value);
     } else {
       if (appliedExternalRef.current == null) return;
       appliedExternalRef.current = undefined;
@@ -140,7 +143,7 @@ export function FormSelectAsync({
       controlFieldRef.current.onChange("");
       if (onValueChangeRef.current) onValueChangeRef.current("");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [externalOption?.value]);
 
   const { data, isLoading, isFetching } = useQueryHook({
@@ -205,11 +208,23 @@ export function FormSelectAsync({
         setPage((prev) => prev + 1);
       }
     }
-  }, [preloadItemId, allOptions, isLoading, isFetching, data?.meta?.last_page, page]);
+  }, [
+    preloadItemId,
+    allOptions,
+    isLoading,
+    isFetching,
+    data?.meta?.last_page,
+    page,
+  ]);
 
   // Auto-select preloaded item
   useEffect(() => {
-    if (!preloadItemId || hasAutoSelected.current || controlFieldRef.current.value) return;
+    if (
+      !preloadItemId ||
+      hasAutoSelected.current ||
+      controlFieldRef.current.value
+    )
+      return;
     const found = allOptions.find((opt) => opt.value === preloadItemId);
     if (found) {
       hasAutoSelected.current = true;
@@ -290,8 +305,7 @@ export function FormSelectAsync({
         displayLabelRef.current = displayLabel;
 
         const handleSelect = (option: Option) => {
-          const newValue =
-            option.value === field.value ? "" : option.value;
+          const newValue = option.value === field.value ? "" : option.value;
           field.onChange(newValue);
           setSelectedOption(newValue ? option : null);
           if (onValueChange) {
@@ -311,12 +325,23 @@ export function FormSelectAsync({
         };
 
         return (
-          <FormItem className="flex flex-col justify-between gap-0.5">
+          <FormItem
+            className={cn(
+              horizontal
+                ? "flex flex-row items-center gap-3"
+                : "flex flex-col justify-start gap-0.5",
+            )}
+          >
             {label && typeof label === "function"
               ? label()
               : label && (
                   <FormLabel
-                    className="flex justify-start items-center font-bold uppercase"
+                    className={cn(
+                      "flex items-center font-bold uppercase",
+                      horizontal
+                        ? "w-48 shrink-0 justify-end text-right"
+                        : "justify-start",
+                    )}
                   >
                     {label}
                     {required && <RequiredField />}
@@ -347,14 +372,21 @@ export function FormSelectAsync({
                         onFocus={handleFocus}
                         onBlur={handleBlur}
                         onMouseDown={(e) => {
-                          if (!open && !disabled && document.activeElement === e.currentTarget) {
-                            if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+                          if (
+                            !open &&
+                            !disabled &&
+                            document.activeElement === e.currentTarget
+                          ) {
+                            if (closeTimerRef.current)
+                              clearTimeout(closeTimerRef.current);
                             setSearch("");
                             setPage(1);
                             setOpen(true);
                             if (debouncedSearch === "") {
                               if (data?.data) {
-                                const newOptions = data.data.map(mapOptionFnRef.current);
+                                const newOptions = data.data.map(
+                                  mapOptionFnRef.current,
+                                );
                                 for (const item of data.data) {
                                   const opt = mapOptionFnRef.current(item);
                                   rawItemsMap.current.set(opt.value, item);
@@ -406,7 +438,10 @@ export function FormSelectAsync({
                   onOpenAutoFocus={(e) => e.preventDefault()}
                   onFocusOutside={(e) => e.preventDefault()}
                 >
-                  <Command className="max-h-72 overflow-hidden" shouldFilter={false}>
+                  <Command
+                    className="max-h-72 overflow-hidden"
+                    shouldFilter={false}
+                  >
                     <CommandList
                       className="max-h-60 overflow-y-auto"
                       ref={scrollRef}

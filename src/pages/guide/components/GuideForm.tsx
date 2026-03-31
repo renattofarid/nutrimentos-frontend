@@ -369,7 +369,9 @@ export const GuideForm = ({
     form.setValue("issue_date", formattedDate);
     form.setValue("transfer_date", formattedDate);
     form.setValue("motive_id", "3");
-    form.setValue("carrier_document_type", "RUC");
+    if (form.getValues("modality") !== "PRIVADO") {
+      form.setValue("carrier_document_type", "RUC");
+    }
   }, [form]);
 
   // Helpers para manejar filas de productos personalizados
@@ -552,6 +554,8 @@ export const GuideForm = ({
           sale_ids: selectedSales,
         };
 
+    console.log("[GuideForm] raw form data:", data);
+    console.log("[GuideForm] payload:", payload);
     onSubmit(payload);
   };
 
@@ -625,14 +629,21 @@ export const GuideForm = ({
     string | null
   >(null);
 
-  const selectedCustomerAddresses: { id: number; address: string; is_primary: boolean; zone_name: string }[] = [];
+  const selectedCustomerAddresses: {
+    id: number;
+    address: string;
+    is_primary: boolean;
+    zone_name: string;
+  }[] = [];
 
   // Setear automáticamente la primera person_zone cuando se selecciona un cliente y solo hay una
   useEffect(() => {
     if (customerValue && selectedCustomerAddresses.length === 1) {
       const newId = selectedCustomerAddresses[0].id.toString();
       setSearchParams((prev) =>
-        prev.person_zone_id === newId ? prev : { ...prev, person_zone_id: newId },
+        prev.person_zone_id === newId
+          ? prev
+          : { ...prev, person_zone_id: newId },
       );
     } else if (!customerValue) {
       setSearchParams((prev) =>
@@ -891,7 +902,7 @@ export const GuideForm = ({
                     form.setValue("carrier_mtc_number", vehicle.mtc);
                   }
                   if (vehicle.owner) {
-                    const docNum = vehicle.owner.document_number || "";
+                    const docNum = vehicle.owner.number_document || "";
                     const docType = docNum.length === 8 ? "DNI" : "CE";
                     form.setValue("driver_document_type", docType);
                     form.setValue("driver_document_number", docNum);
@@ -906,11 +917,9 @@ export const GuideForm = ({
               <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">Chofer: </span>
                 {selectedVehicle.owner.full_name}
-                {selectedVehicle.owner.document_number && (
-                  <span className="ml-2 text-xs">
-                    ({selectedVehicle.owner.document_number})
-                  </span>
-                )}
+                <span className="ml-2 text-xs">
+                  (DNI: {selectedVehicle.owner.number_document ?? "sin documento"})
+                </span>
               </div>
             )}
           </div>
@@ -1261,7 +1270,7 @@ export const GuideForm = ({
                     </ul>
                   </div>
                 )}
-          </div>
+            </div>
           )}
         </GroupFormSection>
 

@@ -436,16 +436,7 @@ export function TopNav() {
   const activeTab = tabs.find((t) => t.id === activeTabId);
   const activePath = activeTab?.path ?? "";
 
-  const countOpenTabsForItem = (item: NavItem): number => {
-    if (!item.items) {
-      return tabs.filter((t) => t.path === item.url || t.path.startsWith(item.url + "/")).length;
-    }
-    return item.items.filter((sub) =>
-      tabs.some((t) => t.path === sub.url || t.path.startsWith(sub.url + "/")),
-    ).length;
-  };
-
-  useEffect(() => {
+useEffect(() => {
     if (!ENABLE_PERMISSION_VALIDATION) {
       setFilteredNav(navData);
       return;
@@ -492,11 +483,6 @@ export function TopNav() {
               >
                 {item.icon && <item.icon className="mr-1 size-3.5" />}
                 {item.title}
-                {countOpenTabsForItem(item) > 0 && (
-                  <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none size-4 shrink-0">
-                    {countOpenTabsForItem(item)}
-                  </span>
-                )}
               </NavigationMenuTrigger>
               <NavigationMenuContent>
                 <ul className="grid min-w-52 w-auto gap-0 p-1">
@@ -535,11 +521,6 @@ export function TopNav() {
                 >
                   {item.icon && <item.icon className="size-3.5" />}
                   {item.title}
-                  {countOpenTabsForItem(item) > 0 && (
-                    <span className="ml-1 inline-flex items-center justify-center rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none size-4 shrink-0">
-                      {countOpenTabsForItem(item)}
-                    </span>
-                  )}
                 </button>
               </NavigationMenuLink>
             </NavigationMenuItem>

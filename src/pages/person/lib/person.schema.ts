@@ -77,12 +77,16 @@ const basePersonSchema = z.object({
 
   phone: z
     .string()
-    .min(1, "El teléfono es obligatorio")
-    .regex(/^[0-9]{9}$/, "El teléfono debe tener exactamente 9 dígitos"),
+    .regex(/^[0-9]{9}$/, "El teléfono debe tener exactamente 9 dígitos")
+    .optional()
+    .or(z.literal("")),
 
   email: z
+    .string()
     .email("Ingrese un correo electrónico válido")
-    .max(255, "El correo no puede exceder 255 caracteres"),
+    .max(255, "El correo no puede exceder 255 caracteres")
+    .optional()
+    .or(z.literal("")),
 
   // Optional fields for specific contexts
   job_position_id: z.string().optional().or(z.literal("")),
@@ -153,12 +157,16 @@ export const createPersonSchema = (
 
       phone: z
         .string()
-        .min(1, "El teléfono es obligatorio")
-        .regex(/^[0-9]{9}$/, "El teléfono debe tener exactamente 9 dígitos"),
+        .regex(/^[0-9]{9}$/, "El teléfono debe tener exactamente 9 dígitos")
+        .optional()
+        .or(z.literal("")),
 
       email: z
+        .string()
         .email("Ingrese un correo electrónico válido")
-        .max(255, "El correo no puede exceder 255 caracteres"),
+        .max(255, "El correo no puede exceder 255 caracteres")
+        .optional()
+        .or(z.literal("")),
 
       // Optional fields for specific contexts
       job_position_id: z.string().optional().or(z.literal("")),
@@ -260,25 +268,6 @@ export const createPersonSchema = (
             message:
               "El apellido materno es obligatorio para personas naturales",
             path: ["mother_surname"],
-          });
-        }
-
-        if (!data.gender) {
-          ctx.addIssue({
-            code: "invalid_type",
-            expected: "string",
-            message: "El género es obligatorio para personas naturales",
-            path: ["gender"],
-          });
-        }
-
-        if (!data.birth_date || data.birth_date.trim() === "") {
-          ctx.addIssue({
-            code: "invalid_type",
-            expected: "string",
-            message:
-              "La fecha de nacimiento es obligatoria para personas naturales",
-            path: ["birth_date"],
           });
         }
 

@@ -104,6 +104,7 @@ export function ClientDialog({
     <GeneralSheet
       open={open}
       onClose={() => onOpenChange(false)}
+      icon="UserPlus"
       title="Agregar Cliente"
       subtitle="Complete los campos para crear un nuevo cliente"
       size="4xl"

@@ -178,7 +178,7 @@ export function SearchableSelect({
   return (
     <div className={cn("flex flex-col gap-0.5", classNameDiv)}>
       {label && (
-        <label className={cn("text-sm font-medium uppercase", classNameLabel)}>
+        <label className={cn("text-sm font-medium uppercase leading-none", classNameLabel)}>
           {label}
         </label>
       )}

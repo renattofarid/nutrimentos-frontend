@@ -31,6 +31,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import RequiredField from "./RequiredField";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useFormLayout } from "./GroupFormSection";
 
 interface DateRangePickerFormFieldProps<T extends FieldValues> {
   control: Control<T>;
@@ -61,6 +62,7 @@ export function DateRangePickerFormField<T extends FieldValues>({
 }: DateRangePickerFormFieldProps<T>) {
   const [open, setOpen] = React.useState(false);
   const isMobile = useIsMobile();
+  const { horizontal } = useFormLayout();
 
   return (
     <FormField
@@ -80,14 +82,27 @@ export function DateRangePickerFormField<T extends FieldValues>({
               dateRange.from && dateRange.to
                 ? `${format(dateRange.from, dateFormat)} - ${format(
                     dateRange.to,
-                    dateFormat
+                    dateFormat,
                   )}`
                 : placeholder;
 
             return (
-              <FormItem className="flex flex-col gap-0.5">
+              <FormItem
+                className={cn(
+                  horizontal
+                    ? "flex flex-row items-center gap-3"
+                    : "flex flex-col justify-start gap-0.5",
+                )}
+              >
                 {label && (
-                  <FormLabel className="flex justify-start items-center">
+                  <FormLabel
+                    className={cn(
+                      "flex items-center font-bold uppercase",
+                      horizontal
+                        ? "w-48 shrink-0 justify-end text-right"
+                        : "justify-start",
+                    )}
+                  >
                     {label}
                     {required && <RequiredField />}
                     {tooltip && (
@@ -117,7 +132,7 @@ export function DateRangePickerFormField<T extends FieldValues>({
                         variant="outline"
                         className={cn(
                           "w-full justify-start text-left font-normal",
-                          !dateRange.from && "text-muted-foreground"
+                          !dateRange.from && "text-muted-foreground",
                         )}
                       >
                         {displayValue}

@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import PageWrapper from "@/components/PageWrapper";
 import { GroupFormSection } from "@/components/GroupFormSection";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -117,21 +116,6 @@ export default function SaleTicketsPrintPage() {
         title="Filtros"
         icon={Filter}
         cols={{ sm: 1, md: 2, lg: 4 }}
-        headerExtra={
-          <Button
-            onClick={handlePrint}
-            disabled={isPrinting || selectedSales.length === 0}
-            size="sm"
-          >
-            {isPrinting ? (
-              <Loader className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Printer className="mr-2 h-4 w-4" />
-            )}
-            Imprimir Ventas
-            {selectedSales.length > 0 && ` (${selectedSales.length})`}
-          </Button>
-        }
       >
         <SearchableSelect
           label="Tipo de documento"
@@ -155,51 +139,59 @@ export default function SaleTicketsPrintPage() {
           className="h-8"
         />
 
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">
-            Número inicio
-          </label>
-          <Input
+        <FormInput
+          label="Número inicio"
+          name="numero_inicio"
+          type="number"
+          value={searchParams.numero_inicio}
+          onChange={(e) =>
+            setSearchParams({
+              ...searchParams,
+              numero_inicio: e.target.value,
+            })
+          }
+          placeholder="Ej: 1"
+          className="h-8"
+        />
+
+        <div className="flex gap-2 items-end">
+          <FormInput
+            label="Número fin"
+            name="numero_fin"
             type="number"
-            value={searchParams.numero_inicio}
+            value={searchParams.numero_fin}
             onChange={(e) =>
-              setSearchParams({
-                ...searchParams,
-                numero_inicio: e.target.value,
-              })
+              setSearchParams({ ...searchParams, numero_fin: e.target.value })
             }
-            placeholder="Ej: 1"
+            placeholder="Ej: 100"
             className="h-8"
           />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">
-            Número fin
-          </label>
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              value={searchParams.numero_fin}
-              onChange={(e) =>
-                setSearchParams({ ...searchParams, numero_fin: e.target.value })
-              }
-              placeholder="Ej: 100"
-              className="h-8"
-            />
-            <Button
-              size="sm"
-              onClick={handleSearch}
-              disabled={isSearching}
-              className="shrink-0"
-            >
-              {isSearching ? (
-                <Loader className="h-4 w-4 animate-spin" />
-              ) : (
-                <Search className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleSearch}
+            disabled={isSearching}
+            className="shrink-0"
+          >
+            {isSearching ? (
+              <Loader className="h-4 w-4 animate-spin" />
+            ) : (
+              <Search className="h-4 w-4" />
+            )}
+          </Button>
+          <Button
+            onClick={handlePrint}
+            disabled={isPrinting}
+            className="shrink-0"
+          >
+            {isPrinting ? (
+              <Loader className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Printer className="mr-2 h-4 w-4" />
+            )}
+            Imprimir
+            {selectedSales.length > 0 && ` (${selectedSales.length})`}
+          </Button>
         </div>
       </GroupFormSection>
 

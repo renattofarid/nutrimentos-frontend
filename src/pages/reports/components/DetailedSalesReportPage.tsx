@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import {
   useDetailedSalesReport,
   useUserAsyncSearch,
-  useWarehouseAsyncSearch,
   useBranchAsyncSearch,
 } from "../lib/reports.hook";
 
@@ -21,9 +20,12 @@ import PageWrapper from "@/components/PageWrapper";
 import { exportDetailedSalesReport } from "../lib/reports.actions";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { FormSelect } from "@/components/FormSelect";
-import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
+import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { useClients } from "@/pages/client/lib/client.hook";
 import ExportButtons from "@/components/ExportButtons";
+import { useBrandSearch } from "@/pages/brand/lib/brand.hook";
+import { useProduct } from "@/pages/product/lib/product.hook";
+import { useZoneSearch } from "@/pages/zone/lib/zone.hook";
 
 interface FilterFormValues {
   branch_id: string;
@@ -208,7 +210,10 @@ export default function DetailedSalesReportPage() {
     const values = form.getValues();
     setIsExportingExcel(true);
     try {
-      const blob = await exportDetailedSalesReport(buildParams(values), "excel");
+      const blob = await exportDetailedSalesReport(
+        buildParams(values),
+        "excel",
+      );
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -248,7 +253,7 @@ export default function DetailedSalesReportPage() {
         <form onSubmit={form.handleSubmit(handleSearch)}>
           <div className="flex gap-4 items-start">
             {/* LEFT: Filter card — single column */}
-            <div className="w-64 shrink-0">
+            <div className="shrink-0">
               <GroupFormSection
                 title="Filtros"
                 icon={Filter}
@@ -256,29 +261,58 @@ export default function DetailedSalesReportPage() {
                 cols={{ sm: 1 }}
                 horizontal
               >
+                <FormSelectAsync
+                  control={form.control}
+                  name="branch_id"
+                  label="Tienda"
+                  placeholder="Buscar tienda..."
+                  useQueryHook={useBranchAsyncSearch}
+                  mapOptionFn={(item) => ({
+                    label: item.name,
+                    value: String(item.id),
+                  })}
+                />
                 <FormSelect
                   control={form.control}
-                  name="document_type"
-                  label="Tipo Documento"
-                  placeholder="Todos"
-                  tabIndex={1}
+                  name="line"
+                  label="Línea"
+                  placeholder="Todas"
                   options={[
-                    { label: "Factura", value: "FACTURA" },
-                    { label: "Boleta", value: "BOLETA" },
-                    { label: "Ticket", value: "TICKET" },
+                    {
+                      label: "ALIMENTOS BALANCEADOS",
+                      value: "ALIMENTOS BALANCEADOS",
+                    },
+                    { label: "ANIMALES VIVOS", value: "ANIMALES VIVOS" },
+                    { label: "CONCENTRADOS", value: "CONCENTRADOS" },
+                    { label: "INSUMOS", value: "INSUMOS" },
+                    { label: "MEDICAMENTOS", value: "MEDICAMENTOS" },
+                    { label: "OTROS", value: "OTROS" },
+                    { label: "PURINA", value: "PURINA" },
                   ]}
                 />
 
-                <FormSelect
+                <FormSelectAsync
                   control={form.control}
-                  name="payment_type"
-                  label="Forma de Pago"
+                  name="brand_id"
+                  label="Marca"
                   placeholder="Todas"
-                  tabIndex={2}
-                  options={[
-                    { label: "Contado", value: "CONTADO" },
-                    { label: "Crédito", value: "CREDITO" },
-                  ]}
+                  useQueryHook={useBrandSearch}
+                  mapOptionFn={(item) => ({
+                    label: item.name,
+                    value: String(item.id),
+                  })}
+                />
+
+                <FormSelectAsync
+                  control={form.control}
+                  name="zone_id"
+                  label="Zona"
+                  placeholder="Buscar zona..."
+                  useQueryHook={useZoneSearch}
+                  mapOptionFn={(item) => ({
+                    label: item.name,
+                    value: String(item.id),
+                  })}
                 />
 
                 <FormSelectAsync
@@ -298,6 +332,19 @@ export default function DetailedSalesReportPage() {
 
                 <FormSelectAsync
                   control={form.control}
+                  name="product_id"
+                  label="Producto"
+                  placeholder="Buscar producto..."
+                  useQueryHook={useProduct}
+                  mapOptionFn={(item) => ({
+                    label: item.name,
+                    value: String(item.id),
+                    description: item.codigo ?? undefined,
+                  })}
+                />
+
+                <FormSelectAsync
+                  control={form.control}
                   name="user_id"
                   label="Vendedor"
                   placeholder="Buscar vendedor..."
@@ -308,39 +355,20 @@ export default function DetailedSalesReportPage() {
                   })}
                 />
 
-                <FormSelectAsync
+                <DatePickerFormField
                   control={form.control}
-                  name="warehouse_id"
-                  label="Almacén"
-                  placeholder="Buscar almacén..."
-                  useQueryHook={useWarehouseAsyncSearch}
-                  mapOptionFn={(item) => ({
-                    label: item.name,
-                    value: String(item.id),
-                  })}
+                  name="start_date"
+                  label="Fecha Inicio"
+                  placeholder="Seleccionar fecha"
+                />
+                <DatePickerFormField
+                  control={form.control}
+                  name="end_date"
+                  label="Fecha Fin"
+                  placeholder="Seleccionar fecha"
                 />
 
-                <FormSelectAsync
-                  control={form.control}
-                  name="branch_id"
-                  label="Sucursal"
-                  placeholder="Buscar sucursal..."
-                  useQueryHook={useBranchAsyncSearch}
-                  mapOptionFn={(item) => ({
-                    label: item.name,
-                    value: String(item.id),
-                  })}
-                />
-
-                <DateRangePickerFormField
-                  control={form.control}
-                  nameFrom="start_date"
-                  nameTo="end_date"
-                  label="Rango de Fechas"
-                  placeholder="Seleccionar rango"
-                />
-
-                <div className="flex flex-col gap-2 pt-1">
+                <div className="flex gap-2 pt-1">
                   <Button
                     type="submit"
                     disabled={isLoading}

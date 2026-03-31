@@ -39,6 +39,9 @@ export const REPORTS: ModelComplete<any> = {
 // Customer Account Statement Report
 export const CUSTOMER_ACCOUNT_STATEMENT_ROUTE = `${ROUTE}/estado-cuenta-clientes`;
 
+// Real Customer Account Statement Report
+export const REAL_CUSTOMER_ACCOUNT_STATEMENT_ROUTE = `${ROUTE}/estado-cuenta-real`;
+
 // Inventory Report
 export const INVENTORY_REPORT_ROUTE = `${ROUTE}/inventario`;
 

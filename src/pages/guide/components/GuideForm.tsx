@@ -49,10 +49,10 @@ import {
   type GuideMotiveResource,
 } from "../lib/guide.interface";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
-import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { BranchResource } from "@/pages/branch/lib/branch.interface";
 import type { VehicleResource } from "@/pages/vehicle/lib/vehicle.interface";
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useVehiclesSearch } from "@/pages/vehicle/lib/vehicle.hook";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { format } from "date-fns";
 import { getSalesByRange } from "@/pages/sale/lib/sale.actions";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
@@ -61,7 +61,6 @@ import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
 import { errorToast, successToast, warningToast } from "@/lib/core.function";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useUbigeosFrom, useUbigeosTo } from "../lib/ubigeo.hook";
-import { useClients } from "@/pages/client/lib/client.hook";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useProduct } from "@/pages/product/lib/product.hook";
@@ -80,7 +79,7 @@ interface GuideFormProps {
   branches: BranchResource[];
   warehouses: WarehouseResource[];
   motives: GuideMotiveResource[];
-  vehicles: VehicleResource[];
+
   guide?: GuideResource;
 }
 
@@ -92,7 +91,6 @@ export const GuideForm = ({
   branches,
   warehouses,
   motives,
-  vehicles,
 }: GuideFormProps) => {
   const [filteredWarehouses, setFilteredWarehouses] = useState<
     WarehouseResource[]
@@ -295,6 +293,30 @@ export const GuideForm = ({
       }
 
       setSalesByRange(response.data);
+
+      // Detectar clientes únicos en los resultados
+      const uniqueCustomers = Array.from(
+        new Map(
+          response.data.map((sale) => {
+            const name =
+              sale.customer.business_name ||
+              `${sale.customer.names} ${sale.customer.father_surname}`.trim();
+            return [sale.customer.id, { id: sale.customer.id, name }];
+          }),
+        ).values(),
+      );
+      if (uniqueCustomers.length === 1) {
+        const c = uniqueCustomers[0];
+        form.setValue("customer_id", c.id.toString());
+        setDetectedCustomerName(c.name);
+      } else if (uniqueCustomers.length > 1) {
+        warningToast(
+          `Las ventas pertenecen a ${uniqueCustomers.length} clientes distintos`,
+        );
+        form.setValue("customer_id", "");
+        setDetectedCustomerName(null);
+      }
+
       successToast(
         `Se encontraron ${response.data.length} ventas`,
         response?.meta?.numeros_encontrados &&
@@ -439,31 +461,17 @@ export const GuideForm = ({
   // Auto-calcular totales cuando cambian los productos personalizados
   useEffect(() => {
     if (!useCustomDetails) return;
-    const totalWeight = customDetails.reduce(
-      (sum, d) => sum + (parseFloat(d.quantity_kg) || 0),
-      0,
-    );
     const totalPackages = customDetails.filter((d) => d.product_id).length;
-    form.setValue("total_weight", totalWeight as any);
     form.setValue("total_packages", totalPackages as any);
   }, [customDetails, useCustomDetails, form]);
 
-  // Calcular peso total y total de bultos automáticamente cuando cambian las ventas seleccionadas
+  // Calcular total de bultos automáticamente cuando cambian las ventas seleccionadas
   useEffect(() => {
     if (useCustomDetails) return;
     if (selectedSales.length > 0 && salesByRange.length > 0) {
       const selectedSalesData = salesByRange.filter((sale) =>
         selectedSales.includes(sale.id),
       );
-
-      // Calcular peso total (usa el total_weight que retorna el backend)
-      const totalWeight = selectedSalesData.reduce((sum, sale) => {
-        const weight =
-          typeof sale.total_weight === "string"
-            ? parseFloat(sale.total_weight)
-            : sale.total_weight;
-        return sum + (weight || 0);
-      }, 0);
 
       // Calcular total de bultos (suma de quantity_sacks de todos los detalles)
       const totalPackages = selectedSalesData.reduce((sum, sale) => {
@@ -474,10 +482,8 @@ export const GuideForm = ({
         return sum + (sacks || 0);
       }, 0);
 
-      form.setValue("total_weight", totalWeight as any);
       form.setValue("total_packages", totalPackages as any);
     } else if (selectedSales.length === 0) {
-      form.setValue("total_weight", 0 as any);
       form.setValue("total_packages", 0 as any);
     }
   }, [selectedSales, salesByRange, form]);
@@ -524,7 +530,6 @@ export const GuideForm = ({
       destination_address: data.destination_address,
       ubigeo_destination_id: parseInt(data.ubigeo_destination_id),
       unit_measurement: data.unit_measurement,
-      total_weight: data.total_weight,
       total_packages: data.total_packages,
       observations: data.observations || null,
     };
@@ -568,13 +573,13 @@ export const GuideForm = ({
       width: "250px",
       accessor: "product_name",
     },
-    {
-      id: "description",
-      header: "Descripción",
-      type: "text",
-      width: "200px",
-      accessor: "description",
-    },
+    // {
+    //   id: "description",
+    //   header: "Descripción",
+    //   type: "text",
+    //   width: "200px",
+    //   accessor: "description",
+    // },
     {
       id: "quantity_sacks",
       header: "Sacos",
@@ -615,14 +620,12 @@ export const GuideForm = ({
 
   const customerValue = form.watch("customer_id");
 
-  const [selectedCustomer, setSelectedCustomer] =
-    useState<PersonResource | null>(null);
+  // Cliente auto-detectado desde la búsqueda por rango
+  const [detectedCustomerName, setDetectedCustomerName] = useState<
+    string | null
+  >(null);
 
-  // Obtener las direcciones del cliente seleccionado
-  const selectedCustomerAddresses = useMemo(
-    () => selectedCustomer?.person_zones || [],
-    [selectedCustomer],
-  );
+  const selectedCustomerAddresses: { id: number; address: string; is_primary: boolean; zone_name: string }[] = [];
 
   // Setear automáticamente la primera person_zone cuando se selecciona un cliente y solo hay una
   useEffect(() => {
@@ -692,24 +695,12 @@ export const GuideForm = ({
             />
           </div>
 
-          <FormSelectAsync
-            control={form.control}
-            name="customer_id"
-            label="Cliente"
-            placeholder="Seleccione un cliente"
-            useQueryHook={useClients}
-            mapOptionFn={(customer: PersonResource) => ({
-              value: customer.id.toString(),
-              label:
-                customer.business_name ??
-                `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
-              description: customer.number_document ?? "-",
-            })}
-            onValueChange={(_value, customer) => {
-              setSelectedCustomer(customer ?? null);
-            }}
-            preloadItemId={defaultValues.customer_id}
-          />
+          {detectedCustomerName && (
+            <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Cliente: </span>
+              {detectedCustomerName}
+            </div>
+          )}
 
           <div className="hidden">
             <FormSelect
@@ -881,56 +872,35 @@ export const GuideForm = ({
             />
           )}
 
-          <FormInput
-            control={form.control}
-            name="total_weight"
-            label="Peso Total (kg)"
-            type="number"
-            step="0.01"
-            placeholder="0.00"
-            className="bg-muted"
-          />
-
           <div className="space-y-2">
-            <FormField
-              control={form.control}
+            <FormSelectAsync
               name="vehicle_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Placa del Vehículo</FormLabel>
-                  <FormControl>
-                    <SearchableSelect
-                      className="md:w-full"
-                      buttonSize="default"
-                      options={vehicles.map((vehicle) => ({
-                        value: vehicle.id.toString(),
-                        label: vehicle.plate,
-                        description: `${vehicle.brand} ${vehicle.model}${vehicle.owner ? ` — ${vehicle.owner.full_name}` : ""}`,
-                      }))}
-                      value={field.value ?? ""}
-                      onChange={(value) => {
-                        field.onChange(value);
-                        const vehicle = vehicles.find(
-                          (v) => v.id.toString() === value,
-                        );
-                        setSelectedVehicle(vehicle ?? null);
-                        if (vehicle?.mtc) {
-                          form.setValue("carrier_mtc_number", vehicle.mtc);
-                        }
-                        if (vehicle?.owner) {
-                          const docNum = vehicle.owner.document_number || "";
-                          const docType = docNum.length === 8 ? "DNI" : "CE";
-                          form.setValue("driver_document_type", docType);
-                          form.setValue("driver_document_number", docNum);
-                          form.setValue("driver_name", vehicle.owner.full_name);
-                        }
-                      }}
-                      placeholder="Seleccionar placa..."
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Placa del Vehículo"
+              control={form.control}
+              placeholder="Buscar placa..."
+              useQueryHook={useVehiclesSearch}
+              mapOptionFn={(vehicle: VehicleResource) => ({
+                value: vehicle.id.toString(),
+                label: vehicle.plate,
+                description: `${vehicle.brand} ${vehicle.model}${vehicle.owner ? ` — ${vehicle.owner.full_name}` : ""}`,
+              })}
+              onValueChange={(_value, vehicle) => {
+                if (vehicle) {
+                  setSelectedVehicle(vehicle);
+                  if (vehicle.mtc) {
+                    form.setValue("carrier_mtc_number", vehicle.mtc);
+                  }
+                  if (vehicle.owner) {
+                    const docNum = vehicle.owner.document_number || "";
+                    const docType = docNum.length === 8 ? "DNI" : "CE";
+                    form.setValue("driver_document_type", docType);
+                    form.setValue("driver_document_number", docNum);
+                    form.setValue("driver_name", vehicle.owner.full_name);
+                  }
+                } else {
+                  setSelectedVehicle(null);
+                }
+              }}
             />
             {selectedVehicle?.owner && (
               <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
@@ -1060,7 +1030,6 @@ export const GuideForm = ({
               checked={useCustomDetails}
               onCheckedChange={(checked) => {
                 setUseCustomDetails(checked);
-                form.setValue("total_weight", 0 as any);
                 form.setValue("total_packages", 0 as any);
               }}
             />
@@ -1219,7 +1188,6 @@ export const GuideForm = ({
                         <TableHead>Cliente</TableHead>
                         <TableHead>Fecha</TableHead>
                         <TableHead className="text-right">Total</TableHead>
-                        <TableHead className="text-right">Peso (kg)</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1264,9 +1232,6 @@ export const GuideForm = ({
                           </TableCell>
                           <TableCell className="text-right">
                             {sale.currency} {sale.total_amount.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {sale.total_weight}
                           </TableCell>
                         </TableRow>
                       ))}

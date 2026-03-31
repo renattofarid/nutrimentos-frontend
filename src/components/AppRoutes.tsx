@@ -68,6 +68,7 @@ import {
   CustomerAccountStatementPage,
   InventoryReportPage,
   KardexReportPage,
+  RealCustomerAccountStatementPage,
 } from "@/pages/reports/components";
 import PurchaseCreditNotePage from "@/pages/purchase-credit-note/components/PurchaseCreditNotePage";
 import PurchaseCreditNoteAddPage from "@/pages/purchase-credit-note/components/PurchaseCreditNoteAddPage";
@@ -129,6 +130,7 @@ import {
   INVENTORY_REPORT_ROUTE,
   KARDEX_REPORT_ROUTE,
   PURCHASE_REGISTER_REPORT_ROUTE,
+  REAL_CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
   SALE_BY_SELLER_REPORT_ROUTE,
   SALES_BY_PRODUCT_REPORT_ROUTE,
   SALES_REGISTER_REPORT_ROUTE,
@@ -302,6 +304,7 @@ export function AppRoutes() {
       {/* Reportes */}
       <Route path={SALE_TICKETS_PRINT_ROUTE} element={<SaleTicketsPrintPage />} />
       <Route path={CUSTOMER_ACCOUNT_STATEMENT_ROUTE} element={<CustomerAccountStatementPage />} />
+      <Route path={REAL_CUSTOMER_ACCOUNT_STATEMENT_ROUTE} element={<RealCustomerAccountStatementPage />} />
       <Route path={INVENTORY_REPORT_ROUTE} element={<InventoryReportPage />} />
       <Route path={KARDEX_REPORT_ROUTE} element={<KardexReportPage />} />
       <Route path={SALE_BY_SELLER_REPORT_ROUTE} element={<SaleBySellerReportPage />} />

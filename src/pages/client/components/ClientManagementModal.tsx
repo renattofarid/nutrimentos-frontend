@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Users,
   Plus,
@@ -16,11 +16,30 @@ import {
   User,
   Star,
   Check,
+  ChevronsUpDown,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandList,
+  CommandItem,
+} from "@/components/ui/command";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import DataTablePagination from "@/components/DataTablePagination";
 import {
@@ -40,6 +59,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ClientDialog } from "./ClientDialog";
 import { ClientEditDialog } from "./ClientEditDialog";
 import ClientAddressesSheet from "./ClientAddressesSheet";
+import { useZoneSearch } from "@/pages/zone/lib/zone.hook";
 
 const PER_PAGE = 10;
 
@@ -52,6 +72,25 @@ interface ClientManagementModalProps {
   onSelectClient?: (id: number, name: string, person?: PersonResource) => void;
 }
 
+type SearchField =
+  | "search"
+  | "names"
+  | "number_document"
+  | "address"
+  | "zone_id"
+  | "phone"
+  | "email";
+
+const SEARCH_FIELD_OPTIONS: { value: SearchField; label: string }[] = [
+  { value: "search", label: "General" },
+  { value: "names", label: "Nombre" },
+  { value: "number_document", label: "N° Documento" },
+  { value: "address", label: "Dirección" },
+  { value: "zone_id", label: "Zona" },
+  { value: "phone", label: "Teléfono" },
+  { value: "email", label: "Correo" },
+];
+
 export function ClientManagementModal({
   open,
   onOpenChange,
@@ -62,6 +101,7 @@ export function ClientManagementModal({
 }: ClientManagementModalProps) {
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [searchField, setSearchField] = useState<SearchField>("search");
   const [search, setSearch] = useState(selectedClientName ?? "");
   const [debouncedSearch, setDebouncedSearch] = useState(selectedClientName ?? "");
   const [page, setPage] = useState(1);
@@ -73,6 +113,20 @@ export function ClientManagementModal({
   );
   const [updatingZoneId, setUpdatingZoneId] = useState<number | null>(null);
 
+  // Zone combobox state
+  const [zoneOpen, setZoneOpen] = useState(false);
+  const [zoneSearch, setZoneSearch] = useState("");
+  const [debouncedZoneSearch, setDebouncedZoneSearch] = useState("");
+  const [selectedZoneId, setSelectedZoneId] = useState<string>("");
+  const [selectedZoneName, setSelectedZoneName] = useState<string>("");
+  const zoneCloseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const { data: zoneData, isLoading: zoneLoading } = useZoneSearch({
+    search: debouncedZoneSearch,
+    page: 1,
+    per_page: 20,
+  });
+
   // Al abrir el modal, pre-llenar búsqueda con el cliente seleccionado
   useEffect(() => {
     if (open) {
@@ -82,20 +136,44 @@ export function ClientManagementModal({
     }
   }, [open, selectedClientName]);
 
-  // Debounce search
+  // Debounce search (text fields)
   useEffect(() => {
+    if (searchField === "zone_id") return;
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
       setPage(1);
     }, 400);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, searchField]);
 
-  const { data, isLoading, refetch } = useClients({
-    page,
-    per_page: PER_PAGE,
-    search: debouncedSearch,
-  });
+  // Debounce zone search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedZoneSearch(zoneSearch);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [zoneSearch]);
+
+  // Reset search values when field changes
+  const handleSearchFieldChange = (field: SearchField) => {
+    setSearchField(field);
+    setSearch("");
+    setDebouncedSearch("");
+    setSelectedZoneId("");
+    setSelectedZoneName("");
+    setZoneSearch("");
+    setDebouncedZoneSearch("");
+    setPage(1);
+  };
+
+  const clientParams: Record<string, unknown> = { page, per_page: PER_PAGE };
+  if (searchField === "zone_id") {
+    if (selectedZoneId) clientParams.zone_id = selectedZoneId;
+  } else if (debouncedSearch) {
+    clientParams[searchField] = debouncedSearch;
+  }
+
+  const { data, isLoading, refetch } = useClients(clientParams);
 
   const handleRefresh = () => {
     refetch();
@@ -198,24 +276,141 @@ export function ClientManagementModal({
 
           {/* Toolbar */}
           <div className="flex items-center gap-3 px-6 py-3 border-b flex-shrink-0">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar cliente..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className={search ? "pl-9 pr-9" : "pl-9"}
-              />
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => { setSearch(""); setDebouncedSearch(""); }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            {/* Field selector */}
+            <Select
+              value={searchField}
+              onValueChange={(v) => handleSearchFieldChange(v as SearchField)}
+            >
+              <SelectTrigger className="w-36 h-9 shrink-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SEARCH_FIELD_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Search input or zone combobox */}
+            {searchField === "zone_id" ? (
+              <Popover open={zoneOpen} onOpenChange={setZoneOpen}>
+                <PopoverAnchor asChild>
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="Buscar zona..."
+                      value={zoneOpen ? zoneSearch : selectedZoneName}
+                      onChange={(e) => setZoneSearch(e.target.value)}
+                      onFocus={() => {
+                        if (zoneCloseTimer.current) clearTimeout(zoneCloseTimer.current);
+                        setZoneSearch("");
+                        setZoneOpen(true);
+                      }}
+                      onBlur={() => {
+                        zoneCloseTimer.current = setTimeout(() => {
+                          setZoneOpen(false);
+                          setZoneSearch("");
+                        }, 150);
+                      }}
+                      className={cn(
+                        "h-9 pr-8",
+                        selectedZoneId && !zoneOpen && "bg-muted",
+                      )}
+                      autoComplete="off"
+                    />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                      {zoneLoading && zoneOpen ? (
+                        <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                      ) : selectedZoneId ? (
+                        <button
+                          type="button"
+                          tabIndex={-1}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setSelectedZoneId("");
+                            setSelectedZoneName("");
+                            setPage(1);
+                          }}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      ) : null}
+                      <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50 pointer-events-none" />
+                    </div>
+                  </div>
+                </PopoverAnchor>
+                <PopoverContent
+                  className="p-0 min-w-(--radix-popover-trigger-width)! w-auto"
+                  onMouseDown={() => {
+                    if (zoneCloseTimer.current) clearTimeout(zoneCloseTimer.current);
+                  }}
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  onFocusOutside={(e) => e.preventDefault()}
                 >
-                  <X className="size-4" />
-                </button>
-              )}
-            </div>
+                  <Command className="max-h-72 overflow-hidden" shouldFilter={false}>
+                    <CommandList className="max-h-60 overflow-y-auto">
+                      {zoneLoading ? (
+                        <div className="py-6 text-center text-sm flex flex-col items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                          <span className="text-muted-foreground">Buscando...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <CommandEmpty className="py-4 text-center text-sm">
+                            No hay resultados.
+                          </CommandEmpty>
+                          {(zoneData?.data ?? []).map((zone: any) => (
+                            <CommandItem
+                              key={zone.id}
+                              className="cursor-pointer"
+                              onSelect={() => {
+                                const id = String(zone.id);
+                                setSelectedZoneId(id === selectedZoneId ? "" : id);
+                                setSelectedZoneName(id === selectedZoneId ? "" : zone.name);
+                                setPage(1);
+                                if (zoneCloseTimer.current) clearTimeout(zoneCloseTimer.current);
+                                setZoneOpen(false);
+                                setZoneSearch("");
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4 shrink-0",
+                                  String(zone.id) === selectedZoneId ? "opacity-100" : "opacity-0",
+                                )}
+                              />
+                              {zone.name}
+                            </CommandItem>
+                          ))}
+                        </>
+                      )}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Input
+                  placeholder={`Buscar por ${SEARCH_FIELD_OPTIONS.find((o) => o.value === searchField)?.label.toLowerCase()}...`}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={search ? "pl-9 pr-9 h-9" : "pl-9 h-9"}
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => { setSearch(""); setDebouncedSearch(""); }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+              </div>
+            )}
+
             <Button size="sm" onClick={() => setIsCreateOpen(true)}>
               <Plus className="size-4 mr-2" />
               Nuevo Cliente

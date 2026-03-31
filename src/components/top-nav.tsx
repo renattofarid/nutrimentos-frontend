@@ -68,6 +68,7 @@ import {
   INVENTORY_REPORT_ROUTE,
   KARDEX_REPORT_ROUTE,
   PURCHASE_REGISTER_REPORT_ROUTE,
+  REAL_CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
   REPORTS,
   SALE_BY_SELLER_REPORT_ROUTE,
   SALE_TICKETS_PRINT_ROUTE,
@@ -77,6 +78,7 @@ import {
 import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-credit-note.interface";
 import { SettlementTitle } from "@/pages/deliverysheet/components/settlement/SettlementHeader";
 import { CustomerAccountStatementTitle } from "@/pages/reports/components/CustomerAccountStatementPage";
+import { RealCustomerAccountStatementTitle } from "@/pages/reports/components/RealCustomerAccountStatementPage";
 import type { LucideIcon } from "lucide-react";
 import { useWindowManager } from "@/stores/window-manager.store";
 
@@ -336,6 +338,11 @@ export const navData: NavItem[] = [
     icon: ReportsIcon,
     items: [
       { title: "Imprimir Tickets", url: SALE_TICKETS_PRINT_ROUTE, icon: ReportsIcon },
+      {
+        title: RealCustomerAccountStatementTitle,
+        url: REAL_CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+        icon: ReportsIcon,
+      },
       { title: "Inventario", url: INVENTORY_REPORT_ROUTE, icon: ReportsIcon },
       { title: "Kardex", url: KARDEX_REPORT_ROUTE, icon: ReportsIcon },
       {
@@ -429,6 +436,15 @@ export function TopNav() {
   const activeTab = tabs.find((t) => t.id === activeTabId);
   const activePath = activeTab?.path ?? "";
 
+  const countOpenTabsForItem = (item: NavItem): number => {
+    if (!item.items) {
+      return tabs.filter((t) => t.path === item.url || t.path.startsWith(item.url + "/")).length;
+    }
+    return item.items.filter((sub) =>
+      tabs.some((t) => t.path === sub.url || t.path.startsWith(sub.url + "/")),
+    ).length;
+  };
+
   useEffect(() => {
     if (!ENABLE_PERMISSION_VALIDATION) {
       setFilteredNav(navData);
@@ -476,6 +492,11 @@ export function TopNav() {
               >
                 {item.icon && <item.icon className="mr-1 size-3.5" />}
                 {item.title}
+                {countOpenTabsForItem(item) > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none size-4 shrink-0">
+                    {countOpenTabsForItem(item)}
+                  </span>
+                )}
               </NavigationMenuTrigger>
               <NavigationMenuContent>
                 <ul className="grid min-w-52 w-auto gap-0 p-1">
@@ -514,6 +535,11 @@ export function TopNav() {
                 >
                   {item.icon && <item.icon className="size-3.5" />}
                   {item.title}
+                  {countOpenTabsForItem(item) > 0 && (
+                    <span className="ml-1 inline-flex items-center justify-center rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none size-4 shrink-0">
+                      {countOpenTabsForItem(item)}
+                    </span>
+                  )}
                 </button>
               </NavigationMenuLink>
             </NavigationMenuItem>

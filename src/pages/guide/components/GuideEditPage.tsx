@@ -15,7 +15,6 @@ import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
 import { useAllNationalities } from "@/pages/nationality/lib/nationality.hook";
 import { CLIENT_ROLE_CODE } from "@/pages/client/lib/client.interface";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
-import { useAllVehicles } from "@/pages/vehicle/lib/vehicle.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
 import { useGuideStore } from "../lib/guide.store";
@@ -68,11 +67,6 @@ export default function GuideEditPage() {
     useAllProductTypes();
   const { data: nationalities, refetch: refetchNationalities } =
     useAllNationalities();
-  const {
-    data: vehicles,
-    isLoading: vehiclesLoading,
-    refetch: refetchVehicles,
-  } = useAllVehicles();
 
   const { updateGuide, fetchGuide, guide, isFinding } = useGuideStore();
 
@@ -87,7 +81,6 @@ export default function GuideEditPage() {
     refetchUnits();
     refetchProductTypes();
     refetchNationalities();
-    refetchVehicles();
   }, []);
 
   const isLoading =
@@ -101,7 +94,6 @@ export default function GuideEditPage() {
     unitsLoading ||
     !productTypes ||
     !nationalities ||
-    vehiclesLoading ||
     isFinding;
 
   useEffect(() => {
@@ -138,7 +130,6 @@ export default function GuideEditPage() {
       destination_address: data.destination_address,
       ubigeo_destination_id: data.ubigeo_destination_id?.toString() || "",
       unit_measurement: data.unit_measurement,
-      total_weight: data.total_weight,
       total_packages: data.total_packages,
       observations: data.observations || "",
     };
@@ -189,7 +180,6 @@ export default function GuideEditPage() {
         nationalities.length > 0 &&
         suppliers &&
         suppliers.length > 0 &&
-        vehicles &&
         guide && (
           <GuideForm
             defaultValues={mapGuideToForm(guide)}
@@ -200,7 +190,6 @@ export default function GuideEditPage() {
             branches={branches}
             warehouses={warehouses}
             motives={motives}
-            vehicles={vehicles}
             guide={guide}
           />
         )}

@@ -46,13 +46,6 @@ export const guideSchema = z
     unit_measurement: z
       .string()
       .min(1, { message: "La unidad de medida es requerida" }),
-    total_weight: z
-      .string()
-      .or(z.number())
-      .transform((val) => (typeof val === "string" ? Number(val) : val))
-      .refine((val) => !isNaN(val) && val > 0, {
-        message: "El peso total debe ser mayor a 0",
-      }),
     total_packages: z
       .string()
       .or(z.number())
@@ -63,6 +56,17 @@ export const guideSchema = z
     observations: z.string().optional(),
   })
   .superRefine((data, ctx) => {
+    // Validaciones condicionales cuando la modalidad es PRIVADO
+    if (data.modality === "PRIVADO") {
+      if (!data.driver_document_number || data.driver_document_number.trim() === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El número de documento del conductor es requerido para transporte privado",
+          path: ["driver_document_number"],
+        });
+      }
+    }
+
     // Validaciones condicionales cuando la modalidad es PUBLICO
     if (data.modality === "PUBLICO") {
       // Validar campos del transportista

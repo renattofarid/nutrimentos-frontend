@@ -15,6 +15,8 @@ import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const DOCUMENT_TYPE_OPTIONS = [
   { value: "FACTURA", label: "Factura" },
@@ -83,20 +85,23 @@ export default function SaleOptions({
   const { data: warehouses } = useAllWarehouses();
   const { data: workers = [] } = useAllWorkers();
 
-  const branchOptions = branches?.map((b) => ({
-    value: String(b.id),
-    label: b.name,
-  })) || [];
+  const branchOptions =
+    branches?.map((b) => ({
+      value: String(b.id),
+      label: b.name,
+    })) || [];
 
-  const warehouseOptions = warehouses?.map((w) => ({
-    value: String(w.id),
-    label: w.name,
-  })) || [];
+  const warehouseOptions =
+    warehouses?.map((w) => ({
+      value: String(w.id),
+      label: w.name,
+    })) || [];
 
-  const workerOptions = workers?.map((w) => ({
-    value: String(w.id),
-    label: `${w.names} ${w.father_surname}`,
-  })) || [];
+  const workerOptions =
+    workers?.map((w) => ({
+      value: String(w.id),
+      label: `${w.names} ${w.father_surname}`,
+    })) || [];
 
   const resetAllFilters = () => {
     setDocumento("");
@@ -108,7 +113,7 @@ export default function SaleOptions({
 
   const handleFilterTypeChange = (value: string) => {
     resetAllFilters();
-    setActiveFilter(value as ActiveFilter);
+    setActiveFilter((value === "none" ? "" : value) as ActiveFilter);
   };
 
   return (
@@ -130,12 +135,20 @@ export default function SaleOptions({
       <DatePickerFilter label="Al" value={end_date} onChange={setEndDate} />
 
       {/* Selector de filtro adicional */}
-      <Select value={activeFilter} onValueChange={handleFilterTypeChange}>
-        <SelectTrigger className="h-8 w-[170px] text-sm">
+      <Select
+        value={activeFilter || "none"}
+        onValueChange={handleFilterTypeChange}
+      >
+        <SelectTrigger
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "h-8!",
+          )}
+        >
           <SelectValue placeholder="Filtro adicional" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">— Sin filtro —</SelectItem>
+          <SelectItem value="none">— Buscar por —</SelectItem>
           <SelectItem value="documento">Número de documento</SelectItem>
           <SelectItem value="warehouse">Almacén</SelectItem>
           <SelectItem value="vendedor">Vendedor</SelectItem>

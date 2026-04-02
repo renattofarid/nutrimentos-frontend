@@ -14,7 +14,7 @@ import FormSkeleton from "@/components/FormSkeleton";
 import { errorToast } from "@/lib/core.function";
 import PageWrapper from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
-import { List, Loader } from "lucide-react";
+import { Loader, Save, X } from "lucide-react";
 
 export const SaleEditPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -50,16 +50,16 @@ export const SaleEditPage = () => {
   useEffect(() => {
     if (sale) {
       // Verificar si alguna cuota tiene pagos registrados
-      const hasPayments =
-        sale.installments?.some((inst) => inst.pending_amount < inst.amount) ??
-        false;
+      // const hasPayments =
+      //   sale.installments?.some((inst) => inst.pending_amount < inst.amount) ??
+      //   false;
 
-      if (hasPayments) {
-        errorToast(
-          "No se puede editar una venta que ya tiene pagos registrados",
-        );
-        navigate("/ventas");
-      }
+      // if (hasPayments) {
+      //   errorToast(
+      //     "No se puede editar una venta que ya tiene pagos registrados",
+      //   );
+      //   navigate("/ventas");
+      // }
     }
   }, [sale, navigate]);
 
@@ -128,13 +128,13 @@ export const SaleEditPage = () => {
 
   return (
     <PageWrapper size="3xl">
-      <div className="flex items-center justify-between">
-        <Button size="sm" variant="outline" onClick={() => navigate("/ventas")}>
-          <List className="size-4 mr-2" /> Ver Listado
-        </Button>
+      <div className="flex items-center gap-2">
         <Button size="sm" type="submit" form="sale-form" disabled={isSubmitting}>
-          <Loader className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`} />
+          {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
           {isSubmitting ? "Guardando..." : "Guardar"}
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => navigate("/ventas/listado")}>
+          <X /> Cancelar
         </Button>
       </div>
       <div className="space-y-6">

@@ -280,7 +280,7 @@ export default function SalePage() {
 
   return (
     <PageWrapper>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-1 pb-1 border-b">
         <SaleActions
           hasSelection={hasSelection}
           onNew={() => navigate("/ventas/agregar")}
@@ -305,6 +305,7 @@ export default function SalePage() {
         enableRowSelection={true}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={handleEdit}
       >
         <SaleOptions
           branch_id={branch_id}

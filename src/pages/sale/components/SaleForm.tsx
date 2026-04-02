@@ -377,6 +377,38 @@ export const SaleForm = ({
     fetchNextSeries();
   }, [selectedBranchId, selectedDocumentType, mode]);
 
+  // Auto-agregar cuota inicial al cambiar a CREDITO (solo en modo creación)
+  useEffect(() => {
+    if (
+      mode === "create" &&
+      selectedPaymentType === "CREDITO" &&
+      installments.length === 0
+    ) {
+      const saleTotal = calculateDetailsTotal();
+      const newInstallment: InstallmentRow = {
+        installment_number: "1",
+        due_days: "30",
+        amount: saleTotal > 0 ? saleTotal.toString() : "0",
+      };
+      setInstallments([newInstallment]);
+      form.setValue("installments", [newInstallment]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPaymentType]);
+
+  // Auto-actualizar monto de la única cuota cuando cambia el total de detalles
+  useEffect(() => {
+    if (installments.length === 1) {
+      const saleTotal = calculateDetailsTotal();
+      const updated: InstallmentRow[] = [
+        { ...installments[0], amount: saleTotal.toString() },
+      ];
+      setInstallments(updated);
+      form.setValue("installments", updated);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [details]);
+
   // Efecto para hacer focus en el primer campo cuando se monta el formulario
   useEffect(() => {
     // Esperar un tick para asegurar que el DOM esté completamente renderizado
@@ -1016,6 +1048,7 @@ export const SaleForm = ({
           icon={Users2}
           cols={{ sm: 1, md: 3, lg: 4 }}
           bordered
+          gap="gap-2"
         >
           <FormSelect
             control={form.control}
@@ -1138,8 +1171,7 @@ export const SaleForm = ({
             </div>
             <Button
               type="button"
-              variant="outline"
-              size="icon-sm"
+              size="icon"
               onClick={() => setIsClientManagementOpen(true)}
               title="Gestión de clientes"
             >
@@ -1201,83 +1233,48 @@ export const SaleForm = ({
         <GroupFormSection
           title="Resumen"
           icon={FileText}
-          cols={{ sm: 1, md: 2, lg: 4 }}
+          cols={{ sm: 1, md: 2, lg: 5 }}
           bordered
         >
           {/* Peso Total */}
-          <div className="space-y-1">
+          <div className="flex gap-2 items-center">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
               Peso Total
             </div>
-            <div className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
+            <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
               {formatDecimalTrunc(calculateTotalWeight(), 2)} kg
             </div>
           </div>
 
           {/* Subtotal */}
-          <div className="space-y-1">
+          <div className="flex gap-2 items-center">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
               Subtotal
             </div>
-            <div className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
+            <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
               {getCurrencySymbol()} {formatNumber(calculateDetailsSubtotal())}
             </div>
           </div>
 
           {/* IGV */}
-          <div className="space-y-1">
+          <div className="flex gap-2 items-center">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
               IGV (18%)
             </div>
-            <div className="text-2xl font-semibold text-orange-600 dark:text-orange-400">
+            <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
               {getCurrencySymbol()} {formatNumber(calculateDetailsIGV())}
             </div>
           </div>
 
           {/* Total a Pagar */}
-          <div className="space-y-1">
+          <div className="flex gap-2 items-center">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
               Total a Pagar
             </div>
-            <div className="text-3xl font-semibold text-primary">
+            <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
               {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())}
             </div>
           </div>
-
-          {/* Resumen de Cuotas si es a crédito */}
-          {selectedPaymentType === "CREDITO" && installments.length > 0 && (
-            <>
-              <div className="border-t" />
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                    Cuotas ({installments.length})
-                  </div>
-                </div>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-sm text-muted-foreground">
-                    Total en cuotas
-                  </span>
-                  <span
-                    className={`text-lg font-semibold ${
-                      installmentsMatchTotal()
-                        ? "text-green-600 dark:text-green-400"
-                        : "text-orange-600 dark:text-orange-400"
-                    }`}
-                  >
-                    {getCurrencySymbol()}{" "}
-                    {formatNumber(calculateInstallmentsTotal())}
-                  </span>
-                </div>
-                {!installmentsMatchTotal() && (
-                  <div className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
-                    <span>⚠</span>
-                    <span>No coincide con el total</span>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
 
           <div className="col-span-full">
             <FormInput

@@ -14,6 +14,7 @@ interface Props {
   enableRowSelection?: boolean;
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  onRowDoubleClick?: (row: SaleResource) => void;
 }
 
 export default function SaleTable({
@@ -24,6 +25,7 @@ export default function SaleTable({
   enableRowSelection = false,
   rowSelection,
   onRowSelectionChange,
+  onRowDoubleClick,
 }: Props) {
   return (
     <div className="border-none text-muted-foreground max-w-full">
@@ -35,6 +37,7 @@ export default function SaleTable({
         enableMultiRowSelection={false}
         rowSelection={rowSelection}
         onRowSelectionChange={onRowSelectionChange}
+        onRowDoubleClick={onRowDoubleClick}
         getRowId={(row) => row.id.toString()}
         initialColumnVisibility={{
           id: false,

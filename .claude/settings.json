@@ -4,7 +4,8 @@
       "Bash(node -e \"const lr = require\\(''./node_modules/lucide-react''\\); console.log\\(''ShieldUser:'', !!lr.ShieldUser\\)\")",
       "Bash(npm show:*)",
       "Bash(node -e \"const v=JSON.parse\\(require\\(''''fs''''\\).readFileSync\\(''''/dev/stdin'''',''''utf8''''\\)\\); console.log\\(v.slice\\(-5\\)\\)\")",
-      "Read(//e/front/nutrimientos-frontend/src/pages/guide/components/**)"
+      "Read(//e/front/nutrimientos-frontend/src/pages/guide/components/**)",
+      "Bash(python3 -c ':*)"
     ]
   }
 }

@@ -107,6 +107,7 @@ interface DataTableProps<TData, TValue> extends VariantProps<
   enableMultiRowSelection?: boolean;
   getRowId?: (originalRow: TData, index: number) => string;
   onRowClick?: (row: TData) => void;
+  onRowDoubleClick?: (row: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -128,6 +129,7 @@ export function DataTable<TData, TValue>({
   enableMultiRowSelection = true,
   getRowId,
   onRowClick,
+  onRowDoubleClick,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -292,7 +294,7 @@ export function DataTable<TData, TValue>({
                     key={row.id}
                     className={cn(
                       "text-nowrap hover:bg-muted bg-background group",
-                      (onRowClick || enableRowSelection) && "cursor-pointer",
+                      (onRowClick || onRowDoubleClick || enableRowSelection) && "cursor-pointer",
                       row.getIsSelected() &&
                         "bg-primary/10 hover:bg-primary/15 border-l-2 border-primary",
                     )}
@@ -307,6 +309,14 @@ export function DataTable<TData, TValue>({
                         if (onRowClick) {
                           onRowClick(row.original);
                         }
+                      }
+                    }}
+                    onDoubleClick={(e) => {
+                      const isInteractive = (e.target as HTMLElement).closest(
+                        'button, a, input, [role="checkbox"]',
+                      );
+                      if (!isInteractive && onRowDoubleClick) {
+                        onRowDoubleClick(row.original);
                       }
                     }}
                   >

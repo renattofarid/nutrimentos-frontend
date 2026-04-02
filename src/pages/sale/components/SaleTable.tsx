@@ -32,12 +32,15 @@ export default function SaleTable({
         data={data}
         isLoading={isLoading}
         enableRowSelection={enableRowSelection}
+        enableMultiRowSelection={false}
         rowSelection={rowSelection}
         onRowSelectionChange={onRowSelectionChange}
         getRowId={(row) => row.id.toString()}
         initialColumnVisibility={{
           id: false,
           user_name: false,
+          details: false,
+          installments: false,
         }}
       >
         {children}

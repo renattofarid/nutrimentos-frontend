@@ -62,6 +62,7 @@ interface ExcelGridProps<T> {
   emptyMessage?: string;
   disabled?: boolean;
   skipColumnsOnEnter?: string[];
+  minHeight?: string;
 }
 
 export function ExcelGrid<T extends Record<string, any>>({
@@ -78,6 +79,7 @@ export function ExcelGrid<T extends Record<string, any>>({
   emptyMessage = "No hay datos. Agregue una nueva fila para comenzar.",
   disabled = false,
   skipColumnsOnEnter = [],
+  minHeight = "250px",
 }: ExcelGridProps<T>) {
   const [focusedCell, setFocusedCell] = React.useState<{
     row: number;
@@ -296,7 +298,11 @@ export function ExcelGrid<T extends Record<string, any>>({
 
       // Helper: avanzar como Tab pero saltando skipColumnsOnEnter
       const advanceEnter = () => {
-        const nextCell = getNextEditableCell(rowIndex, colIndex, skipColumnsOnEnter);
+        const nextCell = getNextEditableCell(
+          rowIndex,
+          colIndex,
+          skipColumnsOnEnter,
+        );
 
         if (nextCell) {
           setFocusedCell(nextCell);
@@ -313,7 +319,8 @@ export function ExcelGrid<T extends Record<string, any>>({
           onAddRow();
           setTimeout(() => {
             const firstEditableCol = columns.findIndex(
-              (col) => col.type !== "readonly" && !skipColumnsOnEnter.includes(col.id),
+              (col) =>
+                col.type !== "readonly" && !skipColumnsOnEnter.includes(col.id),
             );
             const targetCol = firstEditableCol !== -1 ? firstEditableCol : 0;
             const key = `${data.length}-${targetCol}`;
@@ -596,10 +603,11 @@ export function ExcelGrid<T extends Record<string, any>>({
           size="sm"
           variant="outline"
           className="gap-2 uppercase"
+          colorIcon="emerald"
           disabled={disabled}
         >
           <Plus className="h-4 w-4" />
-          Agregar línea
+          Agregar
         </Button>
         <Button
           type="button"
@@ -610,17 +618,17 @@ export function ExcelGrid<T extends Record<string, any>>({
             }
           }}
           size="sm"
+          colorIcon="red"
           variant="outline"
-          className="gap-2 text-destructive hover:text-destructive uppercase"
           disabled={focusedCell === null || data.length === 0}
         >
           <X className="h-4 w-4" />
-          Quitar línea
+          Quitar
         </Button>
       </div>
 
       {/* Tabla */}
-      <div className="border rounded-md overflow-hidden">
+      <div className="border rounded-md overflow-hidden w-fit" style={{ minHeight }}>
         <Table>
           <TableHeader>
             <TableRow className="border-b">
@@ -628,7 +636,7 @@ export function ExcelGrid<T extends Record<string, any>>({
                 <TableHead
                   key={column.id}
                   style={{ width: column.width }}
-                  className="font-medium uppercase border-r h-10 bg-muted/50 text-gray-500"
+                  className="font-medium uppercase border-r h-8 text-gray-900 bg-primary"
                 >
                   {column.header}
                 </TableHead>
@@ -637,7 +645,7 @@ export function ExcelGrid<T extends Record<string, any>>({
           </TableHeader>
           <TableBody>
             {data.length === 0 ? (
-              <TableRow>
+              <TableRow className="border-b">
                 <TableCell
                   colSpan={columns.length}
                   className="text-center py-8 text-muted-foreground"
@@ -647,7 +655,10 @@ export function ExcelGrid<T extends Record<string, any>>({
               </TableRow>
             ) : (
               data.map((row, rowIndex) => (
-                <TableRow key={rowIndex} className="group hover:bg-muted/50">
+                <TableRow
+                  key={rowIndex}
+                  className="group hover:bg-muted/50 border-b!"
+                >
                   {columns.map((column, colIndex) => {
                     const hidden = isColumnHidden(column, row);
                     return (

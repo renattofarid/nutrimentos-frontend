@@ -1,8 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { SearchableSelect } from "@/components/SearchableSelect";
-import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
+import { DatePickerFilter } from "@/components/DatePickerFilter";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
@@ -21,6 +29,14 @@ const STATUS_OPTIONS = [
   { value: "ANULADA", label: "Anulada" },
 ];
 
+type ActiveFilter =
+  | ""
+  | "documento"
+  | "warehouse"
+  | "vendedor"
+  | "document_type"
+  | "status";
+
 interface SaleOptionsProps {
   branch_id: string;
   setBranchId: (value: string) => void;
@@ -34,11 +50,10 @@ interface SaleOptionsProps {
   setVendedorId: (value: string) => void;
   start_date?: Date;
   end_date?: Date;
-  onDateChange: (from: Date | undefined, to: Date | undefined) => void;
-  numero: string;
-  setNumero: (value: string) => void;
-  serie: string;
-  setSerie: (value: string) => void;
+  setStartDate: (date: Date | undefined) => void;
+  setEndDate: (date: Date | undefined) => void;
+  documento: string;
+  setDocumento: (value: string) => void;
 }
 
 export default function SaleOptions({
@@ -54,62 +69,51 @@ export default function SaleOptions({
   setVendedorId,
   start_date,
   end_date,
-  onDateChange,
-  numero,
-  setNumero,
-  serie,
-  setSerie,
+  setStartDate,
+  setEndDate,
+  documento,
+  setDocumento,
 }: SaleOptionsProps) {
   const { user } = useAuthStore();
   const company_id = user?.company_id;
 
-  // Fetch branches, warehouses and workers
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>("");
+
   const { data: branches } = useAllBranches({ company_id });
   const { data: warehouses } = useAllWarehouses();
   const { data: workers = [] } = useAllWorkers();
 
-  const branchOptions = [
-    ...(branches?.map((branch) => ({
-      value: String(branch.id),
-      label: branch.name,
-    })) || []),
-  ];
+  const branchOptions = branches?.map((b) => ({
+    value: String(b.id),
+    label: b.name,
+  })) || [];
 
-  const warehouseOptions = [
-    ...(warehouses?.map((warehouse) => ({
-      value: String(warehouse.id),
-      label: warehouse.name,
-    })) || []),
-  ];
+  const warehouseOptions = warehouses?.map((w) => ({
+    value: String(w.id),
+    label: w.name,
+  })) || [];
 
-  const workerOptions = [
-    ...(workers?.map((worker) => ({
-      value: String(worker.id),
-      label: `${worker.names} ${worker.father_surname}`,
-    })) || []),
-  ];
+  const workerOptions = workers?.map((w) => ({
+    value: String(w.id),
+    label: `${w.names} ${w.father_surname}`,
+  })) || [];
+
+  const resetAllFilters = () => {
+    setDocumento("");
+    setWarehouseId("");
+    setVendedorId("");
+    setDocumentType("");
+    setStatus("");
+  };
+
+  const handleFilterTypeChange = (value: string) => {
+    resetAllFilters();
+    setActiveFilter(value as ActiveFilter);
+  };
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      {/* Serie Input */}
-      <Input
-        type="text"
-        value={serie}
-        onChange={(e) => setSerie(e.target.value)}
-        placeholder="Serie"
-        className="w-[120px] h-8"
-      />
-
-      {/* Numero Input */}
-      <Input
-        type="text"
-        value={numero}
-        onChange={(e) => setNumero(e.target.value)}
-        placeholder="Número"
-        className="w-[140px] h-8"
-      />
-
-      {/* Branch Filter */}
+      {/* Tienda - siempre visible */}
       <SearchableSelect
         options={branchOptions}
         value={branch_id}
@@ -117,46 +121,75 @@ export default function SaleOptions({
         placeholder="Tienda"
       />
 
-      {/* Warehouse Filter */}
-      <SearchableSelect
-        options={warehouseOptions}
-        value={warehouse_id}
-        onChange={setWarehouseId}
-        placeholder="Almacén"
+      {/* Fecha de emisión - siempre visible */}
+      <DatePickerFilter
+        label="Del"
+        value={start_date}
+        onChange={setStartDate}
       />
+      <DatePickerFilter label="Al" value={end_date} onChange={setEndDate} />
 
-      {/* Vendedor Filter */}
-      <SearchableSelect
-        options={workerOptions}
-        value={vendedor_id}
-        onChange={setVendedorId}
-        placeholder="Vendedor"
-      />
+      {/* Selector de filtro adicional */}
+      <Select value={activeFilter} onValueChange={handleFilterTypeChange}>
+        <SelectTrigger className="h-8 w-[170px] text-sm">
+          <SelectValue placeholder="Filtro adicional" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">— Sin filtro —</SelectItem>
+          <SelectItem value="documento">Número de documento</SelectItem>
+          <SelectItem value="warehouse">Almacén</SelectItem>
+          <SelectItem value="vendedor">Vendedor</SelectItem>
+          <SelectItem value="document_type">Tipo de documento</SelectItem>
+          <SelectItem value="status">Estado</SelectItem>
+        </SelectContent>
+      </Select>
 
-      {/* Document Type Filter */}
-      <SearchableSelect
-        options={DOCUMENT_TYPE_OPTIONS}
-        value={document_type}
-        onChange={setDocumentType}
-        placeholder="Tipo de documento"
-      />
+      {/* Control dinámico según el filtro seleccionado */}
+      {activeFilter === "documento" && (
+        <Input
+          type="text"
+          value={documento}
+          onChange={(e) => setDocumento(e.target.value)}
+          placeholder="Ej: F001-00123"
+          className="w-[160px] h-8"
+        />
+      )}
 
-      {/* Status Filter */}
-      <SearchableSelect
-        options={STATUS_OPTIONS}
-        value={status}
-        onChange={setStatus}
-        placeholder="Estado"
-      />
+      {activeFilter === "warehouse" && (
+        <SearchableSelect
+          options={warehouseOptions}
+          value={warehouse_id}
+          onChange={setWarehouseId}
+          placeholder="Almacén"
+        />
+      )}
 
-      {/* Date Range Filter */}
-      <DateRangePickerFilter
-        dateFrom={start_date}
-        dateTo={end_date}
-        onDateChange={onDateChange}
-        placeholder="Rango de fechas"
-        className="w-[240px]"
-      />
+      {activeFilter === "vendedor" && (
+        <SearchableSelect
+          options={workerOptions}
+          value={vendedor_id}
+          onChange={setVendedorId}
+          placeholder="Vendedor"
+        />
+      )}
+
+      {activeFilter === "document_type" && (
+        <SearchableSelect
+          options={DOCUMENT_TYPE_OPTIONS}
+          value={document_type}
+          onChange={setDocumentType}
+          placeholder="Tipo de documento"
+        />
+      )}
+
+      {activeFilter === "status" && (
+        <SearchableSelect
+          options={STATUS_OPTIONS}
+          value={status}
+          onChange={setStatus}
+          placeholder="Estado"
+        />
+      )}
     </div>
   );
 }

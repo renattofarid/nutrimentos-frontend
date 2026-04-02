@@ -66,6 +66,7 @@ interface FormSelectAsyncProps {
   preloadItemId?: string;
   uppercase?: boolean;
   externalOption?: Option | null;
+  horizontalField?: boolean; // Nueva prop para forzar layout horizontal
 }
 
 function getOptionLabel(opt: Option): string {
@@ -96,6 +97,7 @@ export function FormSelectAsync({
   preloadItemId,
   uppercase = false,
   externalOption,
+  horizontalField = false,
 }: FormSelectAsyncProps) {
   const { horizontal } = useFormLayout();
   const { field: controlField } = useController({ name, control });
@@ -327,7 +329,7 @@ export function FormSelectAsync({
         return (
           <FormItem
             className={cn(
-              horizontal
+              horizontal || horizontalField
                 ? "flex flex-row items-center gap-3"
                 : "flex flex-col justify-start gap-0.5",
             )}
@@ -340,7 +342,9 @@ export function FormSelectAsync({
                       "flex items-center font-bold uppercase",
                       horizontal
                         ? "w-48 shrink-0 justify-end text-right"
-                        : "justify-start",
+                        : horizontalField
+                          ? "shrink-0 justify-end text-right"
+                          : "justify-start",
                     )}
                   >
                     {label}

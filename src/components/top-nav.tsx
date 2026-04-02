@@ -5,15 +5,15 @@ import {
   ShoppingBag,
   DollarSign,
   ClipboardCheck,
+  ChevronDown,
 } from "lucide-react";
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  NavigationMenuLink,
-} from "@/components/ui/navigation-menu";
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarTrigger,
+} from "@/components/ui/menubar";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { TYPE_USER } from "@/pages/type-users/lib/typeUser.interface";
@@ -81,6 +81,7 @@ import { CustomerAccountStatementTitle } from "@/pages/reports/components/Custom
 import { RealCustomerAccountStatementTitle } from "@/pages/reports/components/RealCustomerAccountStatementPage";
 import type { LucideIcon } from "lucide-react";
 import { useWindowManager } from "@/stores/window-manager.store";
+import { buttonVariants } from "./ui/button";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -337,7 +338,11 @@ export const navData: NavItem[] = [
     url: "#",
     icon: ReportsIcon,
     items: [
-      { title: "Imprimir Tickets", url: SALE_TICKETS_PRINT_ROUTE, icon: ReportsIcon },
+      {
+        title: "Imprimir Tickets",
+        url: SALE_TICKETS_PRINT_ROUTE,
+        icon: ReportsIcon,
+      },
       {
         title: RealCustomerAccountStatementTitle,
         url: REAL_CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
@@ -436,7 +441,7 @@ export function TopNav() {
   const activeTab = tabs.find((t) => t.id === activeTabId);
   const activePath = activeTab?.path ?? "";
 
-useEffect(() => {
+  useEffect(() => {
     if (!ENABLE_PERMISSION_VALIDATION) {
       setFilteredNav(navData);
       return;
@@ -470,63 +475,52 @@ useEffect(() => {
   };
 
   return (
-    <NavigationMenu viewport={false} className="justify-start">
-      <NavigationMenuList className="gap-0">
-        {filteredNav.map((item) =>
-          item.items ? (
-            <NavigationMenuItem key={item.title}>
-              <NavigationMenuTrigger
-                className={cn(
-                  "h-7 text-sm px-1.5 bg-transparent hover:bg-accent/50 uppercase",
-                  isItemActive(item) && "text-primary font-semibold",
-                )}
-              >
-                {item.icon && <item.icon className="mr-1 size-3.5" />}
-                {item.title}
-              </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid min-w-52 w-auto gap-0 p-1">
-                  {item.items.map((sub) => (
-                    <li key={sub.title}>
-                      <NavigationMenuLink
-                        asChild
-                        active={isSubItemActive(sub.url)}
-                      >
-                        <button
-                          onClick={() => openTab(sub.url, sub.title)}
-                          className={cn(
-                            "w-full flex flex-row justify-start text-start items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground uppercase",
-                            isSubItemActive(sub.url) &&
-                              "bg-accent/50 text-accent-foreground font-medium",
-                          )}
-                        >
-                          {sub.icon && <sub.icon className="size-3.5 shrink-0" />}
-                          <span className="text-start">{sub.title}</span>
-                        </button>
-                      </NavigationMenuLink>
-                    </li>
-                  ))}
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-          ) : (
-            <NavigationMenuItem key={item.title}>
-              <NavigationMenuLink asChild active={isItemActive(item)}>
-                <button
-                  onClick={() => openTab(item.url, item.title)}
+    <Menubar className="border-none shadow-none bg-transparent h-auto p-0 gap-1">
+      {filteredNav.map((item) =>
+        item.items ? (
+          <MenubarMenu key={item.title}>
+            <MenubarTrigger
+              className={cn(
+                buttonVariants({ variant: "default", color: "muted" }),
+                "h-7 text-sm px-1.5 uppercase cursor-pointer",
+                isItemActive(item) && "font-semibold",
+              )}
+            >
+              {item.title}
+              <ChevronDown className="ml-1 size-3 opacity-60" />
+            </MenubarTrigger>
+            <MenubarContent className="min-w-52">
+              {item.items.map((sub) => (
+                <MenubarItem
+                  key={sub.title}
+                  onClick={() => openTab(sub.url, sub.title)}
                   className={cn(
-                    "inline-flex flex-row justify-start text-start items-center gap-1 rounded-md px-1.5 py-1 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground uppercase",
-                    isItemActive(item) && "text-primary font-semibold",
+                    "gap-1.5 uppercase cursor-pointer",
+                    isSubItemActive(sub.url) &&
+                      "bg-accent/50 text-accent-foreground font-medium",
                   )}
                 >
-                  {item.icon && <item.icon className="size-3.5" />}
-                  {item.title}
-                </button>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-          ),
-        )}
-      </NavigationMenuList>
-    </NavigationMenu>
+                  {sub.icon && <sub.icon className="size-3.5 shrink-0" />}
+                  <span>{sub.title}</span>
+                </MenubarItem>
+              ))}
+            </MenubarContent>
+          </MenubarMenu>
+        ) : (
+          <MenubarMenu key={item.title}>
+            <MenubarTrigger
+              onClick={() => openTab(item.url, item.title)}
+              className={cn(
+                buttonVariants({ variant: "default", color: "muted" }),
+                "h-7 text-sm px-1.5 uppercase cursor-pointer",
+                isItemActive(item) && "font-semibold",
+              )}
+            >
+              {item.title}
+            </MenubarTrigger>
+          </MenubarMenu>
+        ),
+      )}
+    </Menubar>
   );
 }

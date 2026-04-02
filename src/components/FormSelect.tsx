@@ -49,6 +49,7 @@ interface FormSelectProps {
   autoSelectSingle?: boolean;
   uppercase?: boolean;
   tabIndex?: number;
+  horizontalField?: boolean;
 }
 
 function getOptionLabel(opt: Option): string {
@@ -71,6 +72,7 @@ export function FormSelect({
   autoSelectSingle = false,
   uppercase = false,
   tabIndex,
+  horizontalField = false,
 }: FormSelectProps) {
   const { horizontal } = useFormLayout();
   const [open, setOpen] = useState(false);
@@ -144,8 +146,7 @@ export function FormSelect({
             : filterByName(options);
 
         const handleSelect = (optionValue: string) => {
-          const newValue =
-            optionValue === field.value ? "" : optionValue;
+          const newValue = optionValue === field.value ? "" : optionValue;
           field.onChange(newValue);
           if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
           setOpen(false);
@@ -204,7 +205,9 @@ export function FormSelect({
                 "flex items-center font-bold uppercase",
                 horizontal
                   ? "w-48 shrink-0 justify-end text-right"
-                  : "justify-start",
+                  : horizontalField
+                    ? "shrink-0 justify-end text-right"
+                    : "justify-start",
               )}
             >
               {label}
@@ -227,125 +230,145 @@ export function FormSelect({
         return (
           <FormItem
             className={cn(
-              horizontal
+              horizontal || horizontalField
                 ? "flex flex-row items-center gap-3"
                 : "flex flex-col justify-start gap-0.5",
             )}
           >
             {labelNode}
 
-            <div className={cn(horizontal ? "flex-1 min-w-0 flex flex-col gap-0.5" : "contents")}>
-            {description && (
-              <FormDescription className="text-sm text-muted-foreground !mb-0">
-                {description}
-              </FormDescription>
-            )}
+            <div
+              className={cn(
+                horizontal || horizontalField
+                  ? "flex-1 min-w-0 flex flex-col gap-0.5"
+                  : "contents",
+              )}
+            >
+              {description && (
+                <FormDescription className="text-sm text-muted-foreground !mb-0">
+                  {description}
+                </FormDescription>
+              )}
 
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverAnchor asChild>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      value={open ? search : displayLabel}
-                      onChange={(e) => setSearch(e.target.value)}
-                      onFocus={handleFocus}
-                      onBlur={handleBlur}
-                      onMouseDown={(e) => {
-                        if (!open && !disabled && document.activeElement === e.currentTarget) {
-                          if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-                          setSearch(displayLabelRef.current);
-                          setOpen(true);
-                        }
-                      }}
-                      placeholder={placeholder}
-                      disabled={disabled}
-                      className={cn(
-                        "h-8 pr-8 text-sm",
-                        field.value && !open && "bg-muted",
-                        uppercase && "uppercase",
-                      )}
-                      autoComplete="off"
-                      tabIndex={tabIndex}
-                    />
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-                      {field.value && !disabled && (
-                        <button
-                          type="button"
-                          tabIndex={-1}
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={handleClear}
-                          className="text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      )}
-                      <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50 pointer-events-none" />
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverAnchor asChild>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        value={open ? search : displayLabel}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        onMouseDown={(e) => {
+                          if (
+                            !open &&
+                            !disabled &&
+                            document.activeElement === e.currentTarget
+                          ) {
+                            if (closeTimerRef.current)
+                              clearTimeout(closeTimerRef.current);
+                            setSearch(displayLabelRef.current);
+                            setOpen(true);
+                          }
+                        }}
+                        placeholder={placeholder}
+                        disabled={disabled}
+                        className={cn(
+                          "h-8 pr-8 text-sm",
+                          field.value && !open && "bg-muted",
+                          uppercase && "uppercase",
+                        )}
+                        autoComplete="off"
+                        tabIndex={tabIndex}
+                      />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                        {field.value && !disabled && (
+                          <button
+                            type="button"
+                            tabIndex={-1}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={handleClear}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50 pointer-events-none" />
+                      </div>
                     </div>
-                  </div>
-                </FormControl>
-              </PopoverAnchor>
+                  </FormControl>
+                </PopoverAnchor>
 
-              <PopoverContent
-                className="p-0 !min-w-(--radix-popover-trigger-width) w-auto"
-                onMouseDown={handleListMouseDown}
-                onWheel={(e) => e.stopPropagation()}
-                onWheelCapture={(e) => e.stopPropagation()}
-                onTouchMove={(e) => e.stopPropagation()}
-                onOpenAutoFocus={(e) => e.preventDefault()}
-                onFocusOutside={(e) => e.preventDefault()}
-              >
-                {enableCodeSearch ? (
-                  <Tabs
-                    value={searchTab}
-                    onValueChange={(value) => {
-                      setSearchTab(value as "name" | "code");
-                      setSearch("");
-                    }}
-                    className="w-full"
-                  >
-                    <TabsList className="w-full grid grid-cols-2 rounded-b-none">
-                      <TabsTrigger value="name" className="text-xs">
-                        Por Nombre
-                      </TabsTrigger>
-                      <TabsTrigger value="code" className="text-xs">
-                        Por Código
-                      </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="name" className="m-0">
-                      <Command className="max-h-72 overflow-hidden" shouldFilter={false}>
-                        <CommandList className="max-h-60 overflow-y-auto">
-                          <CommandEmpty className="py-4 text-center text-sm">
-                            No hay resultados.
-                          </CommandEmpty>
-                          {filterByName(options).map(optionItem)}
-                        </CommandList>
-                      </Command>
-                    </TabsContent>
-                    <TabsContent value="code" className="m-0">
-                      <Command className="max-h-72 overflow-hidden" shouldFilter={false}>
-                        <CommandList className="max-h-60 overflow-y-auto">
-                          <CommandEmpty className="py-4 text-center text-sm">
-                            No hay resultados.
-                          </CommandEmpty>
-                          {filterByCode(options).map(optionItem)}
-                        </CommandList>
-                      </Command>
-                    </TabsContent>
-                  </Tabs>
-                ) : (
-                  <Command className="max-h-72 overflow-hidden" shouldFilter={false}>
-                    <CommandList className="max-h-60 overflow-y-auto">
-                      <CommandEmpty className="py-4 text-center text-sm">
-                        No hay resultados.
-                      </CommandEmpty>
-                      {filteredOptions.map(optionItem)}
-                    </CommandList>
-                  </Command>
-                )}
-              </PopoverContent>
-            </Popover>
+                <PopoverContent
+                  className="p-0 !min-w-(--radix-popover-trigger-width) w-auto"
+                  onMouseDown={handleListMouseDown}
+                  onWheel={(e) => e.stopPropagation()}
+                  onWheelCapture={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  onFocusOutside={(e) => e.preventDefault()}
+                >
+                  {enableCodeSearch ? (
+                    <Tabs
+                      value={searchTab}
+                      onValueChange={(value) => {
+                        setSearchTab(value as "name" | "code");
+                        setSearch("");
+                      }}
+                      className="w-full"
+                    >
+                      <TabsList className="w-full grid grid-cols-2 rounded-b-none">
+                        <TabsTrigger value="name" className="text-xs">
+                          Por Nombre
+                        </TabsTrigger>
+                        <TabsTrigger value="code" className="text-xs">
+                          Por Código
+                        </TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="name" className="m-0">
+                        <Command
+                          className="max-h-72 overflow-hidden"
+                          shouldFilter={false}
+                        >
+                          <CommandList className="max-h-60 overflow-y-auto">
+                            <CommandEmpty className="py-4 text-center text-sm">
+                              No hay resultados.
+                            </CommandEmpty>
+                            {filterByName(options).map(optionItem)}
+                          </CommandList>
+                        </Command>
+                      </TabsContent>
+                      <TabsContent value="code" className="m-0">
+                        <Command
+                          className="max-h-72 overflow-hidden"
+                          shouldFilter={false}
+                        >
+                          <CommandList className="max-h-60 overflow-y-auto">
+                            <CommandEmpty className="py-4 text-center text-sm">
+                              No hay resultados.
+                            </CommandEmpty>
+                            {filterByCode(options).map(optionItem)}
+                          </CommandList>
+                        </Command>
+                      </TabsContent>
+                    </Tabs>
+                  ) : (
+                    <Command
+                      className="max-h-72 overflow-hidden"
+                      shouldFilter={false}
+                    >
+                      <CommandList className="max-h-60 overflow-y-auto">
+                        <CommandEmpty className="py-4 text-center text-sm">
+                          No hay resultados.
+                        </CommandEmpty>
+                        {filteredOptions.map(optionItem)}
+                      </CommandList>
+                    </Command>
+                  )}
+                </PopoverContent>
+              </Popover>
 
-            <FormMessage />
+              <FormMessage />
             </div>
           </FormItem>
         );

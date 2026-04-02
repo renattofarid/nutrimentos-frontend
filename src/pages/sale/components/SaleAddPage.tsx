@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
-import { List, Loader, Save } from "lucide-react";
+import { Loader, Save, X } from "lucide-react";
 import { SaleForm } from "./SaleForm";
 import { type SaleSchema } from "../lib/sale.schema";
 import { useSaleStore } from "../lib/sales.store";
@@ -119,19 +119,20 @@ export const SaleAddPage = () => {
       <div className="flex items-center gap-2">
         <Button
           size="sm"
-          variant="outline"
-          onClick={() => navigate("/ventas/listado")}
-        >
-          <List className="size-4 mr-2" /> Ver Listado
-        </Button>
-        <Button
-          size="sm"
           type="submit"
           form="sale-form"
           disabled={isSubmitting}
         >
           {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
           {isSubmitting ? "Guardando..." : "Guardar"}
+        </Button>
+
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => navigate("/ventas/listado")}
+        >
+          <X /> Cancelar
         </Button>
       </div>
 

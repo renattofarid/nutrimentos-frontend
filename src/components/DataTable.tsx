@@ -31,7 +31,7 @@ import { Button } from "@/components/ui/button";
 const dataTableVariants = cva("hidden md:block w-full", {
   variants: {
     variant: {
-      default: "overflow-hidden rounded-2xl border shadow-xs",
+      default: "overflow-hidden rounded border shadow-xs",
       simple: "",
       outline: "border rounded-lg",
       ghost: "",
@@ -45,7 +45,7 @@ const dataTableVariants = cva("hidden md:block w-full", {
 const headerVariants = cva("sticky top-0 z-10", {
   variants: {
     variant: {
-      default: "bg-muted",
+      default: "bg-primary",
       simple: "",
       outline: "bg-muted/50",
       ghost: "",
@@ -196,7 +196,7 @@ export function DataTable<TData, TValue>({
       ? "bg-muted/50"
       : variant === "simple" || variant === "ghost"
         ? "bg-background"
-        : "bg-muted";
+        : "bg-primary";
 
   return (
     <div
@@ -221,19 +221,21 @@ export function DataTable<TData, TValue>({
           <Table className="text-xs md:text-sm">
             <TableHeader className={cn(headerVariants({ variant }))}>
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="text-nowrap h-10">
+                <TableRow key={headerGroup.id} className="text-nowrap h-8">
                   {headerGroup.headers.map((header) => {
                     const isGroupHeader = header.colSpan > 1;
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const isGroupStart = (header.column.columnDef.meta as any)?.isGroupStart;
+                    const isGroupStart = (header.column.columnDef.meta as any)
+                      ?.isGroupStart;
                     return (
                       <TableHead
                         key={header.id}
                         data-column-id={header.id}
                         colSpan={header.colSpan}
                         className={cn(
-                          "h-10",
-                          isGroupHeader && "text-center font-semibold text-xs tracking-wide uppercase text-muted-foreground",
+                          "h-8",
+                          isGroupHeader &&
+                            "text-center font-semibold text-xs tracking-wide uppercase text-muted-foreground",
                           isGroupStart && "border-l-2 border-border",
                           hasActionsColumn &&
                             isActionsCol(header.id) &&
@@ -295,9 +297,9 @@ export function DataTable<TData, TValue>({
                         "bg-primary/10 hover:bg-primary/15 border-l-2 border-primary",
                     )}
                     onClick={(e) => {
-                      const isInteractive = (
-                        e.target as HTMLElement
-                      ).closest('button, a, input, [role="checkbox"]');
+                      const isInteractive = (e.target as HTMLElement).closest(
+                        'button, a, input, [role="checkbox"]',
+                      );
                       if (!isInteractive) {
                         if (enableRowSelection) {
                           row.toggleSelected();
@@ -310,23 +312,24 @@ export function DataTable<TData, TValue>({
                   >
                     {row.getVisibleCells().map((cell) => {
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      const isGroupStart = (cell.column.columnDef.meta as any)?.isGroupStart;
+                      const isGroupStart = (cell.column.columnDef.meta as any)
+                        ?.isGroupStart;
                       return (
-                      <TableCell
-                        key={cell.id}
-                        className={cn(
-                          "p-2 truncate",
-                          isGroupStart && "border-l-2 border-border",
-                          hasActionsColumn &&
-                            isActionsCol(cell.column.id) &&
-                            "sticky right-0 z-1 bg-background group-hover:bg-muted border-l border-border",
-                        )}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
+                        <TableCell
+                          key={cell.id}
+                          className={cn(
+                            "p-2 truncate",
+                            isGroupStart && "border-l-2 border-border",
+                            hasActionsColumn &&
+                              isActionsCol(cell.column.id) &&
+                              "sticky right-0 z-1 bg-background group-hover:bg-muted border-l border-border",
+                          )}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
                       );
                     })}
                   </TableRow>

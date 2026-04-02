@@ -1,47 +1,83 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Plus, FileText } from "lucide-react";
-import { SALE } from "../lib/sale.interface";
-import { useNavigate } from "react-router-dom";
-import ExportButtons from "@/components/ExportButtons";
+import { Separator } from "@/components/ui/separator";
+import { Plus, Pencil, Trash2, Ban, X, FileMinus } from "lucide-react";
 
 interface SaleActionsProps {
-  excelEndpoint?: string;
-  selectedCount?: number;
-  onExportTickets?: () => void;
+  hasSelection: boolean;
+  onNew: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onAnular: () => void;
+  onCerrar: () => void;
+  onGenerar: () => void;
 }
 
 export default function SaleActions({
-  excelEndpoint,
-  selectedCount = 0,
-  onExportTickets
+  hasSelection,
+  onNew,
+  onEdit,
+  onDelete,
+  onAnular,
+  onCerrar,
+  onGenerar,
 }: SaleActionsProps) {
-  const navigate = useNavigate();
-  const { MODEL } = SALE;
-
   return (
-    <div className="flex items-center gap-2">
-      {selectedCount > 0 && onExportTickets && (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={onExportTickets}
-        >
-          <FileText className="size-4 mr-2" />
-          Exportar Tickets ({selectedCount})
-        </Button>
-      )}
-      <ExportButtons
-        excelEndpoint={excelEndpoint}
-        excelFileName={`ventas_${new Date().toISOString().split("T")[0]}.xlsx`}
-      />
+    <div className="flex items-center gap-1">
+      <Button colorIcon="green" size="sm" variant="outline" onClick={onNew}>
+        <Plus />
+        Nuevo
+      </Button>
       <Button
+        colorIcon="amber"
         size="sm"
-        className="ml-auto"
-        onClick={() => navigate("/ventas/agregar")}
+        variant="outline"
+        onClick={onEdit}
+        disabled={!hasSelection}
       >
-        <Plus className="size-4 mr-2" /> Agregar {MODEL.name}
+        <Pencil />
+        Editar
+      </Button>
+      <Button
+        colorIcon="red"
+        size="sm"
+        variant="outline"
+        onClick={onDelete}
+        disabled={!hasSelection}
+      >
+        <Trash2 />
+        Eliminar
+      </Button>
+      <Button
+        colorIcon="rose"
+        size="sm"
+        variant="outline"
+        onClick={onAnular}
+        disabled={!hasSelection}
+      >
+        <Ban />
+        Anular
+      </Button>
+      <div className="h-6 mx-2">
+        <Separator orientation="vertical" />
+      </div>
+      <Button
+        colorIcon="indigo"
+        size="sm"
+        variant="outline"
+        onClick={onGenerar}
+        disabled={!hasSelection}
+      >
+        <FileMinus />
+        Generar NC
+      </Button>
+      <div className="h-6 mx-2">
+        <Separator orientation="vertical" />
+      </div>
+      <Button colorIcon="gray" size="sm" variant="outline" onClick={onCerrar}>
+        <X />
+        Cerrar
       </Button>
     </div>
   );

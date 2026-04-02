@@ -29,6 +29,7 @@ interface FormSectionProps {
   className?: string;
   gap?: string;
   headerExtra?: ReactNode;
+  bordered?: boolean;
 }
 
 const colsMap = {
@@ -85,6 +86,7 @@ export const GroupFormSection = ({
   gap = "gap-3",
   headerExtra,
   horizontal = false,
+  bordered = false,
 }: FormSectionProps) => {
   const gridClasses = [
     "grid",
@@ -107,7 +109,8 @@ export const GroupFormSection = ({
         className,
       )}
     >
-      <div className={`${bgColor} px-2 py-0 border-b border-muted`}>
+     {
+      !bordered &&  <div className={`${bgColor} px-2 py-0 border-b border-muted`}>
         <div className="flex flex-row flex-wrap justify-between sm:items-center gap-3">
           <h3
             className={cn(
@@ -121,6 +124,7 @@ export const GroupFormSection = ({
           {headerExtra}
         </div>
       </div>
+     }
       <div className="p-3">
         <FormLayoutContext.Provider value={{ horizontal }}>
           <div className={cn(gridClasses)}>{children}</div>

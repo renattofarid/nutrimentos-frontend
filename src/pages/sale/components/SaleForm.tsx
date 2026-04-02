@@ -9,13 +9,7 @@ import {
   saleSchemaUpdate,
   type SaleSchema,
 } from "../lib/sale.schema";
-import {
-  Users2,
-  CreditCard,
-  ListChecks,
-  Users,
-  FileText,
-} from "lucide-react";
+import { Users2, CreditCard, ListChecks, Users, FileText } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
@@ -55,6 +49,7 @@ interface SaleFormProps {
 }
 
 interface DetailRow {
+  index: number;
   product_id: string;
   product_code?: string;
   product_name?: string;
@@ -117,21 +112,26 @@ export const SaleForm = ({
     { id: number; zone_name: string; address: string; is_primary: boolean }[]
   >([]);
 
-  
-
   // Referencia al zone_id actual para detectar cambio de zona al cambiar cliente
   const currentZoneIdRef = useRef<number | null>(null);
 
   const [isClientManagementOpen, setIsClientManagementOpen] = useState(false);
-  const [externalCustomerOption, setExternalCustomerOption] = useState<{ value: string; label: string } | null>(null);
+  const [externalCustomerOption, setExternalCustomerOption] = useState<{
+    value: string;
+    label: string;
+  } | null>(null);
   const pendingExternalPersonRef = useRef<PersonResource | null>(null);
-  const [selectedCustomerName, setSelectedCustomerName] = useState<string>(() => {
-    if (mode === "update" && sale?.customer) {
-      return sale.customer.business_name ||
-        `${sale.customer.names ?? ""} ${sale.customer.father_surname ?? ""} ${sale.customer.mother_surname ?? ""}`.trim();
-    }
-    return "";
-  });
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string>(
+    () => {
+      if (mode === "update" && sale?.customer) {
+        return (
+          sale.customer.business_name ||
+          `${sale.customer.names ?? ""} ${sale.customer.father_surname ?? ""} ${sale.customer.mother_surname ?? ""}`.trim()
+        );
+      }
+      return "";
+    },
+  );
 
   const { fetchDynamicPrice } = useDynamicPrice();
   const queryClient = useQueryClient();
@@ -181,50 +181,53 @@ export const SaleForm = ({
 
       // Inicializar detalles
       if (defaultValues.details && defaultValues.details.length > 0) {
-        const initialDetails = defaultValues.details.map((detail: any) => {
-          // Determinar el modo de venta basado en los valores recibidos
-          const qtySacks = parseFloat(detail.quantity_sacks || "0");
-          const qtyKg = parseFloat(detail.quantity_kg || "0");
-          const sale_mode: "sacks" | "kg" | undefined =
-            qtySacks > 0 ? "sacks" : qtyKg > 0 ? "kg" : undefined;
+        const initialDetails = defaultValues.details.map(
+          (detail: any, index: number) => {
+            // Determinar el modo de venta basado en los valores recibidos
+            const qtySacks = parseFloat(detail.quantity_sacks || "0");
+            const qtyKg = parseFloat(detail.quantity_kg || "0");
+            const sale_mode: "sacks" | "kg" | undefined =
+              qtySacks > 0 ? "sacks" : qtyKg > 0 ? "kg" : undefined;
 
-          const unitPrice = parseFormattedNumber(detail.unit_price);
-          const productWeight = parseFloat(detail.product_weight || "0");
+            const unitPrice = parseFormattedNumber(detail.unit_price);
+            const productWeight = parseFloat(detail.product_weight || "0");
 
-          // Calcular totales según el modo de venta
-          let subtotal = 0;
-          let totalKg = 0;
+            // Calcular totales según el modo de venta
+            let subtotal = 0;
+            let totalKg = 0;
 
-          if (sale_mode === "sacks") {
-            totalKg = roundTo6Decimals(productWeight * qtySacks);
-            subtotal = roundTo6Decimals(totalKg * unitPrice);
-          } else if (sale_mode === "kg") {
-            totalKg = qtyKg;
-            subtotal = roundTo6Decimals(qtyKg * unitPrice);
-          }
+            if (sale_mode === "sacks") {
+              totalKg = roundTo6Decimals(productWeight * qtySacks);
+              subtotal = roundTo6Decimals(totalKg * unitPrice);
+            } else if (sale_mode === "kg") {
+              totalKg = qtyKg;
+              subtotal = roundTo6Decimals(qtyKg * unitPrice);
+            }
 
-          // El subtotal es la multiplicación simple (precio ya incluye IGV)
-          // El IGV se extrae en el resumen total, no por fila
-          const total = subtotal;
-          const igv = 0;
+            // El subtotal es la multiplicación simple (precio ya incluye IGV)
+            // El IGV se extrae en el resumen total, no por fila
+            const total = subtotal;
+            const igv = 0;
 
-          return {
-            product_id: detail.product_id,
-            product_code: detail.product_code || "",
-            product_name: detail.product_name || "",
-            product_weight: detail.product_weight || "0",
-            product_price_per_kg: detail.product_price_per_kg || "0",
-            quantity: detail.quantity,
-            quantity_sacks: detail.quantity_sacks || "",
-            quantity_kg: detail.quantity_kg || "",
-            unit_price: detail.unit_price,
-            subtotal,
-            igv,
-            total,
-            total_kg: totalKg,
-            sale_mode,
-          };
-        });
+            return {
+              index: index + 1,
+              product_id: detail.product_id,
+              product_code: detail.product_code || "",
+              product_name: detail.product_name || "",
+              product_weight: detail.product_weight || "0",
+              product_price_per_kg: detail.product_price_per_kg || "0",
+              quantity: detail.quantity,
+              quantity_sacks: detail.quantity_sacks || "",
+              quantity_kg: detail.quantity_kg || "",
+              unit_price: detail.unit_price,
+              subtotal,
+              igv,
+              total,
+              total_kg: totalKg,
+              sale_mode,
+            };
+          },
+        );
         setDetails(initialDetails);
         form.setValue("details", initialDetails);
       }
@@ -321,7 +324,11 @@ export const SaleForm = ({
           `${resolvedItem.names ?? ""} ${resolvedItem.father_surname ?? ""} ${resolvedItem.mother_surname ?? ""}`.trim(),
       );
     }
-    if (resolvedItem && resolvedItem.person_zones && resolvedItem.person_zones.length > 0) {
+    if (
+      resolvedItem &&
+      resolvedItem.person_zones &&
+      resolvedItem.person_zones.length > 0
+    ) {
       setCustomerAddresses(resolvedItem.person_zones);
       const primary = resolvedItem.person_zones.find((pz) => pz.is_primary);
       const selectedZone = primary || resolvedItem.person_zones[0];
@@ -329,7 +336,10 @@ export const SaleForm = ({
 
       // Limpiar vendedor solo si la zona cambia respecto a la anterior
       const newZoneId = selectedZone.zone_id;
-      if (currentZoneIdRef.current !== null && currentZoneIdRef.current !== newZoneId) {
+      if (
+        currentZoneIdRef.current !== null &&
+        currentZoneIdRef.current !== newZoneId
+      ) {
         form.setValue("vendedor_id", "");
       }
       currentZoneIdRef.current = newZoneId;
@@ -391,6 +401,7 @@ export const SaleForm = ({
   // Funciones para el ExcelGrid
   const handleAddRow = () => {
     const newDetail: DetailRow = {
+      index: details.length + 1,
       product_id: "",
       product_code: "",
       product_name: "",
@@ -414,7 +425,9 @@ export const SaleForm = ({
   };
 
   const handleRemoveRow = (index: number) => {
-    const updatedDetails = details.filter((_, i) => i !== index);
+    const updatedDetails = details
+      .filter((_, i) => i !== index)
+      .map((detail, i) => ({ ...detail, index: i + 1 }));
     setDetails(updatedDetails);
     form.setValue("details", updatedDetails);
   };
@@ -422,8 +435,12 @@ export const SaleForm = ({
   const handleRemoveEmptyDetailRows = useCallback(() => {
     const filtered = details.filter((detail) => !!detail.product_id);
     if (filtered.length === 0 || filtered.length === details.length) return;
-    setDetails(filtered);
-    form.setValue("details", filtered);
+    const reindexed = filtered.map((detail, i) => ({
+      ...detail,
+      index: i + 1,
+    }));
+    setDetails(reindexed);
+    form.setValue("details", reindexed);
   }, [details, form]);
 
   const handleCellChange = async (
@@ -636,24 +653,31 @@ export const SaleForm = ({
   // Configuración de columnas para ExcelGrid de Detalles
   const gridColumns: ExcelGridColumn<DetailRow>[] = [
     {
+      id: "index",
+      header: "#",
+      type: "readonly",
+      width: "10px",
+      accessor: "index",
+    },
+    {
       id: "product_code",
       header: "Código",
       type: "product-code",
-      width: "120px",
+      width: "100px",
       accessor: "product_code",
     },
     {
       id: "product",
       header: "Descripción",
       type: "product-search",
-      width: "300px",
+      width: "400px",
       accessor: "product_name",
     },
     {
       id: "quantity_sacks",
-      header: "Cant. Sacos",
+      header: "Cantidad",
       type: "number",
-      width: "110px",
+      width: "100px",
       accessor: "quantity_sacks",
       // Siempre habilitado para permitir navegación con Tab
     },
@@ -667,9 +691,9 @@ export const SaleForm = ({
     },
     {
       id: "unit_price",
-      header: "Precio Unit.",
+      header: "Precio",
       type: "number",
-      width: "120px",
+      width: "100px",
       accessor: "unit_price",
       // Siempre editable - el precio de la API/producto es solo referencial
     },
@@ -677,7 +701,7 @@ export const SaleForm = ({
       id: "subtotal",
       header: "Subtotal",
       type: "readonly",
-      width: "120px",
+      width: "100px",
       render: (row) => (
         <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold">
           {row.subtotal
@@ -961,11 +985,15 @@ export const SaleForm = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleFormSubmit, (errors) => {
-          const getFirstError = (obj: any, path = ""): { field: string; message: string } | null => {
+          const getFirstError = (
+            obj: any,
+            path = "",
+          ): { field: string; message: string } | null => {
             for (const key in obj) {
               const val = obj[key];
               const currentPath = path ? `${path}.${key}` : key;
-              if (val?.message) return { field: currentPath, message: val.message };
+              if (val?.message)
+                return { field: currentPath, message: val.message };
               if (typeof val === "object") {
                 const nested = getFirstError(val, currentPath);
                 if (nested) return nested;
@@ -987,15 +1015,7 @@ export const SaleForm = ({
           title="Información General"
           icon={Users2}
           cols={{ sm: 1, md: 3, lg: 4 }}
-          // headerExtra={
-          //   mode === "create" &&
-          //   autoSerie &&
-          //   autoNumero && (
-          //     <Badge variant="default" className="px-3 py-1" size="default">
-          //       {autoSerie} - {autoNumero}
-          //     </Badge>
-          //   )
-          // }
+          bordered
         >
           <FormSelect
             control={form.control}
@@ -1017,7 +1037,7 @@ export const SaleForm = ({
           <FormSelect
             control={form.control}
             name="document_type"
-            label="TIPO DE DOCUMENTO"
+            label="TIPO DOCUMENTO"
             placeholder="Seleccione tipo"
             options={DOCUMENT_TYPES.map((dt) => ({
               value: dt.value,
@@ -1052,7 +1072,7 @@ export const SaleForm = ({
             />
             <FormInput
               name="_numero_display"
-              label="CORRELATIVO"
+              label="NÚMERO"
               value={autoNumero}
               onChange={(e) => setAutoNumero(e.target.value)}
               className="font-bold"
@@ -1062,7 +1082,7 @@ export const SaleForm = ({
           <DatePickerFormField
             control={form.control}
             name="issue_date"
-            label="FECHA DE EMISIÓN"
+            label="FECHA EMISIÓN"
             placeholder="Seleccione fecha"
             dateFormat="dd/MM/yyyy"
             disabledRange={{
@@ -1155,195 +1175,156 @@ export const SaleForm = ({
           />
         </GroupFormSection>
 
-        {/* Detalles, Cuotas y Resumen */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6">
-          {/* Columna Izquierda: Detalles y Cuotas */}
-          <div className="space-y-6">
-            {/* Detalles */}
-            <GroupFormSection
-              title="Detalles de la Venta"
-              icon={ListChecks}
-              cols={{ sm: 1 }}
-            >
-              <ExcelGrid
-                columns={gridColumns}
-                data={details}
-                onAddRow={handleAddRow}
-                onRemoveRow={handleRemoveRow}
-                onCellChange={handleCellChange}
-                onProductSelect={handleProductSelect}
-                onProductCodeTab={handleProductCodeTab}
-                onRemoveEmptyRows={handleRemoveEmptyDetailRows}
-                emptyMessage="Seleccione un almacén y cliente para comenzar."
-                disabled={!selectedWarehouseId}
-                skipColumnsOnEnter={["product"]}
-              />
-            </GroupFormSection>
+        {/* Detalles */}
+        <GroupFormSection
+          title="Detalles de la Venta"
+          icon={ListChecks}
+          cols={{ sm: 1 }}
+          bordered
+        >
+          <ExcelGrid
+            columns={gridColumns}
+            data={details}
+            onAddRow={handleAddRow}
+            onRemoveRow={handleRemoveRow}
+            onCellChange={handleCellChange}
+            onProductSelect={handleProductSelect}
+            onProductCodeTab={handleProductCodeTab}
+            onRemoveEmptyRows={handleRemoveEmptyDetailRows}
+            emptyMessage="Seleccione un almacén y cliente para comenzar."
+            disabled={!selectedWarehouseId}
+            skipColumnsOnEnter={["product"]}
+          />
+        </GroupFormSection>
 
-            {/* Cuotas - Solo mostrar si es a crédito */}
-            {selectedPaymentType === "CREDITO" && (
-              <GroupFormSection
-                title="Cuotas de Pago"
-                icon={CreditCard}
-                cols={{ sm: 1 }}
-              >
-                <ExcelGrid
-                  columns={installmentColumns}
-                  data={installments}
-                  onAddRow={handleAddInstallmentRow}
-                  onRemoveRow={handleRemoveInstallment}
-                  onCellChange={handleInstallmentCellChange}
-                  emptyMessage="Agregue las cuotas de pago."
-                  disabled={details.length === 0}
-                />
+        {/* Resumen */}
+        <GroupFormSection
+          title="Resumen"
+          icon={FileText}
+          cols={{ sm: 1, md: 2, lg: 4 }}
+          bordered
+        >
+          {/* Peso Total */}
+          <div className="space-y-1">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              Peso Total
+            </div>
+            <div className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
+              {formatDecimalTrunc(calculateTotalWeight(), 2)} kg
+            </div>
+          </div>
 
-                {installments.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <div className="flex justify-between items-center p-4 bg-muted/30 rounded-lg border">
-                      <span className="font-bold">TOTAL CUOTAS:</span>
-                      <span className="text-xl font-bold text-blue-600">
-                        {getCurrencySymbol()}{" "}
-                        {formatNumber(calculateInstallmentsTotal())}
-                      </span>
-                    </div>
-                    {!installmentsMatchTotal() && (
-                      <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-                        <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                          ⚠️ El total de cuotas ({getCurrencySymbol()}{" "}
-                          {formatNumber(calculateInstallmentsTotal())}) debe ser
-                          igual al total de la venta ({getCurrencySymbol()}{" "}
-                          {formatNumber(calculateDetailsTotal())})
-                        </p>
-                      </div>
-                    )}
+          {/* Subtotal */}
+          <div className="space-y-1">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              Subtotal
+            </div>
+            <div className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
+              {getCurrencySymbol()} {formatNumber(calculateDetailsSubtotal())}
+            </div>
+          </div>
+
+          {/* IGV */}
+          <div className="space-y-1">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              IGV (18%)
+            </div>
+            <div className="text-2xl font-semibold text-orange-600 dark:text-orange-400">
+              {getCurrencySymbol()} {formatNumber(calculateDetailsIGV())}
+            </div>
+          </div>
+
+          {/* Total a Pagar */}
+          <div className="space-y-1">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              Total a Pagar
+            </div>
+            <div className="text-3xl font-semibold text-primary">
+              {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())}
+            </div>
+          </div>
+
+          {/* Resumen de Cuotas si es a crédito */}
+          {selectedPaymentType === "CREDITO" && installments.length > 0 && (
+            <>
+              <div className="border-t" />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                    Cuotas ({installments.length})
+                  </div>
+                </div>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm text-muted-foreground">
+                    Total en cuotas
+                  </span>
+                  <span
+                    className={`text-lg font-semibold ${
+                      installmentsMatchTotal()
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-orange-600 dark:text-orange-400"
+                    }`}
+                  >
+                    {getCurrencySymbol()}{" "}
+                    {formatNumber(calculateInstallmentsTotal())}
+                  </span>
+                </div>
+                {!installmentsMatchTotal() && (
+                  <div className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
+                    <span>⚠</span>
+                    <span>No coincide con el total</span>
                   </div>
                 )}
-              </GroupFormSection>
-            )}
-          </div>
-
-          {/* Columna Derecha: Resumen Sticky */}
-          <div className="xl:sticky xl:top-4 xl:self-start">
-            <GroupFormSection
-              title="Resumen"
-              icon={FileText}
-              cols={{ sm: 1 }}
-              // headerExtra={
-              //   mode === "create" &&
-              //   autoSerie &&
-              //   autoNumero && (
-              //     <Badge variant="default" className="px-3 py-1" size="default">
-              //       {autoSerie} - {autoNumero}
-              //     </Badge>
-              //   )
-              // }
-            >
-              <div className="space-y-6">
-                {/* Peso Total */}
-                <div className="space-y-1">
-                  <div className="text-[10px] uppercase tracking-wider text-blue-600/70 dark:text-blue-400/70 font-medium">
-                    Peso Total
-                  </div>
-                  <div className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
-                    {formatDecimalTrunc(calculateTotalWeight(), 2)} kg
-                  </div>
-                </div>
-
-                <div className="border-t" />
-
-                {/* Desglose */}
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-medium text-foreground">
-                      {getCurrencySymbol()}{" "}
-                      {formatNumber(calculateDetailsSubtotal())}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">IGV (18%)</span>
-                    <span className="font-medium text-orange-600 dark:text-orange-400">
-                      {getCurrencySymbol()}{" "}
-                      {formatNumber(calculateDetailsIGV())}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="border-t" />
-
-                {/* Total a Pagar */}
-                <div className="space-y-1">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                    Total a Pagar
-                  </div>
-                  <div className="text-3xl font-semibold text-primary">
-                    {getCurrencySymbol()}{" "}
-                    {formatNumber(calculateDetailsTotal())}
-                  </div>
-                </div>
-
-                {/* Resumen de Cuotas si es a crédito */}
-                {selectedPaymentType === "CREDITO" &&
-                  installments.length > 0 && (
-                    <>
-                      <div className="border-t" />
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                            Cuotas ({installments.length})
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-baseline">
-                          <span className="text-sm text-muted-foreground">
-                            Total en cuotas
-                          </span>
-                          <span
-                            className={`text-lg font-semibold ${
-                              installmentsMatchTotal()
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-orange-600 dark:text-orange-400"
-                            }`}
-                          >
-                            {getCurrencySymbol()}{" "}
-                            {formatNumber(calculateInstallmentsTotal())}
-                          </span>
-                        </div>
-                        {!installmentsMatchTotal() && (
-                          <div className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
-                            <span>⚠</span>
-                            <span>No coincide con el total</span>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                <FormInput
-                  name="observations"
-                  control={form.control}
-                  label="OBSERVACIONES"
-                  placeholder="Ingrese observaciones adicionales"
-                  uppercase
-                />
               </div>
-            </GroupFormSection>
+            </>
+          )}
+
+          <div className="col-span-full">
+            <FormInput
+              name="observations"
+              control={form.control}
+              label="OBSERVACIONES"
+              placeholder="Ingrese observaciones adicionales"
+              uppercase
+            />
           </div>
-        </div>
+        </GroupFormSection>
 
-        {/* <pre>
-          <code>{JSON.stringify(products, null, 2)}</code>
-          <code>{JSON.stringify(filteredProducts, null, 2)}</code>
-        </pre> */}
+        {/* Cuotas - Solo mostrar si es a crédito */}
+        {selectedPaymentType === "CREDITO" && (
+          <GroupFormSection
+            title="Cuotas de Pago"
+            icon={CreditCard}
+            cols={{ sm: 1 }}
+            bordered
+          >
+            <ExcelGrid
+              columns={installmentColumns}
+              data={installments}
+              onAddRow={handleAddInstallmentRow}
+              onRemoveRow={handleRemoveInstallment}
+              onCellChange={handleInstallmentCellChange}
+              emptyMessage="Agregue las cuotas de pago."
+              disabled={details.length === 0}
+              minHeight="0px"
+            />
 
-        {/* <pre>
-          <code>{JSON.stringify(form.getValues(), null, 2)}</code>
-          <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-        </pre>
-        <Button onClick={() => form.trigger()}>Button</Button> */}
-
-        {/* <pre>
-          <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-        </pre> */}
+            {installments.length > 0 && (
+              <div className="mt-4 space-y-2">
+                {!installmentsMatchTotal() && (
+                  <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+                    <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
+                      ⚠️ El total de cuotas ({getCurrencySymbol()}{" "}
+                      {formatNumber(calculateInstallmentsTotal())}) debe ser
+                      igual al total de la venta ({getCurrencySymbol()}{" "}
+                      {formatNumber(calculateDetailsTotal())})
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </GroupFormSection>
+        )}
       </form>
 
       {/* Modal de gestión de clientes */}

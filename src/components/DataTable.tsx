@@ -45,7 +45,7 @@ const dataTableVariants = cva("hidden md:block w-full", {
 const headerVariants = cva("sticky top-0 z-10", {
   variants: {
     variant: {
-      default: "bg-primary",
+      default: "bg-[#82BBE3]",
       simple: "",
       outline: "bg-muted/50",
       ghost: "",
@@ -137,6 +137,7 @@ export function DataTable<TData, TValue>({
   );
   const [internalRowSelection, setInternalRowSelection] = useState({});
 
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -198,7 +199,7 @@ export function DataTable<TData, TValue>({
       ? "bg-muted/50"
       : variant === "simple" || variant === "ghost"
         ? "bg-background"
-        : "bg-primary";
+        : "bg-[#82BBE3]";
 
   return (
     <div
@@ -302,21 +303,23 @@ export function DataTable<TData, TValue>({
                       const isInteractive = (e.target as HTMLElement).closest(
                         'button, a, input, [role="checkbox"]',
                       );
-                      if (!isInteractive) {
-                        if (enableRowSelection) {
-                          row.toggleSelected();
+                      if (isInteractive) return;
+
+                      if (onRowDoubleClick) {
+                        if (clickTimerRef.current) {
+                          clearTimeout(clickTimerRef.current);
+                          clickTimerRef.current = null;
+                          onRowDoubleClick(row.original);
+                        } else {
+                          clickTimerRef.current = setTimeout(() => {
+                            clickTimerRef.current = null;
+                            if (enableRowSelection) row.toggleSelected();
+                            if (onRowClick) onRowClick(row.original);
+                          }, 250);
                         }
-                        if (onRowClick) {
-                          onRowClick(row.original);
-                        }
-                      }
-                    }}
-                    onDoubleClick={(e) => {
-                      const isInteractive = (e.target as HTMLElement).closest(
-                        'button, a, input, [role="checkbox"]',
-                      );
-                      if (!isInteractive && onRowDoubleClick) {
-                        onRowDoubleClick(row.original);
+                      } else {
+                        if (enableRowSelection) row.toggleSelected();
+                        if (onRowClick) onRowClick(row.original);
                       }
                     }}
                   >

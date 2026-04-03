@@ -8,6 +8,7 @@ import {
   Printer,
   Trash2,
   Wallet,
+  X,
 } from "lucide-react";
 import ExportButtons from "@/components/ExportButtons";
 
@@ -21,6 +22,7 @@ interface PurchaseActionsProps {
   onEdit: () => void;
   onDelete: () => void;
   onQuickPay: () => void;
+  onClose: () => void;
   excelEndpoint?: string;
   onPrint: () => void;
 }
@@ -35,6 +37,7 @@ export const PurchaseActions = ({
   onEdit,
   onDelete,
   onQuickPay,
+  onClose,
   excelEndpoint,
   onPrint,
 }: PurchaseActionsProps) => {
@@ -109,6 +112,11 @@ export const PurchaseActions = ({
         excelEndpoint={excelEndpoint}
         excelFileName={`compras_${new Date().toISOString().split("T")[0]}.xlsx`}
       />
+
+      <Button onClick={onClose} size="sm" variant="outline">
+        <X className="mr-2 h-4 w-4" />
+        Cerrar
+      </Button>
     </ActionsWrapper>
   );
 };

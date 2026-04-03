@@ -26,6 +26,7 @@ import { promiseToast } from "@/lib/core.function";
 import { PurchaseTable } from "./PurchaseTable";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
+import { useWindowManager } from "@/stores/window-manager.store";
 
 export default function PurchasePage() {
   const navigate = useNavigate();
@@ -55,6 +56,7 @@ export default function PurchasePage() {
     useState<PurchaseInstallmentResource | null>(null);
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
   const { user } = useAuthStore();
+  const { activeTabId, closeTab } = useWindowManager();
 
   const { data, meta, isLoading, refetch } = usePurchase({
     company_id: user?.company_id,
@@ -367,6 +369,10 @@ export default function PurchasePage() {
     handleQuickPay(selectedPurchaseRow);
   };
 
+  const handleClose = () => {
+    if (activeTabId) closeTab(activeTabId);
+  };
+
   return (
     <PageWrapper>
       <div className="flex justify-between items-center">
@@ -380,6 +386,7 @@ export default function PurchasePage() {
           onEdit={handleToolbarEdit}
           onDelete={handleToolbarDelete}
           onQuickPay={handleToolbarQuickPay}
+          onClose={handleClose}
           excelEndpoint={exportEndpoint}
           onPrint={handlePrint}
         />

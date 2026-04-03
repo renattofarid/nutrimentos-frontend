@@ -29,6 +29,8 @@ import {
   EyeOff,
   Package,
   ShoppingCart,
+  Save,
+  X,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
@@ -69,6 +71,8 @@ import {
   type ExcelGridColumn,
   type ProductOption,
 } from "@/components/ExcelGrid";
+import { useClients } from "@/pages/client/lib/client.hook";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
 
 interface GuideFormProps {
   defaultValues: Partial<GuideSchema>;
@@ -655,9 +659,29 @@ export const GuideForm = ({
   return (
     <Form {...form}>
       <form
+        id="guide-form"
         onSubmit={form.handleSubmit(handleFormSubmit)}
         className="w-full grid grid-cols-1 md:grid-cols-2 gap-6"
       >
+        {/* Botones */}
+        <div className="flex gap-2 col-span-full">
+          <Button
+            size="sm"
+            type="submit"
+            disabled={
+              isSubmitting ||
+              (!useCustomDetails && selectedSales.length === 0) ||
+              (useCustomDetails && customDetails.every((d) => !d.product_id))
+            }
+          >
+            {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+            {isSubmitting ? "Guardando..." : "Guardar"}
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            <X /> Cancelar
+          </Button>
+        </div>
+
         {/* Información de la Guía */}
         <GroupFormSection
           title="Información de la Guía"
@@ -706,11 +730,28 @@ export const GuideForm = ({
             />
           </div>
 
-          {detectedCustomerName && (
-            <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Cliente: </span>
-              {detectedCustomerName}
-            </div>
+          {useCustomDetails ? (
+            <FormSelectAsync
+              control={form.control}
+              name="customer_id"
+              label="Cliente"
+              placeholder="Buscar cliente..."
+              useQueryHook={useClients}
+              mapOptionFn={(customer: PersonResource) => ({
+                value: customer.id.toString(),
+                label:
+                  customer.business_name ||
+                  `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
+                description: customer.number_document || "",
+              })}
+            />
+          ) : (
+            detectedCustomerName && (
+              <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Cliente: </span>
+                {detectedCustomerName}
+              </div>
+            )
           )}
 
           <div className="hidden">
@@ -1040,6 +1081,8 @@ export const GuideForm = ({
               onCheckedChange={(checked) => {
                 setUseCustomDetails(checked);
                 form.setValue("total_packages", 0 as any);
+                form.setValue("customer_id", "");
+                setDetectedCustomerName(null);
               }}
             />
             <Label htmlFor="detail-mode" className="text-sm font-medium">
@@ -1334,27 +1377,6 @@ export const GuideForm = ({
           </GroupFormSection>
         )}
 
-        {/* Botones */}
-        <div className="flex gap-4 w-full justify-end col-span-full">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-            Cancelar
-          </Button>
-
-          <Button
-            size="sm"
-            type="submit"
-            disabled={
-              isSubmitting ||
-              (!useCustomDetails && selectedSales.length === 0) ||
-              (useCustomDetails && customDetails.every((d) => !d.product_id))
-            }
-          >
-            <Loader
-              className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`}
-            />
-            {isSubmitting ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
       </form>
     </Form>
   );

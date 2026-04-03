@@ -119,7 +119,7 @@ export const CreditNoteForm = ({
         onSubmit={form.handleSubmit(handleSubmit)}
         className="space-y-4 w-full"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sidebar p-4 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-sidebar p-4 rounded-lg">
           {readOnlySale ? (
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium">Venta</span>
@@ -190,7 +190,7 @@ export const CreditNoteForm = ({
               <CardTitle className="text-lg">Resumen de la Venta</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Documento</p>
                   <p className="font-semibold">

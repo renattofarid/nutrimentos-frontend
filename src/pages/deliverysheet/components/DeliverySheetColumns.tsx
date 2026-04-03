@@ -1,23 +1,8 @@
 import { Badge } from "@/components/ui/badge";
-import { ButtonAction } from "@/components/ButtonAction";
-import ExportButtons from "@/components/ExportButtons";
-import { Trash2, Eye, RefreshCcw } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { DeliverySheetResource } from "../lib/deliverysheet.interface";
 
-interface DeliverySheetColumnsProps {
-  onDelete: (id: number) => void;
-  onViewDetails: (deliverySheet: DeliverySheetResource) => void;
-  onUpdateStatus: (deliverySheet: DeliverySheetResource) => void;
-  onExport: (id: number) => void;
-}
-
-export const getDeliverySheetColumns = ({
-  onDelete,
-  onViewDetails,
-  onUpdateStatus,
-  onExport,
-}: DeliverySheetColumnsProps): ColumnDef<DeliverySheetResource>[] => [
+export const getDeliverySheetColumns = (): ColumnDef<DeliverySheetResource>[] => [
   { 
     accessorKey: "id",
     header: "ID",
@@ -140,43 +125,6 @@ export const getDeliverySheetColumns = ({
         hour: "2-digit",
         minute: "2-digit",
       });
-    },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const canDelete = row.original.status === "PENDIENTE";
-      // const canUpdateStatus =
-      //   row.original.status === "PENDIENTE" ||
-      //   row.original.status === "EN_REPARTO";
-
-      return (
-        <div className="flex items-center gap-1">
-          <ExportButtons
-            variant="separate"
-            onPdfDownload={() => onExport(row.original.id)}
-          />
-          <ButtonAction
-            icon={Eye}
-            onClick={() => onViewDetails(row.original)}
-            tooltip="Ver Detalle"
-          />
-          <ButtonAction
-            icon={RefreshCcw}
-            onClick={() => onUpdateStatus(row.original)}
-            canRender={false}
-            tooltip="Cambiar Estado"
-          />
-          <ButtonAction
-            icon={Trash2}
-            variant="destructive"
-            onClick={() => onDelete(row.original.id)}
-            canRender={canDelete}
-            tooltip="Eliminar"
-          />
-        </div>
-      );
     },
   },
 ];

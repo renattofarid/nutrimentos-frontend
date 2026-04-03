@@ -13,18 +13,19 @@ import {
   Search,
   SearchX,
   Info,
-  List,
+  X,
   ChevronDown,
   ChevronUp,
   Calendar,
   ListX,
   Eye,
   Save,
+  List,
 } from "lucide-react";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
 import { FormSelect } from "@/components/FormSelect";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { format, parse } from "date-fns";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DataTable } from "@/components/DataTable";
+import type { ColumnDef } from "@tanstack/react-table";
 import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useClients } from "@/pages/client/lib/client.hook";
@@ -53,6 +56,8 @@ import { EmptyState } from "@/components/EmptyState";
 interface DeliverySheetFormProps {
   defaultValues: Partial<DeliverySheetSchema>;
   onSubmit: (data: DeliverySheetSchema) => void;
+  formId?: string;
+  showHeaderActions?: boolean;
   onCancel?: () => void;
   onPreview?: (data: DeliverySheetSchema) => void;
   isSubmitting?: boolean;
@@ -76,6 +81,8 @@ export const DeliverySheetForm = ({
   onCancel,
   defaultValues,
   onSubmit,
+  formId,
+  showHeaderActions = true,
   onPreview,
   isSubmitting = false,
   isPreviewing = false,
@@ -236,15 +243,145 @@ export const DeliverySheetForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoneValue, customerValue, forSingleCustomer, typeValue]);
 
-  const totalAmount = selectedSaleIds.reduce((sum, saleId) => {
-    const sale = availableSales.find((s) => s.id === saleId);
-    return sum + (sale ? parseFormattedNumber(sale.current_amount) : 0);
-  }, 0);
+  const selectedSales = useMemo(
+    () => availableSales.filter((sale) => selectedSaleIds.includes(sale.id)),
+    [availableSales, selectedSaleIds],
+  );
 
-  const totalWeight = selectedSaleIds.reduce((sum, saleId) => {
-    const sale = availableSales.find((s) => s.id === saleId);
-    return sum + (sale ? parseFormattedNumber(sale.total_weight) : 0);
-  }, 0);
+  const salesWithCreditNotes = selectedSales.filter(
+    (sale) => !!sale.credit_notes?.length,
+  ).length;
+
+  const saleColumns = useMemo<ColumnDef<AvailableSale>[]>(
+    () => [
+      {
+        id: "selected",
+        header: () => (
+          <Checkbox
+            checked={
+              selectedSaleIds.length === availableSales.length &&
+              availableSales.length > 0
+            }
+            onCheckedChange={handleToggleAll}
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={selectedSaleIds.includes(row.original.id)}
+            onCheckedChange={() => handleToggleSale(row.original.id)}
+          />
+        ),
+        enableSorting: false,
+      },
+      {
+        id: "vendedor",
+        header: "Vendedor",
+        cell: ({ row }) => {
+          const vendedor = row.original.vendedor;
+          return vendedor
+            ? `${vendedor.names} ${vendedor.father_surname} ${vendedor.mother_surname}`
+            : "-";
+        },
+      },
+      {
+        id: "fecha",
+        header: "Fecha",
+        cell: ({ row }) => (
+          <Badge variant="outline">
+            {format(
+              parse(
+                row.original.issue_date.split("T")[0],
+                "yyyy-MM-dd",
+                new Date(),
+              ),
+              "dd/MM/yyyy",
+            )}
+          </Badge>
+        ),
+      },
+      {
+        id: "cliente",
+        header: "Cliente",
+        cell: ({ row }) =>
+          row.original.customer.business_name ??
+          `${row.original.customer.names} ${row.original.customer.father_surname} ${row.original.customer.mother_surname}`,
+      },
+      {
+        id: "total",
+        header: "Total",
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">
+            S/. {parseFormattedNumber(row.original.total_amount).toFixed(2)}
+          </span>
+        ),
+      },
+      {
+        id: "nota_credito",
+        header: "Nota de Crédito",
+        cell: ({ row }) => {
+          if (!row.original.credit_notes?.length) {
+            return (
+              <Badge variant="default" color="muted">
+                SIN NOTA
+              </Badge>
+            );
+          }
+
+          const creditTotal = row.original.credit_notes
+            .reduce((sum, cn) => sum + parseFormattedNumber(cn.total_amount), 0)
+            .toFixed(2);
+
+          return (
+            <div className="flex gap-1 items-center">
+              <Badge size="default" color="orange">
+                S/. {creditTotal}
+              </Badge>
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                color="orange"
+                onClick={() =>
+                  setCreditNotesModal({
+                    open: true,
+                    creditNotes: row.original.credit_notes!,
+                    saleName: `${row.original.serie}-${row.original.numero}`,
+                  })
+                }
+              >
+                <ListX className="h-3 w-3 mr-1" />
+                Detalles
+              </Button>
+            </div>
+          );
+        },
+      },
+      {
+        id: "monto_pendiente",
+        header: "Monto Pendiente",
+        cell: ({ row }) => (
+          <span className="font-bold">
+            S/. {parseFormattedNumber(row.original.current_amount).toFixed(2)}
+          </span>
+        ),
+      },
+      {
+        id: "documento",
+        header: "Documento",
+        cell: ({ row }) => (
+          <div className="flex flex-col">
+            <span className="text-xs text-muted-foreground">
+              {row.original.document_type}
+            </span>
+            <span className="font-mono font-semibold">
+              {row.original.serie}-{row.original.numero}
+            </span>
+          </div>
+        ),
+      },
+    ],
+    [availableSales.length, selectedSaleIds],
+  );
 
   const handleFormSubmit = (data: DeliverySheetSchema) => {
     onSubmit(data);
@@ -253,45 +390,48 @@ export const DeliverySheetForm = ({
   return (
     <Form {...form}>
       <form
+        id={formId}
         onSubmit={form.handleSubmit(handleFormSubmit)}
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
-        <div className="flex items-center gap-4 col-span-full">
-          {onCancel && (
+        {showHeaderActions && (
+          <div className="flex items-center gap-4 col-span-full">
+            {onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onCancel}
+              >
+                <X />
+                Cancelar
+              </Button>
+            )}
+            {onPreview && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isPreviewing || selectedSaleIds.length === 0}
+                onClick={() => onPreview(form.getValues())}
+              >
+                {isPreviewing ? <Loader className="animate-spin" /> : <Eye />}
+                Ver Planilla
+              </Button>
+            )}
             <Button
-              type="button"
-              variant="outline"
               size="sm"
-              onClick={onCancel}
+              type="submit"
+              disabled={isSubmitting || selectedSaleIds.length === 0}
             >
-              <List />
-              Ver Listado
+              {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+              {mode === "create" ? "Guardar Planilla" : "Actualizar Planilla"}
             </Button>
-          )}
-          {onPreview && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={isPreviewing || selectedSaleIds.length === 0}
-              onClick={() => onPreview(form.getValues())}
-            >
-              {isPreviewing ? <Loader className="animate-spin" /> : <Eye />}
-              Ver Planilla
-            </Button>
-          )}
-          <Button
-            size="sm"
-            type="submit"
-            disabled={isSubmitting || selectedSaleIds.length === 0}
-          >
-            {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
-            {mode === "create" ? "Guardar Planilla" : "Actualizar Planilla"}
-          </Button>
-        </div>
+          </div>
+        )}
 
         <GroupFormSection
-          title="Información General"
+          title="Datos de la Planilla"
           icon={Info}
           cols={{
             sm: 1,
@@ -386,14 +526,8 @@ export const DeliverySheetForm = ({
               </div>
             </>
           )}
-        </GroupFormSection>
 
-        <GroupFormSection
-          title="Buscar Ventas Disponibles"
-          icon={Search}
-          cols={{ sm: 1 }}
-        >
-          <div className="space-y-3">
+          <div className="rounded-lg border bg-muted/20 p-3 space-y-3 h-fit">
             <div className="flex flex-wrap gap-2 items-center justify-end">
               {isLoadingAvailableSales && (
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -434,6 +568,7 @@ export const DeliverySheetForm = ({
                 </Button>
               )}
             </div>
+
             {showDateFilter && (
               <DateRangePickerFilter
                 dateFrom={searchParams.date_from}
@@ -469,7 +604,60 @@ export const DeliverySheetForm = ({
             cols={{ sm: 1 }}
           >
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
+              <DataTable
+                columns={saleColumns}
+                data={availableSales}
+                variant="outline"
+                isVisibleColumnFilter={false}
+                mobileCardRender={(sale) => {
+                  const hasCreditNotes = !!sale.credit_notes?.length;
+                  const creditNoteAmount = hasCreditNotes
+                    ? sale.credit_notes!
+                        .reduce(
+                          (sum, cn) => sum + parseFormattedNumber(cn.total_amount),
+                          0,
+                        )
+                        .toFixed(2)
+                    : "0.00";
+
+                  return (
+                    <div className="space-y-2 text-xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono font-semibold">
+                          {sale.serie}-{sale.numero}
+                        </span>
+                        <Checkbox
+                          checked={selectedSaleIds.includes(sale.id)}
+                          onCheckedChange={() => handleToggleSale(sale.id)}
+                        />
+                      </div>
+                      <div className="text-muted-foreground">
+                        {sale.customer.business_name ??
+                          `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline">
+                          {format(
+                            parse(
+                              sale.issue_date.split("T")[0],
+                              "yyyy-MM-dd",
+                              new Date(),
+                            ),
+                            "dd/MM/yyyy",
+                          )}
+                        </Badge>
+                        <span className="font-semibold">
+                          S/. {parseFormattedNumber(sale.current_amount).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Notas crédito</span>
+                        <span>S/. {creditNoteAmount}</span>
+                      </div>
+                    </div>
+                  );
+                }}
+              >
                 <Button
                   type="button"
                   variant="outline"
@@ -480,144 +668,13 @@ export const DeliverySheetForm = ({
                     ? "Deseleccionar Todas"
                     : "Seleccionar Todas"}
                 </Button>
-                <Badge
-                  color="green"
-                  className="text-lg flex flex-col items-end"
-                >
-                  <span className="text-xs">TOTAL</span>
-                  <span>S/. {totalAmount.toFixed(2)}</span>
-                </Badge>
-              </div>
+              </DataTable>
 
-              <div className="border rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
-                <Table>
-                  <TableHeader className="sticky top-0 z-10 bg-background">
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <Checkbox
-                          checked={
-                            selectedSaleIds.length === availableSales.length &&
-                            availableSales.length > 0
-                          }
-                          onCheckedChange={handleToggleAll}
-                        />
-                      </TableHead>
-                      <TableHead>Vendedor</TableHead>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead>Nota de Crédito</TableHead>
-                      <TableHead className="text-right">
-                        Monto Pendiente
-                      </TableHead>
-                      <TableHead>Documento</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {availableSales.map((sale) => (
-                      <TableRow key={sale.id}>
-                        <TableCell>
-                          <Checkbox
-                            checked={selectedSaleIds.includes(sale.id)}
-                            onCheckedChange={() => handleToggleSale(sale.id)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {sale.vendedor
-                            ? `${sale.vendedor.names} ${sale.vendedor.father_surname} ${sale.vendedor.mother_surname}`
-                            : "-"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {format(
-                              parse(
-                                sale.issue_date.split("T")[0],
-                                "yyyy-MM-dd",
-                                new Date(),
-                              ),
-                              "dd/MM/yyyy",
-                            )}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {sale.customer.business_name ??
-                            `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`}
-                        </TableCell>
-
-                        <TableCell className="text-right text-muted-foreground">
-                          S/.{" "}
-                          {parseFormattedNumber(sale.total_amount).toFixed(2)}
-                        </TableCell>
-                        <TableCell>
-                          {sale.credit_notes && sale.credit_notes.length > 0 ? (
-                            <div className="flex gap-1">
-                              <Badge size="default" color="orange">
-                                S/.{" "}
-                                {sale.credit_notes
-                                  .reduce(
-                                    (sum, cn) =>
-                                      sum +
-                                      parseFormattedNumber(cn.total_amount),
-                                    0,
-                                  )
-                                  .toFixed(2)}
-                              </Badge>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="xs"
-                                color="orange"
-                                onClick={() =>
-                                  setCreditNotesModal({
-                                    open: true,
-                                    creditNotes: sale.credit_notes!,
-                                    saleName: `${sale.serie}-${sale.numero}`,
-                                  })
-                                }
-                              >
-                                <ListX className="h-3 w-3 mr-1" />
-                                Detalles
-                              </Button>
-                            </div>
-                          ) : (
-                            <Badge variant="default" color="muted">
-                              SIN NOTA
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right font-bold">
-                          S/.{" "}
-                          {parseFormattedNumber(sale.current_amount).toFixed(2)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="text-xs text-muted-foreground">
-                              {sale.document_type}
-                            </span>
-                            <span className="font-mono font-semibold">
-                              {sale.serie}-{sale.numero}
-                            </span>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="flex justify-end gap-4 pt-2 text-sm">
-                <span className="text-muted-foreground">
-                  {selectedSaleIds.length} ventas
-                </span>
-                <span className="font-semibold">
-                  Peso:{" "}
-                  <span className="font-bold">{totalWeight.toFixed(2)} kg</span>
-                </span>
-                <span className="font-semibold">
-                  Total:{" "}
-                  <span className="font-bold">
-                    S/. {totalAmount.toFixed(2)}
-                  </span>
-                </span>
+              <div className="flex items-center justify-start rounded-md border px-3 py-2 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">Resumen:</span>
+                <span className="mx-2">{selectedSaleIds.length} seleccionadas</span>
+                <span className="mx-2">•</span>
+                <span>{salesWithCreditNotes} con nota de crédito</span>
               </div>
             </div>
           </GroupFormSection>

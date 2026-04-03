@@ -60,7 +60,7 @@ import {
 import WarehouseDocumentDetailPage from "@/pages/warehouse-document/components/WarehouseDocumentDetailPage";
 import DeliverySheetPage from "@/pages/deliverysheet/components/DeliverySheetPage";
 import SettlementPage from "@/pages/deliverysheet/components/SettlementPage";
-import { DeliverySheetAddPage } from "@/pages/deliverysheet";
+import { DeliverySheetAddPage, DeliverySheetEditPage } from "@/pages/deliverysheet";
 import DriverPage from "@/pages/driver/components/DriverPage";
 import DriverAddPage from "@/pages/driver/components/DriverAddPage";
 import DriverEditPage from "@/pages/driver/components/DriverEditPage";
@@ -298,7 +298,7 @@ export function AppRoutes() {
       <Route path={DeliverySheetRoute} element={<DeliverySheetAddPage />} />
       <Route path="/planillas/listado" element={<DeliverySheetPage />} />
       <Route path={DeliverySheetRouteAdd} element={<DeliverySheetAddPage />} />
-      <Route path={DeliverySheetRouteUpdate} element={<DeliverySheetAddPage />} />
+      <Route path={DeliverySheetRouteUpdate} element={<DeliverySheetEditPage />} />
       <Route path={DeliverySheetSettlementRoute} element={<SettlementPage />} />
 
       {/* Reportes */}

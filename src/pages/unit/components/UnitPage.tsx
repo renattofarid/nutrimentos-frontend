@@ -46,10 +46,8 @@ export default function UnitPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <UnitActions />
-      </div>
+    <div className="space-y-2">
+      <UnitActions />
 
       <UnitTable
         isLoading={isLoading}
@@ -58,6 +56,7 @@ export default function UnitPage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => setEditId(row.id)}
       >
         <UnitOptions search={search} setSearch={setSearch} />
       </UnitTable>

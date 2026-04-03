@@ -7,6 +7,7 @@ interface Props {
   data: JobPositionResource[];
   children?: React.ReactNode;
   isLoading?: boolean;
+  onRowDoubleClick?: (row: JobPositionResource) => void;
 }
 
 export default function JobPositionTable({
@@ -14,6 +15,7 @@ export default function JobPositionTable({
   data,
   children,
   isLoading,
+  onRowDoubleClick,
 }: Props) {
   return (
     <div className="border-none text-muted-foreground max-w-full">
@@ -21,6 +23,7 @@ export default function JobPositionTable({
         columns={columns}
         data={data}
         isLoading={isLoading}
+        onRowDoubleClick={onRowDoubleClick}
         initialColumnVisibility={{}}
       >
         {children}

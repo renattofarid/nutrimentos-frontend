@@ -1,17 +1,8 @@
 import type { BrandResource } from "../lib/brand.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { ButtonAction } from "@/components/ButtonAction";
-import { Pencil } from "lucide-react";
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
-export const BrandColumns = ({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-}): ColumnDef<BrandResource>[] => [
+export const BrandColumns = (): ColumnDef<BrandResource>[] => [
   {
     accessorKey: "name",
     header: "Nombre",
@@ -40,24 +31,6 @@ export const BrandColumns = ({
         hour: "2-digit",
         minute: "2-digit",
       });
-    },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const id = row.original.id;
-
-      return (
-        <div className="flex gap-2">
-          <ButtonAction
-            onClick={() => onEdit(id)}
-            icon={Pencil}
-            tooltip="Editar"
-          />
-          <DeleteButton onClick={() => onDelete(id)} />
-        </div>
-      );
     },
   },
 ];

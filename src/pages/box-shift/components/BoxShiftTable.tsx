@@ -7,6 +7,7 @@ interface BoxShiftTableProps {
   data: BoxShiftResource[];
   isLoading: boolean;
   children?: React.ReactNode;
+  onRowDoubleClick?: (row: BoxShiftResource) => void;
 }
 
 export default function BoxShiftTable({
@@ -14,12 +15,14 @@ export default function BoxShiftTable({
   data,
   isLoading,
   children,
+  onRowDoubleClick,
 }: BoxShiftTableProps) {
   return (
     <DataTable
       columns={columns}
       data={data}
       isLoading={isLoading}
+      onRowDoubleClick={onRowDoubleClick}
       initialColumnVisibility={{ id: false }}
     >
       {children}

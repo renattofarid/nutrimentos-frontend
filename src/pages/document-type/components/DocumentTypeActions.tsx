@@ -12,9 +12,9 @@ export default function DocumentTypeActions() {
 
   return (
     <ActionsWrapper>
-      <Button size={"sm"} onClick={() => setIsCreateModalOpen(true)}>
-        <Plus className="mr-2 h-4 w-4" />
-        Agregar Tipo de Documento
+      <Button colorIcon="green" size="sm" variant="outline" onClick={() => setIsCreateModalOpen(true)}>
+        <Plus />
+        Nuevo
       </Button>
 
       {isCreateModalOpen && (

@@ -86,7 +86,7 @@ export const GroupFormSection = ({
   gap = "gap-3",
   headerExtra,
   horizontal = false,
-  bordered = false,
+  bordered = true,
 }: FormSectionProps) => {
   const gridClasses = [
     "grid",

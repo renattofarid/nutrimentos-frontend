@@ -7,6 +7,7 @@ interface UnitTableProps {
   columns: ColumnDef<UnitResource, any>[];
   isLoading?: boolean;
   children?: React.ReactNode;
+  onRowDoubleClick?: (row: UnitResource) => void;
 }
 
 export default function UnitTable({
@@ -14,9 +15,10 @@ export default function UnitTable({
   columns,
   isLoading,
   children,
+  onRowDoubleClick,
 }: UnitTableProps) {
   return (
-    <DataTable data={data} columns={columns} isLoading={isLoading}>
+    <DataTable data={data} columns={columns} isLoading={isLoading} onRowDoubleClick={onRowDoubleClick}>
       {children}
     </DataTable>
   );

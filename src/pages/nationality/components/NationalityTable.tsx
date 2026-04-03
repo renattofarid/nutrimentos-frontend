@@ -7,6 +7,7 @@ interface NationalityTableProps {
   columns: ColumnDef<NationalityResource>[];
   data: NationalityResource[];
   children?: React.ReactNode;
+  onRowDoubleClick?: (row: NationalityResource) => void;
 }
 
 export default function NationalityTable({
@@ -14,9 +15,10 @@ export default function NationalityTable({
   columns,
   data,
   children,
+  onRowDoubleClick,
 }: NationalityTableProps) {
   return (
-    <DataTable isLoading={isLoading} columns={columns} data={data}>
+    <DataTable isLoading={isLoading} columns={columns} data={data} onRowDoubleClick={onRowDoubleClick}>
       {children}
     </DataTable>
   );

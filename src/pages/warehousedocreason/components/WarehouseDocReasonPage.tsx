@@ -46,10 +46,8 @@ export default function WarehouseDocReasonPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <WarehouseDocReasonActions />
-      </div>
+    <div className="space-y-2">
+      <WarehouseDocReasonActions />
 
       <WarehouseDocReasonTable
         isLoading={isLoading}
@@ -58,6 +56,7 @@ export default function WarehouseDocReasonPage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => setEditId(row.id)}
       >
         <WarehouseDocReasonOptions search={search} setSearch={setSearch} />
       </WarehouseDocReasonTable>

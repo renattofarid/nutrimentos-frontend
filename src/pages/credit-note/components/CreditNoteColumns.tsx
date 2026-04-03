@@ -1,14 +1,8 @@
 import type { CreditNoteResource } from "../lib/credit-note.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
-import ExportButtons from "@/components/ExportButtons";
 
-export const CreditNoteColumns = ({
-  onDelete,
-}: {
-  onDelete: (id: number) => void;
-}): ColumnDef<CreditNoteResource>[] => [
+export const CreditNoteColumns = (): ColumnDef<CreditNoteResource>[] => [
   {
     accessorKey: "full_document_number",
     header: "N° Documento",
@@ -136,23 +130,6 @@ export const CreditNoteColumns = ({
         hour: "2-digit",
         minute: "2-digit",
       });
-    },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const id = row.original.id;
-
-      return (
-        <div className="flex items-center gap-2">
-          <ExportButtons
-            pdfEndpoint={`/credit-notes/${id}/pdf`}
-            variant="separate"
-          />
-          <DeleteButton onClick={() => onDelete(id)} />
-        </div>
-      );
     },
   },
 ];

@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { Loader, Save, X } from "lucide-react";
 import {
   creditNoteSchemaCreate,
   type CreditNoteSchema,
@@ -119,6 +120,21 @@ export const CreditNoteForm = ({
         onSubmit={form.handleSubmit(handleSubmit)}
         className="space-y-4 w-full"
       >
+        {/* Form Actions */}
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            type="submit"
+            disabled={isSubmitting || !form.formState.isValid}
+          >
+            {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+            {isSubmitting ? "Guardando..." : "Guardar"}
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            <X /> Cancelar
+          </Button>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-sidebar p-4 rounded-lg">
           {readOnlySale ? (
             <div className="flex flex-col gap-1">
@@ -436,18 +452,6 @@ export const CreditNoteForm = ({
           </Card>
         )}
 
-        <div className="flex gap-4 w-full justify-end">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button
-            size="sm"
-            type="submit"
-            disabled={isSubmitting || !form.formState.isValid}
-          >
-            {isSubmitting ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
       </form>
     </Form>
   );

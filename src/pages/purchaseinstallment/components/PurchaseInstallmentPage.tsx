@@ -24,7 +24,7 @@ export default function PurchaseInstallmentPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <PurchaseInstallmentTable
         isLoading={isLoading}
         columns={PurchaseInstallmentColumns({

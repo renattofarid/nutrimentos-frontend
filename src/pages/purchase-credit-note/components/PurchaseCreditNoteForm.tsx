@@ -39,6 +39,9 @@ import {
   MessageSquare,
   DollarSign,
   Package,
+  Loader,
+  Save,
+  X,
 } from "lucide-react";
 
 interface PurchaseCreditNoteFormProps {
@@ -202,6 +205,17 @@ export const PurchaseCreditNoteForm = ({
         onSubmit={form.handleSubmit(handleSubmit)}
         className="space-y-6 w-full"
       >
+        {/* Form Actions */}
+        <div className="flex items-center gap-2">
+          <Button size="sm" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+            {isSubmitting ? "Guardando..." : "Guardar"}
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            <X /> Cancelar
+          </Button>
+        </div>
+
         {/* Modo de NC */}
         <GroupFormSection
           title="Tipo de Nota de Crédito"
@@ -716,14 +730,6 @@ export const PurchaseCreditNoteForm = ({
           </GroupFormSection>
         )}
 
-        <div className="flex gap-4 w-full justify-end">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button size="sm" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
       </form>
     </Form>
   );

@@ -11,9 +11,9 @@ export default function PaymentConceptActions({
 }: PaymentConceptActionsProps) {
   return (
     <ActionsWrapper>
-      <Button size="sm" className="ml-auto" onClick={onCreatePaymentConcept}>
-        <Plus className="h-4 w-4 mr-2" />
-        Agregar
+      <Button colorIcon="green" size="sm" variant="outline" onClick={onCreatePaymentConcept}>
+        <Plus />
+        Nuevo
       </Button>
     </ActionsWrapper>
   );

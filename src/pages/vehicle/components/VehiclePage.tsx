@@ -50,10 +50,8 @@ export default function VehiclePage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <VehicleActions />
-      </div>
+    <div className="space-y-2">
+      <VehicleActions />
 
       <VehicleTable
         isLoading={isLoading}
@@ -62,6 +60,7 @@ export default function VehiclePage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => setEditId(row.id)}
       >
         <VehicleOptions search={search} setSearch={setSearch} />
       </VehicleTable>

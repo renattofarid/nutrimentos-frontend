@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCompany } from "../lib/company.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import CompanyActions from "./CompanyActions";
 import CompanyTable from "./CompanyTable";
@@ -17,6 +18,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { COMPANY } from "../lib/company.interface";
 import CompanyModal from "./CompanyModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = COMPANY;
 
@@ -24,13 +26,21 @@ export default function CompanyPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
+  const [openCreate, setOpenCreate] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { data, meta, isLoading, refetch } = useCompany();
 
   useEffect(() => {
     refetch({ page, search, per_page });
   }, [page, search, per_page]);
+
+  const selectedCompanyId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarCompany = selectedCompanyId
+    ? (data?.find((c) => c.id.toString() === selectedCompanyId) ?? null)
+    : null;
+  const hasSelection = !!toolbarCompany;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -46,18 +56,22 @@ export default function CompanyPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <CompanyActions />
-      </div>
+    <PageWrapper>
+      <CompanyActions
+        hasSelection={hasSelection}
+        onNew={() => setOpenCreate(true)}
+        onEdit={() => toolbarCompany && setEditId(toolbarCompany.id)}
+        onDelete={() => toolbarCompany && setDeleteId(toolbarCompany.id)}
+      />
 
       <CompanyTable
         isLoading={isLoading}
-        columns={CompanyColumns({
-          onEdit: setEditId,
-          onDelete: setDeleteId,
-        })}
+        columns={CompanyColumns()}
         data={data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={(company) => setEditId(company.id)}
       >
         <CompanyOptions search={search} setSearch={setSearch} />
       </CompanyTable>
@@ -70,6 +84,15 @@ export default function CompanyPage() {
         setPerPage={setPerPage}
         totalData={meta?.total || 0}
       />
+
+      {openCreate && (
+        <CompanyModal
+          title={`Crear ${MODEL.name}`}
+          mode="create"
+          open={true}
+          onClose={() => setOpenCreate(false)}
+        />
+      )}
 
       {editId !== null && (
         <CompanyModal
@@ -88,6 +111,6 @@ export default function CompanyPage() {
           onConfirm={handleDelete}
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

@@ -1,27 +1,99 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
-import BoxModal from "./BoxModal";
-import { Plus } from "lucide-react";
-import { BOX } from "../lib/box.interface";
-import { useState } from "react";
-import ActionsWrapper from "@/components/ActionsWrapper";
+import { Separator } from "@/components/ui/separator";
+import { Plus, Pencil, Trash2, X, Eye, UserPlus, RefreshCw } from "lucide-react";
+import { useWindowManager } from "@/stores/window-manager.store";
 
-export default function BoxActions() {
-  const [open, setOpen] = useState(false);
+interface Props {
+  hasSelection: boolean;
+  onNew: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onAssign: () => void;
+  onViewAssignments: () => void;
+  onToggleStatus: () => void;
+}
 
-  const { MODEL } = BOX;
+export default function BoxActions({
+  hasSelection,
+  onNew,
+  onEdit,
+  onDelete,
+  onAssign,
+  onViewAssignments,
+  onToggleStatus,
+}: Props) {
+  const { activeTabId, closeTab } = useWindowManager();
+
+  const handleCerrar = () => {
+    if (activeTabId) closeTab(activeTabId);
+  };
+
   return (
-    <ActionsWrapper>
-      <Button size="sm" className="ml-auto" onClick={() => setOpen(true)}>
-        <Plus className="size-4 mr-2" /> Agregar {MODEL.name}
-      </Button>
-      <BoxModal
-        title={`Crear ${MODEL.name}`}
-        mode="create"
-        open={open}
-        onClose={() => setOpen(false)}
-      />
-    </ActionsWrapper>
+    <div className="flex items-center justify-between mb-1 pb-1 border-b w-full">
+      <div className="flex items-center gap-1">
+        <Button colorIcon="green" size="sm" variant="outline" onClick={onNew}>
+          <Plus />
+          Nuevo
+        </Button>
+        <Button
+          colorIcon="amber"
+          size="sm"
+          variant="outline"
+          onClick={onEdit}
+          disabled={!hasSelection}
+        >
+          <Pencil />
+          Editar
+        </Button>
+        <Button
+          colorIcon="red"
+          size="sm"
+          variant="outline"
+          onClick={onDelete}
+          disabled={!hasSelection}
+        >
+          <Trash2 />
+          Eliminar
+        </Button>
+        <div className="h-6 mx-2">
+          <Separator orientation="vertical" />
+        </div>
+        <Button
+          colorIcon="blue"
+          size="sm"
+          variant="outline"
+          onClick={onViewAssignments}
+          disabled={!hasSelection}
+        >
+          <Eye />
+          Ver Asignaciones
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onAssign}
+          disabled={!hasSelection}
+        >
+          <UserPlus />
+          Asignar Usuario
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onToggleStatus}
+          disabled={!hasSelection}
+        >
+          <RefreshCw />
+          Cambiar Estado
+        </Button>
+        <div className="h-6 mx-2">
+          <Separator orientation="vertical" />
+        </div>
+        <Button colorIcon="gray" size="sm" variant="outline" onClick={handleCerrar}>
+          <X />
+          Cerrar
+        </Button>
+      </div>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBranch } from "../lib/branch.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import BranchActions from "./BranchActions";
 import BranchTable from "./BranchTable";
@@ -17,6 +18,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { BRANCH } from "../lib/branch.interface";
 import BranchModal from "./BranchModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = BRANCH;
 
@@ -24,13 +26,21 @@ export default function BranchPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
+  const [openCreate, setOpenCreate] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { data, meta, isLoading, refetch } = useBranch();
 
   useEffect(() => {
     refetch({ page, search, per_page });
   }, [page, search, per_page]);
+
+  const selectedBranchId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarBranch = selectedBranchId
+    ? (data?.find((b) => b.id.toString() === selectedBranchId) ?? null)
+    : null;
+  const hasSelection = !!toolbarBranch;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -46,18 +56,22 @@ export default function BranchPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <BranchActions />
-      </div>
+    <PageWrapper>
+      <BranchActions
+        hasSelection={hasSelection}
+        onNew={() => setOpenCreate(true)}
+        onEdit={() => toolbarBranch && setEditId(toolbarBranch.id)}
+        onDelete={() => toolbarBranch && setDeleteId(toolbarBranch.id)}
+      />
 
       <BranchTable
         isLoading={isLoading}
-        columns={BranchColumns({
-          onEdit: setEditId,
-          onDelete: setDeleteId,
-        })}
+        columns={BranchColumns()}
         data={data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={(branch) => setEditId(branch.id)}
       >
         <BranchOptions search={search} setSearch={setSearch} />
       </BranchTable>
@@ -70,6 +84,15 @@ export default function BranchPage() {
         setPerPage={setPerPage}
         totalData={meta?.total || 0}
       />
+
+      {openCreate && (
+        <BranchModal
+          title={`Crear ${MODEL.name}`}
+          mode="create"
+          open={true}
+          onClose={() => setOpenCreate(false)}
+        />
+      )}
 
       {editId !== null && (
         <BranchModal
@@ -88,6 +111,6 @@ export default function BranchPage() {
           onConfirm={handleDelete}
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

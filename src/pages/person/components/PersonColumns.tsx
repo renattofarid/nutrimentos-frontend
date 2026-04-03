@@ -1,24 +1,8 @@
 import type { PersonResource } from "../lib/person.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { ButtonAction } from "@/components/ButtonAction";
-import { Pencil, Trash2, MapPin, List, ListPlus } from "lucide-react";
 
-export const PersonColumns = ({
-  onEdit,
-  onDelete,
-  onViewPriceList,
-  onAssignPriceList,
-  onViewAddresses,
-}: // onManageRoles,
-{
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-  onViewPriceList?: (person: PersonResource) => void;
-  onAssignPriceList?: (person: PersonResource) => void;
-  onViewAddresses?: (person: PersonResource) => void;
-  // onManageRoles: (person: PersonResource) => void;
-}): ColumnDef<PersonResource>[] => [
+export const PersonColumns = (): ColumnDef<PersonResource>[] => [
   {
     accessorKey: "id",
     header: "ID",
@@ -125,47 +109,4 @@ export const PersonColumns = ({
   //     );
   //   },
   // },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const person = row.original;
-
-      return (
-        <div className="flex items-center gap-1">
-          <ButtonAction
-            icon={List}
-            canRender={!!onViewPriceList}
-            onClick={() => onViewPriceList?.(person)}
-            tooltip="Ver Lista de Precios"
-            color="blue"
-          />
-          <ButtonAction
-            icon={ListPlus}
-            canRender={!!onAssignPriceList}
-            onClick={() => onAssignPriceList?.(person)}
-            tooltip="Asignar Lista de Precios"
-          />
-          <ButtonAction
-            icon={MapPin}
-            color="indigo"
-            canRender={!!onViewAddresses}
-            onClick={() => onViewAddresses?.(person)}
-            tooltip="Ver Direcciones"
-          />
-          <ButtonAction
-            icon={Pencil}
-            onClick={() => onEdit(person.id)}
-            tooltip="Editar"
-          />
-          <ButtonAction
-            icon={Trash2}
-            color="red"
-            onClick={() => onDelete(person.id)}
-            tooltip="Eliminar"
-          />
-        </div>
-      );
-    },
-  },
 ];

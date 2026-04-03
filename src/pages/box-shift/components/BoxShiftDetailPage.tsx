@@ -3,7 +3,7 @@ import { useBoxShiftById } from "../lib/box-shift.hook";
 import { useBoxMovement } from "@/pages/box-movement/lib/box-movement.hook";
 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { X } from "lucide-react";
 import { BOX_SHIFT } from "../lib/box-shift.interface";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { Badge } from "@/components/ui/badge";
@@ -53,13 +53,9 @@ export default function BoxShiftDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(BOX_SHIFT.ROUTE)}
-          >
-            <ArrowLeft className="h-4 w-4" />
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => navigate(BOX_SHIFT.ROUTE)}>
+            <X /> Cerrar
           </Button>
         </div>
         <Badge

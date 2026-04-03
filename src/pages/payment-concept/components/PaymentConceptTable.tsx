@@ -7,6 +7,7 @@ interface PaymentConceptTableProps {
   columns: ColumnDef<PaymentConceptResource>[];
   data: PaymentConceptResource[];
   children?: React.ReactNode;
+  onRowDoubleClick?: (row: PaymentConceptResource) => void;
 }
 
 export default function PaymentConceptTable({
@@ -14,9 +15,10 @@ export default function PaymentConceptTable({
   columns,
   data,
   children,
+  onRowDoubleClick,
 }: PaymentConceptTableProps) {
   return (
-    <DataTable isLoading={isLoading} columns={columns} data={data}>
+    <DataTable isLoading={isLoading} columns={columns} data={data} onRowDoubleClick={onRowDoubleClick}>
       {children}
     </DataTable>
   );

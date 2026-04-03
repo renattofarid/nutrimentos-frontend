@@ -7,6 +7,7 @@ interface Props {
   data: VehicleResource[];
   children?: React.ReactNode;
   isLoading?: boolean;
+  onRowDoubleClick?: (row: VehicleResource) => void;
 }
 
 export default function VehicleTable({
@@ -14,6 +15,7 @@ export default function VehicleTable({
   data,
   children,
   isLoading,
+  onRowDoubleClick,
 }: Props) {
   return (
     <div className="border-none text-muted-foreground max-w-full">
@@ -21,6 +23,7 @@ export default function VehicleTable({
         columns={columns}
         data={data}
         isLoading={isLoading}
+        onRowDoubleClick={onRowDoubleClick}
         initialColumnVisibility={{}}
       >
         {children}

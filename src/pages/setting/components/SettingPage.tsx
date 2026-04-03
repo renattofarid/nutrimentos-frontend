@@ -60,10 +60,8 @@ export default function SettingPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <SettingActions onCreateSetting={handleCreateSetting} />
-      </div>
+    <div className="space-y-2">
+      <SettingActions onCreateSetting={handleCreateSetting} />
 
       <SettingTable
         isLoading={isLoading}
@@ -72,6 +70,7 @@ export default function SettingPage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => handleEditSetting(row.id)}
       />
 
       {modalOpen && (

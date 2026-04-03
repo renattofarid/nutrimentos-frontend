@@ -80,10 +80,8 @@ export default function NationalityPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <NationalityActions onCreateNationality={handleCreateNationality} />
-      </div>
+    <div className="space-y-2">
+      <NationalityActions onCreateNationality={handleCreateNationality} />
 
       <NationalityTable
         isLoading={isLoading}
@@ -92,6 +90,7 @@ export default function NationalityPage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => handleEditNationality(row.id)}
       >
         <NationalityOptions search={search} setSearch={setSearch} />
       </NationalityTable>

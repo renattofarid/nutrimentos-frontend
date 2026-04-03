@@ -7,6 +7,7 @@ interface Props {
   data: WarehouseDocReasonResource[];
   children?: React.ReactNode;
   isLoading?: boolean;
+  onRowDoubleClick?: (row: WarehouseDocReasonResource) => void;
 }
 
 export default function WarehouseDocReasonTable({
@@ -14,6 +15,7 @@ export default function WarehouseDocReasonTable({
   data,
   children,
   isLoading,
+  onRowDoubleClick,
 }: Props) {
   return (
     <div className="border-none text-muted-foreground max-w-full">
@@ -21,6 +23,7 @@ export default function WarehouseDocReasonTable({
         columns={columns}
         data={data}
         isLoading={isLoading}
+        onRowDoubleClick={onRowDoubleClick}
         initialColumnVisibility={{}}
       >
         {children}

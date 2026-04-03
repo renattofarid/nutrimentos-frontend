@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCreditNote } from "../lib/credit-note.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import CreditNoteActions from "./CreditNoteActions";
 import CreditNoteTable from "./CreditNoteTable";
@@ -11,11 +12,14 @@ import {
   errorToast,
   SUCCESS_MESSAGE,
   ERROR_MESSAGE,
+  promiseToast,
 } from "@/lib/core.function";
 import { CreditNoteColumns } from "./CreditNoteColumns";
 import DataTablePagination from "@/components/DataTablePagination";
 import { CREDIT_NOTE } from "../lib/credit-note.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import { api } from "@/lib/config";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = CREDIT_NOTE;
 
@@ -29,6 +33,7 @@ export default function CreditNotePage() {
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { data, meta, isLoading, refetch } = useCreditNote();
 
   const buildParams = () => ({
@@ -46,32 +51,19 @@ export default function CreditNotePage() {
       : undefined,
   });
 
-  // Reset page when filters change
   useEffect(() => {
     if (page !== 1) setPage(1);
-  }, [
-    search,
-    status,
-    motive_id,
-    customer_id,
-    issue_date_from,
-    issue_date_to,
-    per_page,
-  ]);
+  }, [search, status, motive_id, customer_id, issue_date_from, issue_date_to, per_page]);
 
-  // Refetch when any filter or page changes
   useEffect(() => {
     refetch(buildParams());
-  }, [
-    page,
-    per_page,
-    search,
-    status,
-    motive_id,
-    customer_id,
-    issue_date_from,
-    issue_date_to,
-  ]);
+  }, [page, per_page, search, status, motive_id, customer_id, issue_date_from, issue_date_to]);
+
+  const selectedNoteId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarNote = selectedNoteId
+    ? (data?.find((n) => n.id.toString() === selectedNoteId) ?? null)
+    : null;
+  const hasSelection = !!toolbarNote;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -90,6 +82,29 @@ export default function CreditNotePage() {
     }
   };
 
+  const handlePrint = () => {
+    if (!toolbarNote) return;
+    const download = api
+      .get(`/credit-notes/${toolbarNote.id}/pdf`, { responseType: "blob" })
+      .then((response) => {
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, "_blank");
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `nota_credito_${toolbarNote.id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+      });
+    promiseToast(download, {
+      loading: "Generando PDF...",
+      success: "PDF generado exitosamente",
+      error: "Error al generar el PDF",
+    });
+  };
+
   const exportFilters = {
     full_document_number: search || undefined,
     status: status || undefined,
@@ -104,17 +119,21 @@ export default function CreditNotePage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <CreditNoteActions filters={exportFilters} />
-      </div>
+    <PageWrapper>
+      <CreditNoteActions
+        hasSelection={hasSelection}
+        onDelete={() => toolbarNote && setDeleteId(toolbarNote.id)}
+        onPrint={handlePrint}
+        filters={exportFilters}
+      />
 
       <CreditNoteTable
         isLoading={isLoading}
-        columns={CreditNoteColumns({
-          onDelete: setDeleteId,
-        })}
+        columns={CreditNoteColumns()}
         data={data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
       >
         <CreditNoteOptions
           search={search}
@@ -150,6 +169,6 @@ export default function CreditNotePage() {
           onConfirm={handleDelete}
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

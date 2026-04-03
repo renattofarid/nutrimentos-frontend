@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSuppliers } from "../lib/supplier.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import SupplierActions from "./SupplierActions";
 import PersonTable from "@/pages/person/components/PersonTable";
@@ -16,9 +17,8 @@ import {
 import { PersonColumns } from "@/pages/person/components/PersonColumns";
 import DataTablePagination from "@/components/DataTablePagination";
 import { SUPPLIER, SUPPLIER_ROLE_ID } from "../lib/supplier.interface";
-import { PersonRoleAssignment } from "@/pages/person/components/PersonRoleAssignment";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
-import type { PersonResource } from "@/pages/person/lib/person.interface";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = SUPPLIER;
 
@@ -28,17 +28,19 @@ export default function SupplierPage() {
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [roleAssignmentPerson, setRoleAssignmentPerson] =
-    useState<PersonResource | null>(null);
-  const { data, isLoading, refetch } = useSuppliers({
-    page,
-    per_page,
-    search,
-  });
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  const { data, isLoading, refetch } = useSuppliers({ page, per_page, search });
 
   useEffect(() => {
     setPage(1);
   }, [search, per_page]);
+
+  const selectedSupplierId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarSupplier = selectedSupplierId
+    ? (data?.data?.find((s) => s.id.toString() === selectedSupplierId) ?? null)
+    : null;
+  const hasSelection = !!toolbarSupplier;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -53,28 +55,23 @@ export default function SupplierPage() {
     }
   };
 
-  // const handleManageRoles = (person: PersonResource) => {
-  //   setRoleAssignmentPerson(person);
-  // };
-
-  const handleCloseRoleAssignment = () => {
-    setRoleAssignmentPerson(null);
-  };
-
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <SupplierActions />
-      </div>
+    <PageWrapper>
+      <SupplierActions
+        hasSelection={hasSelection}
+        onNew={() => navigate("/proveedores/agregar")}
+        onEdit={() => toolbarSupplier && navigate(`/proveedores/editar/${toolbarSupplier.id}`)}
+        onDelete={() => toolbarSupplier && setDeleteId(toolbarSupplier.id)}
+      />
 
       <PersonTable
         isLoading={isLoading}
-        columns={PersonColumns({
-          onEdit: (person) => navigate(`/proveedores/editar/${person}`),
-          onDelete: setDeleteId,
-          // onManageRoles: handleManageRoles,
-        })}
+        columns={PersonColumns()}
         data={data?.data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={(person) => navigate(`/proveedores/editar/${person.id}`)}
       >
         <PersonOptions search={search} setSearch={setSearch} />
       </PersonTable>
@@ -88,25 +85,13 @@ export default function SupplierPage() {
         totalData={data?.meta?.total || 0}
       />
 
-      {/* Role Assignment Modal */}
-      {roleAssignmentPerson && (
-        <PersonRoleAssignment
-          personId={roleAssignmentPerson.id}
-          personName={roleAssignmentPerson.business_name}
-          open={!!roleAssignmentPerson}
-          onClose={handleCloseRoleAssignment}
-        />
-      )}
-
       {deleteId !== null && (
         <SimpleDeleteDialog
           open={true}
           onOpenChange={(open) => !open && setDeleteId(null)}
           onConfirm={handleDelete}
-          // title={`Eliminar ${MODEL.name}`}
-          // description={`¿Está seguro de que desea eliminar este ${MODEL.name.toLowerCase()}? Esta acción no se puede deshacer.`}
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

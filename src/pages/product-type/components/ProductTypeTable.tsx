@@ -7,6 +7,7 @@ interface ProductTypeTableProps {
   columns: ColumnDef<ProductTypeResource>[];
   data: ProductTypeResource[];
   children?: React.ReactNode;
+  onRowDoubleClick?: (row: ProductTypeResource) => void;
 }
 
 export default function ProductTypeTable({
@@ -14,9 +15,10 @@ export default function ProductTypeTable({
   columns,
   data,
   children,
+  onRowDoubleClick,
 }: ProductTypeTableProps) {
   return (
-    <DataTable isLoading={isLoading} columns={columns} data={data}>
+    <DataTable isLoading={isLoading} columns={columns} data={data} onRowDoubleClick={onRowDoubleClick}>
       {children}
     </DataTable>
   );

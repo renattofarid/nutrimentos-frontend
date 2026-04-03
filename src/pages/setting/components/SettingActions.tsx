@@ -11,9 +11,9 @@ export default function SettingActions({
 }: SettingActionsProps) {
   return (
     <ActionsWrapper>
-      <Button size="sm" className="ml-auto" onClick={onCreateSetting}>
-        <Plus className="h-4 w-4 mr-2" />
-        Agregar
+      <Button colorIcon="green" size="sm" variant="outline" onClick={onCreateSetting}>
+        <Plus />
+        Nuevo
       </Button>
     </ActionsWrapper>
   );

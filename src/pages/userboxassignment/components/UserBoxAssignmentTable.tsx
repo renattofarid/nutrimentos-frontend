@@ -7,6 +7,7 @@ interface Props {
   data: UserBoxAssignmentResource[];
   children?: React.ReactNode;
   isLoading?: boolean;
+  onRowDoubleClick?: (row: UserBoxAssignmentResource) => void;
 }
 
 export default function UserBoxAssignmentTable({
@@ -14,6 +15,7 @@ export default function UserBoxAssignmentTable({
   data,
   children,
   isLoading,
+  onRowDoubleClick,
 }: Props) {
   return (
     <div className="border-none text-muted-foreground max-w-full">
@@ -21,6 +23,7 @@ export default function UserBoxAssignmentTable({
         columns={columns}
         data={data}
         isLoading={isLoading}
+        onRowDoubleClick={onRowDoubleClick}
         initialColumnVisibility={{}}
       >
         {children}

@@ -55,13 +55,9 @@ export default function TypeUserPage() {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Encabezado */}
-      <div className="flex justify-between items-center">
-        <TypeUserActions />
-      </div>
+    <div className="space-y-2">
+      <TypeUserActions />
 
-      {/* Tabla */}
       <TypeUserTable
         isLoading={isLoading}
         columns={TypeUserColumns({
@@ -70,6 +66,7 @@ export default function TypeUserPage() {
           onPermissions: handleAccessDialog,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => setEditId(row.id)}
       >
         <TypeUserOptions search={search} setSearch={setSearch} />
       </TypeUserTable>

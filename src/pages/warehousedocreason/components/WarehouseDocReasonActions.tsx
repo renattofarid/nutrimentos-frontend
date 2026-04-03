@@ -14,11 +14,12 @@ export default function WarehouseDocReasonActions() {
   return (
     <ActionsWrapper>
       <Button
+        colorIcon="green"
         size="sm"
-        className="ml-auto"
+        variant="outline"
         onClick={() => setOpen(true)}
       >
-        <Plus className="size-4 mr-2" /> Agregar {MODEL.name}
+        <Plus /> Nuevo
       </Button>
       <WarehouseDocReasonModal
         title={`Crear ${MODEL.name}`}

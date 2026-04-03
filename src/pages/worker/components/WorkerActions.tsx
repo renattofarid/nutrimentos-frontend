@@ -13,11 +13,12 @@ export default function WorkerActions() {
   return (
     <ActionsWrapper>
       <Button
+        colorIcon="green"
         size="sm"
-        className="ml-auto"
+        variant="outline"
         onClick={() => navigate("/trabajadores/agregar")}
       >
-        <Plus className="size-4 mr-2" /> Agregar {MODEL.name}
+        <Plus /> Nuevo
       </Button>
     </ActionsWrapper>
   );

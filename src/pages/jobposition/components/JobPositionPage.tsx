@@ -46,10 +46,8 @@ export default function JobPositionPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <JobPositionActions />
-      </div>
+    <div className="space-y-2">
+      <JobPositionActions />
 
       <JobPositionTable
         isLoading={isLoading}
@@ -58,6 +56,7 @@ export default function JobPositionPage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => setEditId(row.id)}
       >
         <JobPositionOptions search={search} setSearch={setSearch} />
       </JobPositionTable>

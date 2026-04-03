@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
-import { Loader, Users2, UserPlus, DollarSign } from "lucide-react";
+import { Loader, Users2, UserPlus, DollarSign, Save, X } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
@@ -827,6 +827,30 @@ export const PurchaseForm = ({
         })}
         className="space-y-6 w-full"
       >
+        {/* Form Actions */}
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            type="submit"
+            disabled={
+              isSubmitting ||
+              (mode === "create" && details.length === 0) ||
+              (mode === "create" &&
+                selectedPaymentType === "CREDITO" &&
+                installments.length === 0) ||
+              (mode === "create" &&
+                installments.length > 0 &&
+                !installmentsMatchTotal())
+            }
+          >
+            {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+            {isSubmitting ? "Guardando..." : "Guardar"}
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            <X /> Cancelar
+          </Button>
+        </div>
+
         {/* Información General */}
         <GroupFormSection
           title="Información General"
@@ -1248,32 +1272,6 @@ export const PurchaseForm = ({
           </div>
         </div>
 
-        {/* Botones */}
-        <div className="flex gap-4 w-full justify-end">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-            Cancelar
-          </Button>
-
-          <Button
-            size="sm"
-            type="submit"
-            disabled={
-              isSubmitting ||
-              (mode === "create" && details.length === 0) ||
-              (mode === "create" &&
-                selectedPaymentType === "CREDITO" &&
-                installments.length === 0) ||
-              (mode === "create" &&
-                installments.length > 0 &&
-                !installmentsMatchTotal())
-            }
-          >
-            <Loader
-              className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`}
-            />
-            {isSubmitting ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
       </form>
 
       {/* Diálogo para agregar proveedor */}

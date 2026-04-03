@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Pencil, CheckCircle, XCircle, FileText, Package } from "lucide-react";
+import { Pencil, CheckCircle, XCircle, FileText, Package, X } from "lucide-react";
 import { WAREHOUSE_DOCUMENT } from "../lib/warehouse-document.interface";
 import type {
   WarehouseDocumentResource,
@@ -184,6 +184,9 @@ export default function WarehouseDocumentDetailPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => navigate(`/${ROUTE}`)}>
+              <X /> Cerrar
+            </Button>
             {document.status === "BORRADOR" && (
               <>
                 <Button onClick={handleEdit} variant="outline">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBox } from "../lib/box.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import BoxActions from "./BoxActions";
 import BoxTable from "./BoxTable";
@@ -20,6 +21,7 @@ import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import UserBoxAssignmentModal from "@/pages/userboxassignment/components/UserBoxAssignmentModal";
 import BoxAssignmentsSheet from "./BoxAssignmentsSheet";
 import { StatusChangeDialog } from "./StatusChangeDialog";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = BOX;
 
@@ -27,22 +29,28 @@ export default function BoxPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
+  const [openCreate, setOpenCreate] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [assignBoxId, setAssignBoxId] = useState<number | null>(null);
-  const [viewAssignmentsBoxId, setViewAssignmentsBoxId] = useState<
-    number | null
-  >(null);
+  const [viewAssignmentsBoxId, setViewAssignmentsBoxId] = useState<number | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
   const [statusChangeData, setStatusChangeData] = useState<{
     id: number;
     currentStatus: string;
   } | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { data, meta, isLoading, refetch } = useBox();
 
   useEffect(() => {
     refetch({ page, search, per_page });
   }, [page, search, per_page]);
+
+  const selectedBoxId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarBox = selectedBoxId
+    ? (data?.find((b) => b.id.toString() === selectedBoxId) ?? null)
+    : null;
+  const hasSelection = !!toolbarBox;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -57,13 +65,8 @@ export default function BoxPage() {
     }
   };
 
-  const handleToggleStatus = (id: number, currentStatus: string) => {
-    setStatusChangeData({ id, currentStatus });
-  };
-
   const confirmStatusChange = async () => {
     if (!statusChangeData) return;
-
     setUpdatingStatusId(statusChangeData.id);
     try {
       const newStatus =
@@ -83,20 +86,28 @@ export default function BoxPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <BoxActions />
+    <PageWrapper>
+      <BoxActions
+        hasSelection={hasSelection}
+        onNew={() => setOpenCreate(true)}
+        onEdit={() => toolbarBox && setEditId(toolbarBox.id)}
+        onDelete={() => toolbarBox && setDeleteId(toolbarBox.id)}
+        onAssign={() => toolbarBox && setAssignBoxId(toolbarBox.id)}
+        onViewAssignments={() => toolbarBox && setViewAssignmentsBoxId(toolbarBox.id)}
+        onToggleStatus={() =>
+          toolbarBox &&
+          setStatusChangeData({ id: toolbarBox.id, currentStatus: toolbarBox.status })
+        }
+      />
 
       <BoxTable
         isLoading={isLoading}
-        columns={BoxColumns({
-          onEdit: setEditId,
-          onDelete: setDeleteId,
-          onAssign: setAssignBoxId,
-          onViewAssignments: setViewAssignmentsBoxId,
-          onToggleStatus: handleToggleStatus,
-          updatingStatusId,
-        })}
+        columns={BoxColumns()}
         data={data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={(box) => setEditId(box.id)}
       >
         <BoxOptions search={search} setSearch={setSearch} />
       </BoxTable>
@@ -109,6 +120,15 @@ export default function BoxPage() {
         setPerPage={setPerPage}
         totalData={meta?.total || 0}
       />
+
+      {openCreate && (
+        <BoxModal
+          title={`Crear ${MODEL.name}`}
+          mode="create"
+          open={true}
+          onClose={() => setOpenCreate(false)}
+        />
+      )}
 
       {editId !== null && (
         <BoxModal
@@ -161,6 +181,6 @@ export default function BoxPage() {
           }
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

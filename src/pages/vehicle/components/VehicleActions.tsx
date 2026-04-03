@@ -13,8 +13,8 @@ export default function VehicleActions() {
   const { MODEL } = VEHICLE;
   return (
     <ActionsWrapper>
-      <Button size="sm" className="ml-auto" onClick={() => setOpen(true)}>
-        <Plus className="size-4 mr-2" /> Agregar {MODEL.name}
+      <Button colorIcon="green" size="sm" variant="outline" onClick={() => setOpen(true)}>
+        <Plus /> Nuevo
       </Button>
       <VehicleModal
         title={`Crear ${MODEL.name}`}

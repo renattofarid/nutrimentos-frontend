@@ -46,10 +46,8 @@ export default function DocumentTypePage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <DocumentTypeActions />
-      </div>
+    <div className="space-y-2">
+      <DocumentTypeActions />
 
       <DocumentTypeTable
         isLoading={isLoading}
@@ -58,6 +56,7 @@ export default function DocumentTypePage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => setEditId(row.id)}
       >
         <DocumentTypeOptions search={search} setSearch={setSearch} />
       </DocumentTypeTable>

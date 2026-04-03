@@ -46,10 +46,8 @@ export default function ZonePage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <ZoneActions />
-      </div>
+    <div className="space-y-2">
+      <ZoneActions />
 
       <ZoneTable
         isLoading={isLoading}
@@ -58,6 +56,7 @@ export default function ZonePage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => setEditId(row.id)}
       >
         <ZoneOptions search={search} setSearch={setSearch} />
       </ZoneTable>

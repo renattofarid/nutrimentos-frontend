@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePriceList } from "../lib/pricelist.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import PriceListActions from "./PriceListActions";
 import PriceListTable from "./PriceListTable";
@@ -19,6 +20,7 @@ import { PRICELIST } from "../lib/pricelist.interface";
 import AssignClientModal from "./AssignClientModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import { PriceListDetailsSheet } from "./PriceListDetailsSheet";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = PRICELIST;
 
@@ -30,6 +32,7 @@ export default function PriceListPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [assignClientId, setAssignClientId] = useState<number | null>(null);
   const [viewDetailsId, setViewDetailsId] = useState<number | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const { data, meta, isLoading, refetch } = usePriceList();
   const { deletePriceList } = usePriceListStore();
@@ -38,9 +41,11 @@ export default function PriceListPage() {
     refetch({ page, search, per_page });
   }, [page, search, per_page, refetch]);
 
-  const handleEdit = (id: number) => {
-    navigate(`${PRICELIST.ROUTE}/editar/${id}`);
-  };
+  const selectedPriceListId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarPriceList = selectedPriceListId
+    ? (data?.find((p) => p.id.toString() === selectedPriceListId) ?? null)
+    : null;
+  const hasSelection = !!toolbarPriceList;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -56,20 +61,24 @@ export default function PriceListPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <PriceListActions />
-      </div>
+    <PageWrapper>
+      <PriceListActions
+        hasSelection={hasSelection}
+        onNew={() => navigate(`${PRICELIST.ROUTE}/agregar`)}
+        onEdit={() => toolbarPriceList && navigate(`${PRICELIST.ROUTE}/editar/${toolbarPriceList.id}`)}
+        onDelete={() => toolbarPriceList && setDeleteId(toolbarPriceList.id)}
+        onViewDetails={() => toolbarPriceList && setViewDetailsId(toolbarPriceList.id)}
+        onAssignClient={() => toolbarPriceList && setAssignClientId(toolbarPriceList.id)}
+      />
 
       <PriceListTable
         isLoading={isLoading}
-        columns={PriceListColumns({
-          onEdit: handleEdit,
-          onDelete: setDeleteId,
-          onAssignClient: setAssignClientId,
-          onViewDetails: setViewDetailsId,
-        })}
+        columns={PriceListColumns()}
         data={data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={(pl) => navigate(`${PRICELIST.ROUTE}/editar/${pl.id}`)}
       >
         <PriceListOptions search={search} setSearch={setSearch} />
       </PriceListTable>
@@ -106,6 +115,6 @@ export default function PriceListPage() {
           onClose={() => setViewDetailsId(null)}
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

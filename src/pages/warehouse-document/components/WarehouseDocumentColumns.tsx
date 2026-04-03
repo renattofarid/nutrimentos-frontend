@@ -5,24 +5,9 @@ import {
   getDocumentTypeLabel,
   getDocumentStatusVariant,
 } from "../lib/warehouse-document.constants";
-import { CheckCircle, Eye, Pencil, XCircle } from "lucide-react";
 import { parse } from "date-fns";
-import { ButtonAction } from "@/components/ButtonAction";
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
-export const WarehouseDocumentColumns = ({
-  onEdit,
-  onDelete,
-  onView,
-  onConfirm,
-  onCancel,
-}: {
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-  onView: (id: number) => void;
-  onConfirm: (id: number) => void;
-  onCancel: (id: number) => void;
-}): ColumnDef<WarehouseDocumentResource>[] => [
+export const WarehouseDocumentColumns = (): ColumnDef<WarehouseDocumentResource>[] => [
   {
     accessorKey: "document_number",
     header: "Número de Documento",
@@ -124,46 +109,6 @@ export const WarehouseDocumentColumns = ({
         month: "short",
         day: "numeric",
       });
-    },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const id = row.original.id;
-      const status = row.original.status;
-
-      return (
-        <div className="flex gap-2">
-          <ButtonAction
-            onClick={() => onView(id)}
-            icon={Eye}
-            tooltip="Ver Detalles"
-          />
-          {status === "BORRADOR" && (
-            <>
-              <ButtonAction
-                onClick={() => onEdit(id)}
-                icon={Pencil}
-                tooltip="Editar"
-              />
-              <ButtonAction
-                onClick={() => onConfirm(id)}
-                icon={CheckCircle}
-                tooltip="Confirmar"
-              />
-              <DeleteButton onClick={() => onDelete(id)} />
-            </>
-          )}
-          {status === "CONFIRMADO" && (
-            <ButtonAction
-              onClick={() => onCancel(id)}
-              icon={XCircle}
-              tooltip="Cancelar"
-            />
-          )}
-        </div>
-      );
     },
   },
 ];

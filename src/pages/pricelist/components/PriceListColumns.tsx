@@ -1,23 +1,8 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { PriceList } from "../lib/pricelist.interface";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Eye, UserPlus } from "lucide-react"; // Import necessary icons
-import { ButtonAction } from "@/components/ButtonAction"; // Import ButtonAction component
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
-interface PriceListColumnsProps {
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-  onAssignClient: (id: number) => void;
-  onViewDetails: (id: number) => void;
-}
-
-export const PriceListColumns = ({
-  onEdit,
-  onDelete,
-  onAssignClient,
-  onViewDetails,
-}: PriceListColumnsProps): ColumnDef<PriceList>[] => [
+export const PriceListColumns = (): ColumnDef<PriceList>[] => [
   {
     accessorKey: "code",
     header: "Código",
@@ -95,29 +80,5 @@ export const PriceListColumns = ({
         </span>
       );
     },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => (
-      <div className="flex gap-2">
-        <ButtonAction
-          onClick={() => onViewDetails(row.original.id)}
-          icon={Eye}
-          tooltip="Ver Detalles"
-        />
-        <ButtonAction
-          onClick={() => onEdit(row.original.id)}
-          icon={Pencil}
-          tooltip="Editar"
-        />
-        <ButtonAction
-          onClick={() => onAssignClient(row.original.id)}
-          icon={UserPlus}
-          tooltip="Asignar Cliente"
-        />
-        <DeleteButton onClick={() => onDelete(row.original.id)} />
-      </div>
-    ),
   },
 ];

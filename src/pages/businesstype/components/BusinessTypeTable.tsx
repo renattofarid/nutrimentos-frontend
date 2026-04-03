@@ -7,6 +7,7 @@ interface Props {
   data: BusinessTypeResource[];
   children?: React.ReactNode;
   isLoading?: boolean;
+  onRowDoubleClick?: (row: BusinessTypeResource) => void;
 }
 
 export default function BusinessTypeTable({
@@ -14,6 +15,7 @@ export default function BusinessTypeTable({
   data,
   children,
   isLoading,
+  onRowDoubleClick,
 }: Props) {
   return (
     <div className="border-none text-muted-foreground max-w-full">
@@ -21,6 +23,7 @@ export default function BusinessTypeTable({
         columns={columns}
         data={data}
         isLoading={isLoading}
+        onRowDoubleClick={onRowDoubleClick}
         initialColumnVisibility={{}}
       >
         {children}

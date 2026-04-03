@@ -12,7 +12,7 @@ import {
 } from "../lib/warehouse-document.constants";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
-import { Package, FileText, AlertCircle } from "lucide-react";
+import { Package, FileText, AlertCircle, Loader, Save, X } from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
@@ -466,6 +466,19 @@ export default function WarehouseDocumentForm({
         })}
         className="space-y-6"
       >
+        {/* Form Actions */}
+        <div className="flex items-center gap-2">
+          <Button size="sm" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+            {isSubmitting ? "Guardando..." : "Guardar"}
+          </Button>
+          {onCancel && (
+            <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+              <X /> Cancelar
+            </Button>
+          )}
+        </div>
+
         <GroupFormSection
           title="Información General"
           icon={FileText}
@@ -613,20 +626,6 @@ export default function WarehouseDocumentForm({
           </Alert>
         )}
 
-        <div className="flex justify-end gap-2">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancelar
-            </Button>
-          )}
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting
-              ? "Guardando..."
-              : mode === "create"
-                ? "Crear Documento"
-                : "Actualizar Documento"}
-          </Button>
-        </div>
       </form>
     </Form>
   );

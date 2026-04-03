@@ -124,6 +124,7 @@ export default function WarehouseDocumentEditPage() {
           warehouses={warehouses}
           persons={persons}
           purchases={purchases || []}
+          onCancel={() => navigate("/documentos-almacen")}
         />
       )}
     </PageWrapper>

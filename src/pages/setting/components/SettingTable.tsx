@@ -7,6 +7,7 @@ interface SettingTableProps {
   columns: ColumnDef<SettingResource>[];
   data: SettingResource[];
   children?: React.ReactNode;
+  onRowDoubleClick?: (row: SettingResource) => void;
 }
 
 export default function SettingTable({
@@ -14,9 +15,10 @@ export default function SettingTable({
   columns,
   data,
   children,
+  onRowDoubleClick,
 }: SettingTableProps) {
   return (
-    <DataTable isLoading={isLoading} columns={columns} data={data}>
+    <DataTable isLoading={isLoading} columns={columns} data={data} onRowDoubleClick={onRowDoubleClick}>
       {children}
     </DataTable>
   );

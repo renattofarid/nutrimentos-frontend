@@ -11,9 +11,9 @@ export default function NationalityActions({
 }: NationalityActionsProps) {
   return (
     <ActionsWrapper>
-      <Button size={"sm"} onClick={onCreateNationality}>
-        <Plus className="h-4 w-4 mr-2" />
-        Agregar
+      <Button colorIcon="green" size="sm" variant="outline" onClick={onCreateNationality}>
+        <Plus />
+        Nuevo
       </Button>
     </ActionsWrapper>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWarehouseDocuments } from "../lib/warehouse-document.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import WarehouseDocumentActions from "./WarehouseDocumentActions";
 import WarehouseDocumentTable from "./WarehouseDocumentTable";
@@ -32,6 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL, ROUTE } = WAREHOUSE_DOCUMENT;
 
@@ -46,6 +48,7 @@ export default function WarehouseDocumentPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [cancelId, setCancelId] = useState<number | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const { data, meta, isLoading, refetch } = useWarehouseDocuments({
     page,
@@ -66,15 +69,13 @@ export default function WarehouseDocumentPage() {
       type: selectedType,
       status: selectedStatus,
     });
-  }, [
-    page,
-    search,
-    per_page,
-    selectedWarehouse,
-    selectedType,
-    selectedStatus,
-    refetch,
-  ]);
+  }, [page, search, per_page, selectedWarehouse, selectedType, selectedStatus, refetch]);
+
+  const selectedDocId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarDoc = selectedDocId
+    ? (data?.find((d) => d.id.toString() === selectedDocId) ?? null)
+    : null;
+  const hasSelection = !!toolbarDoc;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -127,34 +128,27 @@ export default function WarehouseDocumentPage() {
     }
   };
 
-  const handleCreateDocument = () => {
-    navigate(`${ROUTE}/agregar`);
-  };
-
-  const handleEditDocument = (id: number) => {
-    navigate(`${ROUTE}/actualizar/${id}`);
-  };
-
-  const handleViewDocument = (id: number) => {
-    navigate(`${ROUTE}/${id}`);
-  };
-
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <WarehouseDocumentActions onCreateDocument={handleCreateDocument} />
-      </div>
+    <PageWrapper>
+      <WarehouseDocumentActions
+        hasSelection={hasSelection}
+        selectedStatus={toolbarDoc?.status}
+        onNew={() => navigate(`${ROUTE}/agregar`)}
+        onEdit={() => toolbarDoc && navigate(`${ROUTE}/actualizar/${toolbarDoc.id}`)}
+        onDelete={() => toolbarDoc && setDeleteId(toolbarDoc.id)}
+        onView={() => toolbarDoc && navigate(`${ROUTE}/${toolbarDoc.id}`)}
+        onConfirm={() => toolbarDoc && setConfirmId(toolbarDoc.id)}
+        onCancel={() => toolbarDoc && setCancelId(toolbarDoc.id)}
+      />
 
       <WarehouseDocumentTable
         isLoading={isLoading}
-        columns={WarehouseDocumentColumns({
-          onEdit: handleEditDocument,
-          onDelete: setDeleteId,
-          onView: handleViewDocument,
-          onConfirm: setConfirmId,
-          onCancel: setCancelId,
-        })}
+        columns={WarehouseDocumentColumns()}
         data={data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={(doc) => navigate(`${ROUTE}/${doc.id}`)}
       >
         {warehouses && (
           <WarehouseDocumentOptions
@@ -236,6 +230,6 @@ export default function WarehouseDocumentPage() {
           </AlertDialogContent>
         </AlertDialog>
       )}
-    </div>
+    </PageWrapper>
   );
 }

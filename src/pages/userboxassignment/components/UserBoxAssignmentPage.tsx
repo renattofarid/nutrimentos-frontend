@@ -46,10 +46,8 @@ export default function UserBoxAssignmentPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <UserBoxAssignmentActions />
-      </div>
+    <div className="space-y-2">
+      <UserBoxAssignmentActions />
 
       <UserBoxAssignmentTable
         isLoading={isLoading}
@@ -58,6 +56,7 @@ export default function UserBoxAssignmentPage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => setEditId(row.id)}
       >
         <UserBoxAssignmentOptions search={search} setSearch={setSearch} />
       </UserBoxAssignmentTable>

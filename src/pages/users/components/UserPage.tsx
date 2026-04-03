@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import UserOptions from "./UserOptions";
 import UserTable from "./UserTable";
@@ -19,6 +20,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { USER } from "../lib/User.interface";
 import UserModal from "./UserModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = USER;
 
@@ -26,14 +28,22 @@ export default function UserPage() {
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [search, setSearch] = useState("");
+  const [openCreate, setOpenCreate] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const { data, meta, isLoading, refetch } = useUsers();
 
   useEffect(() => {
     refetch({ page, search, per_page });
   }, [page, search, per_page]);
+
+  const selectedUserId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarUser = selectedUserId
+    ? (data?.find((u) => u.id.toString() === selectedUserId) ?? null)
+    : null;
+  const hasSelection = !!toolbarUser;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -48,21 +58,23 @@ export default function UserPage() {
     }
   };
 
-  // make pagination of 10 in data
-
-  // if (!checkRouteExists("Users")) notFound();
-  // if (!data) NotFound();
-
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <UserActions />
-      </div>
+    <PageWrapper>
+      <UserActions
+        hasSelection={hasSelection}
+        onNew={() => setOpenCreate(true)}
+        onEdit={() => toolbarUser && setEditId(toolbarUser.id)}
+        onDelete={() => toolbarUser && setDeleteId(toolbarUser.id)}
+      />
 
       <UserTable
         isLoading={isLoading}
-        columns={UserColumns({ onEdit: setEditId, onDelete: setDeleteId })}
+        columns={UserColumns()}
         data={data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={(user) => setEditId(user.id)}
       >
         <UserOptions search={search} setSearch={setSearch} />
       </UserTable>
@@ -76,7 +88,15 @@ export default function UserPage() {
         totalData={meta?.total || 0}
       />
 
-      {/* Formularios */}
+      {openCreate && (
+        <UserModal
+          title={`Crear ${MODEL.name}`}
+          mode="create"
+          open={true}
+          onClose={() => setOpenCreate(false)}
+        />
+      )}
+
       {editId !== null && (
         <UserModal
           id={editId}
@@ -94,6 +114,6 @@ export default function UserPage() {
           onConfirm={handleDelete}
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

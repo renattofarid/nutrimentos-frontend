@@ -7,6 +7,7 @@ interface DocumentTypeTableProps {
   columns: ColumnDef<DocumentTypeResource, any>[];
   isLoading?: boolean;
   children?: React.ReactNode;
+  onRowDoubleClick?: (row: DocumentTypeResource) => void;
 }
 
 export default function DocumentTypeTable({
@@ -14,9 +15,10 @@ export default function DocumentTypeTable({
   columns,
   isLoading,
   children,
+  onRowDoubleClick,
 }: DocumentTypeTableProps) {
   return (
-    <DataTable data={data} columns={columns} isLoading={isLoading}>
+    <DataTable data={data} columns={columns} isLoading={isLoading} onRowDoubleClick={onRowDoubleClick}>
       {children}
     </DataTable>
   );

@@ -1,19 +1,88 @@
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { PRICELIST } from "../lib/pricelist.interface";
+import { Separator } from "@/components/ui/separator";
+import { Plus, Pencil, Trash2, X, Eye, UserPlus } from "lucide-react";
+import { useWindowManager } from "@/stores/window-manager.store";
 
-export default function PriceListActions() {
-  const navigate = useNavigate();
+interface Props {
+  hasSelection: boolean;
+  onNew: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onViewDetails: () => void;
+  onAssignClient: () => void;
+}
 
-  const handleAdd = () => {
-    navigate(`${PRICELIST.ROUTE}/agregar`);
+export default function PriceListActions({
+  hasSelection,
+  onNew,
+  onEdit,
+  onDelete,
+  onViewDetails,
+  onAssignClient,
+}: Props) {
+  const { activeTabId, closeTab } = useWindowManager();
+
+  const handleCerrar = () => {
+    if (activeTabId) closeTab(activeTabId);
   };
 
   return (
-    <Button size={"sm"} onClick={handleAdd}>
-      <Plus className="h-4 w-4 mr-2" />
-      Agregar Lista de Precio
-    </Button>
+    <div className="flex items-center justify-between mb-1 pb-1 border-b w-full">
+      <div className="flex items-center gap-1">
+        <Button colorIcon="green" size="sm" variant="outline" onClick={onNew}>
+          <Plus />
+          Nuevo
+        </Button>
+        <Button
+          colorIcon="amber"
+          size="sm"
+          variant="outline"
+          onClick={onEdit}
+          disabled={!hasSelection}
+        >
+          <Pencil />
+          Editar
+        </Button>
+        <Button
+          colorIcon="red"
+          size="sm"
+          variant="outline"
+          onClick={onDelete}
+          disabled={!hasSelection}
+        >
+          <Trash2 />
+          Eliminar
+        </Button>
+        <div className="h-6 mx-2">
+          <Separator orientation="vertical" />
+        </div>
+        <Button
+          colorIcon="blue"
+          size="sm"
+          variant="outline"
+          onClick={onViewDetails}
+          disabled={!hasSelection}
+        >
+          <Eye />
+          Ver Detalles
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onAssignClient}
+          disabled={!hasSelection}
+        >
+          <UserPlus />
+          Asignar Cliente
+        </Button>
+        <div className="h-6 mx-2">
+          <Separator orientation="vertical" />
+        </div>
+        <Button colorIcon="gray" size="sm" variant="outline" onClick={handleCerrar}>
+          <X />
+          Cerrar
+        </Button>
+      </div>
+    </div>
   );
 }

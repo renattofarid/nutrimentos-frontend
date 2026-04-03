@@ -1,19 +1,9 @@
 import type { ProductResource } from "../lib/product.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CheckCircle, Eye, Pencil, XCircle } from "lucide-react";
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
+import { CheckCircle, XCircle } from "lucide-react";
 
-export const ProductColumns = ({
-  onEdit,
-  onDelete,
-  onView,
-}: {
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-  onView: (id: number) => void;
-}): ColumnDef<ProductResource>[] => [
+export const ProductColumns = (): ColumnDef<ProductResource>[] => [
   {
     accessorKey: "codigo",
     header: "Código",
@@ -126,30 +116,6 @@ export const ProductColumns = ({
         month: "short",
         day: "numeric",
       });
-    },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const id = row.original.id;
-
-      return (
-        <div className="flex gap-1">
-          <Button size="icon-xs" onClick={() => onView(id)} variant="outline">
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            color="primary"
-            size="icon-xs"
-            onClick={() => onEdit(id)}
-            variant="outline"
-          >
-            <Pencil />
-          </Button>
-          <DeleteButton onClick={() => onDelete(id)} />
-        </div>
-      );
     },
   },
 ];

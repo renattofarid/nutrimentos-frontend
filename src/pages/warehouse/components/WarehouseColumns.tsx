@@ -1,16 +1,7 @@
 import type { WarehouseResource } from "../lib/warehouse.interface";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ButtonAction } from "@/components/ButtonAction";
-import { Pencil } from "lucide-react";
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
-export const WarehouseColumns = ({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-}): ColumnDef<WarehouseResource>[] => [
+export const WarehouseColumns = (): ColumnDef<WarehouseResource>[] => [
   {
     accessorKey: "name",
     header: "Nombre",
@@ -52,24 +43,6 @@ export const WarehouseColumns = ({
     cell: ({ getValue }) => {
       const name = getValue() as string;
       return name ? name.trim() : "Sin responsable";
-    },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const id = row.original.id;
-
-      return (
-        <div className="flex gap-2">
-          <ButtonAction
-            onClick={() => onEdit(id)}
-            icon={Pencil}
-            tooltip="Editar"
-          />
-          <DeleteButton onClick={() => onDelete(id)} />
-        </div>
-      );
     },
   },
 ];

@@ -46,10 +46,8 @@ export default function BusinessTypePage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <BusinessTypeActions />
-      </div>
+    <div className="space-y-2">
+      <BusinessTypeActions />
 
       <BusinessTypeTable
         isLoading={isLoading}
@@ -58,6 +56,7 @@ export default function BusinessTypePage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => setEditId(row.id)}
       >
         <BusinessTypeOptions search={search} setSearch={setSearch} />
       </BusinessTypeTable>

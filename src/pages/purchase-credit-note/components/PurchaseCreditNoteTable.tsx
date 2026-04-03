@@ -7,6 +7,7 @@ interface Props {
   data: PurchaseCreditNoteResource[];
   children?: React.ReactNode;
   isLoading?: boolean;
+  onRowDoubleClick?: (row: PurchaseCreditNoteResource) => void;
 }
 
 export default function PurchaseCreditNoteTable({
@@ -14,6 +15,7 @@ export default function PurchaseCreditNoteTable({
   data,
   children,
   isLoading,
+  onRowDoubleClick,
 }: Props) {
   return (
     <div className="border-none text-muted-foreground max-w-full">
@@ -21,6 +23,7 @@ export default function PurchaseCreditNoteTable({
         columns={columns}
         data={data}
         isLoading={isLoading}
+        onRowDoubleClick={onRowDoubleClick}
         initialColumnVisibility={{
           created_at: false,
         }}

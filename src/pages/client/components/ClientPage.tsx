@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useClients } from "../lib/client.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import ClientActions from "./ClientActions";
 import PersonTable from "@/pages/person/components/PersonTable";
@@ -16,13 +17,14 @@ import {
 import { PersonColumns } from "@/pages/person/components/PersonColumns";
 import DataTablePagination from "@/components/DataTablePagination";
 import { CLIENT } from "../lib/client.interface";
-import { PersonRoleAssignment } from "@/pages/person/components/PersonRoleAssignment";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import { CLIENT_ROLE_ID } from "../lib/client.interface";
 import ClientPriceListSheet from "./ClientPriceListSheet";
 import AssignPriceListModal from "./AssignPriceListModal";
 import ClientAddressesSheet from "./ClientAddressesSheet";
+import PageWrapper from "@/components/PageWrapper";
+
 const { MODEL } = CLIENT;
 
 export default function ClientPage() {
@@ -31,25 +33,22 @@ export default function ClientPage() {
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [roleAssignmentPerson, setRoleAssignmentPerson] =
-    useState<PersonResource | null>(null);
-  const [priceListPerson, setPriceListPerson] = useState<PersonResource | null>(
-    null,
-  );
-  const [assignPriceListPerson, setAssignPriceListPerson] =
-    useState<PersonResource | null>(null);
-  const [addressesPerson, setAddressesPerson] = useState<PersonResource | null>(
-    null,
-  );
-  const { data, isLoading, refetch } = useClients({
-    page,
-    per_page,
-    search,
-  });
+  const [priceListPerson, setPriceListPerson] = useState<PersonResource | null>(null);
+  const [assignPriceListPerson, setAssignPriceListPerson] = useState<PersonResource | null>(null);
+  const [addressesPerson, setAddressesPerson] = useState<PersonResource | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  const { data, isLoading, refetch } = useClients({ page, per_page, search });
 
   useEffect(() => {
     setPage(1);
   }, [search, per_page]);
+
+  const selectedClientId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarClient = selectedClientId
+    ? (data?.data?.find((c) => c.id.toString() === selectedClientId) ?? null)
+    : null;
+  const hasSelection = !!toolbarClient;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -64,56 +63,27 @@ export default function ClientPage() {
     }
   };
 
-  // const handleManageRoles = (person: PersonResource) => {
-  //   setRoleAssignmentPerson(person);
-  // };
-
-  const handleCloseRoleAssignment = () => {
-    setRoleAssignmentPerson(null);
-  };
-
-  const handleViewPriceList = (person: PersonResource) => {
-    setPriceListPerson(person);
-  };
-
-  const handleClosePriceList = () => {
-    setPriceListPerson(null);
-  };
-
-  const handleAssignPriceList = (person: PersonResource) => {
-    setAssignPriceListPerson(person);
-  };
-
-  const handleCloseAssignPriceList = () => {
-    setAssignPriceListPerson(null);
-  };
-
-  const handleViewAddresses = (person: PersonResource) => {
-    setAddressesPerson(person);
-  };
-
-  const handleCloseAddresses = () => {
-    setAddressesPerson(null);
-  };
-
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <ClientActions />
-      </div>
+    <PageWrapper>
+      <ClientActions
+        hasSelection={hasSelection}
+        onNew={() => navigate("/clientes/agregar")}
+        onEdit={() => toolbarClient && navigate(`/clientes/editar/${toolbarClient.id}`)}
+        onDelete={() => toolbarClient && setDeleteId(toolbarClient.id)}
+        onViewPriceList={() => toolbarClient && setPriceListPerson(toolbarClient)}
+        onAssignPriceList={() => toolbarClient && setAssignPriceListPerson(toolbarClient)}
+        onViewAddresses={() => toolbarClient && setAddressesPerson(toolbarClient)}
+      />
 
       <PersonTable
         isLoading={isLoading}
-        columns={PersonColumns({
-          onEdit: (person) => navigate(`/clientes/editar/${person}`),
-          onDelete: setDeleteId,
-          onViewPriceList: handleViewPriceList,
-          onAssignPriceList: handleAssignPriceList,
-          onViewAddresses: handleViewAddresses,
-          // onManageRoles: handleManageRoles,
-        })}
+        columns={PersonColumns()}
         isClientTable
         data={data?.data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={(person) => navigate(`/clientes/editar/${person.id}`)}
       >
         <PersonOptions search={search} setSearch={setSearch} />
       </PersonTable>
@@ -127,20 +97,10 @@ export default function ClientPage() {
         totalData={data?.meta?.total || 0}
       />
 
-      {/* Role Assignment Modal */}
-      {roleAssignmentPerson && (
-        <PersonRoleAssignment
-          personId={roleAssignmentPerson.id}
-          personName={roleAssignmentPerson.names}
-          open={!!roleAssignmentPerson}
-          onClose={handleCloseRoleAssignment}
-        />
-      )}
-
       {priceListPerson && (
         <ClientPriceListSheet
           open={!!priceListPerson}
-          onOpenChange={(open) => !open && handleClosePriceList()}
+          onOpenChange={(open) => !open && setPriceListPerson(null)}
           personId={priceListPerson.id}
           personName={
             priceListPerson.business_name ||
@@ -154,7 +114,7 @@ export default function ClientPage() {
       {assignPriceListPerson && (
         <AssignPriceListModal
           open={!!assignPriceListPerson}
-          onClose={handleCloseAssignPriceList}
+          onClose={() => setAssignPriceListPerson(null)}
           personId={assignPriceListPerson.id}
           personName={
             assignPriceListPerson.business_name ||
@@ -170,15 +130,13 @@ export default function ClientPage() {
           open={true}
           onOpenChange={(open) => !open && setDeleteId(null)}
           onConfirm={handleDelete}
-          // title={`Eliminar ${MODEL.name}`}
-          // description={`¿Está seguro de que desea eliminar este ${MODEL.name.toLowerCase()}? Esta acción no se puede deshacer.`}
         />
       )}
 
       {addressesPerson && (
         <ClientAddressesSheet
           open={!!addressesPerson}
-          onOpenChange={(open) => !open && handleCloseAddresses()}
+          onOpenChange={(open) => !open && setAddressesPerson(null)}
           personId={addressesPerson.id}
           personName={
             addressesPerson.business_name ||
@@ -188,6 +146,6 @@ export default function ClientPage() {
           }
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

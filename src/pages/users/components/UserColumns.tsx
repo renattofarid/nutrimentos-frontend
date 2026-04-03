@@ -1,19 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { UserResource } from "../lib/User.interface";
-import { ButtonAction } from "@/components/ButtonAction";
-import { Pencil } from "lucide-react";
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 export type UserColumns = ColumnDef<UserResource>;
 
-export const UserColumns = ({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-}): ColumnDef<UserResource>[] => [
+export const UserColumns = (): ColumnDef<UserResource>[] => [
   {
     accessorKey: "username",
     header: "Username",
@@ -79,24 +70,6 @@ export const UserColumns = ({
         <Badge variant={"outline"} className={`font-semibold`}>
           {status}
         </Badge>
-      );
-    },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const id = row.original.id;
-
-      return (
-        <div className="flex gap-2">
-          <ButtonAction
-            onClick={() => onEdit(id)}
-            icon={Pencil}
-            tooltip="Editar"
-          />
-          <DeleteButton onClick={() => onDelete(id)} />
-        </div>
       );
     },
   },

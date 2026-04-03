@@ -12,7 +12,7 @@ import {
   productSchemaUpdate,
   type ProductSchema,
 } from "../lib/product.schema";
-import { Loader, Info, Weight } from "lucide-react";
+import { Loader, Info, Weight, Save, X } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSwitch } from "@/components/FormSwitch";
 import { GroupFormSection } from "@/components/GroupFormSection";
@@ -68,6 +68,21 @@ export const ProductForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
+        {/* Form Actions */}
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            type="submit"
+            disabled={isSubmitting || !form.formState.isValid}
+          >
+            {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+            {isSubmitting ? "Guardando..." : "Guardar"}
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            <X /> Cancelar
+          </Button>
+        </div>
+
         {/* Información Básica */}
         <GroupFormSection
           title="Información Básica"
@@ -225,22 +240,6 @@ export const ProductForm = ({
           />
         </GroupFormSection>
 
-        <div className="flex gap-4 w-full justify-end">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-            Cancelar
-          </Button>
-
-          <Button
-            size="sm"
-            type="submit"
-            disabled={isSubmitting || !form.formState.isValid}
-          >
-            <Loader
-              className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`}
-            />
-            {isSubmitting ? "Guardando" : "Guardar"}
-          </Button>
-        </div>
       </form>
     </Form>
   );

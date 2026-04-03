@@ -14,11 +14,12 @@ export default function TypeUserActions() {
   return (
     <ActionsWrapper>
       <Button
+        colorIcon="green"
         size="sm"
-        className="ml-auto"
+        variant="outline"
         onClick={() => setOpen(true)}
       >
-        <Plus className="size-4 mr-2" /> Agregar {MODEL.name}
+        <Plus /> Nuevo
       </Button>
       <TypeUserModal
         title={`Crear ${MODEL.name}`}

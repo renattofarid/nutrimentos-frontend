@@ -8,8 +8,8 @@ export default function PersonActions() {
   const { MODEL } = PERSON;
   return (
     <ActionsWrapper>
-      <Button size="sm" className="ml-auto">
-        <Plus className="size-4 mr-2" /> Agregar {MODEL.name}
+      <Button colorIcon="green" size="sm" variant="outline">
+        <Plus /> Nuevo
       </Button>
     </ActionsWrapper>
   );

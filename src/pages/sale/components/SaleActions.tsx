@@ -2,7 +2,17 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Pencil, Trash2, Ban, X, FileMinus } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Ban,
+  X,
+  FileMinus,
+  Eye,
+  PanelRightOpen,
+  Wallet,
+} from "lucide-react";
 
 interface SaleActionsProps {
   hasSelection: boolean;
@@ -12,6 +22,10 @@ interface SaleActionsProps {
   onAnular: () => void;
   onCerrar: () => void;
   onGenerar: () => void;
+  onViewDetails: () => void;
+  onManage: () => void;
+  onQuickPay: () => void;
+  canQuickPay: boolean;
 }
 
 export default function SaleActions({
@@ -22,6 +36,10 @@ export default function SaleActions({
   onAnular,
   onCerrar,
   onGenerar,
+  onViewDetails,
+  onManage,
+  onQuickPay,
+  canQuickPay,
 }: SaleActionsProps) {
   return (
     <div className="flex items-center gap-1">
@@ -58,6 +76,36 @@ export default function SaleActions({
       >
         <Ban />
         Anular
+      </Button>
+      <Button
+        colorIcon="blue"
+        size="sm"
+        variant="outline"
+        onClick={onViewDetails}
+        disabled={!hasSelection}
+      >
+        <PanelRightOpen />
+        Ver detalle
+      </Button>
+      <Button
+        colorIcon="violet"
+        size="sm"
+        variant="outline"
+        onClick={onManage}
+        disabled={!hasSelection}
+      >
+        <Eye />
+        Gestionar
+      </Button>
+      <Button
+        colorIcon="teal"
+        size="sm"
+        variant="outline"
+        onClick={onQuickPay}
+        disabled={!canQuickPay}
+      >
+        <Wallet />
+        Pago rapido
       </Button>
       <div className="h-6 mx-2">
         <Separator orientation="vertical" />

@@ -6,22 +6,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Eye, Wallet, AlertTriangle, PanelRightOpen } from "lucide-react";
-import { ButtonAction } from "@/components/ButtonAction";
+import { AlertTriangle } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { SaleResource } from "../lib/sale.interface";
 
-interface SaleColumnsProps {
-  onViewDetails: (sale: SaleResource) => void;
-  onManage: (sale: SaleResource) => void;
-  onQuickPay: (sale: SaleResource) => void;
-}
-
-export const getSaleColumns = ({
-  onViewDetails,
-  onManage,
-  onQuickPay,
-}: SaleColumnsProps): ColumnDef<SaleResource>[] => [
+export const getSaleColumns = (): ColumnDef<SaleResource>[] => [
   {
     accessorKey: "id",
     header: "ID",
@@ -153,16 +142,7 @@ export const getSaleColumns = ({
     accessorKey: "details",
     header: "Detalles",
     cell: ({ row }) => (
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onManage(row.original)}
-        className="h-auto p-1"
-      >
-        <Badge variant="outline" className="cursor-pointer hover:bg-accent">
-          {row.original.details?.length || 0} item(s)
-        </Badge>
-      </Button>
+      <Badge variant="outline">{row.original.details?.length || 0} item(s)</Badge>
     ),
   },
   {
@@ -196,19 +176,9 @@ export const getSaleColumns = ({
       return (
         <TooltipProvider>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onManage(row.original)}
-              className="h-auto p-1"
-            >
-              <Badge
-                variant="outline"
-                className="cursor-pointer hover:bg-accent"
-              >
-                {row.original.installments?.length || 0} cuota(s)
-              </Badge>
-            </Button>
+            <Badge variant="outline">
+              {row.original.installments?.length || 0} cuota(s)
+            </Badge>
 
             {!isValid && (
               <Tooltip>
@@ -226,31 +196,10 @@ export const getSaleColumns = ({
               </Tooltip>
             )}
 
-            {hasPendingPayments && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onQuickPay(row.original)}
-                    className="h-8 w-8 p-0"
-                    disabled={!isValid}
-                  >
-                    <Wallet
-                      className={`h-4 w-4 ${
-                        isValid ? "text-primary" : "text-gray-400"
-                      }`}
-                    />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">
-                    {isValid
-                      ? "Pago rápido"
-                      : "No se puede realizar pago rápido. Debe sincronizar las cuotas primero."}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
+            {hasPendingPayments && !isValid && (
+              <span className="text-xs text-muted-foreground">
+                Sincronizar cuotas
+              </span>
             )}
           </div>
         </TooltipProvider>
@@ -262,24 +211,6 @@ export const getSaleColumns = ({
     header: "Usuario",
     cell: ({ getValue }) => (
       <span className="font-semibold">{getValue() as string}</span>
-    ),
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-1">
-        <ButtonAction
-          icon={Eye}
-          onClick={() => onManage(row.original)}
-          tooltip="Gestionar Venta"
-        />
-        <ButtonAction
-          icon={PanelRightOpen}
-          onClick={() => onViewDetails(row.original)}
-          tooltip="Ver Detalles"
-        />
-      </div>
     ),
   },
 ];

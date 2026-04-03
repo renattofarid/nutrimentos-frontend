@@ -43,9 +43,14 @@ export const PurchaseActions = ({
 }: PurchaseActionsProps) => {
   return (
     <ActionsWrapper>
-      <Button onClick={onCreatePurchase} size="sm">
+      <Button
+        onClick={onCreatePurchase}
+        size="sm"
+        variant="outline"
+        colorIcon="green"
+      >
         <Plus className="mr-2 h-4 w-4" />
-        Crear Compra
+        Nuevo
       </Button>
 
       <Button
@@ -53,6 +58,7 @@ export const PurchaseActions = ({
         size="sm"
         variant="outline"
         disabled={!hasSelection}
+        colorIcon="blue"
       >
         <Eye className="mr-2 h-4 w-4" />
         Ver detalle
@@ -63,6 +69,7 @@ export const PurchaseActions = ({
         size="sm"
         variant="outline"
         disabled={!hasSelection}
+        colorIcon="orange"
       >
         <PanelRightOpen className="mr-2 h-4 w-4" />
         Gestionar
@@ -73,6 +80,7 @@ export const PurchaseActions = ({
         size="sm"
         variant="outline"
         disabled={!canEditOrDelete}
+        colorIcon="yellow"
       >
         <Pencil className="mr-2 h-4 w-4" />
         Editar
@@ -83,6 +91,7 @@ export const PurchaseActions = ({
         size="sm"
         variant="outline"
         disabled={!canEditOrDelete}
+        colorIcon="red"
       >
         <Trash2 className="mr-2 h-4 w-4" />
         Eliminar
@@ -93,6 +102,7 @@ export const PurchaseActions = ({
         size="sm"
         variant="outline"
         disabled={!canQuickPay}
+        colorIcon="teal"
       >
         <Wallet className="mr-2 h-4 w-4" />
         Pago rápido
@@ -103,6 +113,7 @@ export const PurchaseActions = ({
         size="sm"
         variant="outline"
         disabled={!hasSelection}
+        colorIcon="gray"
       >
         <Printer className="mr-2 h-4 w-4" />
         Imprimir

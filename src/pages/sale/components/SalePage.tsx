@@ -14,7 +14,6 @@ import {
 } from "../lib/sale.interface";
 import { CreditNoteAddRoute } from "@/pages/credit-note/lib/credit-note.interface";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
-import SaleDetailSheet from "./SaleDetailSheet";
 import {
   findSaleById,
   anularSale,
@@ -29,6 +28,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import type { RowSelectionState } from "@tanstack/react-table";
 import ExportButtons from "@/components/ExportButtons";
+import SaleDetailSheet from "./SaleDetailSheet";
 
 function parseDocumento(documento: string) {
   const dashIndex = documento.indexOf("-");
@@ -217,11 +217,7 @@ export default function SalePage() {
     }
   };
 
-  const columns = getSaleColumns({
-    onViewDetails: handleViewDetails,
-    onManage: handleManage,
-    onQuickPay: handleQuickPay,
-  });
+  const columns = getSaleColumns();
 
   // Construir el endpoint con query params para exportación
   const exportEndpoint = useMemo(() => {
@@ -261,6 +257,18 @@ export default function SalePage() {
     ? (sales?.find((s) => s.id.toString() === selectedSaleId) ?? null)
     : null;
   const hasSelection = !!toolbarSale;
+  const hasPendingInstallments = toolbarSale?.installments?.some(
+    (inst) => inst.pending_amount > 0,
+  );
+  const totalAmount = toolbarSale?.total_amount ?? 0;
+  const sumOfInstallments =
+    toolbarSale?.installments?.reduce((sum, inst) => sum + inst.amount, 0) ||
+    0;
+  const isInstallmentDistributionValid =
+    Math.abs(totalAmount - sumOfInstallments) <= 0.01;
+  const canQuickPay = Boolean(
+    toolbarSale && hasPendingInstallments && isInstallmentDistributionValid,
+  );
 
   const handleAnular = () => {
     if (!toolbarSale) return;
@@ -289,6 +297,10 @@ export default function SalePage() {
           onAnular={handleAnular}
           onCerrar={handleCerrar}
           onGenerar={() => toolbarSale && handleCreateCreditNote(toolbarSale)}
+          onViewDetails={() => toolbarSale && handleViewDetails(toolbarSale)}
+          onManage={() => toolbarSale && handleManage(toolbarSale)}
+          onQuickPay={() => toolbarSale && handleQuickPay(toolbarSale)}
+          canQuickPay={canQuickPay}
         />
         <div className="flex items-center gap-2">
           <ExportButtons

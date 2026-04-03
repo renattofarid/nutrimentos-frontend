@@ -686,7 +686,7 @@ export const GuideForm = ({
         <GroupFormSection
           title="Información de la Guía"
           icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 4 }}
+          cols={{ sm: 1 }}
           className="col-span-full"
           headerExtra={
             <Button
@@ -701,34 +701,34 @@ export const GuideForm = ({
                 : "Mostrar campos adicionales"}
             </Button>
           }
+          horizontal
+          bordered
         >
-          <div className={showAdvancedFields ? "" : "hidden"}>
-            <FormSelect
-              control={form.control}
-              name="branch_id"
-              label="Tienda"
-              placeholder="Seleccione una tienda"
-              options={branches.map((branch) => ({
-                value: branch.id.toString(),
-                label: branch.name,
-                description: branch.address,
-              }))}
-            />
-          </div>
+          <FormSelect
+            control={form.control}
+            name="branch_id"
+            label="Tienda"
+            placeholder="Seleccione una tienda"
+            options={branches.map((branch) => ({
+              value: branch.id.toString(),
+              label: branch.name,
+              description: branch.address,
+            }))}
+            className={showAdvancedFields ? "" : "hidden"}
+          />
 
-          <div className={showAdvancedFields ? "" : "hidden"}>
-            <FormSelect
-              control={form.control}
-              name="warehouse_id"
-              label="Almacén"
-              placeholder="Seleccione un almacén"
-              options={filteredWarehouses.map((warehouse) => ({
-                value: warehouse.id.toString(),
-                label: warehouse.name,
-                description: warehouse.address,
-              }))}
-            />
-          </div>
+          <FormSelect
+            control={form.control}
+            name="warehouse_id"
+            label="Almacén"
+            placeholder="Seleccione un almacén"
+            options={filteredWarehouses.map((warehouse) => ({
+              value: warehouse.id.toString(),
+              label: warehouse.name,
+              description: warehouse.address,
+            }))}
+            className={showAdvancedFields ? "" : "hidden"}
+          />
 
           {useCustomDetails ? (
             <FormSelectAsync
@@ -959,7 +959,8 @@ export const GuideForm = ({
                 <span className="font-medium text-foreground">Chofer: </span>
                 {selectedVehicle.owner.full_name}
                 <span className="ml-2 text-xs">
-                  (DNI: {selectedVehicle.owner.number_document ?? "sin documento"})
+                  (DNI:{" "}
+                  {selectedVehicle.owner.number_document ?? "sin documento"})
                 </span>
               </div>
             )}
@@ -1376,7 +1377,6 @@ export const GuideForm = ({
             </div>
           </GroupFormSection>
         )}
-
       </form>
     </Form>
   );

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGuides } from "../lib/guide.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import GuideActions from "./GuideActions";
 import GuideTable from "./GuideTable";
@@ -10,14 +11,17 @@ import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import {
   successToast,
   errorToast,
+  promiseToast,
   SUCCESS_MESSAGE,
   ERROR_MESSAGE,
 } from "@/lib/core.function";
+import { api } from "@/lib/config";
 import { GuideColumns } from "./GuideColumns";
 import DataTablePagination from "@/components/DataTablePagination";
 import { GUIDE } from "../lib/guide.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = GUIDE;
 
@@ -27,6 +31,7 @@ export default function GuidePage() {
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { user } = useAuthStore();
 
   const { data, meta, isLoading, refetch } = useGuides({
@@ -37,12 +42,40 @@ export default function GuidePage() {
   });
   const { removeGuide } = useGuideStore();
 
+  const selectedGuideId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarGuide = selectedGuideId
+    ? (data?.find((g) => g.id.toString() === selectedGuideId) ?? null)
+    : null;
+  const hasSelection = !!toolbarGuide;
+
   const handleEdit = (id: number) => {
     navigate(`${GUIDE.ROUTE}/actualizar/${id}`);
   };
 
-  const handleView = (id: number) => {
-    navigate(`${GUIDE.ROUTE}/${id}`);
+  const handlePrint = () => {
+    if (!toolbarGuide) return;
+    const download = api
+      .get(`/sale-shipping-guides/${toolbarGuide.id}/pdf`, { responseType: "blob" })
+      .then((response) => {
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+
+        window.open(url, "_blank");
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `guia_${toolbarGuide.id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+      });
+    promiseToast(download, {
+      loading: "Generando PDF...",
+      success: "PDF generado exitosamente",
+      error: "Error al generar el PDF",
+    });
   };
 
   const handleDelete = async () => {
@@ -73,19 +106,24 @@ export default function GuidePage() {
   }, [user?.company_id]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <GuideActions excelEndpoint={exportEndpoint} />
-      </div>
+    <PageWrapper>
+      <GuideActions
+        excelEndpoint={exportEndpoint}
+        hasSelection={hasSelection}
+        onNew={() => navigate(GUIDE.ROUTE_ADD)}
+        onEdit={() => toolbarGuide && handleEdit(toolbarGuide.id)}
+        onDelete={() => toolbarGuide && setDeleteId(toolbarGuide.id)}
+        onPrint={handlePrint}
+      />
 
       <GuideTable
         isLoading={isLoading}
-        columns={GuideColumns({
-          onEdit: handleEdit,
-          onDelete: setDeleteId,
-          onView: handleView,
-        })}
+        columns={GuideColumns()}
         data={data || []}
+        onRowDoubleClick={(guide) => handleEdit(guide.id)}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
       >
         <GuideOptions search={search} setSearch={setSearch} />
       </GuideTable>
@@ -106,6 +144,6 @@ export default function GuidePage() {
           onConfirm={handleDelete}
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

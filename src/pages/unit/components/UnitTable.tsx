@@ -1,24 +1,34 @@
-import type { ColumnDef } from "@tanstack/react-table";
-import type { UnitResource } from "../lib/unit.interface";
 import { DataTable } from "@/components/DataTable";
+import type { UnitResource } from "../lib/unit.interface";
+import type { ColumnDef, RowSelectionState, OnChangeFn } from "@tanstack/react-table";
 
 interface UnitTableProps {
-  data: UnitResource[];
-  columns: ColumnDef<UnitResource, any>[];
   isLoading?: boolean;
+  columns: ColumnDef<UnitResource, any>[];
+  data: UnitResource[];
   children?: React.ReactNode;
   onRowDoubleClick?: (row: UnitResource) => void;
+  enableRowSelection?: boolean;
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
 }
 
 export default function UnitTable({
-  data,
-  columns,
-  isLoading,
-  children,
-  onRowDoubleClick,
+  isLoading, columns, data, children, onRowDoubleClick,
+  enableRowSelection, rowSelection, onRowSelectionChange,
 }: UnitTableProps) {
   return (
-    <DataTable data={data} columns={columns} isLoading={isLoading} onRowDoubleClick={onRowDoubleClick}>
+    <DataTable
+      isLoading={isLoading}
+      columns={columns}
+      data={data}
+      onRowDoubleClick={onRowDoubleClick}
+      enableRowSelection={enableRowSelection}
+      enableMultiRowSelection={false}
+      rowSelection={rowSelection}
+      onRowSelectionChange={onRowSelectionChange}
+      getRowId={(row) => row.id.toString()}
+    >
       {children}
     </DataTable>
   );

@@ -2,17 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, X } from "lucide-react";
 import type { SettingResource } from "../lib/setting.interface";
-import { Pencil } from "lucide-react"; // Import the Pencil icon
-import { ButtonAction } from "@/components/ButtonAction";
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
-export const SettingColumns = ({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-}): ColumnDef<SettingResource>[] => [
+export const SettingColumns = (): ColumnDef<SettingResource>[] => [
   {
     accessorKey: "id",
     header: "ID",
@@ -70,24 +61,6 @@ export const SettingColumns = ({
         <Check className="h-5 w-5 text-green-600" />
       ) : (
         <X className="h-5 w-5 text-red-600" />
-      );
-    },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const id = row.original.id;
-
-      return (
-        <div className="flex gap-2">
-          <ButtonAction
-            onClick={() => onEdit(id)}
-            icon={Pencil}
-            tooltip="Editar"
-          />
-          <DeleteButton onClick={() => onDelete(id)} />
-        </div>
       );
     },
   },

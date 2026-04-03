@@ -1,18 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { UnitResource } from "../lib/unit.interface";
-import { Pencil } from "lucide-react";
-import { ButtonAction } from "@/components/ButtonAction";
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
-interface UnitColumnsProps {
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-}
-
-export const UnitColumns = ({
-  onEdit,
-  onDelete,
-}: UnitColumnsProps): ColumnDef<UnitResource>[] => [
+export const UnitColumns = (): ColumnDef<UnitResource>[] => [
   {
     accessorKey: "id",
     header: "ID",
@@ -37,24 +26,6 @@ export const UnitColumns = ({
         hour: "2-digit",
         minute: "2-digit",
       });
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const unit = row.original;
-
-      return (
-        <div className="flex gap-2">
-          <ButtonAction
-            onClick={() => onEdit(unit.id)}
-            icon={Pencil}
-            tooltip="Editar"
-          />
-          <DeleteButton onClick={() => onDelete(unit.id)} />
-        </div>
-      );
     },
   },
 ];

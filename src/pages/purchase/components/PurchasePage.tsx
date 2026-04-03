@@ -39,8 +39,12 @@ export default function PurchasePage() {
   const [payment_type, setPaymentType] = useState("");
   const [status, setStatus] = useState("");
   const [warehouse_id, setWarehouseId] = useState("");
-  const [start_date, setStartDate] = useState<Date | undefined>();
-  const [end_date, setEndDate] = useState<Date | undefined>();
+  const [start_date, setStartDate] = useState<Date | undefined>(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return d;
+  });
+  const [end_date, setEndDate] = useState<Date | undefined>(() => new Date());
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -225,9 +229,8 @@ export default function PurchasePage() {
     });
   };
 
-  const selectedPurchaseId = parseInt(Object.keys(rowSelection)[0]);
-
   const handlePrint = () => {
+    if (!selectedPurchaseRow) return;
     const downloadPromise = exportPurchaseById(selectedPurchaseId).then(
       (blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -306,27 +309,88 @@ export default function PurchasePage() {
     end_date,
   ]);
 
+  const selectedPurchaseRowId = Object.keys(rowSelection).find(
+    (key) => rowSelection[key],
+  );
+  const selectedPurchaseRow = selectedPurchaseRowId
+    ? (data?.find((purchase) => purchase.id.toString() === selectedPurchaseRowId) ??
+      null)
+    : null;
+  const hasSelection = !!selectedPurchaseRow;
+
+  const selectedPurchaseId = selectedPurchaseRow?.id ?? 0;
+
+  const isPaidPurchase = selectedPurchaseRow?.status === "PAGADO";
+  const canEditOrDelete = Boolean(selectedPurchaseRow && !isPaidPurchase);
+
+  const hasPendingInstallments = selectedPurchaseRow?.installments?.some(
+    (inst) => parseFloat(inst.pending_amount) > 0,
+  );
+  const totalAmount = selectedPurchaseRow
+    ? parseFloat(selectedPurchaseRow.total_amount)
+    : 0;
+  const sumOfInstallments =
+    selectedPurchaseRow?.installments?.reduce(
+      (sum, inst) => sum + parseFloat(inst.amount),
+      0,
+    ) || 0;
+  const isInstallmentDistributionValid =
+    Math.abs(totalAmount - sumOfInstallments) <= 0.01;
+  const canQuickPay = Boolean(
+    selectedPurchaseRow &&
+      hasPendingInstallments &&
+      isInstallmentDistributionValid,
+  );
+
+  const handleToolbarViewDetails = () => {
+    if (!selectedPurchaseRow) return;
+    handleViewDetails(selectedPurchaseRow);
+  };
+
+  const handleToolbarManage = () => {
+    if (!selectedPurchaseRow) return;
+    handleManage(selectedPurchaseRow);
+  };
+
+  const handleToolbarEdit = () => {
+    if (!selectedPurchaseRow) return;
+    handleEditPurchase(selectedPurchaseRow);
+  };
+
+  const handleToolbarDelete = () => {
+    if (!selectedPurchaseRow) return;
+    setDeleteId(selectedPurchaseRow.id);
+  };
+
+  const handleToolbarQuickPay = () => {
+    if (!selectedPurchaseRow) return;
+    handleQuickPay(selectedPurchaseRow);
+  };
+
   return (
     <PageWrapper>
       <div className="flex justify-between items-center">
         <PurchaseActions
           onCreatePurchase={handleCreatePurchase}
+          hasSelection={hasSelection}
+          canEditOrDelete={canEditOrDelete}
+          canQuickPay={canQuickPay}
+          onViewDetails={handleToolbarViewDetails}
+          onManage={handleToolbarManage}
+          onEdit={handleToolbarEdit}
+          onDelete={handleToolbarDelete}
+          onQuickPay={handleToolbarQuickPay}
           excelEndpoint={exportEndpoint}
           onPrint={handlePrint}
-          selectedCount={Object.keys(rowSelection).length}
         />
       </div>
 
       <PurchaseTable
         data={data || []}
-        onEdit={handleEditPurchase}
-        onDelete={setDeleteId}
-        onViewDetails={handleViewDetails}
-        onManage={handleManage}
-        onQuickPay={handleQuickPay}
         isLoading={isLoading}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={handleEditPurchase}
       >
         <PurchaseOptions
           document_type={document_type}
@@ -343,10 +407,8 @@ export default function PurchasePage() {
           setWarehouseId={setWarehouseId}
           start_date={start_date}
           end_date={end_date}
-          onDateChange={(from, to) => {
-            setStartDate(from);
-            setEndDate(to);
-          }}
+          setStartDate={setStartDate}
+          setEndDate={setEndDate}
         />
       </PurchaseTable>
 

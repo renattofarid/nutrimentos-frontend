@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -7,32 +6,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  Pencil,
-  Eye,
-  Wallet,
   AlertTriangle,
-  PanelRightOpen,
 } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { PurchaseResource } from "../lib/purchase.interface";
-import { ButtonAction } from "@/components/ButtonAction";
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
-interface PurchaseColumnsProps {
-  onEdit: (purchase: PurchaseResource) => void;
-  onDelete: (id: number) => void;
-  onViewDetails: (purchase: PurchaseResource) => void;
-  onManage: (purchase: PurchaseResource) => void;
-  onQuickPay: (purchase: PurchaseResource) => void;
-}
-
-export const getPurchaseColumns = ({
-  onEdit,
-  onDelete,
-  onViewDetails,
-  onManage,
-  onQuickPay,
-}: PurchaseColumnsProps): ColumnDef<PurchaseResource>[] => [
+export const getPurchaseColumns = (): ColumnDef<PurchaseResource>[] => [
   {
     accessorKey: "correlativo",
     header: "Correlativo",
@@ -161,16 +140,7 @@ export const getPurchaseColumns = ({
     accessorKey: "details",
     header: "Detalles",
     cell: ({ row }) => (
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onManage(row.original)}
-        className="h-auto p-1"
-      >
-        <Badge variant="outline" className="cursor-pointer hover:bg-accent">
-          {row.original.details?.length || 0} item(s)
-        </Badge>
-      </Button>
+      <Badge variant="outline">{row.original.details?.length || 0} item(s)</Badge>
     ),
   },
   {
@@ -204,19 +174,9 @@ export const getPurchaseColumns = ({
       return (
         <TooltipProvider>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onManage(row.original)}
-              className="h-auto p-1"
-            >
-              <Badge
-                variant="outline"
-                className="cursor-pointer hover:bg-accent"
-              >
-                {row.original.installments?.length || 0} cuota(s)
-              </Badge>
-            </Button>
+            <Badge variant="outline">
+              {row.original.installments?.length || 0} cuota(s)
+            </Badge>
 
             {!isValid && (
               <Tooltip>
@@ -233,68 +193,13 @@ export const getPurchaseColumns = ({
                 </TooltipContent>
               </Tooltip>
             )}
-
-            {hasPendingPayments && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onQuickPay(row.original)}
-                    className="h-8 w-8 p-0"
-                    disabled={!isValid}
-                  >
-                    <Wallet
-                      className={`h-4 w-4 ${
-                        isValid ? "text-primary" : "text-gray-400"
-                      }`}
-                    />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">
-                    {isValid
-                      ? "Pago rápido"
-                      : "No se puede realizar pago rápido. Debe sincronizar las cuotas primero."}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
+            {hasPendingPayments && !isValid && (
+              <span className="text-xs text-muted-foreground">
+                Sincronizar cuotas
+              </span>
             )}
           </div>
         </TooltipProvider>
-      );
-    },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const isPaid = row.original.status === "PAGADO";
-
-      return (
-        <div className="flex items-center gap-2">
-          <ButtonAction
-            onClick={() => onViewDetails(row.original)}
-            icon={Eye}
-            tooltip="Ver Detalle"
-          />
-          <ButtonAction
-            onClick={() => onManage(row.original)}
-            icon={PanelRightOpen}
-            tooltip="Gestionar"
-          />
-          <ButtonAction
-            onClick={() => !isPaid && onEdit(row.original)}
-            icon={Pencil}
-            tooltip={isPaid ? "Editar (Pagado)" : "Editar"}
-            disabled={isPaid}
-          />
-          {!isPaid && (
-            <DeleteButton
-              onClick={() => !isPaid && onDelete(row.original.id)}
-            />
-          )}
-        </div>
       );
     },
   },

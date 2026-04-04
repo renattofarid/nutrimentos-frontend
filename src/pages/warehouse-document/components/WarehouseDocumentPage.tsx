@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWarehouseDocuments } from "../lib/warehouse-document.hook";
 import type { RowSelectionState } from "@tanstack/react-table";
@@ -17,6 +17,7 @@ import {
   errorToast,
   SUCCESS_MESSAGE,
   ERROR_MESSAGE,
+  promiseToast,
 } from "@/lib/core.function";
 import { WarehouseDocumentColumns } from "./WarehouseDocumentColumns";
 import DataTablePagination from "@/components/DataTablePagination";
@@ -34,6 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import PageWrapper from "@/components/PageWrapper";
+import { exportWarehouseDocumentByNumber } from "../lib/warehouse-document.actions";
 
 const { MODEL, ROUTE } = WAREHOUSE_DOCUMENT;
 
@@ -128,15 +130,58 @@ export default function WarehouseDocumentPage() {
     }
   };
 
+  const handlePrint = () => {
+    if (!toolbarDoc?.document_number) return;
+
+    const downloadPromise = exportWarehouseDocumentByNumber(
+      toolbarDoc.document_number,
+    ).then((blob) => {
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+    });
+
+    promiseToast(downloadPromise, {
+      loading: "Generando PDF...",
+      success: "PDF generado correctamente",
+      error: "Error al generar el PDF",
+    });
+  };
+
+  const exportEndpoint = useMemo(() => {
+    const params = new URLSearchParams();
+
+    if (search) {
+      params.append("search", search);
+    }
+    if (selectedWarehouse) {
+      params.append("warehouse_id", selectedWarehouse);
+    }
+    if (selectedType) {
+      params.append("type", selectedType);
+    }
+    if (selectedStatus) {
+      params.append("status", selectedStatus);
+    }
+
+    params.append("export", "excel");
+
+    const queryString = params.toString();
+    const baseExcelUrl = "/warehouse-document/export";
+    return queryString ? `${baseExcelUrl}?${queryString}` : baseExcelUrl;
+  }, [search, selectedWarehouse, selectedType, selectedStatus]);
+
   return (
     <PageWrapper>
       <WarehouseDocumentActions
+        excelEndpoint={exportEndpoint}
         hasSelection={hasSelection}
         selectedStatus={toolbarDoc?.status}
         onNew={() => navigate(`${ROUTE}/agregar`)}
         onEdit={() => toolbarDoc && navigate(`${ROUTE}/actualizar/${toolbarDoc.id}`)}
         onDelete={() => toolbarDoc && setDeleteId(toolbarDoc.id)}
         onView={() => toolbarDoc && navigate(`${ROUTE}/${toolbarDoc.id}`)}
+        onPrint={handlePrint}
         onConfirm={() => toolbarDoc && setConfirmId(toolbarDoc.id)}
         onCancel={() => toolbarDoc && setCancelId(toolbarDoc.id)}
       />

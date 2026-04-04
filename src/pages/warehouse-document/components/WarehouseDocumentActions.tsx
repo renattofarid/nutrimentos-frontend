@@ -1,26 +1,40 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Pencil, Trash2, X, Eye, CheckCircle, XCircle } from "lucide-react";
+import ExportButtons from "@/components/ExportButtons";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Eye,
+  CheckCircle,
+  XCircle,
+  Printer,
+} from "lucide-react";
 import { useWindowManager } from "@/stores/window-manager.store";
 
 interface Props {
+  excelEndpoint?: string;
   hasSelection: boolean;
   selectedStatus?: string;
   onNew: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onView: () => void;
+  onPrint: () => void;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
 export default function WarehouseDocumentActions({
+  excelEndpoint,
   hasSelection,
   selectedStatus,
   onNew,
   onEdit,
   onDelete,
   onView,
+  onPrint,
   onConfirm,
   onCancel,
 }: Props) {
@@ -61,6 +75,16 @@ export default function WarehouseDocumentActions({
           Editar
         </Button>
         <Button
+          colorIcon="blue"
+          size="sm"
+          variant="outline"
+          onClick={onPrint}
+          disabled={!hasSelection}
+        >
+          <Printer />
+          Imprimir
+        </Button>
+        <Button
           colorIcon="green"
           size="sm"
           variant="outline"
@@ -98,6 +122,10 @@ export default function WarehouseDocumentActions({
           Cerrar
         </Button>
       </div>
+      <ExportButtons
+        excelEndpoint={excelEndpoint}
+        excelFileName={`documentos_almacen_${new Date().toISOString().split("T")[0]}.xlsx`}
+      />
     </div>
   );
 }

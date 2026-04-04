@@ -86,3 +86,17 @@ export async function deleteWarehouseDocument(
   const { data } = await api.delete<{ message: string }>(`${ENDPOINT}/${id}`);
   return data;
 }
+
+// Export warehouse document
+export async function exportWarehouseDocumentByNumber(
+  document_number: string,
+): Promise<Blob> {
+  const response = await api.get<Blob>(`${ENDPOINT}/export`, {
+    params: {
+      document_number,
+      export: "pdf",
+    },
+    responseType: "blob",
+  });
+  return response.data;
+}

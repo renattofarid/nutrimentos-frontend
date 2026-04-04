@@ -15,11 +15,16 @@ import { errorToast } from "@/lib/core.function";
 import PageWrapper from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
 import { Loader, Save, X } from "lucide-react";
+import { ConfirmationDialog } from "@/components/ConfirmationDialog";
+import { exportBulkTickets } from "../lib/sale.actions";
 
 export const SaleEditPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const [showNextDialog, setShowNextDialog] = useState(false);
+  const [pendingSaleId, setPendingSaleId] = useState<number | null>(null);
 
   const { data: companies, isLoading: companiesLoading } = useAllCompanies();
   const { data: branches, isLoading: branchesLoading } = useAllBranches();
@@ -98,8 +103,8 @@ export const SaleEditPage = () => {
     setIsSubmitting(true);
     try {
       await updateSale(Number(id), data);
-      // El toast de éxito se muestra en el store
-      navigate("/ventas");
+      setPendingSaleId(Number(id));
+      setShowPrintDialog(true);
     } catch (error: any) {
       errorToast(
         error.response?.data?.message || "Error al actualizar la venta",
@@ -107,6 +112,25 @@ export const SaleEditPage = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePrintConfirm = async () => {
+    if (pendingSaleId) {
+      try {
+        const blob = await exportBulkTickets([pendingSaleId]);
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, "_blank");
+      } catch {
+        // Si falla la exportación, continuamos igual
+      }
+    }
+    setShowPrintDialog(false);
+    setShowNextDialog(true);
+  };
+
+  const handlePrintCancel = () => {
+    setShowPrintDialog(false);
+    setShowNextDialog(true);
   };
 
   if (isLoading) {
@@ -156,6 +180,33 @@ export const SaleEditPage = () => {
             />
           )}
       </div>
+
+      <ConfirmationDialog
+        open={showPrintDialog}
+        onOpenChange={setShowPrintDialog}
+        icon="info"
+        title="Venta actualizada"
+        description="¿Deseas imprimir la boleta?"
+        confirmText="Sí, imprimir"
+        cancelText="No, omitir"
+        onConfirm={handlePrintConfirm}
+        onCancel={handlePrintCancel}
+      />
+
+      <ConfirmationDialog
+        open={showNextDialog}
+        onOpenChange={setShowNextDialog}
+        icon="info"
+        title="¿Qué deseas hacer ahora?"
+        description="Puedes registrar una nueva venta o volver al listado."
+        confirmText="Nueva venta"
+        cancelText="Ir al listado"
+        onConfirm={() => {
+          setShowNextDialog(false);
+          navigate("/ventas/agregar");
+        }}
+        onCancel={() => navigate("/ventas/listado")}
+      />
     </PageWrapper>
   );
 };

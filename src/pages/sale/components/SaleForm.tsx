@@ -296,6 +296,7 @@ export const SaleForm = ({
   const selectedDocumentType = form.watch("document_type");
   const selectedCustomerId = form.watch("customer_id");
   const selectedVendedorId = form.watch("vendedor_id");
+  const selectedDiscountGlobal = form.watch("discount_global");
   const selectedCustomerPrimaryZone =
     customerAddresses.find((zone) => zone.is_primary)?.zone_name ??
     customerAddresses[0]?.zone_name ??
@@ -432,13 +433,28 @@ export const SaleForm = ({
     fetchNextSeries();
   }, [selectedBranchId, selectedDocumentType, mode]);
 
-  // Auto-agregar cuota inicial al cambiar a CREDITO (solo en modo creación)
+  const buildCashInstallment = (): InstallmentRow => {
+    const saleTotal = calculateDetailsTotal();
+    return {
+      installment_number: "1",
+      due_days: "0",
+      amount: saleTotal.toString(),
+    };
+  };
+
+  // Mantener cuota única automática para pagos al contado (create/update)
   useEffect(() => {
-    if (
-      mode === "create" &&
-      selectedPaymentType === "CREDITO" &&
-      installments.length === 0
-    ) {
+    if (selectedPaymentType === "CONTADO") {
+      const cashInstallment = buildCashInstallment();
+      setInstallments([cashInstallment]);
+      form.setValue("installments", [cashInstallment]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPaymentType, details, selectedDiscountGlobal]);
+
+  // Auto-agregar cuota inicial al cambiar a CREDITO
+  useEffect(() => {
+    if (selectedPaymentType === "CREDITO" && installments.length === 0) {
       const saleTotal = calculateDetailsTotal();
       const newInstallment: InstallmentRow = {
         installment_number: "1",
@@ -462,7 +478,7 @@ export const SaleForm = ({
       form.setValue("installments", updated);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [details]);
+  }, [details, selectedDiscountGlobal]);
 
   // Efecto para hacer focus en el primer campo cuando se monta el formulario
   useEffect(() => {
@@ -844,13 +860,21 @@ export const SaleForm = ({
     [],
   );
 
-  // El total es la suma de los subtotales (precio ya incluye IGV)
-  const calculateDetailsTotal = () => {
+  // Total bruto: suma de subtotales de detalle (precio incluye IGV)
+  const calculateDetailsGrossTotal = () => {
     const sum = details.reduce(
       (sum, detail) => sum + (detail.subtotal || 0),
       0,
     );
     return roundTo6Decimals(sum);
+  };
+
+  // Total neto: total bruto menos descuento global
+  const calculateDetailsTotal = () => {
+    const grossTotal = calculateDetailsGrossTotal();
+    const discount = parseFloat(String(selectedDiscountGlobal ?? "0")) || 0;
+    const safeDiscount = Math.min(Math.max(discount, 0), grossTotal);
+    return roundTo6Decimals(grossTotal - safeDiscount);
   };
 
   // El IGV se extrae del total (IGV incluido en precio)
@@ -1321,16 +1345,6 @@ export const SaleForm = ({
             </div>
           </div>
 
-          {/* Total a Pagar */}
-          <div className="flex gap-2 items-center">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-              Total a Pagar
-            </div>
-            <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-              {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())}
-            </div>
-          </div>
-
           <div className="col-span-2">
             <FormInput
               name="discount_global"
@@ -1343,6 +1357,17 @@ export const SaleForm = ({
               horizontalField
             />
           </div>
+
+          {/* Total a Pagar */}
+          <div className="flex gap-2 items-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              Total a Pagar
+            </div>
+            <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+              {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())}
+            </div>
+          </div>
+
           <div className="col-span-full">
             <FormInput
               name="observations"

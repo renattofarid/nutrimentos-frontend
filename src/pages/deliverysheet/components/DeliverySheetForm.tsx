@@ -367,9 +367,9 @@ export const DeliverySheetForm = ({
         header: "Documento",
         cell: ({ row }) => (
           <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">
+            {/* <span className="text-xs text-muted-foreground">
               {row.original.document_type}
-            </span>
+            </span> */}
             <span className="font-mono font-semibold">
               {row.original.serie}-{row.original.numero}
             </span>
@@ -418,9 +418,7 @@ export const DeliverySheetForm = ({
               disabled={isSubmitting || selectedSaleIds.length === 0}
             >
               {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
-              {mode === "create"
-                ? "Guardar e Imprimir Planilla"
-                : "Actualizar Planilla"}
+              {mode === "create" ? "Guardar e Imprimir" : "Actualizar"}
             </Button>
 
             {onCancel && (

@@ -184,7 +184,7 @@ export default function WarehouseDocumentDetailPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => navigate(`/${ROUTE}`)}>
+            <Button size="sm" variant="outline" onClick={() => navigate(`${ROUTE}`)}>
               <X /> Cerrar
             </Button>
             {document.status === "BORRADOR" && (

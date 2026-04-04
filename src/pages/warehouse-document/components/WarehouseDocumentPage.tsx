@@ -148,7 +148,7 @@ export default function WarehouseDocumentPage() {
         enableRowSelection={true}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
-        onRowDoubleClick={(doc) => navigate(`${ROUTE}/${doc.id}`)}
+        onRowDoubleClick={(doc) => navigate(`${ROUTE}/actualizar/${doc.id}`)}
       >
         {warehouses && (
           <WarehouseDocumentOptions

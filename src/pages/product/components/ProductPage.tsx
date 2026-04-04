@@ -42,7 +42,7 @@ export default function ProductPage() {
     page,
     per_page,
     search,
-    code: searchCode,
+    codigo: searchCode,
     category_id: selectedCategory,
     brand_id: selectedBrand,
     type: selectedType,

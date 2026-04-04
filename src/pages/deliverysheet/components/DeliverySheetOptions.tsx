@@ -1,8 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
 import SearchInput from "@/components/SearchInput";
 import { SearchableSelect } from "@/components/SearchableSelect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 // import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 // import { useAllCompaniesList } from "@/pages/company/lib/company.hook";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
@@ -19,6 +29,8 @@ const TYPE_OPTIONS = [
   { value: "CONTADO", label: "Contado" },
   { value: "CREDITO", label: "Crédito" },
 ];
+
+type ActiveFilter = "" | "type" | "zone";
 
 interface DeliverySheetOptionsProps {
   search: string;
@@ -54,21 +66,18 @@ export default function DeliverySheetOptions({
   // delivery_date_from,
   // delivery_date_to,
   // onDeliveryDateChange,
-  // status,
-  // setStatus,
+  setStatus,
   type,
   setType,
-  // customer_id,
-  // setCustomerId,
-  // driver_id,
-  // setDriverId,
+  setCustomerId,
+  setDriverId,
   zone_id,
   setZoneId,
-  // branch_id,
-  // setBranchId,
-  // company_id,
-  // setCompanyId,
+  setBranchId,
+  setCompanyId,
+  onDeliveryDateChange,
 }: DeliverySheetOptionsProps) {
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>("");
   // const { data: branches } = useAllBranches();
   // const { data: companies } = useAllCompaniesList();
   const { data: zones } = useAllZones();
@@ -95,6 +104,22 @@ export default function DeliverySheetOptions({
   //     label: c.business_name || `${c.names} ${c.father_surname}`.trim(),
   //   })) ?? [];
 
+  const resetAdditionalFilters = () => {
+    setType("");
+    setZoneId("");
+    setStatus("");
+    setCustomerId("");
+    setDriverId("");
+    setBranchId("");
+    setCompanyId("");
+    onDeliveryDateChange(undefined, undefined);
+  };
+
+  const handleFilterTypeChange = (value: string) => {
+    resetAdditionalFilters();
+    setActiveFilter((value === "none" ? "" : value) as ActiveFilter);
+  };
+
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <SearchInput
@@ -103,12 +128,41 @@ export default function DeliverySheetOptions({
         placeholder="Buscar por número, cliente o conductor"
       />
 
-      <SearchableSelect
-        options={TYPE_OPTIONS}
-        value={type}
-        onChange={setType}
-        placeholder="Tipo"
+      <DateRangePickerFilter
+        dateFrom={issue_date_from}
+        dateTo={issue_date_to}
+        onDateChange={onIssueDateChange}
+        placeholder="F. Emisión"
+        className="w-[220px]"
       />
+
+      <Select
+        value={activeFilter || "none"}
+        onValueChange={handleFilterTypeChange}
+      >
+        <SelectTrigger
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "h-8!",
+          )}
+        >
+          <SelectValue placeholder="Filtro adicional" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">- Buscar por -</SelectItem>
+          <SelectItem value="type">Tipo</SelectItem>
+          <SelectItem value="zone">Zona</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {activeFilter === "type" && (
+        <SearchableSelect
+          options={TYPE_OPTIONS}
+          value={type}
+          onChange={setType}
+          placeholder="Tipo"
+        />
+      )}
 
       {/* 
       <SearchableSelect
@@ -132,12 +186,14 @@ export default function DeliverySheetOptions({
         placeholder="Conductor"
       /> */}
 
-      <SearchableSelect
-        options={zoneOptions}
-        value={zone_id}
-        onChange={setZoneId}
-        placeholder="Zona"
-      />
+      {activeFilter === "zone" && (
+        <SearchableSelect
+          options={zoneOptions}
+          value={zone_id}
+          onChange={setZoneId}
+          placeholder="Zona"
+        />
+      )}
       {/* 
       <SearchableSelect
         options={branchOptions}
@@ -161,13 +217,6 @@ export default function DeliverySheetOptions({
         className="w-[220px]"
       /> */}
 
-      <DateRangePickerFilter
-        dateFrom={issue_date_from}
-        dateTo={issue_date_to}
-        onDateChange={onIssueDateChange}
-        placeholder="F. Emisión"
-        className="w-[220px]"
-      />
     </div>
   );
 }

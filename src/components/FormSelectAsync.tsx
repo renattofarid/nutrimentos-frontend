@@ -365,172 +365,180 @@ export function FormSelectAsync({
                   </FormLabel>
                 )}
 
-            <div className="flex gap-2 items-center">
-              <Popover open={open} onOpenChange={setOpen}>
-                <PopoverAnchor asChild>
-                  <FormControl>
-                    <div className="relative w-full">
-                      <Input
-                        value={open ? search : displayLabel}
-                        onChange={(e) => setSearch(e.target.value)}
-                        onFocus={handleFocus}
-                        onBlur={handleBlur}
-                        onMouseDown={(e) => {
-                          if (
-                            !open &&
-                            !disabled &&
-                            document.activeElement === e.currentTarget
-                          ) {
-                            if (closeTimerRef.current)
-                              clearTimeout(closeTimerRef.current);
-                            setSearch("");
-                            setPage(1);
-                            setOpen(true);
-                            if (debouncedSearch === "") {
-                              if (data?.data) {
-                                const newOptions = data.data.map(
-                                  mapOptionFnRef.current,
-                                );
-                                for (const item of data.data) {
-                                  const opt = mapOptionFnRef.current(item);
-                                  rawItemsMap.current.set(opt.value, item);
+            <div
+              className={cn(
+                horizontal || horizontalField
+                  ? "flex-1 min-w-0 flex flex-col gap-0.5"
+                  : "contents",
+              )}
+            >
+              <div className="flex gap-2 items-center">
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverAnchor asChild>
+                    <FormControl>
+                      <div className="relative w-full">
+                        <Input
+                          value={open ? search : displayLabel}
+                          onChange={(e) => setSearch(e.target.value)}
+                          onFocus={handleFocus}
+                          onBlur={handleBlur}
+                          onMouseDown={(e) => {
+                            if (
+                              !open &&
+                              !disabled &&
+                              document.activeElement === e.currentTarget
+                            ) {
+                              if (closeTimerRef.current)
+                                clearTimeout(closeTimerRef.current);
+                              setSearch("");
+                              setPage(1);
+                              setOpen(true);
+                              if (debouncedSearch === "") {
+                                if (data?.data) {
+                                  const newOptions = data.data.map(
+                                    mapOptionFnRef.current,
+                                  );
+                                  for (const item of data.data) {
+                                    const opt = mapOptionFnRef.current(item);
+                                    rawItemsMap.current.set(opt.value, item);
+                                  }
+                                  setAllOptions(newOptions);
                                 }
-                                setAllOptions(newOptions);
+                              } else {
+                                setDebouncedSearch("");
+                                setAllOptions([]);
                               }
-                            } else {
-                              setDebouncedSearch("");
-                              setAllOptions([]);
                             }
-                          }
-                        }}
-                        placeholder={placeholder}
-                        disabled={disabled}
-                        className={cn(
-                          "h-8 pr-8 text-sm",
-                          field.value && !open && "bg-muted",
-                          uppercase && "uppercase",
-                          className,
-                        )}
-                        autoComplete="off"
-                      />
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-                        {(isLoading || isFetching) && open ? (
-                          <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                        ) : field.value && !disabled ? (
-                          <button
-                            type="button"
-                            tabIndex={-1}
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={handleClear}
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        ) : null}
-                        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50 pointer-events-none" />
-                      </div>
-                    </div>
-                  </FormControl>
-                </PopoverAnchor>
-
-                <PopoverContent
-                  className="p-0 min-w-(--radix-popover-trigger-width)! w-auto"
-                  onMouseDown={handleListMouseDown}
-                  onWheel={(e) => e.stopPropagation()}
-                  onWheelCapture={(e) => e.stopPropagation()}
-                  onTouchMove={(e) => e.stopPropagation()}
-                  onOpenAutoFocus={(e) => e.preventDefault()}
-                  onFocusOutside={(e) => e.preventDefault()}
-                >
-                  <Command
-                    className="max-h-72 overflow-hidden"
-                    shouldFilter={false}
-                  >
-                    <CommandList
-                      className="max-h-60 overflow-y-auto"
-                      ref={scrollRef}
-                      onScroll={handleScroll}
-                    >
-                      {isLoading && page === 1 ? (
-                        <div className="py-6 text-center text-sm flex flex-col items-center justify-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                          <span className="text-muted-foreground">
-                            Buscando...
-                          </span>
-                        </div>
-                      ) : (
-                        <>
-                          <CommandEmpty className="py-4 text-center text-sm">
-                            No hay resultados.
-                          </CommandEmpty>
-                          {allOptions.map((option) => (
-                            <CommandItem
-                              key={option.value}
-                              className="cursor-pointer"
-                              onSelect={() => handleSelect(option)}
+                          }}
+                          placeholder={placeholder}
+                          disabled={disabled}
+                          className={cn(
+                            "h-8 pr-8 text-sm",
+                            field.value && !open && "bg-muted",
+                            uppercase && "uppercase",
+                            className,
+                          )}
+                          autoComplete="off"
+                        />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                          {(isLoading || isFetching) && open ? (
+                            <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                          ) : field.value && !disabled ? (
+                            <button
+                              type="button"
+                              tabIndex={-1}
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={handleClear}
+                              className="text-muted-foreground hover:text-foreground transition-colors"
                             >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4 shrink-0",
-                                  option.value === field.value
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              <div className="flex flex-col min-w-0 flex-1">
-                                <span
+                              <X className="h-3 w-3" />
+                            </button>
+                          ) : null}
+                          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50 pointer-events-none" />
+                        </div>
+                      </div>
+                    </FormControl>
+                  </PopoverAnchor>
+
+                  <PopoverContent
+                    className="p-0 min-w-(--radix-popover-trigger-width)! w-auto"
+                    onMouseDown={handleListMouseDown}
+                    onWheel={(e) => e.stopPropagation()}
+                    onWheelCapture={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                    onFocusOutside={(e) => e.preventDefault()}
+                  >
+                    <Command
+                      className="max-h-72 overflow-hidden"
+                      shouldFilter={false}
+                    >
+                      <CommandList
+                        className="max-h-60 overflow-y-auto"
+                        ref={scrollRef}
+                        onScroll={handleScroll}
+                      >
+                        {isLoading && page === 1 ? (
+                          <div className="py-6 text-center text-sm flex flex-col items-center justify-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                            <span className="text-muted-foreground">
+                              Buscando...
+                            </span>
+                          </div>
+                        ) : (
+                          <>
+                            <CommandEmpty className="py-4 text-center text-sm">
+                              No hay resultados.
+                            </CommandEmpty>
+                            {allOptions.map((option) => (
+                              <CommandItem
+                                key={option.value}
+                                className="cursor-pointer"
+                                onSelect={() => handleSelect(option)}
+                              >
+                                <Check
                                   className={cn(
-                                    "truncate",
-                                    classNameOption,
-                                    uppercase && "uppercase",
+                                    "mr-2 h-4 w-4 shrink-0",
+                                    option.value === field.value
+                                      ? "opacity-100"
+                                      : "opacity-0",
                                   )}
-                                >
-                                  {typeof option.label === "function"
-                                    ? option.label()
-                                    : option.label}
-                                </span>
-                                {option.description && (
+                                />
+                                <div className="flex flex-col min-w-0 flex-1">
                                   <span
                                     className={cn(
-                                      "text-[10px] text-muted-foreground truncate",
+                                      "truncate",
+                                      classNameOption,
                                       uppercase && "uppercase",
                                     )}
                                   >
-                                    {withValue && `${option.value} - `}{" "}
-                                    {option.description}
+                                    {typeof option.label === "function"
+                                      ? option.label()
+                                      : option.label}
                                   </span>
-                                )}
+                                  {option.description && (
+                                    <span
+                                      className={cn(
+                                        "text-[10px] text-muted-foreground truncate",
+                                        uppercase && "uppercase",
+                                      )}
+                                    >
+                                      {withValue && `${option.value} - `}{" "}
+                                      {option.description}
+                                    </span>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            ))}
+                            {isFetching && page > 1 && (
+                              <div className="py-2 text-center text-sm flex items-center justify-center gap-2">
+                                <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                                <span className="text-xs text-muted-foreground">
+                                  Cargando más...
+                                </span>
                               </div>
-                            </CommandItem>
-                          ))}
-                          {isFetching && page > 1 && (
-                            <div className="py-2 text-center text-sm flex items-center justify-center gap-2">
-                              <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                              <span className="text-xs text-muted-foreground">
-                                Cargando más...
-                              </span>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              {children}
-            </div>
+                            )}
+                          </>
+                        )}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                {children}
+              </div>
 
-            {description && (
-              <FormDescription
-                className={cn(
-                  "text-xs text-muted-foreground mb-0!",
-                  uppercase && "uppercase",
-                )}
-              >
-                {description}
-              </FormDescription>
-            )}
-            <FormMessage />
+              {description && (
+                <FormDescription
+                  className={cn(
+                    "text-xs text-muted-foreground mb-0!",
+                    uppercase && "uppercase",
+                  )}
+                >
+                  {description}
+                </FormDescription>
+              )}
+              <FormMessage />
+            </div>
           </FormItem>
         );
       }}

@@ -3,11 +3,9 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
-import { Loader, Save, X } from "lucide-react";
 
 import PageWrapper from "@/components/PageWrapper";
 import FormSkeleton from "@/components/FormSkeleton";
-import { Button } from "@/components/ui/button";
 import { errorToast } from "@/lib/core.function";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
@@ -35,13 +33,23 @@ export default function DeliverySheetEditPage() {
     resetDeliverySheet,
   } = useDeliverySheetStore();
 
-  const { data: allBranches = [], isLoading: isLoadingBranches } =
-    useAllBranches();
-  const { data: zones = [], isLoading: isLoadingZones } = useAllZones();
+  const {
+    data: allBranches = [],
+    isLoading: isLoadingBranches,
+    refetch: refetchBranches,
+  } = useAllBranches();
+  const {
+    data: zones = [],
+    isLoading: isLoadingZones,
+    refetch: refetchZones,
+  } = useAllZones();
 
   const isLoading = isFinding || isLoadingBranches || isLoadingZones;
 
   useEffect(() => {
+    refetchBranches();
+    refetchZones();
+
     if (!id) {
       navigate("/planillas/listado");
       return;
@@ -52,7 +60,14 @@ export default function DeliverySheetEditPage() {
     return () => {
       resetDeliverySheet();
     };
-  }, [id, navigate, fetchDeliverySheet, resetDeliverySheet]);
+  }, [
+    id,
+    navigate,
+    fetchDeliverySheet,
+    resetDeliverySheet,
+    refetchBranches,
+    refetchZones,
+  ]);
 
   useEffect(() => {
     if (!deliverySheet) return;
@@ -107,6 +122,10 @@ export default function DeliverySheetEditPage() {
     });
   };
 
+  const handleCancel = () => {
+    navigate("/planillas/listado");
+  };
+
   if (isLoading) {
     return (
       <PageWrapper>
@@ -127,25 +146,6 @@ export default function DeliverySheetEditPage() {
 
   return (
     <PageWrapper>
-      <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          type="submit"
-          form="delivery-sheet-form"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
-          {isSubmitting ? "Guardando..." : "Guardar"}
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => navigate("/planillas/listado")}
-        >
-          <X /> Cancelar
-        </Button>
-      </div>
-
       <DeliverySheetForm
         defaultValues={{
           branch_id: "",
@@ -158,12 +158,12 @@ export default function DeliverySheetEditPage() {
           for_single_customer: !!deliverySheet.customer,
         }}
         onSubmit={handleSubmit}
+        onCancel={handleCancel}
         mode="update"
         formId="delivery-sheet-form"
-        showHeaderActions={false}
         isSubmitting={isSubmitting}
-        branches={allBranches}
-        zones={zones}
+        branches={allBranches || []}
+        zones={zones || []}
         availableSales={availableSales || []}
         onSearchSales={handleSearchSales}
         isLoadingAvailableSales={isLoadingAvailableSales}

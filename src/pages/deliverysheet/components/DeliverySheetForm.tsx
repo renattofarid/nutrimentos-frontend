@@ -410,16 +410,18 @@ export const DeliverySheetForm = ({
                 Ver
               </Button>
             )}
-            <Button
-              size="sm"
-              type="submit"
-              variant="outline"
-              colorIcon="green"
-              disabled={isSubmitting || selectedSaleIds.length === 0}
-            >
-              {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
-              {mode === "create" ? "Guardar e Imprimir" : "Actualizar"}
-            </Button>
+            {mode === "create" && (
+              <Button
+                size="sm"
+                type="submit"
+                variant="outline"
+                colorIcon="green"
+                disabled={isSubmitting || selectedSaleIds.length === 0}
+              >
+                {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+                {mode === "create" ? "Guardar e Imprimir" : "Actualizar"}
+              </Button>
+            )}
 
             {onCancel && (
               <Button

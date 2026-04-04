@@ -209,7 +209,7 @@ export default function CarLoadReportPage() {
               <DataTable
                 columns={zoneColumns}
                 data={displayedZones}
-                isLoading={isLoading}
+                isLoading={false}
                 isVisibleColumnFilter={false}
                 onRowClick={(zone) => toggleZone(zone.value)}
               />

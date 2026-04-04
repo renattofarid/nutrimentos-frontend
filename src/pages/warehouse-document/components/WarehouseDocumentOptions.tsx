@@ -3,7 +3,11 @@
 import { useState } from "react";
 import SearchInput from "@/components/SearchInput";
 import { SearchableSelect } from "@/components/SearchableSelect";
-import { DOCUMENT_TYPES, DOCUMENT_STATUS } from "../lib/warehouse-document.constants";
+import { DatePickerFilter } from "@/components/DatePickerFilter";
+import {
+  DOCUMENT_TYPES,
+  DOCUMENT_STATUS,
+} from "../lib/warehouse-document.constants";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import {
   Select,
@@ -14,36 +18,55 @@ import {
 } from "@/components/ui/select";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 
-type ActiveFilter = "" | "warehouse" | "type" | "status";
+type ActiveFilter =
+  | ""
+  | "warehouse_origin_id"
+  | "warehouse_dest_id"
+  | "type"
+  | "status";
 
 interface WarehouseDocumentOptionsProps {
   search: string;
   setSearch: (value: string) => void;
-  selectedWarehouse: string;
-  setSelectedWarehouse: (value: string) => void;
+  selectedWarehouseOrigin: string;
+  setSelectedWarehouseOrigin: (value: string) => void;
+  selectedWarehouseDest: string;
+  setSelectedWarehouseDest: (value: string) => void;
   selectedType: string;
   setSelectedType: (value: string) => void;
   selectedStatus: string;
   setSelectedStatus: (value: string) => void;
+  startDate?: Date;
+  endDate?: Date;
+  setStartDate: (date: Date | undefined) => void;
+  setEndDate: (date: Date | undefined) => void;
   warehouses: WarehouseResource[];
 }
 
 export default function WarehouseDocumentOptions({
   search,
   setSearch,
-  selectedWarehouse,
-  setSelectedWarehouse,
+  selectedWarehouseOrigin,
+  setSelectedWarehouseOrigin,
+  selectedWarehouseDest,
+  setSelectedWarehouseDest,
   selectedType,
   setSelectedType,
   selectedStatus,
   setSelectedStatus,
+  startDate,
+  endDate,
+  setStartDate,
+  setEndDate,
   warehouses,
 }: WarehouseDocumentOptionsProps) {
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>("");
 
   const resetAdditionalFilters = () => {
-    setSelectedWarehouse("");
+    setSelectedWarehouseOrigin("");
+    setSelectedWarehouseDest("");
     setSelectedType("");
     setSelectedStatus("");
   };
@@ -61,6 +84,24 @@ export default function WarehouseDocumentOptions({
         placeholder="Buscar documento"
       />
 
+      <DatePickerFilter
+        label="Del"
+        value={startDate}
+        onChange={setStartDate}
+        placeholder="Fecha inicio"
+      />
+
+      <DatePickerFilter
+        label="Al"
+        value={endDate}
+        onChange={setEndDate}
+        placeholder="Fecha fin"
+      />
+
+      <div className="h-full">
+        <Separator orientation="vertical" />
+      </div>
+
       <Select
         value={activeFilter || "none"}
         onValueChange={handleFilterTypeChange}
@@ -75,20 +116,33 @@ export default function WarehouseDocumentOptions({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="none">- Buscar por -</SelectItem>
-          <SelectItem value="warehouse">Almacén</SelectItem>
+          <SelectItem value="warehouse_origin_id">Almacén de origen</SelectItem>
+          <SelectItem value="warehouse_dest_id">Almacén de destino</SelectItem>
           <SelectItem value="type">Tipo</SelectItem>
           <SelectItem value="status">Estado</SelectItem>
         </SelectContent>
       </Select>
 
-      {activeFilter === "warehouse" && (
+      {activeFilter === "warehouse_origin_id" && (
         <SearchableSelect
           options={warehouses.map((warehouse) => ({
             value: warehouse.id.toString(),
             label: warehouse.name,
           }))}
-          value={selectedWarehouse}
-          onChange={setSelectedWarehouse}
+          value={selectedWarehouseOrigin}
+          onChange={setSelectedWarehouseOrigin}
+          placeholder="Todos los almacenes"
+        />
+      )}
+
+      {activeFilter === "warehouse_dest_id" && (
+        <SearchableSelect
+          options={warehouses.map((warehouse) => ({
+            value: warehouse.id.toString(),
+            label: warehouse.name,
+          }))}
+          value={selectedWarehouseDest}
+          onChange={setSelectedWarehouseDest}
           placeholder="Todos los almacenes"
         />
       )}

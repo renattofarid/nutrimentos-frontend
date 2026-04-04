@@ -44,9 +44,12 @@ export default function WarehouseDocumentPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
-  const [selectedWarehouse, setSelectedWarehouse] = useState("");
+  const [selectedWarehouseOrigin, setSelectedWarehouseOrigin] = useState("");
+  const [selectedWarehouseDest, setSelectedWarehouseDest] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [cancelId, setCancelId] = useState<number | null>(null);
@@ -56,9 +59,12 @@ export default function WarehouseDocumentPage() {
     page,
     per_page,
     search,
-    warehouse_id: selectedWarehouse,
+    warehouse_origin_id: selectedWarehouseOrigin,
+    warehouse_dest_id: selectedWarehouseDest,
     type: selectedType,
     status: selectedStatus,
+    start_date: startDate ? startDate.toISOString().split("T")[0] : undefined,
+    end_date: endDate ? endDate.toISOString().split("T")[0] : undefined,
   });
   const { data: warehouses } = useAllWarehouses();
 
@@ -67,13 +73,29 @@ export default function WarehouseDocumentPage() {
       page,
       per_page,
       search,
-      warehouse_id: selectedWarehouse,
+      warehouse_origin_id: selectedWarehouseOrigin,
+      warehouse_dest_id: selectedWarehouseDest,
       type: selectedType,
       status: selectedStatus,
+      start_date: startDate ? startDate.toISOString().split("T")[0] : undefined,
+      end_date: endDate ? endDate.toISOString().split("T")[0] : undefined,
     });
-  }, [page, search, per_page, selectedWarehouse, selectedType, selectedStatus, refetch]);
+  }, [
+    page,
+    search,
+    per_page,
+    selectedWarehouseOrigin,
+    selectedWarehouseDest,
+    selectedType,
+    selectedStatus,
+    startDate,
+    endDate,
+    refetch,
+  ]);
 
-  const selectedDocId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const selectedDocId = Object.keys(rowSelection).find(
+    (key) => rowSelection[key],
+  );
   const toolbarDoc = selectedDocId
     ? (data?.find((d) => d.id.toString() === selectedDocId) ?? null)
     : null;
@@ -154,8 +176,11 @@ export default function WarehouseDocumentPage() {
     if (search) {
       params.append("search", search);
     }
-    if (selectedWarehouse) {
-      params.append("warehouse_id", selectedWarehouse);
+    if (selectedWarehouseOrigin) {
+      params.append("warehouse_origin_id", selectedWarehouseOrigin);
+    }
+    if (selectedWarehouseDest) {
+      params.append("warehouse_dest_id", selectedWarehouseDest);
     }
     if (selectedType) {
       params.append("type", selectedType);
@@ -163,13 +188,27 @@ export default function WarehouseDocumentPage() {
     if (selectedStatus) {
       params.append("status", selectedStatus);
     }
+    if (startDate) {
+      params.append("start_date", startDate.toISOString().split("T")[0]);
+    }
+    if (endDate) {
+      params.append("end_date", endDate.toISOString().split("T")[0]);
+    }
 
     params.append("export", "excel");
 
     const queryString = params.toString();
     const baseExcelUrl = "/warehouse-document/export";
     return queryString ? `${baseExcelUrl}?${queryString}` : baseExcelUrl;
-  }, [search, selectedWarehouse, selectedType, selectedStatus]);
+  }, [
+    search,
+    selectedWarehouseOrigin,
+    selectedWarehouseDest,
+    selectedType,
+    selectedStatus,
+    startDate,
+    endDate,
+  ]);
 
   return (
     <PageWrapper>
@@ -178,7 +217,9 @@ export default function WarehouseDocumentPage() {
         hasSelection={hasSelection}
         selectedStatus={toolbarDoc?.status}
         onNew={() => navigate(`${ROUTE}/agregar`)}
-        onEdit={() => toolbarDoc && navigate(`${ROUTE}/actualizar/${toolbarDoc.id}`)}
+        onEdit={() =>
+          toolbarDoc && navigate(`${ROUTE}/actualizar/${toolbarDoc.id}`)
+        }
         onDelete={() => toolbarDoc && setDeleteId(toolbarDoc.id)}
         onView={() => toolbarDoc && navigate(`${ROUTE}/${toolbarDoc.id}`)}
         onPrint={handlePrint}
@@ -199,12 +240,18 @@ export default function WarehouseDocumentPage() {
           <WarehouseDocumentOptions
             search={search}
             setSearch={setSearch}
-            selectedWarehouse={selectedWarehouse}
-            setSelectedWarehouse={setSelectedWarehouse}
+            selectedWarehouseOrigin={selectedWarehouseOrigin}
+            setSelectedWarehouseOrigin={setSelectedWarehouseOrigin}
+            selectedWarehouseDest={selectedWarehouseDest}
+            setSelectedWarehouseDest={setSelectedWarehouseDest}
             selectedType={selectedType}
             setSelectedType={setSelectedType}
             selectedStatus={selectedStatus}
             setSelectedStatus={setSelectedStatus}
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
             warehouses={warehouses}
           />
         )}

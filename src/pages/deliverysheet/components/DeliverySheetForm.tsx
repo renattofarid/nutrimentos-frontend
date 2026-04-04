@@ -392,7 +392,7 @@ export const DeliverySheetForm = ({
       <form
         id={formId}
         onSubmit={form.handleSubmit(handleFormSubmit)}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        className="grid grid-cols-1 gap-4"
       >
         {showHeaderActions && (
           <div className="flex items-center gap-4 col-span-full">
@@ -431,11 +431,12 @@ export const DeliverySheetForm = ({
         )}
 
         <GroupFormSection
+          className="col-span-full xl:max-w-5xl"
           title="Datos de la Planilla"
           icon={Info}
           cols={{
             sm: 1,
-            md: 2,
+            md: 1,
           }}
         >
           <FormSelect

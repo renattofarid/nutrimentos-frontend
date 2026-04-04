@@ -13,24 +13,16 @@ export const PersonColumns = (): ColumnDef<PersonResource>[] => [
     cell: ({ row }) => {
       const person = row.original;
       const typeDocument = person?.document_type_name;
-      const numberDocument = person?.number_document;
       return (
-        <div>
-          <div className="font-medium">
-            {typeDocument === "RUC"
-              ? person.business_name
-              : typeDocument === "PASAPORTE"
+        <div className="font-medium">
+          {typeDocument === "RUC"
+            ? person.business_name
+            : typeDocument === "PASAPORTE"
+              ? person.names
+              : typeDocument === "CE"
                 ? person.names
-                : typeDocument === "CE"
-                  ? person.names
-                  : (person.business_name ??
-                    `${person.names} ${person.father_surname} ${person.mother_surname}`)}
-          </div>
-          <div className="text-sm text-muted-foreground">
-            {typeDocument &&
-              numberDocument &&
-              `${typeDocument}: ${person.number_document}`}
-          </div>
+                : (person.business_name ??
+                  `${person.names ?? ""} ${person.father_surname ?? ""} ${person.mother_surname ?? ""}`)}
         </div>
       );
     },

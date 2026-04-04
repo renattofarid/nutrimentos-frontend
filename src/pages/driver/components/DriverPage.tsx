@@ -18,23 +18,30 @@ import { PersonColumns } from "@/pages/person/components/PersonColumns";
 import DataTablePagination from "@/components/DataTablePagination";
 import { DRIVER, DRIVER_ROLE_ID } from "../lib/driver.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import type { PersonSearchField } from "@/pages/person/components/PersonOptions";
 import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = DRIVER;
 
 export default function DriverPage() {
   const navigate = useNavigate();
+  const [searchField, setSearchField] = useState<PersonSearchField>("search");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-  const { data, isLoading, refetch } = useDrivers({ page, per_page, search });
+  const queryParams: Record<string, unknown> = { page, per_page };
+  if (search.trim()) {
+    queryParams[searchField] = search.trim();
+  }
+
+  const { data, isLoading, refetch } = useDrivers(queryParams);
 
   useEffect(() => {
     setPage(1);
-  }, [search, per_page]);
+  }, [search, searchField, per_page]);
 
   const selectedDriverId = Object.keys(rowSelection).find((key) => rowSelection[key]);
   const toolbarDriver = selectedDriverId
@@ -76,7 +83,12 @@ export default function DriverPage() {
         onRowSelectionChange={setRowSelection}
         onRowDoubleClick={(person) => navigate(`/conductores/editar/${person.id}`)}
       >
-        <PersonOptions search={search} setSearch={setSearch} />
+        <PersonOptions
+          searchField={searchField}
+          setSearchField={setSearchField}
+          search={search}
+          setSearch={setSearch}
+        />
       </PersonTable>
 
       <DataTablePagination

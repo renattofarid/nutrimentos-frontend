@@ -43,7 +43,6 @@ interface FormSelectProps {
   disabled?: boolean;
   tooltip?: string | React.ReactNode;
   withValue?: boolean;
-  className?: string;
   classNameOption?: string;
   strictFilter?: boolean;
   enableCodeSearch?: boolean;
@@ -68,7 +67,6 @@ export function FormSelect({
   disabled,
   tooltip,
   withValue = false,
-  className,
   classNameOption,
   enableCodeSearch = false,
   autoSelectSingle = false,

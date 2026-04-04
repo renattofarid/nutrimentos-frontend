@@ -21,6 +21,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { Label } from "@/components/ui/label";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ interface SearchableSelectProps {
   classNameLabel?: string;
   withValue?: boolean;
   label?: string;
+  horizontalField?: boolean;
   disabled?: boolean;
   buttonSize?: "icon" | "sm" | "lg" | "default" | "xs" | "icon-sm" | "icon-lg";
 }
@@ -55,6 +57,7 @@ export function SearchableSelect({
   classNameLabel,
   withValue = true,
   label,
+  horizontalField = false,
   disabled = false,
   buttonSize = "sm",
 }: SearchableSelectProps) {
@@ -65,12 +68,10 @@ export function SearchableSelect({
   const selected =
     value === "all" ? undefined : options.find((opt) => opt.value === value);
 
-  // Filtrar opciones basado en el texto de búsqueda
   const filteredOptions = React.useMemo(() => {
     if (!searchValue) return options;
 
     return options.filter((option) => {
-      // Obtener el label como string
       let labelText = "";
       if (typeof option.label === "function") {
         const labelResult = option.label();
@@ -79,9 +80,7 @@ export function SearchableSelect({
         labelText = String(option.label);
       }
 
-      // Convertir value a string para búsqueda
       const valueText = String(option.value);
-
       const searchLower = searchValue.toLowerCase();
 
       return (
@@ -93,7 +92,6 @@ export function SearchableSelect({
     });
   }, [options, searchValue]);
 
-  // Resetear búsqueda cuando se cierra el popover/drawer
   React.useEffect(() => {
     if (!open) {
       setSearchValue("");
@@ -176,52 +174,70 @@ export function SearchableSelect({
   );
 
   return (
-    <div className={cn("flex flex-col gap-0.5", classNameDiv)}>
+    <div
+      className={cn(
+        horizontalField
+          ? "flex flex-row items-center gap-3"
+          : "flex flex-col gap-0.5",
+        classNameDiv,
+      )}
+    >
       {label && (
-        <label className={cn("text-sm font-medium uppercase leading-none", classNameLabel)}>
+        <Label
+          className={cn(
+            "flex items-center font-bold uppercase",
+            horizontalField
+              ? "shrink-0 justify-end text-right"
+              : "justify-start",
+            classNameLabel,
+          )}
+        >
           {label}
-        </label>
+        </Label>
       )}
-      {isMobile ? (
-        <Drawer
-          open={open}
-          onOpenChange={(isOpen) => {
-            setOpen(isOpen);
-            if (!isOpen && onBlur) {
-              onBlur();
-            }
-          }}
-        >
-          <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
-          <DrawerContent className="px-4 pb-4 max-h-[80vh]">
-            <DrawerHeader>
-              <DrawerTitle>{label || "Seleccionar opción"}</DrawerTitle>
-              <DrawerDescription className="hidden" />
-            </DrawerHeader>
-            <div className="overflow-hidden">{commandContent}</div>
-          </DrawerContent>
-        </Drawer>
-      ) : (
-        <Popover
-          open={open}
-          onOpenChange={(isOpen) => {
-            setOpen(isOpen);
-            if (!isOpen && onBlur) {
-              onBlur();
-            }
-          }}
-        >
-          <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
-          <PopoverContent
-            className="p-0 min-w-(--radix-popover-trigger-width)! w-auto"
-            onWheel={(e) => e.stopPropagation()}
-            onWheelCapture={(e) => e.stopPropagation()}
-            onTouchMove={(e) => e.stopPropagation()}
+
+      <div className={cn(horizontalField ? "flex-1 min-w-0" : "w-full")}>
+        {isMobile ? (
+          <Drawer
+            open={open}
+            onOpenChange={(isOpen) => {
+              setOpen(isOpen);
+              if (!isOpen && onBlur) {
+                onBlur();
+              }
+            }}
           >
-            {commandContent}
-          </PopoverContent>
-        </Popover>
-      )}
+            <DrawerTrigger asChild>{triggerButton}</DrawerTrigger>
+            <DrawerContent className="px-4 pb-4 max-h-[80vh]">
+              <DrawerHeader>
+                <DrawerTitle>{label || "Seleccionar opción"}</DrawerTitle>
+                <DrawerDescription className="hidden" />
+              </DrawerHeader>
+              <div className="overflow-hidden">{commandContent}</div>
+            </DrawerContent>
+          </Drawer>
+        ) : (
+          <Popover
+            open={open}
+            onOpenChange={(isOpen) => {
+              setOpen(isOpen);
+              if (!isOpen && onBlur) {
+                onBlur();
+              }
+            }}
+          >
+            <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
+            <PopoverContent
+              className="p-0 min-w-(--radix-popover-trigger-width)! w-auto"
+              onWheel={(e) => e.stopPropagation()}
+              onWheelCapture={(e) => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
+            >
+              {commandContent}
+            </PopoverContent>
+          </Popover>
+        )}
+      </div>
     </div>
   );
 }

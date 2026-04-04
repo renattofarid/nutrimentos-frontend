@@ -20,6 +20,7 @@ import { CLIENT } from "../lib/client.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import { CLIENT_ROLE_ID } from "../lib/client.interface";
+import type { PersonSearchField } from "@/pages/person/components/PersonOptions";
 import ClientPriceListSheet from "./ClientPriceListSheet";
 import AssignPriceListModal from "./AssignPriceListModal";
 import ClientAddressesSheet from "./ClientAddressesSheet";
@@ -29,6 +30,7 @@ const { MODEL } = CLIENT;
 
 export default function ClientPage() {
   const navigate = useNavigate();
+  const [searchField, setSearchField] = useState<PersonSearchField>("search");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
@@ -38,11 +40,16 @@ export default function ClientPage() {
   const [addressesPerson, setAddressesPerson] = useState<PersonResource | null>(null);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-  const { data, isLoading, refetch } = useClients({ page, per_page, search });
+  const queryParams: Record<string, unknown> = { page, per_page };
+  if (search.trim()) {
+    queryParams[searchField] = search.trim();
+  }
+
+  const { data, isLoading, refetch } = useClients(queryParams);
 
   useEffect(() => {
     setPage(1);
-  }, [search, per_page]);
+  }, [search, searchField, per_page]);
 
   const selectedClientId = Object.keys(rowSelection).find((key) => rowSelection[key]);
   const toolbarClient = selectedClientId
@@ -85,7 +92,12 @@ export default function ClientPage() {
         onRowSelectionChange={setRowSelection}
         onRowDoubleClick={(person) => navigate(`/clientes/editar/${person.id}`)}
       >
-        <PersonOptions search={search} setSearch={setSearch} />
+        <PersonOptions
+          searchField={searchField}
+          setSearchField={setSearchField}
+          search={search}
+          setSearch={setSearch}
+        />
       </PersonTable>
 
       <DataTablePagination

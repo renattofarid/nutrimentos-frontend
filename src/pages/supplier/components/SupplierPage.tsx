@@ -18,23 +18,30 @@ import { PersonColumns } from "@/pages/person/components/PersonColumns";
 import DataTablePagination from "@/components/DataTablePagination";
 import { SUPPLIER, SUPPLIER_ROLE_ID } from "../lib/supplier.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import type { PersonSearchField } from "@/pages/person/components/PersonOptions";
 import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = SUPPLIER;
 
 export default function SupplierPage() {
   const navigate = useNavigate();
+  const [searchField, setSearchField] = useState<PersonSearchField>("search");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-  const { data, isLoading, refetch } = useSuppliers({ page, per_page, search });
+  const queryParams: Record<string, unknown> = { page, per_page };
+  if (search.trim()) {
+    queryParams[searchField] = search.trim();
+  }
+
+  const { data, isLoading, refetch } = useSuppliers(queryParams);
 
   useEffect(() => {
     setPage(1);
-  }, [search, per_page]);
+  }, [search, searchField, per_page]);
 
   const selectedSupplierId = Object.keys(rowSelection).find((key) => rowSelection[key]);
   const toolbarSupplier = selectedSupplierId
@@ -73,7 +80,12 @@ export default function SupplierPage() {
         onRowSelectionChange={setRowSelection}
         onRowDoubleClick={(person) => navigate(`/proveedores/editar/${person.id}`)}
       >
-        <PersonOptions search={search} setSearch={setSearch} />
+        <PersonOptions
+          searchField={searchField}
+          setSearchField={setSearchField}
+          search={search}
+          setSearch={setSearch}
+        />
       </PersonTable>
 
       <DataTablePagination

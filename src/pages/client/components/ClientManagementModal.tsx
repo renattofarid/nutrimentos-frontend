@@ -539,7 +539,7 @@ export function ClientManagementModal({
                           </Button>
                         )}
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
                           className="size-8"
                           onClick={() => setEditPersonId(person.id)}
@@ -548,7 +548,7 @@ export function ClientManagementModal({
                           <Pencil className="size-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
                           className="size-8 text-destructive hover:text-destructive"
                           onClick={() => setDeleteId(person.id)}
@@ -557,7 +557,7 @@ export function ClientManagementModal({
                           <Trash2 className="size-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
                           className="size-8"
                           onClick={() => setAddressesPerson(person)}

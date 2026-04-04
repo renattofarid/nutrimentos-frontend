@@ -25,8 +25,9 @@ export const PersonColumns = (_options?: {
               ? person.names
               : typeDocument === "CE"
                 ? person.names
-                : (person.business_name ??
-                  `${person.names ?? ""} ${person.father_surname ?? ""} ${person.mother_surname ?? ""}`)}
+                : person.business_name && person.business_name.trim() !== ""
+                  ? `${person.names ?? ""} ${person.father_surname ?? ""} ${person.mother_surname ?? ""}`
+                  : `${person.names ?? ""} ${person.father_surname ?? ""} ${person.mother_surname ?? ""}`}
         </div>
       );
     },

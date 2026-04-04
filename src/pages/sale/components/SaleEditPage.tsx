@@ -71,6 +71,7 @@ export const SaleEditPage = () => {
     document_type: data.document_type,
     issue_date: data.issue_date.split("T")[0],
     payment_type: data.payment_type,
+    discount_global: (data.discount_global ?? 0).toString(),
     currency: data.currency,
     observations: data.observations || "",
     details:

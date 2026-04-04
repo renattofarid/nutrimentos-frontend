@@ -171,6 +171,7 @@ export const SaleForm = ({
       document_type: "FACTURA", // Por defecto Factura
       currency: "PEN", // Por defecto Soles
       payment_type: "CONTADO", // Por defecto al Contado
+      discount_global: "0",
       ...defaultValues,
       details: details.length > 0 ? details : [],
       installments: installments.length > 0 ? installments : [],
@@ -294,6 +295,10 @@ export const SaleForm = ({
   const selectedDocumentType = form.watch("document_type");
   const selectedCustomerId = form.watch("customer_id");
   const selectedVendedorId = form.watch("vendedor_id");
+  const selectedCustomerPrimaryZone =
+    customerAddresses.find((zone) => zone.is_primary)?.zone_name ??
+    customerAddresses[0]?.zone_name ??
+    "Sin zona";
 
   const mapCustomerZones = (zones: any[]): CustomerAddress[] => {
     return zones.map((z) => ({
@@ -303,6 +308,11 @@ export const SaleForm = ({
       address: z.address,
       is_primary: Boolean(z.is_primary),
     }));
+  };
+
+  const getCustomerZoneLabel = (customer: PersonResource): string => {
+    const primaryZone = customer.person_zones?.find((zone) => zone.is_primary);
+    return customer.zone_name ?? primaryZone?.zone_name ?? "Sin zona";
   };
 
   const getCurrencySymbol = () => "S/.";
@@ -1194,7 +1204,7 @@ export const SaleForm = ({
                   label:
                     customer.business_name ||
                     `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
-                  description: `${customer.number_document ?? "-"} | ${customer.zone_name ?? "-"}`,
+                  description: getCustomerZoneLabel(customer),
                 })}
                 onValueChange={handleCustomerChange}
                 defaultOption={
@@ -1204,7 +1214,7 @@ export const SaleForm = ({
                         label:
                           sale.customer.business_name ||
                           `${sale.customer.names ?? ""} ${sale.customer.father_surname ?? ""} ${sale.customer.mother_surname ?? ""}`.trim(),
-                        description: sale.customer.number_document ?? "-",
+                        description: selectedCustomerPrimaryZone,
                       }
                     : undefined
                 }
@@ -1277,7 +1287,7 @@ export const SaleForm = ({
         <GroupFormSection
           title="Resumen"
           icon={FileText}
-          cols={{ sm: 1, md: 2, lg: 5 }}
+          cols={{ sm: 1, md: 2, lg: 6 }}
           bordered
         >
           {/* Peso Total */}
@@ -1320,6 +1330,18 @@ export const SaleForm = ({
             </div>
           </div>
 
+          <div className="col-span-2">
+            <FormInput
+              name="discount_global"
+              control={form.control}
+              label="DESCUENTO GLOBAL"
+              placeholder="0"
+              type="number"
+              min={0}
+              step="0.01"
+              horizontalField
+            />
+          </div>
           <div className="col-span-full">
             <FormInput
               name="observations"

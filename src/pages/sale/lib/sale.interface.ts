@@ -221,6 +221,7 @@ export interface CreateSaleRequest {
   document_type: string;
   issue_date: string;
   payment_type: string;
+  discount_global: number;
   total_weight: number;
   currency: string;
   observations: string;
@@ -236,6 +237,7 @@ export interface UpdateSaleRequest {
   document_type?: string;
   issue_date?: string;
   payment_type?: string;
+  discount_global?: number;
   total_weight?: number;
   currency?: string;
   observations?: string;

@@ -63,6 +63,7 @@ export const SaleAddPage = () => {
     document_type: "BOLETA",
     issue_date: format(new Date(), "yyyy-MM-dd"),
     payment_type: "CONTADO",
+    discount_global: "0",
     currency: "PEN",
     observations: "",
     details: [],
@@ -126,10 +127,12 @@ export const SaleAddPage = () => {
 
   return (
     <PageWrapper size="3xl">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 border-b pb-1">
         <Button
           size="sm"
           type="submit"
+          variant="outline"
+          colorIcon="green"
           form="sale-form"
           disabled={isSubmitting}
         >

@@ -72,6 +72,12 @@ export const saleSchemaCreate = z.object({
   payment_type: z
     .string()
     .min(1, { message: "Debe seleccionar un tipo de pago" }),
+  discount_global: z
+    .union([z.string(), z.number()])
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "El descuento global debe ser un número mayor o igual a 0",
+    })
+    .default("0"),
   total_weight: z
     .number()
     .nonnegative("El peso total debe ser mayor o igual a 0")

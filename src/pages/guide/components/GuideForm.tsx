@@ -988,43 +988,41 @@ export const GuideForm = ({
               )}
 
               {customerValue && (
-                <div className="space-y-2 rounded-md border p-3">
-                  <div className="space-y-2">
-                    <SearchableSelect
-                      label="Dirección del Cliente"
-                      buttonSize="default"
-                      options={customerAddresses.map((address) => ({
-                        value: address.id.toString(),
-                        label: address.address,
-                        description: `${address.zone.name}${address.is_primary ? " - Principal" : ""}`,
-                      }))}
-                      value={selectedPersonZoneId}
-                      onChange={(value) => {
-                        void handleSelectPersonZone(value);
-                      }}
-                      placeholder={
-                        isLoadingPersonZones
-                          ? "Cargando direcciones..."
-                          : "Seleccione una dirección"
-                      }
-                      disabled={
-                        isLoadingPersonZones || customerAddresses.length === 0
-                      }
-                      className="w-full"
-                    />
+                <div className="space-y-2">
+                  <SearchableSelect
+                    label="Dirección del Cliente"
+                    buttonSize="default"
+                    options={customerAddresses.map((address) => ({
+                      value: address.id.toString(),
+                      label: address.address,
+                      description: `${address.zone.name}${address.is_primary ? " - Principal" : ""}`,
+                    }))}
+                    value={selectedPersonZoneId}
+                    onChange={(value) => {
+                      void handleSelectPersonZone(value);
+                    }}
+                    placeholder={
+                      isLoadingPersonZones
+                        ? "Cargando direcciones..."
+                        : "Seleccione una dirección"
+                    }
+                    disabled={
+                      isLoadingPersonZones || customerAddresses.length === 0
+                    }
+                    className="w-full"
+                  />
 
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setIsAddressManagerOpen(true)}
-                        disabled={!selectedCustomerId}
-                        className="w-full sm:w-auto"
-                      >
-                        <Settings2 className="h-4 w-4" />
-                        Gestionar
-                      </Button>
-                    </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsAddressManagerOpen(true)}
+                      disabled={!selectedCustomerId}
+                      className="w-full sm:w-auto"
+                    >
+                      <Settings2 className="h-4 w-4" />
+                      Gestionar
+                    </Button>
                   </div>
 
                   {customerAddresses.length === 0 && !isLoadingPersonZones && (

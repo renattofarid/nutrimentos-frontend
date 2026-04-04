@@ -209,7 +209,8 @@ export const SaleForm = ({
 
             if (sale_mode === "sacks") {
               totalKg = roundTo6Decimals(productWeight * qtySacks);
-              subtotal = roundTo6Decimals(totalKg * unitPrice);
+              // En modo sacos, el precio unitario corresponde al saco.
+              subtotal = roundTo6Decimals(qtySacks * unitPrice);
             } else if (sale_mode === "kg") {
               totalKg = qtyKg;
               subtotal = roundTo6Decimals(qtyKg * unitPrice);

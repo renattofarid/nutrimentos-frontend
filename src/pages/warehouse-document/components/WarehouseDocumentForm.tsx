@@ -20,7 +20,6 @@ import {
   type ExcelGridColumn,
   type ProductOption,
 } from "@/components/ExcelGrid";
-import { formatNumber } from "@/lib/formatCurrency";
 import type { PurchaseResource } from "@/pages/purchase/lib/purchase.interface";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useProduct } from "@/pages/product/lib/product.hook";
@@ -106,19 +105,15 @@ export default function WarehouseDocumentForm({
       defaultValues.details.length > 0
     ) {
       const mappedDetails = defaultValues.details.map((detail: any) => {
-        const quantityKg = parseFloat(detail.quantity_kg || "0");
-        const unitPrice = parseFloat(detail.unit_price || "0");
-        const total = quantityKg * unitPrice;
-
         return {
           product_id: detail.product_id,
           product_code: detail.product_code || "",
           product_name: detail.product_name || "",
           quantity_sacks: detail.quantity_sacks?.toString() || "",
           quantity_kg: detail.quantity_kg?.toString() || "",
-          unit_price: detail.unit_price?.toString() || "",
+          unit_price: detail.unit_price?.toString() || "0",
           observations: detail.observations || "",
-          total,
+          total: 0,
         };
       });
       setDetails(mappedDetails);
@@ -147,19 +142,15 @@ export default function WarehouseDocumentForm({
         if (selectedPurchase.details) {
           const mappedDetails: DetailRow[] = selectedPurchase.details.map(
             (detail) => {
-              const quantityKg = detail.quantity_kg;
-              const unitPrice = detail.unit_price;
-              const total = quantityKg * unitPrice;
-
               return {
                 product_id: detail.product.id.toString(),
                 product_code: detail.product.codigo,
                 product_name: detail.product.name,
                 quantity_sacks: detail.quantity_sacks.toString(),
                 quantity_kg: detail.quantity_kg.toString(),
-                unit_price: detail.unit_price.toString(),
+                unit_price: detail.unit_price?.toString() || "0",
                 observations: "",
-                total,
+                total: 0,
               };
             },
           );
@@ -231,28 +222,6 @@ export default function WarehouseDocumentForm({
     const updatedDetails = [...details];
     const current = { ...updatedDetails[index], [field]: value };
 
-    if (field === "quantity_sacks") {
-      // Solo sacos: poner kg en 0, setear precio por saco
-      const purchasePrice = parseFloat(current.purchase_price || "") || 0;
-      const qty = parseFloat(value) || 0;
-      current.quantity_kg = "0";
-      current.unit_price = current.purchase_price || "";
-      current.total = qty * purchasePrice;
-    } else if (field === "quantity_kg") {
-      // Solo kg: poner sacos en 0, setear precio por kg
-      const priceKg = parseFloat(current.price_per_kg || "") || 0;
-      const qty = parseFloat(value) || 0;
-      current.quantity_sacks = "0";
-      current.unit_price = current.price_per_kg || "";
-      current.total = qty * priceKg;
-    } else if (field === "unit_price") {
-      // Si editan precio manual, recalcular con la cantidad activa
-      const unitPrice = parseFloat(value) || 0;
-      const qtyKg = parseFloat(current.quantity_kg) || 0;
-      const qtySacks = parseFloat(current.quantity_sacks) || 0;
-      current.total = qtySacks > 0 ? qtySacks * unitPrice : qtyKg * unitPrice;
-    }
-
     updatedDetails[index] = current;
     setDetails(updatedDetails);
     form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
@@ -264,32 +233,12 @@ export default function WarehouseDocumentForm({
       setDetails((prev) => {
         const updatedDetails = [...prev];
         const current = updatedDetails[index];
-        const purchasePrice = product.purchase_price || "";
-        const pricePerKg = product.price_per_kg || "";
-
-        // Recalcular total si ya hay cantidad ingresada
-        const qtySacks = parseFloat(current.quantity_sacks) || 0;
-        const qtyKg = parseFloat(current.quantity_kg) || 0;
-        let unit_price = current.unit_price;
-        let total = current.total;
-
-        if (qtySacks > 0) {
-          unit_price = purchasePrice;
-          total = qtySacks * (parseFloat(purchasePrice) || 0);
-        } else if (qtyKg > 0) {
-          unit_price = pricePerKg;
-          total = qtyKg * (parseFloat(pricePerKg) || 0);
-        }
 
         updatedDetails[index] = {
           ...current,
           product_id: product.id,
           product_code: product.codigo,
           product_name: product.name,
-          purchase_price: purchasePrice,
-          price_per_kg: pricePerKg,
-          unit_price,
-          total,
         };
         form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
         form.clearErrors("details");
@@ -347,10 +296,6 @@ export default function WarehouseDocumentForm({
     [],
   );
 
-  const calculateDetailsTotal = () => {
-    return details.reduce((sum, detail) => sum + (detail.total || 0), 0);
-  };
-
   // Configuración de columnas para ExcelGrid
   const gridColumns: ExcelGridColumn<DetailRow>[] = [
     {
@@ -380,24 +325,6 @@ export default function WarehouseDocumentForm({
       type: "number",
       width: "120px",
       accessor: "quantity_kg",
-    },
-    {
-      id: "unit_price",
-      header: "Precio Unitario",
-      type: "number",
-      width: "120px",
-      accessor: "unit_price",
-    },
-    {
-      id: "total",
-      header: "Total",
-      type: "readonly",
-      width: "120px",
-      render: (row) => (
-        <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold">
-          {row.total ? `S/. ${formatNumber(row.total)}` : "-"}
-        </div>
-      ),
     },
     {
       id: "observations",
@@ -437,12 +364,6 @@ export default function WarehouseDocumentForm({
         });
         return false;
       }
-      if (!detail.unit_price || parseFloat(detail.unit_price) < 0) {
-        form.setError("details", {
-          message: `Fila ${i + 1}: El precio unitario es requerido`,
-        });
-        return false;
-      }
     }
 
     return true;
@@ -467,13 +388,24 @@ export default function WarehouseDocumentForm({
         className="space-y-6"
       >
         {/* Form Actions */}
-        <div className="flex items-center gap-2">
-          <Button size="sm" type="submit" disabled={isSubmitting}>
+        <div className="flex items-center gap-2 border-b pb-2">
+          <Button
+            variant="outline"
+            colorIcon="green"
+            size="sm"
+            type="submit"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
             {isSubmitting ? "Guardando..." : "Guardar"}
           </Button>
           {onCancel && (
-            <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onCancel}
+            >
               <X /> Cancelar
             </Button>
           )}
@@ -596,17 +528,6 @@ export default function WarehouseDocumentForm({
             emptyMessage="Agregue productos al documento"
             skipColumnsOnEnter={["product"]}
           />
-
-          {details.length > 0 && (
-            <div className="mt-4 p-4 bg-muted/30 rounded-lg border">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-bold">Total:</span>
-                <span className="text-xl font-bold text-primary">
-                  S/. {formatNumber(calculateDetailsTotal())}
-                </span>
-              </div>
-            </div>
-          )}
         </GroupFormSection>
 
         {Object.keys(form.formState.errors).length > 0 && (
@@ -625,7 +546,6 @@ export default function WarehouseDocumentForm({
             </AlertDescription>
           </Alert>
         )}
-
       </form>
     </Form>
   );

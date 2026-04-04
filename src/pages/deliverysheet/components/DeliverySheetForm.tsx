@@ -16,14 +16,12 @@ import {
   X,
   ChevronDown,
   ChevronUp,
-  Calendar,
   ListX,
-  Eye,
   Save,
-  List,
+  Printer,
 } from "lucide-react";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
-import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
+import { DatePickerFilter } from "@/components/DatePickerFilter";
 import { FormSelect } from "@/components/FormSelect";
 import { useState, useEffect, useMemo } from "react";
 import { format, parse } from "date-fns";
@@ -106,7 +104,6 @@ export const DeliverySheetForm = ({
   );
   const [hasSearched, setHasSearched] = useState(false);
   const [showMoreFields, setShowMoreFields] = useState(false);
-  const [showDateFilter, setShowDateFilter] = useState(false);
   const [creditNotesModal, setCreditNotesModal] = useState<{
     open: boolean;
     creditNotes: CreditNoteResource[];
@@ -395,7 +392,36 @@ export const DeliverySheetForm = ({
         className="grid grid-cols-1 gap-4"
       >
         {showHeaderActions && (
-          <div className="flex items-center gap-4 col-span-full">
+          <div className="flex items-center gap-2 col-span-full">
+            <Button
+              size="sm"
+              type="submit"
+              variant="outline"
+              colorIcon="green"
+              disabled={isSubmitting || selectedSaleIds.length === 0}
+            >
+              {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+              {mode === "create" ? "Guardar Planilla" : "Actualizar Planilla"}
+            </Button>
+
+            {onPreview && (
+              <Button
+                type="button"
+                variant="outline"
+                colorIcon="blue"
+                size="sm"
+                disabled={isPreviewing || selectedSaleIds.length === 0}
+                onClick={() => onPreview(form.getValues())}
+              >
+                {isPreviewing ? (
+                  <Loader className="animate-spin" />
+                ) : (
+                  <Printer />
+                )}
+                Imprimir
+              </Button>
+            )}
+
             {onCancel && (
               <Button
                 type="button"
@@ -407,26 +433,6 @@ export const DeliverySheetForm = ({
                 Cancelar
               </Button>
             )}
-            {onPreview && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={isPreviewing || selectedSaleIds.length === 0}
-                onClick={() => onPreview(form.getValues())}
-              >
-                {isPreviewing ? <Loader className="animate-spin" /> : <Eye />}
-                Ver Planilla
-              </Button>
-            )}
-            <Button
-              size="sm"
-              type="submit"
-              disabled={isSubmitting || selectedSaleIds.length === 0}
-            >
-              {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
-              {mode === "create" ? "Guardar Planilla" : "Actualizar Planilla"}
-            </Button>
           </div>
         )}
 
@@ -436,8 +442,24 @@ export const DeliverySheetForm = ({
           icon={Info}
           cols={{
             sm: 1,
-            md: 1,
+            md: 3,
           }}
+          headerExtra={
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              className="text-muted-foreground gap-1 px-0 hover:bg-transparent"
+              onClick={() => setShowMoreFields(!showMoreFields)}
+            >
+              {showMoreFields ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+              {showMoreFields ? "Menos opciones" : "Más opciones"}
+            </Button>
+          }
         >
           <FormSelect
             control={form.control}
@@ -475,23 +497,6 @@ export const DeliverySheetForm = ({
             />
           )}
 
-          <div className="col-span-full">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground gap-1 px-0 hover:bg-transparent"
-              onClick={() => setShowMoreFields(!showMoreFields)}
-            >
-              {showMoreFields ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-              {showMoreFields ? "Menos opciones" : "Más opciones"}
-            </Button>
-          </div>
-
           {showMoreFields && (
             <>
               <FormSelect
@@ -528,61 +533,67 @@ export const DeliverySheetForm = ({
             </>
           )}
 
-          <div className="rounded-lg border bg-muted/20 p-3 space-y-3 h-fit">
-            <div className="flex flex-wrap gap-2 items-center justify-end">
-              {isLoadingAvailableSales && (
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Loader className="h-3 w-3 animate-spin" />
-                  Buscando ventas...
-                </span>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground gap-1"
-                onClick={() => setShowDateFilter(!showDateFilter)}
-              >
-                <Calendar className="h-4 w-4" />
-                Filtrar por fecha
-                {showDateFilter ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </Button>
-              {showDateFilter && (
-                <Button
-                  type="button"
-                  onClick={handleSearchSales}
-                  disabled={
-                    !searchParams.payment_type || isLoadingAvailableSales
-                  }
-                  size="sm"
-                >
-                  {isLoadingAvailableSales ? (
-                    <Loader className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Search className="mr-2 h-4 w-4" />
-                  )}
-                  Buscar
-                </Button>
-              )}
-            </div>
-
-            {showDateFilter && (
-              <DateRangePickerFilter
-                dateFrom={searchParams.date_from}
-                dateTo={searchParams.date_to}
-                onDateChange={(dateFrom, dateTo) =>
-                  setSearchParams((prev) => ({
-                    ...prev,
-                    date_from: dateFrom,
-                    date_to: dateTo,
-                  }))
-                }
-              />
+          {isLoadingAvailableSales && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Loader className="h-3 w-3 animate-spin" />
+              Buscando ventas...
+            </span>
+          )}
+          {/* <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground gap-1"
+            onClick={() => setShowDateFilter(!showDateFilter)}
+          >
+            <Calendar className="h-4 w-4" />
+            Filtrar por fecha
+            {showDateFilter ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
             )}
+          </Button> */}
+          <div className="flex gap-2">
+            {/* {showDateFilter && ( */}
+            <DatePickerFilter
+              label="Del"
+              value={searchParams.date_from}
+              onChange={(dateFrom) =>
+                setSearchParams((prev) => ({
+                  ...prev,
+                  date_from: dateFrom,
+                }))
+              }
+              placeholder="Fecha desde"
+            />
+            <DatePickerFilter
+              label="Al"
+              value={searchParams.date_to}
+              onChange={(dateTo) =>
+                setSearchParams((prev) => ({
+                  ...prev,
+                  date_to: dateTo,
+                }))
+              }
+              placeholder="Fecha hasta"
+            />
+            {/* )} */}
+            {/* {showDateFilter && ( */}
+            <Button
+              type="button"
+              onClick={handleSearchSales}
+              disabled={!searchParams.payment_type || isLoadingAvailableSales}
+              size="sm"
+            >
+              {isLoadingAvailableSales ? (
+                <Loader className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="mr-2 h-4 w-4" />
+              )}
+              Buscar
+            </Button>
+            {/* )} */}
           </div>
         </GroupFormSection>
 
@@ -598,68 +609,65 @@ export const DeliverySheetForm = ({
           )}
 
         {availableSales.length > 0 && (
-          <GroupFormSection
-            className="col-span-full"
-            title={`Ventas Disponibles (${selectedSaleIds.length} seleccionadas)`}
-            icon={List}
-            cols={{ sm: 1 }}
-          >
-            <div className="space-y-4">
-              <DataTable
-                columns={saleColumns}
-                data={availableSales}
-                variant="outline"
-                isVisibleColumnFilter={false}
-                mobileCardRender={(sale) => {
-                  const hasCreditNotes = !!sale.credit_notes?.length;
-                  const creditNoteAmount = hasCreditNotes
-                    ? sale.credit_notes!
-                        .reduce(
-                          (sum, cn) => sum + parseFormattedNumber(cn.total_amount),
-                          0,
-                        )
-                        .toFixed(2)
-                    : "0.00";
+          <div className="space-y-4">
+            <DataTable
+              columns={saleColumns}
+              data={availableSales}
+              isVisibleColumnFilter={false}
+              mobileCardRender={(sale) => {
+                const hasCreditNotes = !!sale.credit_notes?.length;
+                const creditNoteAmount = hasCreditNotes
+                  ? sale
+                      .credit_notes!.reduce(
+                        (sum, cn) =>
+                          sum + parseFormattedNumber(cn.total_amount),
+                        0,
+                      )
+                      .toFixed(2)
+                  : "0.00";
 
-                  return (
-                    <div className="space-y-2 text-xs">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono font-semibold">
-                          {sale.serie}-{sale.numero}
-                        </span>
-                        <Checkbox
-                          checked={selectedSaleIds.includes(sale.id)}
-                          onCheckedChange={() => handleToggleSale(sale.id)}
-                        />
-                      </div>
-                      <div className="text-muted-foreground">
-                        {sale.customer.business_name ??
-                          `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline">
-                          {format(
-                            parse(
-                              sale.issue_date.split("T")[0],
-                              "yyyy-MM-dd",
-                              new Date(),
-                            ),
-                            "dd/MM/yyyy",
-                          )}
-                        </Badge>
-                        <span className="font-semibold">
-                          S/. {parseFormattedNumber(sale.current_amount).toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Notas crédito</span>
-                        <span>S/. {creditNoteAmount}</span>
-                      </div>
+                return (
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono font-semibold">
+                        {sale.serie}-{sale.numero}
+                      </span>
+                      <Checkbox
+                        checked={selectedSaleIds.includes(sale.id)}
+                        onCheckedChange={() => handleToggleSale(sale.id)}
+                      />
                     </div>
-                  );
-                }}
-              >
-                <Button
+                    <div className="text-muted-foreground">
+                      {sale.customer.business_name ??
+                        `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline">
+                        {format(
+                          parse(
+                            sale.issue_date.split("T")[0],
+                            "yyyy-MM-dd",
+                            new Date(),
+                          ),
+                          "dd/MM/yyyy",
+                        )}
+                      </Badge>
+                      <span className="font-semibold">
+                        S/.{" "}
+                        {parseFormattedNumber(sale.current_amount).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">
+                        Notas crédito
+                      </span>
+                      <span>S/. {creditNoteAmount}</span>
+                    </div>
+                  </div>
+                );
+              }}
+            >
+              {/* <Button
                   type="button"
                   variant="outline"
                   size="sm"
@@ -668,17 +676,18 @@ export const DeliverySheetForm = ({
                   {selectedSaleIds.length === availableSales.length
                     ? "Deseleccionar Todas"
                     : "Seleccionar Todas"}
-                </Button>
-              </DataTable>
+                </Button> */}
+            </DataTable>
 
-              <div className="flex items-center justify-start rounded-md border px-3 py-2 text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">Resumen:</span>
-                <span className="mx-2">{selectedSaleIds.length} seleccionadas</span>
-                <span className="mx-2">•</span>
-                <span>{salesWithCreditNotes} con nota de crédito</span>
-              </div>
+            <div className="flex items-center justify-start rounded-md border px-3 py-2 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">Resumen:</span>
+              <span className="mx-2">
+                {selectedSaleIds.length} seleccionadas
+              </span>
+              <span className="mx-2">•</span>
+              <span>{salesWithCreditNotes} con nota de crédito</span>
             </div>
-          </GroupFormSection>
+          </div>
         )}
 
         <div className="col-span-full text-sm text-muted-foreground">

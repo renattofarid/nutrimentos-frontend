@@ -128,15 +128,19 @@ export const GroupFormSection = ({
         </div>
       )}
       {bordered && (
-        <span
+        <div
           className={cn(
-            "absolute -top-1.5 left-3 px-1 bg-background text-xs font-semibold flex items-center gap-1",
+            "absolute -top-1.5 left-3 right-3 bg-background px-1 text-xs font-semibold flex items-center gap-2",
             iconColor,
           )}
         >
-          <Icon className="size-2 md:size-3" />
-          {title}
-        </span>
+          <span className="flex items-center gap-1 shrink-0 min-w-0">
+            <Icon className="size-2 md:size-3 shrink-0" />
+            <span className="truncate">{title}</span>
+          </span>
+          <span className="h-px flex-1 bg-muted" aria-hidden="true" />
+          {headerExtra && <span className="shrink-0">{headerExtra}</span>}
+        </div>
       )}
       <div className={bordered ? "p-2 pt-4" : "p-2"}>
         <FormLayoutContext.Provider value={{ horizontal }}>

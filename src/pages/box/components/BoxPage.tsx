@@ -34,7 +34,6 @@ export default function BoxPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [assignBoxId, setAssignBoxId] = useState<number | null>(null);
   const [viewAssignmentsBoxId, setViewAssignmentsBoxId] = useState<number | null>(null);
-  const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
   const [statusChangeData, setStatusChangeData] = useState<{
     id: number;
     currentStatus: string;
@@ -67,7 +66,6 @@ export default function BoxPage() {
 
   const confirmStatusChange = async () => {
     if (!statusChangeData) return;
-    setUpdatingStatusId(statusChangeData.id);
     try {
       const newStatus =
         statusChangeData.currentStatus === "Activo" ? "Inactivo" : "Activo";
@@ -80,7 +78,6 @@ export default function BoxPage() {
         ERROR_MESSAGE(MODEL, "update"),
       );
     } finally {
-      setUpdatingStatusId(null);
       setStatusChangeData(null);
     }
   };

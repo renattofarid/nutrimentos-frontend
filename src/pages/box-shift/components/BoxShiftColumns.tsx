@@ -3,7 +3,11 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/formatCurrency";
 
-export const BoxShiftColumns = (): ColumnDef<BoxShiftResource>[] => [
+export const BoxShiftColumns = (_options?: {
+  onDelete?: (id: number) => void;
+  onView?: (id: number) => void;
+  onClose?: (id: number) => void;
+}): ColumnDef<BoxShiftResource>[] => [
   {
     accessorKey: "id",
     header: "ID",

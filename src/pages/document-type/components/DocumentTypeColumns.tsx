@@ -1,7 +1,10 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { DocumentTypeResource } from "../lib/document-type.interface";
 
-export const DocumentTypeColumns = (): ColumnDef<DocumentTypeResource>[] => [
+export const DocumentTypeColumns = (_options?: {
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
+}): ColumnDef<DocumentTypeResource>[] => [
   {
     accessorKey: "id",
     header: "ID",

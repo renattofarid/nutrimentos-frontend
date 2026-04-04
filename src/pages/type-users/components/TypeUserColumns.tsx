@@ -2,7 +2,11 @@ import type { TypeUserResource } from "../lib/typeUser.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 
-export const TypeUserColumns = (): ColumnDef<TypeUserResource>[] => [
+export const TypeUserColumns = (_options?: {
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
+  onPermissions?: (id: number) => void;
+}): ColumnDef<TypeUserResource>[] => [
   {
     accessorKey: "name",
     header: "Nombre",

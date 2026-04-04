@@ -3,7 +3,10 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Check, X } from "lucide-react";
 import type { SettingResource } from "../lib/setting.interface";
 
-export const SettingColumns = (): ColumnDef<SettingResource>[] => [
+export const SettingColumns = (_options?: {
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
+}): ColumnDef<SettingResource>[] => [
   {
     accessorKey: "id",
     header: "ID",

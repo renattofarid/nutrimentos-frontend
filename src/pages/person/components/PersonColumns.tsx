@@ -2,7 +2,11 @@ import type { PersonResource } from "../lib/person.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 
-export const PersonColumns = (): ColumnDef<PersonResource>[] => [
+export const PersonColumns = (_options?: {
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
+  onManageRoles?: (id: number) => void;
+}): ColumnDef<PersonResource>[] => [
   {
     accessorKey: "id",
     header: "ID",

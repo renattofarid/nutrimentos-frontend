@@ -2,7 +2,10 @@ import type { PaymentConceptResource } from "../lib/payment-concept.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 
-export const PaymentConceptColumns = (): ColumnDef<PaymentConceptResource>[] => [
+export const PaymentConceptColumns = (_options?: {
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
+}): ColumnDef<PaymentConceptResource>[] => [
   {
     accessorKey: "name",
     header: "Nombre",

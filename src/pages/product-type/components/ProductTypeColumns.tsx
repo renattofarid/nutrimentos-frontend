@@ -2,7 +2,10 @@ import type { ProductTypeResource } from "../lib/product-type.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 
-export const ProductTypeColumns = (): ColumnDef<ProductTypeResource>[] => [
+export const ProductTypeColumns = (_options?: {
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
+}): ColumnDef<ProductTypeResource>[] => [
   {
     accessorKey: "name",
     header: "Nombre",

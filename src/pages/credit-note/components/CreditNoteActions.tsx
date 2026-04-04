@@ -14,8 +14,6 @@ import {
 } from "@/components/ui/popover";
 import { exportCreditNotes } from "../lib/credit-note.actions";
 import { successToast, errorToast } from "@/lib/core.function";
-import { api } from "@/lib/config";
-import { promiseToast } from "@/lib/core.function";
 
 interface CreditNoteActionsProps {
   hasSelection: boolean;
@@ -32,7 +30,6 @@ export default function CreditNoteActions({
 }: CreditNoteActionsProps) {
   const navigate = useNavigate();
   const { activeTabId, closeTab } = useWindowManager();
-  const { MODEL } = CREDIT_NOTE;
   const [isExporting, setIsExporting] = useState<"excel" | "pdf" | null>(null);
   const [open, setOpen] = useState(false);
 

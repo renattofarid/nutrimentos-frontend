@@ -2,7 +2,10 @@ import type { NationalityResource } from "../lib/nationality.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 
-export const NationalityColumns = (): ColumnDef<NationalityResource>[] => [
+export const NationalityColumns = (_options?: {
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
+}): ColumnDef<NationalityResource>[] => [
   {
     accessorKey: "name",
     header: "Nombre",

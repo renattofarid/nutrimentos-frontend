@@ -2,7 +2,10 @@ import type { PurchaseCreditNoteResource } from "../lib/purchase-credit-note.int
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 
-export const PurchaseCreditNoteColumns = (): ColumnDef<PurchaseCreditNoteResource>[] => [
+export const PurchaseCreditNoteColumns = (_options?: {
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
+}): ColumnDef<PurchaseCreditNoteResource>[] => [
   {
     accessorKey: "full_document_number",
     header: "N° Documento",

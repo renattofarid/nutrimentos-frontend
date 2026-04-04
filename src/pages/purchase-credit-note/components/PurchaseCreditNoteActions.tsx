@@ -4,26 +4,26 @@ import { Plus, Pencil, Trash2, X } from "lucide-react";
 import { useWindowManager } from "@/stores/window-manager.store";
 
 interface Props {
-  hasSelection: boolean;
-  onNew: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  hasSelection?: boolean;
+  onNew?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export default function PurchaseCreditNoteActions({ hasSelection, onNew, onEdit, onDelete }: Props) {
+export default function PurchaseCreditNoteActions({ hasSelection = false, onNew, onEdit, onDelete }: Props) {
   const { activeTabId, closeTab } = useWindowManager();
   const handleCerrar = () => { if (activeTabId) closeTab(activeTabId); };
 
   return (
     <div className="flex items-center justify-between mb-1 pb-1 border-b w-full">
       <div className="flex items-center gap-1">
-        <Button colorIcon="green" size="sm" variant="outline" onClick={onNew}>
+        <Button colorIcon="green" size="sm" variant="outline" onClick={onNew ?? (() => {})}>
           <Plus /> Nuevo
         </Button>
-        <Button colorIcon="amber" size="sm" variant="outline" onClick={onEdit} disabled={!hasSelection}>
+        <Button colorIcon="amber" size="sm" variant="outline" onClick={onEdit ?? (() => {})} disabled={!hasSelection}>
           <Pencil /> Editar
         </Button>
-        <Button colorIcon="red" size="sm" variant="outline" onClick={onDelete} disabled={!hasSelection}>
+        <Button colorIcon="red" size="sm" variant="outline" onClick={onDelete ?? (() => {})} disabled={!hasSelection}>
           <Trash2 /> Eliminar
         </Button>
         <div className="h-6 mx-2"><Separator orientation="vertical" /></div>

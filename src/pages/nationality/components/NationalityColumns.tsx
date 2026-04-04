@@ -1,16 +1,10 @@
 import type { NationalityResource } from "../lib/nationality.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { Pencil } from "lucide-react"; // Import the Pencil icon
-import { ButtonAction } from "@/components/ButtonAction"; // Import ButtonAction component
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
-export const NationalityColumns = ({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
+export const NationalityColumns = (_options?: {
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
 }): ColumnDef<NationalityResource>[] => [
   {
     accessorKey: "name",
@@ -38,24 +32,6 @@ export const NationalityColumns = ({
         month: "short",
         day: "numeric",
       });
-    },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const id = row.original.id;
-
-      return (
-        <div className="flex gap-2">
-          <ButtonAction
-            onClick={() => onEdit(id)}
-            icon={Pencil}
-            tooltip="Editar"
-          />
-          <DeleteButton onClick={() => onDelete(id)} />
-        </div>
-      );
     },
   },
 ];

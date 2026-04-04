@@ -15,6 +15,8 @@ import type { PurchaseSchema } from "../lib/purchase.schema";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 export default function PurchaseEditPage() {
   const { user } = useAuthStore();
@@ -131,6 +133,16 @@ export default function PurchaseEditPage() {
 
   return (
     <PageWrapper size="3xl">
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => navigate("/compras")}
+        >
+          <X /> Cancelar
+        </Button>
+      </div>
+
       {suppliers &&
         suppliers.length > 0 &&
         warehouses &&

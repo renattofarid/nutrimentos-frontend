@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBrand } from "../lib/brand.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import BrandActions from "./BrandActions";
 import BrandTable from "./BrandTable";
@@ -17,6 +18,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { BRAND } from "../lib/brand.interface";
 import BrandModal from "./BrandModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = BRAND;
 
@@ -24,13 +26,21 @@ export default function BrandPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
+  const [openCreate, setOpenCreate] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { data, meta, isLoading, refetch } = useBrand();
 
   useEffect(() => {
     refetch({ page, search, per_page });
   }, [page, search, per_page]);
+
+  const selectedBrandId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarBrand = selectedBrandId
+    ? (data?.find((b) => b.id.toString() === selectedBrandId) ?? null)
+    : null;
+  const hasSelection = !!toolbarBrand;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -46,18 +56,22 @@ export default function BrandPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <BrandActions />
-      </div>
+    <PageWrapper>
+      <BrandActions
+        hasSelection={hasSelection}
+        onNew={() => setOpenCreate(true)}
+        onEdit={() => toolbarBrand && setEditId(toolbarBrand.id)}
+        onDelete={() => toolbarBrand && setDeleteId(toolbarBrand.id)}
+      />
 
       <BrandTable
         isLoading={isLoading}
-        columns={BrandColumns({
-          onEdit: setEditId,
-          onDelete: setDeleteId,
-        })}
+        columns={BrandColumns()}
         data={data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={(brand) => setEditId(brand.id)}
       >
         <BrandOptions search={search} setSearch={setSearch} />
       </BrandTable>
@@ -70,6 +84,15 @@ export default function BrandPage() {
         setPerPage={setPerPage}
         totalData={meta?.total || 0}
       />
+
+      {openCreate && (
+        <BrandModal
+          title={`Crear ${MODEL.name}`}
+          mode="create"
+          open={true}
+          onClose={() => setOpenCreate(false)}
+        />
+      )}
 
       {editId !== null && (
         <BrandModal
@@ -88,6 +111,6 @@ export default function BrandPage() {
           onConfirm={handleDelete}
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

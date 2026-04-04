@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWarehouseDocuments } from "../lib/warehouse-document.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import WarehouseDocumentActions from "./WarehouseDocumentActions";
 import WarehouseDocumentTable from "./WarehouseDocumentTable";
@@ -16,6 +17,7 @@ import {
   errorToast,
   SUCCESS_MESSAGE,
   ERROR_MESSAGE,
+  promiseToast,
 } from "@/lib/core.function";
 import { WarehouseDocumentColumns } from "./WarehouseDocumentColumns";
 import DataTablePagination from "@/components/DataTablePagination";
@@ -32,6 +34,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import PageWrapper from "@/components/PageWrapper";
+import { exportWarehouseDocumentByNumber } from "../lib/warehouse-document.actions";
 
 const { MODEL, ROUTE } = WAREHOUSE_DOCUMENT;
 
@@ -40,20 +44,27 @@ export default function WarehouseDocumentPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
-  const [selectedWarehouse, setSelectedWarehouse] = useState("");
+  const [selectedWarehouseOrigin, setSelectedWarehouseOrigin] = useState("");
+  const [selectedWarehouseDest, setSelectedWarehouseDest] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [cancelId, setCancelId] = useState<number | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const { data, meta, isLoading, refetch } = useWarehouseDocuments({
     page,
     per_page,
     search,
-    warehouse_id: selectedWarehouse,
+    warehouse_origin_id: selectedWarehouseOrigin,
+    warehouse_dest_id: selectedWarehouseDest,
     type: selectedType,
     status: selectedStatus,
+    start_date: startDate ? startDate.toISOString().split("T")[0] : undefined,
+    end_date: endDate ? endDate.toISOString().split("T")[0] : undefined,
   });
   const { data: warehouses } = useAllWarehouses();
 
@@ -62,19 +73,33 @@ export default function WarehouseDocumentPage() {
       page,
       per_page,
       search,
-      warehouse_id: selectedWarehouse,
+      warehouse_origin_id: selectedWarehouseOrigin,
+      warehouse_dest_id: selectedWarehouseDest,
       type: selectedType,
       status: selectedStatus,
+      start_date: startDate ? startDate.toISOString().split("T")[0] : undefined,
+      end_date: endDate ? endDate.toISOString().split("T")[0] : undefined,
     });
   }, [
     page,
     search,
     per_page,
-    selectedWarehouse,
+    selectedWarehouseOrigin,
+    selectedWarehouseDest,
     selectedType,
     selectedStatus,
+    startDate,
+    endDate,
     refetch,
   ]);
+
+  const selectedDocId = Object.keys(rowSelection).find(
+    (key) => rowSelection[key],
+  );
+  const toolbarDoc = selectedDocId
+    ? (data?.find((d) => d.id.toString() === selectedDocId) ?? null)
+    : null;
+  const hasSelection = !!toolbarDoc;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -127,45 +152,106 @@ export default function WarehouseDocumentPage() {
     }
   };
 
-  const handleCreateDocument = () => {
-    navigate(`${ROUTE}/agregar`);
+  const handlePrint = () => {
+    if (!toolbarDoc?.document_number) return;
+
+    const downloadPromise = exportWarehouseDocumentByNumber(
+      toolbarDoc.document_number,
+    ).then((blob) => {
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+    });
+
+    promiseToast(downloadPromise, {
+      loading: "Generando PDF...",
+      success: "PDF generado correctamente",
+      error: "Error al generar el PDF",
+    });
   };
 
-  const handleEditDocument = (id: number) => {
-    navigate(`${ROUTE}/actualizar/${id}`);
-  };
+  const exportEndpoint = useMemo(() => {
+    const params = new URLSearchParams();
 
-  const handleViewDocument = (id: number) => {
-    navigate(`${ROUTE}/${id}`);
-  };
+    if (search) {
+      params.append("search", search);
+    }
+    if (selectedWarehouseOrigin) {
+      params.append("warehouse_origin_id", selectedWarehouseOrigin);
+    }
+    if (selectedWarehouseDest) {
+      params.append("warehouse_dest_id", selectedWarehouseDest);
+    }
+    if (selectedType) {
+      params.append("type", selectedType);
+    }
+    if (selectedStatus) {
+      params.append("status", selectedStatus);
+    }
+    if (startDate) {
+      params.append("start_date", startDate.toISOString().split("T")[0]);
+    }
+    if (endDate) {
+      params.append("end_date", endDate.toISOString().split("T")[0]);
+    }
+
+    params.append("export", "excel");
+
+    const queryString = params.toString();
+    const baseExcelUrl = "/warehouse-document/export";
+    return queryString ? `${baseExcelUrl}?${queryString}` : baseExcelUrl;
+  }, [
+    search,
+    selectedWarehouseOrigin,
+    selectedWarehouseDest,
+    selectedType,
+    selectedStatus,
+    startDate,
+    endDate,
+  ]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <WarehouseDocumentActions onCreateDocument={handleCreateDocument} />
-      </div>
+    <PageWrapper>
+      <WarehouseDocumentActions
+        excelEndpoint={exportEndpoint}
+        hasSelection={hasSelection}
+        selectedStatus={toolbarDoc?.status}
+        onNew={() => navigate(`${ROUTE}/agregar`)}
+        onEdit={() =>
+          toolbarDoc && navigate(`${ROUTE}/actualizar/${toolbarDoc.id}`)
+        }
+        onDelete={() => toolbarDoc && setDeleteId(toolbarDoc.id)}
+        onView={() => toolbarDoc && navigate(`${ROUTE}/${toolbarDoc.id}`)}
+        onPrint={handlePrint}
+        onConfirm={() => toolbarDoc && setConfirmId(toolbarDoc.id)}
+        onCancel={() => toolbarDoc && setCancelId(toolbarDoc.id)}
+      />
 
       <WarehouseDocumentTable
         isLoading={isLoading}
-        columns={WarehouseDocumentColumns({
-          onEdit: handleEditDocument,
-          onDelete: setDeleteId,
-          onView: handleViewDocument,
-          onConfirm: setConfirmId,
-          onCancel: setCancelId,
-        })}
+        columns={WarehouseDocumentColumns()}
         data={data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={(doc) => navigate(`${ROUTE}/actualizar/${doc.id}`)}
       >
         {warehouses && (
           <WarehouseDocumentOptions
             search={search}
             setSearch={setSearch}
-            selectedWarehouse={selectedWarehouse}
-            setSelectedWarehouse={setSelectedWarehouse}
+            selectedWarehouseOrigin={selectedWarehouseOrigin}
+            setSelectedWarehouseOrigin={setSelectedWarehouseOrigin}
+            selectedWarehouseDest={selectedWarehouseDest}
+            setSelectedWarehouseDest={setSelectedWarehouseDest}
             selectedType={selectedType}
             setSelectedType={setSelectedType}
             selectedStatus={selectedStatus}
             setSelectedStatus={setSelectedStatus}
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
             warehouses={warehouses}
           />
         )}
@@ -236,6 +322,6 @@ export default function WarehouseDocumentPage() {
           </AlertDialogContent>
         </AlertDialog>
       )}
-    </div>
+    </PageWrapper>
   );
 }

@@ -2,10 +2,10 @@ import { useParams, useNavigate } from "react-router-dom";
 
 import {
   Loader,
-  ArrowLeft,
   FileText,
   Calendar,
   DollarSign,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,10 +50,9 @@ export default function PurchaseDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <Button variant="outline" onClick={() => navigate(ROUTE)}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant="outline" onClick={() => navigate(ROUTE)}>
+          <X /> Cerrar
         </Button>
       </div>
 

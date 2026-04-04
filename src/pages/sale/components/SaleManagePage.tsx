@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useSaleById } from "../lib/sale.hook";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import {
   Users,
   Package,
   DollarSign,
+  X,
 } from "lucide-react";
 import type { SaleInstallmentResource } from "../lib/sale.interface";
 import InstallmentPaymentDialog from "./InstallmentPaymentDialog";
@@ -27,6 +28,7 @@ import PageWrapper from "@/components/PageWrapper";
 
 export default function SaleManagePage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { data: sale, isFinding, refetch } = useSaleById(Number(id));
 
   const [selectedInstallment, setSelectedInstallment] =
@@ -92,6 +94,11 @@ export default function SaleManagePage() {
 
   return (
     <PageWrapper>
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant="outline" onClick={() => navigate("/ventas/listado")}>
+          <X /> Cerrar
+        </Button>
+      </div>
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <Badge

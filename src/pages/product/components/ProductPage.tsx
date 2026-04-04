@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useProduct } from "../lib/product.hook";
 import { useAllCategories } from "@/pages/category/lib/category.hook";
 import { useAllBrands } from "@/pages/brand/lib/brand.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import ProductActions from "./ProductActions";
 import ProductTable from "./ProductTable";
@@ -20,6 +21,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { PRODUCT } from "../lib/product.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = PRODUCT;
 
@@ -34,12 +36,13 @@ export default function ProductPage() {
   const [selectedType, setSelectedType] = useState("");
   const [selectedCompany, setSelectedCompany] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const { data, isLoading, refetch } = useProduct({
     page,
     per_page,
     search,
-    code: searchCode,
+    codigo: searchCode,
     category_id: selectedCategory,
     brand_id: selectedBrand,
     type: selectedType,
@@ -51,17 +54,13 @@ export default function ProductPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [
-    page,
-    search,
-    searchCode,
-    per_page,
-    selectedCategory,
-    selectedBrand,
-    selectedType,
-    selectedCompany,
-    refetch,
-  ]);
+  }, [search, searchCode, per_page, selectedCategory, selectedBrand, selectedType, selectedCompany]);
+
+  const selectedProductId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarProduct = selectedProductId
+    ? (data?.data?.find((p) => p.id.toString() === selectedProductId) ?? null)
+    : null;
+  const hasSelection = !!toolbarProduct;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -78,32 +77,24 @@ export default function ProductPage() {
     }
   };
 
-  const handleCreateProduct = () => {
-    navigate("/productos/agregar");
-  };
-
-  const handleEditProduct = (id: number) => {
-    navigate(`/productos/actualizar/${id}`);
-  };
-
-  const handleViewProduct = (id: number) => {
-    navigate(`/productos/${id}`);
-  };
-
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <ProductActions onCreateProduct={handleCreateProduct} />
-      </div>
+    <PageWrapper>
+      <ProductActions
+        hasSelection={hasSelection}
+        onNew={() => navigate("/productos/agregar")}
+        onEdit={() => toolbarProduct && navigate(`/productos/actualizar/${toolbarProduct.id}`)}
+        onDelete={() => toolbarProduct && setDeleteId(toolbarProduct.id)}
+        onView={() => toolbarProduct && navigate(`/productos/${toolbarProduct.id}`)}
+      />
 
       <ProductTable
         isLoading={isLoading}
-        columns={ProductColumns({
-          onEdit: handleEditProduct,
-          onDelete: setDeleteId,
-          onView: handleViewProduct,
-        })}
+        columns={ProductColumns()}
         data={data?.data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={(product) => navigate(`/productos/actualizar/${product.id}`)}
       >
         {categories && brands && companies && (
           <ProductOptions
@@ -142,6 +133,6 @@ export default function ProductPage() {
           onConfirm={handleDelete}
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

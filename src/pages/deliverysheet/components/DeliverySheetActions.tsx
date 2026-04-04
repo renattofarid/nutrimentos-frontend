@@ -3,44 +3,38 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Ban,
-  X,
-  FileMinus,
   Eye,
-  PanelRightOpen,
-  Wallet,
+  FileSpreadsheet,
+  Pencil,
+  Plus,
+  RefreshCcw,
+  Trash2,
+  X,
 } from "lucide-react";
 
-interface SaleActionsProps {
+interface DeliverySheetActionsProps {
   hasSelection: boolean;
+  canDelete: boolean;
   onNew: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onAnular: () => void;
-  onCerrar: () => void;
-  onGenerar: () => void;
   onViewDetails: () => void;
-  onManage: () => void;
-  onQuickPay: () => void;
-  canQuickPay: boolean;
+  onUpdateStatus: () => void;
+  onExportPdf: () => void;
+  onClose: () => void;
 }
 
-export default function SaleActions({
+export default function DeliverySheetActions({
   hasSelection,
+  canDelete,
   onNew,
   onEdit,
   onDelete,
-  onAnular,
-  onCerrar,
-  onGenerar,
   onViewDetails,
-  onManage,
-  onQuickPay,
-  canQuickPay,
-}: SaleActionsProps) {
+  onUpdateStatus,
+  onExportPdf,
+  onClose,
+}: DeliverySheetActionsProps) {
   return (
     <div className="flex items-center gap-1">
       <Button colorIcon="green" size="sm" variant="outline" onClick={onNew}>
@@ -62,20 +56,10 @@ export default function SaleActions({
         size="sm"
         variant="outline"
         onClick={onDelete}
-        disabled={!hasSelection}
+        disabled={!hasSelection || !canDelete}
       >
         <Trash2 />
         Eliminar
-      </Button>
-      <Button
-        colorIcon="rose"
-        size="sm"
-        variant="outline"
-        onClick={onAnular}
-        disabled={!hasSelection}
-      >
-        <Ban />
-        Anular
       </Button>
       <Button
         colorIcon="blue"
@@ -84,46 +68,33 @@ export default function SaleActions({
         onClick={onViewDetails}
         disabled={!hasSelection}
       >
-        <PanelRightOpen />
+        <Eye />
         Ver detalle
       </Button>
       <Button
         colorIcon="violet"
         size="sm"
         variant="outline"
-        onClick={onManage}
+        onClick={onUpdateStatus}
         disabled={!hasSelection}
       >
-        <Eye />
-        Gestionar
+        <RefreshCcw />
+        Estado
       </Button>
       <Button
         colorIcon="teal"
         size="sm"
         variant="outline"
-        onClick={onQuickPay}
-        disabled={!canQuickPay}
-      >
-        <Wallet />
-        Pago rapido
-      </Button>
-      <div className="h-6 mx-2">
-        <Separator orientation="vertical" />
-      </div>
-      <Button
-        colorIcon="indigo"
-        size="sm"
-        variant="outline"
-        onClick={onGenerar}
+        onClick={onExportPdf}
         disabled={!hasSelection}
       >
-        <FileMinus />
-        Generar NC
+        <FileSpreadsheet />
+        PDF
       </Button>
       <div className="h-6 mx-2">
         <Separator orientation="vertical" />
       </div>
-      <Button colorIcon="gray" size="sm" variant="outline" onClick={onCerrar}>
+      <Button colorIcon="gray" size="sm" variant="outline" onClick={onClose}>
         <X />
         Cerrar
       </Button>

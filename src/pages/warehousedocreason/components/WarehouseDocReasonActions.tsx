@@ -1,31 +1,36 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
-import WarehouseDocReasonModal from "./WarehouseDocReasonModal";
-import { Plus } from "lucide-react";
-import { WAREHOUSEDOCREASON } from "../lib/warehousedocreason.interface";
-import { useState } from "react";
-import ActionsWrapper from "@/components/ActionsWrapper";
+import { Separator } from "@/components/ui/separator";
+import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { useWindowManager } from "@/stores/window-manager.store";
 
-export default function WarehouseDocReasonActions() {
-  const [open, setOpen] = useState(false);
+interface Props {
+  hasSelection: boolean;
+  onNew: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
 
-  const { MODEL } = WAREHOUSEDOCREASON;
+export default function WarehouseDocReasonActions({ hasSelection, onNew, onEdit, onDelete }: Props) {
+  const { activeTabId, closeTab } = useWindowManager();
+  const handleCerrar = () => { if (activeTabId) closeTab(activeTabId); };
+
   return (
-    <ActionsWrapper>
-      <Button
-        size="sm"
-        className="ml-auto"
-        onClick={() => setOpen(true)}
-      >
-        <Plus className="size-4 mr-2" /> Agregar {MODEL.name}
-      </Button>
-      <WarehouseDocReasonModal
-        title={`Crear ${MODEL.name}`}
-        mode="create"
-        open={open}
-        onClose={() => setOpen(false)}
-      />
-    </ActionsWrapper>
+    <div className="flex items-center justify-between mb-1 pb-1 border-b w-full">
+      <div className="flex items-center gap-1">
+        <Button colorIcon="green" size="sm" variant="outline" onClick={onNew}>
+          <Plus /> Nuevo
+        </Button>
+        <Button colorIcon="amber" size="sm" variant="outline" onClick={onEdit} disabled={!hasSelection}>
+          <Pencil /> Editar
+        </Button>
+        <Button colorIcon="red" size="sm" variant="outline" onClick={onDelete} disabled={!hasSelection}>
+          <Trash2 /> Eliminar
+        </Button>
+        <div className="h-6 mx-2"><Separator orientation="vertical" /></div>
+        <Button colorIcon="gray" size="sm" variant="outline" onClick={handleCerrar}>
+          <X /> Cerrar
+        </Button>
+      </div>
+    </div>
   );
 }

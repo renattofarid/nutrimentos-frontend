@@ -15,6 +15,8 @@ import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
 import { DEFAULT_BRANCH_ID, DEFAULT_WAREHOUSE_ID } from "@/lib/core.constants";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 export default function PurchaseAddPage() {
   const navigate = useNavigate();
@@ -85,6 +87,16 @@ export default function PurchaseAddPage() {
 
   return (
     <PageWrapper size="3xl">
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => navigate("/compras")}
+        >
+          <X /> Cancelar
+        </Button>
+      </div>
+
       {suppliers &&
         suppliers.length > 0 &&
         warehouses &&

@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
 import { useFormLayout } from "@/components/GroupFormSection";
-import { Loader, Search, Paperclip, IdCard, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader, Search, Paperclip, IdCard, ChevronDown, ChevronUp, Save, X } from "lucide-react";
 import {
   personCreateSchema,
   personCreateSchemaClient,
@@ -259,7 +259,7 @@ export const PersonForm = ({
   }, [document_type_id, documentTypes, form]);
 
   // Get form state for better UX
-  const { errors, isValid, dirtyFields } = form.formState;
+  const { errors, dirtyFields } = form.formState;
   const [fieldsFromSearch, setFieldsFromSearch] = useState({
     names: false,
     father_surname: false,
@@ -400,6 +400,25 @@ export const PersonForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        {/* Form Actions */}
+        <div className="flex items-center gap-2">
+          <Button size="sm" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+            {isSubmitting
+              ? isEditing
+                ? "Actualizando..."
+                : "Creando..."
+              : isEditing
+                ? "Actualizar"
+                : "Guardar"}
+          </Button>
+          {onCancel && (
+            <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+              <X /> Cancelar
+            </Button>
+          )}
+        </div>
+
         {/* Document Information */}
         <GroupFormSection
           title="Información de Documento"
@@ -679,35 +698,6 @@ export const PersonForm = ({
         {isEditing && isClient && initialData?.id && (
           <PersonAddressesList personId={initialData.id} />
         )}
-
-        {/* Form Actions */}
-        <div className="flex justify-end gap-3">
-          {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onCancel}
-            >
-              Cancelar
-            </Button>
-          )}
-          <Button
-            size="sm"
-            type="submit"
-            disabled={isSubmitting}
-            className={`gap-2 ${!isValid ? "opacity-50" : ""}`}
-          >
-            {isSubmitting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                {isEditing ? "Actualizando..." : "Creando..."}
-              </>
-            ) : (
-              <>{isEditing ? "Actualizar" : "Crear"} Persona</>
-            )}
-          </Button>
-        </div>
 
         {/* Form validation summary */}
         {Object.keys(errors).length > 0 && (

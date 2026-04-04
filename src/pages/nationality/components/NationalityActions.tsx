@@ -1,20 +1,38 @@
-import ActionsWrapper from "@/components/ActionsWrapper";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { useWindowManager } from "@/stores/window-manager.store";
 
-interface NationalityActionsProps {
-  onCreateNationality: () => void;
+interface Props {
+  hasSelection?: boolean;
+  onNew?: () => void;
+  onCreateNationality?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export default function NationalityActions({
-  onCreateNationality,
-}: NationalityActionsProps) {
+export default function NationalityActions({ hasSelection = false, onNew, onCreateNationality, onEdit, onDelete }: Props) {
+  const { activeTabId, closeTab } = useWindowManager();
+  const handleCerrar = () => { if (activeTabId) closeTab(activeTabId); };
+  const handleNew = onNew ?? onCreateNationality ?? (() => {});
+
   return (
-    <ActionsWrapper>
-      <Button size={"sm"} onClick={onCreateNationality}>
-        <Plus className="h-4 w-4 mr-2" />
-        Agregar
-      </Button>
-    </ActionsWrapper>
+    <div className="flex items-center justify-between mb-1 pb-1 border-b w-full">
+      <div className="flex items-center gap-1">
+        <Button colorIcon="green" size="sm" variant="outline" onClick={handleNew}>
+          <Plus /> Nuevo
+        </Button>
+        <Button colorIcon="amber" size="sm" variant="outline" onClick={onEdit ?? (() => {})} disabled={!hasSelection}>
+          <Pencil /> Editar
+        </Button>
+        <Button colorIcon="red" size="sm" variant="outline" onClick={onDelete ?? (() => {})} disabled={!hasSelection}>
+          <Trash2 /> Eliminar
+        </Button>
+        <div className="h-6 mx-2"><Separator orientation="vertical" /></div>
+        <Button colorIcon="gray" size="sm" variant="outline" onClick={handleCerrar}>
+          <X /> Cerrar
+        </Button>
+      </div>
+    </div>
   );
 }

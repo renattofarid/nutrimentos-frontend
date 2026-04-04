@@ -31,7 +31,7 @@ import { Button } from "@/components/ui/button";
 const dataTableVariants = cva("hidden md:block w-full", {
   variants: {
     variant: {
-      default: "overflow-hidden rounded-2xl border shadow-xs",
+      default: "overflow-hidden rounded border shadow-xs",
       simple: "",
       outline: "border rounded-lg",
       ghost: "",
@@ -45,7 +45,7 @@ const dataTableVariants = cva("hidden md:block w-full", {
 const headerVariants = cva("sticky top-0 z-10", {
   variants: {
     variant: {
-      default: "bg-muted",
+      default: "bg-[#82BBE3]",
       simple: "",
       outline: "bg-muted/50",
       ghost: "",
@@ -107,6 +107,7 @@ interface DataTableProps<TData, TValue> extends VariantProps<
   enableMultiRowSelection?: boolean;
   getRowId?: (originalRow: TData, index: number) => string;
   onRowClick?: (row: TData) => void;
+  onRowDoubleClick?: (row: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -128,6 +129,7 @@ export function DataTable<TData, TValue>({
   enableMultiRowSelection = true,
   getRowId,
   onRowClick,
+  onRowDoubleClick,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -135,6 +137,7 @@ export function DataTable<TData, TValue>({
   );
   const [internalRowSelection, setInternalRowSelection] = useState({});
 
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -196,7 +199,7 @@ export function DataTable<TData, TValue>({
       ? "bg-muted/50"
       : variant === "simple" || variant === "ghost"
         ? "bg-background"
-        : "bg-muted";
+        : "bg-[#82BBE3]";
 
   return (
     <div
@@ -221,19 +224,21 @@ export function DataTable<TData, TValue>({
           <Table className="text-xs md:text-sm">
             <TableHeader className={cn(headerVariants({ variant }))}>
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="text-nowrap h-10">
+                <TableRow key={headerGroup.id} className="text-nowrap h-8">
                   {headerGroup.headers.map((header) => {
                     const isGroupHeader = header.colSpan > 1;
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const isGroupStart = (header.column.columnDef.meta as any)?.isGroupStart;
+                    const isGroupStart = (header.column.columnDef.meta as any)
+                      ?.isGroupStart;
                     return (
                       <TableHead
                         key={header.id}
                         data-column-id={header.id}
                         colSpan={header.colSpan}
                         className={cn(
-                          "h-10",
-                          isGroupHeader && "text-center font-semibold text-xs tracking-wide uppercase text-muted-foreground",
+                          "h-8",
+                          isGroupHeader &&
+                            "text-center font-semibold text-xs tracking-wide uppercase text-muted-foreground",
                           isGroupStart && "border-l-2 border-border",
                           hasActionsColumn &&
                             isActionsCol(header.id) &&
@@ -290,43 +295,54 @@ export function DataTable<TData, TValue>({
                     key={row.id}
                     className={cn(
                       "text-nowrap hover:bg-muted bg-background group",
-                      (onRowClick || enableRowSelection) && "cursor-pointer",
+                      (onRowClick || onRowDoubleClick || enableRowSelection) && "cursor-pointer",
                       row.getIsSelected() &&
                         "bg-primary/10 hover:bg-primary/15 border-l-2 border-primary",
                     )}
                     onClick={(e) => {
-                      const isInteractive = (
-                        e.target as HTMLElement
-                      ).closest('button, a, input, [role="checkbox"]');
-                      if (!isInteractive) {
-                        if (enableRowSelection) {
-                          row.toggleSelected();
+                      const isInteractive = (e.target as HTMLElement).closest(
+                        'button, a, input, [role="checkbox"]',
+                      );
+                      if (isInteractive) return;
+
+                      if (onRowDoubleClick) {
+                        if (clickTimerRef.current) {
+                          clearTimeout(clickTimerRef.current);
+                          clickTimerRef.current = null;
+                          onRowDoubleClick(row.original);
+                        } else {
+                          clickTimerRef.current = setTimeout(() => {
+                            clickTimerRef.current = null;
+                            if (enableRowSelection) row.toggleSelected();
+                            if (onRowClick) onRowClick(row.original);
+                          }, 250);
                         }
-                        if (onRowClick) {
-                          onRowClick(row.original);
-                        }
+                      } else {
+                        if (enableRowSelection) row.toggleSelected();
+                        if (onRowClick) onRowClick(row.original);
                       }
                     }}
                   >
                     {row.getVisibleCells().map((cell) => {
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      const isGroupStart = (cell.column.columnDef.meta as any)?.isGroupStart;
+                      const isGroupStart = (cell.column.columnDef.meta as any)
+                        ?.isGroupStart;
                       return (
-                      <TableCell
-                        key={cell.id}
-                        className={cn(
-                          "p-2 truncate",
-                          isGroupStart && "border-l-2 border-border",
-                          hasActionsColumn &&
-                            isActionsCol(cell.column.id) &&
-                            "sticky right-0 z-1 bg-background group-hover:bg-muted border-l border-border",
-                        )}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
+                        <TableCell
+                          key={cell.id}
+                          className={cn(
+                            "p-2 truncate",
+                            isGroupStart && "border-l-2 border-border",
+                            hasActionsColumn &&
+                              isActionsCol(cell.column.id) &&
+                              "sticky right-0 z-1 bg-background group-hover:bg-muted border-l border-border",
+                          )}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
                       );
                     })}
                   </TableRow>

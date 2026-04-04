@@ -20,7 +20,7 @@ import {
 
 import PageWrapper from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
-import { Plus, FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import type { DeliverySheetStatusSchema } from "../lib/deliverysheet.schema";
@@ -29,11 +29,15 @@ import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import DeliverySheetOptions from "./DeliverySheetOptions";
 import { useDeliverySheets } from "../lib/deliverysheet.hook";
 import { errorToast, successToast } from "@/lib/core.function";
+import DeliverySheetActions from "./DeliverySheetActions";
+import { useWindowManager } from "@/stores/window-manager.store";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 export default function DeliverySheetPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(DEFAULT_PER_PAGE);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [openDelete, setOpenDelete] = useState(false);
   const [deliverySheetToDelete, setDeliverySheetToDelete] = useState<
     number | null
@@ -55,9 +59,12 @@ export default function DeliverySheetPage() {
   const [company_id, setCompanyId] = useState("");
   const [issue_date_from, setIssueDateFrom] = useState<Date | undefined>();
   const [issue_date_to, setIssueDateTo] = useState<Date | undefined>();
-  const [delivery_date_from, setDeliveryDateFrom] = useState<Date | undefined>();
+  const [delivery_date_from, setDeliveryDateFrom] = useState<
+    Date | undefined
+  >();
   const [delivery_date_to, setDeliveryDateTo] = useState<Date | undefined>();
   const [isExporting, setIsExporting] = useState(false);
+  const { activeTabId, closeTab } = useWindowManager();
 
   const { removeDeliverySheet, updateStatus } = useDeliverySheetStore();
 
@@ -189,16 +196,47 @@ export default function DeliverySheetPage() {
 
   const { ROUTE_ADD } = DELIVERY_SHEET;
 
-  const columns = getDeliverySheetColumns({
-    onDelete: handleDelete,
-    onViewDetails: handleViewDetails,
-    onUpdateStatus: handleUpdateStatus,
-    onExport: handleExportById,
-  });
+  const sheets = data?.data || [];
+  const selectedDeliverySheetId = Object.keys(rowSelection).find(
+    (key) => rowSelection[key],
+  );
+  const toolbarDeliverySheet = selectedDeliverySheetId
+    ? (sheets.find((sheet) => sheet.id.toString() === selectedDeliverySheetId) ??
+      null)
+    : null;
+  const hasSelection = !!toolbarDeliverySheet;
+  const canDelete = toolbarDeliverySheet?.status === "PENDIENTE";
+
+  const handleEdit = (deliverySheet: DeliverySheetResource) => {
+    navigate(`/planillas/actualizar/${deliverySheet.id}`);
+  };
+
+  const handleClose = () => {
+    if (activeTabId) closeTab(activeTabId);
+  };
+
+  const columns = getDeliverySheetColumns();
 
   return (
     <PageWrapper>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-1 pb-1 border-b">
+        <DeliverySheetActions
+          hasSelection={hasSelection}
+          canDelete={!!canDelete}
+          onNew={() => navigate(ROUTE_ADD)}
+          onEdit={() => toolbarDeliverySheet && handleEdit(toolbarDeliverySheet)}
+          onDelete={() => toolbarDeliverySheet && handleDelete(toolbarDeliverySheet.id)}
+          onViewDetails={() =>
+            toolbarDeliverySheet && handleViewDetails(toolbarDeliverySheet)
+          }
+          onUpdateStatus={() =>
+            toolbarDeliverySheet && handleUpdateStatus(toolbarDeliverySheet)
+          }
+          onExportPdf={() =>
+            toolbarDeliverySheet && handleExportById(toolbarDeliverySheet.id)
+          }
+          onClose={handleClose}
+        />
         <div className="flex gap-2">
           <Button
             size={"sm"}
@@ -209,17 +247,17 @@ export default function DeliverySheetPage() {
             <FileSpreadsheet className="mr-2 h-4 w-4" />
             {isExporting ? "Exportando..." : "Exportar"}
           </Button>
-          <Button size={"sm"} onClick={() => navigate(ROUTE_ADD)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nueva Planilla
-          </Button>
         </div>
       </div>
 
       <DeliverySheetTable
         columns={columns}
-        data={data?.data || []}
+        data={sheets}
         isLoading={isLoading}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={handleEdit}
       >
         <DeliverySheetOptions
           search={search}

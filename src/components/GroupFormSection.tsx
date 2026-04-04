@@ -29,6 +29,7 @@ interface FormSectionProps {
   className?: string;
   gap?: string;
   headerExtra?: ReactNode;
+  bordered?: boolean;
 }
 
 const colsMap = {
@@ -85,6 +86,7 @@ export const GroupFormSection = ({
   gap = "gap-3",
   headerExtra,
   horizontal = false,
+  bordered = true,
 }: FormSectionProps) => {
   const gridClasses = [
     "grid",
@@ -103,25 +105,44 @@ export const GroupFormSection = ({
   return (
     <div
       className={cn(
-        `bg-background rounded-md border border-muted shadow-sm overflow-hidden`,
+        bordered
+          ? "relative rounded-md border border-muted bg-background shadow-sm"
+          : "bg-background rounded-md border border-muted shadow-sm overflow-hidden",
         className,
       )}
     >
-      <div className={`${bgColor} px-2 py-0 border-b border-muted`}>
-        <div className="flex flex-row flex-wrap justify-between sm:items-center gap-3">
-          <h3
-            className={cn(
-              "text-xs md:text-sm font-semibold flex items-center",
-              iconColor,
-            )}
-          >
-            <Icon className={`size-2 md:size-3 mr-2`} />
-            {title}
-          </h3>
-          {headerExtra}
+      {!bordered && (
+        <div className={`${bgColor} px-2 py-0 border-b border-muted`}>
+          <div className="flex flex-row flex-wrap justify-between sm:items-center gap-3">
+            <h3
+              className={cn(
+                "text-xs md:text-sm font-semibold flex items-center",
+                iconColor,
+              )}
+            >
+              <Icon className={`size-2 md:size-3 mr-2`} />
+              {title}
+            </h3>
+            {headerExtra}
+          </div>
         </div>
-      </div>
-      <div className="p-3">
+      )}
+      {bordered && (
+        <div
+          className={cn(
+            "absolute -top-1.5 left-3 right-3 bg-background px-1 text-xs font-semibold flex items-center gap-2",
+            iconColor,
+          )}
+        >
+          <span className="flex items-center gap-1 shrink-0 min-w-0">
+            <Icon className="size-2 md:size-3 shrink-0" />
+            <span className="truncate">{title}</span>
+          </span>
+          <span className="h-px flex-1 bg-muted" aria-hidden="true" />
+          {headerExtra && <span className="shrink-0">{headerExtra}</span>}
+        </div>
+      )}
+      <div className={bordered ? "p-2 pt-4" : "p-2"}>
         <FormLayoutContext.Provider value={{ horizontal }}>
           <div className={cn(gridClasses)}>{children}</div>
         </FormLayoutContext.Provider>

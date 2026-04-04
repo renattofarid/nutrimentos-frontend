@@ -9,13 +9,7 @@ import {
   saleSchemaUpdate,
   type SaleSchema,
 } from "../lib/sale.schema";
-import {
-  Users2,
-  CreditCard,
-  ListChecks,
-  Users,
-  FileText,
-} from "lucide-react";
+import { Users2, CreditCard, ListChecks, Users, FileText } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
@@ -48,13 +42,23 @@ import { FormInput } from "@/components/FormInput";
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
   onSubmit: (data: any) => void;
+  onVendedorChange?: (vendedorId: string) => void;
   mode?: "create" | "update";
   branches: BranchResource[];
   warehouses: WarehouseResource[];
   sale?: SaleResource;
 }
 
+interface CustomerAddress {
+  id: number;
+  zone_id: number;
+  zone_name: string;
+  address: string;
+  is_primary: boolean;
+}
+
 interface DetailRow {
+  index: number;
   product_id: string;
   product_code?: string;
   product_name?: string;
@@ -80,6 +84,7 @@ interface InstallmentRow {
 export const SaleForm = ({
   defaultValues,
   onSubmit,
+  onVendedorChange,
   mode = "create",
   branches,
   warehouses,
@@ -113,25 +118,30 @@ export const SaleForm = ({
     )[0];
 
   // Estado para las direcciones del cliente seleccionado
-  const [customerAddresses, setCustomerAddresses] = useState<
-    { id: number; zone_name: string; address: string; is_primary: boolean }[]
-  >([]);
-
-  
+  const [customerAddresses, setCustomerAddresses] = useState<CustomerAddress[]>(
+    [],
+  );
 
   // Referencia al zone_id actual para detectar cambio de zona al cambiar cliente
   const currentZoneIdRef = useRef<number | null>(null);
 
   const [isClientManagementOpen, setIsClientManagementOpen] = useState(false);
-  const [externalCustomerOption, setExternalCustomerOption] = useState<{ value: string; label: string } | null>(null);
+  const [externalCustomerOption, setExternalCustomerOption] = useState<{
+    value: string;
+    label: string;
+  } | null>(null);
   const pendingExternalPersonRef = useRef<PersonResource | null>(null);
-  const [selectedCustomerName, setSelectedCustomerName] = useState<string>(() => {
-    if (mode === "update" && sale?.customer) {
-      return sale.customer.business_name ||
-        `${sale.customer.names ?? ""} ${sale.customer.father_surname ?? ""} ${sale.customer.mother_surname ?? ""}`.trim();
-    }
-    return "";
-  });
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string>(
+    () => {
+      if (mode === "update" && sale?.customer) {
+        return (
+          sale.customer.business_name ||
+          `${sale.customer.names ?? ""} ${sale.customer.father_surname ?? ""} ${sale.customer.mother_surname ?? ""}`.trim()
+        );
+      }
+      return "";
+    },
+  );
 
   const { fetchDynamicPrice } = useDynamicPrice();
   const queryClient = useQueryClient();
@@ -161,6 +171,7 @@ export const SaleForm = ({
       document_type: "FACTURA", // Por defecto Factura
       currency: "PEN", // Por defecto Soles
       payment_type: "CONTADO", // Por defecto al Contado
+      discount_global: "0",
       ...defaultValues,
       details: details.length > 0 ? details : [],
       installments: installments.length > 0 ? installments : [],
@@ -181,50 +192,54 @@ export const SaleForm = ({
 
       // Inicializar detalles
       if (defaultValues.details && defaultValues.details.length > 0) {
-        const initialDetails = defaultValues.details.map((detail: any) => {
-          // Determinar el modo de venta basado en los valores recibidos
-          const qtySacks = parseFloat(detail.quantity_sacks || "0");
-          const qtyKg = parseFloat(detail.quantity_kg || "0");
-          const sale_mode: "sacks" | "kg" | undefined =
-            qtySacks > 0 ? "sacks" : qtyKg > 0 ? "kg" : undefined;
+        const initialDetails = defaultValues.details.map(
+          (detail: any, index: number) => {
+            // Determinar el modo de venta basado en los valores recibidos
+            const qtySacks = parseFloat(detail.quantity_sacks || "0");
+            const qtyKg = parseFloat(detail.quantity_kg || "0");
+            const sale_mode: "sacks" | "kg" | undefined =
+              qtySacks > 0 ? "sacks" : qtyKg > 0 ? "kg" : undefined;
 
-          const unitPrice = parseFormattedNumber(detail.unit_price);
-          const productWeight = parseFloat(detail.product_weight || "0");
+            const unitPrice = parseFormattedNumber(detail.unit_price);
+            const productWeight = parseFloat(detail.product_weight || "0");
 
-          // Calcular totales según el modo de venta
-          let subtotal = 0;
-          let totalKg = 0;
+            // Calcular totales según el modo de venta
+            let subtotal = 0;
+            let totalKg = 0;
 
-          if (sale_mode === "sacks") {
-            totalKg = roundTo6Decimals(productWeight * qtySacks);
-            subtotal = roundTo6Decimals(totalKg * unitPrice);
-          } else if (sale_mode === "kg") {
-            totalKg = qtyKg;
-            subtotal = roundTo6Decimals(qtyKg * unitPrice);
-          }
+            if (sale_mode === "sacks") {
+              totalKg = roundTo6Decimals(productWeight * qtySacks);
+              // En modo sacos, el precio unitario corresponde al saco.
+              subtotal = roundTo6Decimals(qtySacks * unitPrice);
+            } else if (sale_mode === "kg") {
+              totalKg = qtyKg;
+              subtotal = roundTo6Decimals(qtyKg * unitPrice);
+            }
 
-          // El subtotal es la multiplicación simple (precio ya incluye IGV)
-          // El IGV se extrae en el resumen total, no por fila
-          const total = subtotal;
-          const igv = 0;
+            // El subtotal es la multiplicación simple (precio ya incluye IGV)
+            // El IGV se extrae en el resumen total, no por fila
+            const total = subtotal;
+            const igv = 0;
 
-          return {
-            product_id: detail.product_id,
-            product_code: detail.product_code || "",
-            product_name: detail.product_name || "",
-            product_weight: detail.product_weight || "0",
-            product_price_per_kg: detail.product_price_per_kg || "0",
-            quantity: detail.quantity,
-            quantity_sacks: detail.quantity_sacks || "",
-            quantity_kg: detail.quantity_kg || "",
-            unit_price: detail.unit_price,
-            subtotal,
-            igv,
-            total,
-            total_kg: totalKg,
-            sale_mode,
-          };
-        });
+            return {
+              index: index + 1,
+              product_id: detail.product_id,
+              product_code: detail.product_code || "",
+              product_name: detail.product_name || "",
+              product_weight: detail.product_weight || "0",
+              product_price_per_kg: detail.product_price_per_kg || "0",
+              quantity: detail.quantity,
+              quantity_sacks: detail.quantity_sacks || "",
+              quantity_kg: detail.quantity_kg || "",
+              unit_price: detail.unit_price,
+              subtotal,
+              igv,
+              total,
+              total_kg: totalKg,
+              sale_mode,
+            };
+          },
+        );
         setDetails(initialDetails);
         form.setValue("details", initialDetails);
       }
@@ -248,6 +263,7 @@ export const SaleForm = ({
           if (zones && zones.length > 0) {
             const mapped = zones.map((z) => ({
               id: z.id,
+              zone_id: z.zone_id,
               zone_name: z.zone.name,
               address: z.address,
               is_primary: z.is_primary,
@@ -256,8 +272,10 @@ export const SaleForm = ({
             const primary = mapped.find((pz) => pz.is_primary);
             if (primary) {
               form.setValue("person_zone_id", primary.id.toString());
+              currentZoneIdRef.current = primary.zone_id;
             } else {
               form.setValue("person_zone_id", mapped[0].id.toString());
+              currentZoneIdRef.current = mapped[0].zone_id;
             }
           }
         });
@@ -277,6 +295,27 @@ export const SaleForm = ({
   const selectedWarehouseId = form.watch("warehouse_id");
   const selectedDocumentType = form.watch("document_type");
   const selectedCustomerId = form.watch("customer_id");
+  const selectedVendedorId = form.watch("vendedor_id");
+  const selectedDiscountGlobal = form.watch("discount_global");
+  const selectedCustomerPrimaryZone =
+    customerAddresses.find((zone) => zone.is_primary)?.zone_name ??
+    customerAddresses[0]?.zone_name ??
+    "Sin zona";
+
+  const mapCustomerZones = (zones: any[]): CustomerAddress[] => {
+    return zones.map((z) => ({
+      id: z.id,
+      zone_id: z.zone_id,
+      zone_name: z.zone_name ?? z.zone?.name ?? "Sin zona",
+      address: z.address,
+      is_primary: Boolean(z.is_primary),
+    }));
+  };
+
+  const getCustomerZoneLabel = (customer: PersonResource): string => {
+    const primaryZone = customer.person_zones?.find((zone) => zone.is_primary);
+    return customer.zone_name ?? primaryZone?.zone_name ?? "Sin zona";
+  };
 
   const getCurrencySymbol = () => "S/.";
 
@@ -308,7 +347,10 @@ export const SaleForm = ({
   }, [selectedBranchId, warehouses]);
 
   // Actualizar direcciones al seleccionar un cliente en el FormSelectAsync
-  const handleCustomerChange = (_value: string, item?: PersonResource) => {
+  const handleCustomerChange = async (
+    _value: string,
+    item?: PersonResource,
+  ) => {
     const resolvedItem =
       item ??
       (pendingExternalPersonRef.current?.id.toString() === _value
@@ -321,16 +363,34 @@ export const SaleForm = ({
           `${resolvedItem.names ?? ""} ${resolvedItem.father_surname ?? ""} ${resolvedItem.mother_surname ?? ""}`.trim(),
       );
     }
-    if (resolvedItem && resolvedItem.person_zones && resolvedItem.person_zones.length > 0) {
-      setCustomerAddresses(resolvedItem.person_zones);
-      const primary = resolvedItem.person_zones.find((pz) => pz.is_primary);
-      const selectedZone = primary || resolvedItem.person_zones[0];
+    const personId = resolvedItem?.id ?? Number(_value);
+
+    let zones: CustomerAddress[] = [];
+    if (resolvedItem?.person_zones?.length) {
+      zones = mapCustomerZones(resolvedItem.person_zones);
+    } else if (personId) {
+      try {
+        const fetchedZones = await getPersonZones(personId);
+        zones = mapCustomerZones(fetchedZones);
+      } catch (error) {
+        console.error("Error fetching customer zones:", error);
+      }
+    }
+
+    if (zones.length > 0) {
+      setCustomerAddresses(zones);
+      const primary = zones.find((pz) => pz.is_primary);
+      const selectedZone = primary || zones[0];
       form.setValue("person_zone_id", selectedZone.id.toString());
 
       // Limpiar vendedor solo si la zona cambia respecto a la anterior
       const newZoneId = selectedZone.zone_id;
-      if (currentZoneIdRef.current !== null && currentZoneIdRef.current !== newZoneId) {
+      if (
+        currentZoneIdRef.current !== null &&
+        currentZoneIdRef.current !== newZoneId
+      ) {
         form.setValue("vendedor_id", "");
+        onVendedorChange?.("");
       }
       currentZoneIdRef.current = newZoneId;
     } else {
@@ -338,10 +398,16 @@ export const SaleForm = ({
       form.setValue("person_zone_id", "");
       if (currentZoneIdRef.current !== null) {
         form.setValue("vendedor_id", "");
+        onVendedorChange?.("");
       }
       currentZoneIdRef.current = null;
     }
   };
+
+  useEffect(() => {
+    if (!onVendedorChange) return;
+    onVendedorChange(selectedVendedorId || "");
+  }, [selectedVendedorId, onVendedorChange]);
 
   // Efecto para obtener serie y número automático
   useEffect(() => {
@@ -367,6 +433,53 @@ export const SaleForm = ({
     fetchNextSeries();
   }, [selectedBranchId, selectedDocumentType, mode]);
 
+  const buildCashInstallment = (): InstallmentRow => {
+    const saleTotal = calculateDetailsTotal();
+    return {
+      installment_number: "1",
+      due_days: "0",
+      amount: saleTotal.toString(),
+    };
+  };
+
+  // Mantener cuota única automática para pagos al contado (create/update)
+  useEffect(() => {
+    if (selectedPaymentType === "CONTADO") {
+      const cashInstallment = buildCashInstallment();
+      setInstallments([cashInstallment]);
+      form.setValue("installments", [cashInstallment]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPaymentType, details, selectedDiscountGlobal]);
+
+  // Auto-agregar cuota inicial al cambiar a CREDITO
+  useEffect(() => {
+    if (selectedPaymentType === "CREDITO" && installments.length === 0) {
+      const saleTotal = calculateDetailsTotal();
+      const newInstallment: InstallmentRow = {
+        installment_number: "1",
+        due_days: "30",
+        amount: saleTotal > 0 ? saleTotal.toString() : "0",
+      };
+      setInstallments([newInstallment]);
+      form.setValue("installments", [newInstallment]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPaymentType]);
+
+  // Auto-actualizar monto de la única cuota cuando cambia el total de detalles
+  useEffect(() => {
+    if (installments.length === 1) {
+      const saleTotal = calculateDetailsTotal();
+      const updated: InstallmentRow[] = [
+        { ...installments[0], amount: saleTotal.toString() },
+      ];
+      setInstallments(updated);
+      form.setValue("installments", updated);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [details, selectedDiscountGlobal]);
+
   // Efecto para hacer focus en el primer campo cuando se monta el formulario
   useEffect(() => {
     // Esperar un tick para asegurar que el DOM esté completamente renderizado
@@ -391,6 +504,7 @@ export const SaleForm = ({
   // Funciones para el ExcelGrid
   const handleAddRow = () => {
     const newDetail: DetailRow = {
+      index: details.length + 1,
       product_id: "",
       product_code: "",
       product_name: "",
@@ -414,7 +528,9 @@ export const SaleForm = ({
   };
 
   const handleRemoveRow = (index: number) => {
-    const updatedDetails = details.filter((_, i) => i !== index);
+    const updatedDetails = details
+      .filter((_, i) => i !== index)
+      .map((detail, i) => ({ ...detail, index: i + 1 }));
     setDetails(updatedDetails);
     form.setValue("details", updatedDetails);
   };
@@ -422,8 +538,12 @@ export const SaleForm = ({
   const handleRemoveEmptyDetailRows = useCallback(() => {
     const filtered = details.filter((detail) => !!detail.product_id);
     if (filtered.length === 0 || filtered.length === details.length) return;
-    setDetails(filtered);
-    form.setValue("details", filtered);
+    const reindexed = filtered.map((detail, i) => ({
+      ...detail,
+      index: i + 1,
+    }));
+    setDetails(reindexed);
+    form.setValue("details", reindexed);
   }, [details, form]);
 
   const handleCellChange = async (
@@ -636,24 +756,31 @@ export const SaleForm = ({
   // Configuración de columnas para ExcelGrid de Detalles
   const gridColumns: ExcelGridColumn<DetailRow>[] = [
     {
+      id: "index",
+      header: "#",
+      type: "readonly",
+      width: "10px",
+      accessor: "index",
+    },
+    {
       id: "product_code",
       header: "Código",
       type: "product-code",
-      width: "120px",
+      width: "100px",
       accessor: "product_code",
     },
     {
       id: "product",
       header: "Descripción",
       type: "product-search",
-      width: "300px",
+      width: "400px",
       accessor: "product_name",
     },
     {
       id: "quantity_sacks",
-      header: "Cant. Sacos",
+      header: "Cantidad",
       type: "number",
-      width: "110px",
+      width: "100px",
       accessor: "quantity_sacks",
       // Siempre habilitado para permitir navegación con Tab
     },
@@ -667,9 +794,9 @@ export const SaleForm = ({
     },
     {
       id: "unit_price",
-      header: "Precio Unit.",
+      header: "Precio",
       type: "number",
-      width: "120px",
+      width: "100px",
       accessor: "unit_price",
       // Siempre editable - el precio de la API/producto es solo referencial
     },
@@ -677,7 +804,7 @@ export const SaleForm = ({
       id: "subtotal",
       header: "Subtotal",
       type: "readonly",
-      width: "120px",
+      width: "100px",
       render: (row) => (
         <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold">
           {row.subtotal
@@ -733,13 +860,21 @@ export const SaleForm = ({
     [],
   );
 
-  // El total es la suma de los subtotales (precio ya incluye IGV)
-  const calculateDetailsTotal = () => {
+  // Total bruto: suma de subtotales de detalle (precio incluye IGV)
+  const calculateDetailsGrossTotal = () => {
     const sum = details.reduce(
       (sum, detail) => sum + (detail.subtotal || 0),
       0,
     );
     return roundTo6Decimals(sum);
+  };
+
+  // Total neto: total bruto menos descuento global
+  const calculateDetailsTotal = () => {
+    const grossTotal = calculateDetailsGrossTotal();
+    const discount = parseFloat(String(selectedDiscountGlobal ?? "0")) || 0;
+    const safeDiscount = Math.min(Math.max(discount, 0), grossTotal);
+    return roundTo6Decimals(grossTotal - safeDiscount);
   };
 
   // El IGV se extrae del total (IGV incluido en precio)
@@ -961,11 +1096,15 @@ export const SaleForm = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleFormSubmit, (errors) => {
-          const getFirstError = (obj: any, path = ""): { field: string; message: string } | null => {
+          const getFirstError = (
+            obj: any,
+            path = "",
+          ): { field: string; message: string } | null => {
             for (const key in obj) {
               const val = obj[key];
               const currentPath = path ? `${path}.${key}` : key;
-              if (val?.message) return { field: currentPath, message: val.message };
+              if (val?.message)
+                return { field: currentPath, message: val.message };
               if (typeof val === "object") {
                 const nested = getFirstError(val, currentPath);
                 if (nested) return nested;
@@ -987,15 +1126,8 @@ export const SaleForm = ({
           title="Información General"
           icon={Users2}
           cols={{ sm: 1, md: 3, lg: 4 }}
-          // headerExtra={
-          //   mode === "create" &&
-          //   autoSerie &&
-          //   autoNumero && (
-          //     <Badge variant="default" className="px-3 py-1" size="default">
-          //       {autoSerie} - {autoNumero}
-          //     </Badge>
-          //   )
-          // }
+          bordered
+          gap="gap-2"
         >
           <FormSelect
             control={form.control}
@@ -1017,7 +1149,7 @@ export const SaleForm = ({
           <FormSelect
             control={form.control}
             name="document_type"
-            label="TIPO DE DOCUMENTO"
+            label="TIPO DOCUMENTO"
             placeholder="Seleccione tipo"
             options={DOCUMENT_TYPES.map((dt) => ({
               value: dt.value,
@@ -1052,7 +1184,7 @@ export const SaleForm = ({
             />
             <FormInput
               name="_numero_display"
-              label="CORRELATIVO"
+              label="NÚMERO"
               value={autoNumero}
               onChange={(e) => setAutoNumero(e.target.value)}
               className="font-bold"
@@ -1062,7 +1194,7 @@ export const SaleForm = ({
           <DatePickerFormField
             control={form.control}
             name="issue_date"
-            label="FECHA DE EMISIÓN"
+            label="FECHA EMISIÓN"
             placeholder="Seleccione fecha"
             dateFormat="dd/MM/yyyy"
             disabledRange={{
@@ -1097,7 +1229,7 @@ export const SaleForm = ({
                   label:
                     customer.business_name ||
                     `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
-                  description: `${customer.number_document ?? "-"} | ${customer.zone_name ?? "-"}`,
+                  description: getCustomerZoneLabel(customer),
                 })}
                 onValueChange={handleCustomerChange}
                 defaultOption={
@@ -1107,7 +1239,7 @@ export const SaleForm = ({
                         label:
                           sale.customer.business_name ||
                           `${sale.customer.names ?? ""} ${sale.customer.father_surname ?? ""} ${sale.customer.mother_surname ?? ""}`.trim(),
-                        description: sale.customer.number_document ?? "-",
+                        description: selectedCustomerPrimaryZone,
                       }
                     : undefined
                 }
@@ -1118,8 +1250,7 @@ export const SaleForm = ({
             </div>
             <Button
               type="button"
-              variant="outline"
-              size="icon-sm"
+              size="icon"
               onClick={() => setIsClientManagementOpen(true)}
               title="Gestión de clientes"
             >
@@ -1155,195 +1286,134 @@ export const SaleForm = ({
           />
         </GroupFormSection>
 
-        {/* Detalles, Cuotas y Resumen */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6">
-          {/* Columna Izquierda: Detalles y Cuotas */}
-          <div className="space-y-6">
-            {/* Detalles */}
-            <GroupFormSection
-              title="Detalles de la Venta"
-              icon={ListChecks}
-              cols={{ sm: 1 }}
-            >
-              <ExcelGrid
-                columns={gridColumns}
-                data={details}
-                onAddRow={handleAddRow}
-                onRemoveRow={handleRemoveRow}
-                onCellChange={handleCellChange}
-                onProductSelect={handleProductSelect}
-                onProductCodeTab={handleProductCodeTab}
-                onRemoveEmptyRows={handleRemoveEmptyDetailRows}
-                emptyMessage="Seleccione un almacén y cliente para comenzar."
-                disabled={!selectedWarehouseId}
-                skipColumnsOnEnter={["product"]}
-              />
-            </GroupFormSection>
+        {/* Detalles */}
+        <GroupFormSection
+          title="Detalles de la Venta"
+          icon={ListChecks}
+          cols={{ sm: 1 }}
+          bordered
+        >
+          <ExcelGrid
+            columns={gridColumns}
+            data={details}
+            onAddRow={handleAddRow}
+            onRemoveRow={handleRemoveRow}
+            onCellChange={handleCellChange}
+            onProductSelect={handleProductSelect}
+            onProductCodeTab={handleProductCodeTab}
+            onRemoveEmptyRows={handleRemoveEmptyDetailRows}
+            emptyMessage="Seleccione un almacén y cliente para comenzar."
+            disabled={!selectedWarehouseId}
+            skipColumnsOnEnter={["product"]}
+          />
+        </GroupFormSection>
 
-            {/* Cuotas - Solo mostrar si es a crédito */}
-            {selectedPaymentType === "CREDITO" && (
-              <GroupFormSection
-                title="Cuotas de Pago"
-                icon={CreditCard}
-                cols={{ sm: 1 }}
-              >
-                <ExcelGrid
-                  columns={installmentColumns}
-                  data={installments}
-                  onAddRow={handleAddInstallmentRow}
-                  onRemoveRow={handleRemoveInstallment}
-                  onCellChange={handleInstallmentCellChange}
-                  emptyMessage="Agregue las cuotas de pago."
-                  disabled={details.length === 0}
-                />
+        {/* Resumen */}
+        <GroupFormSection
+          title="Resumen"
+          icon={FileText}
+          cols={{ sm: 1, md: 2, lg: 6 }}
+          bordered
+        >
+          {/* Peso Total */}
+          <div className="flex gap-2 items-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              Peso Total
+            </div>
+            <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+              {formatDecimalTrunc(calculateTotalWeight(), 2)} kg
+            </div>
+          </div>
 
-                {installments.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <div className="flex justify-between items-center p-4 bg-muted/30 rounded-lg border">
-                      <span className="font-bold">TOTAL CUOTAS:</span>
-                      <span className="text-xl font-bold text-blue-600">
-                        {getCurrencySymbol()}{" "}
-                        {formatNumber(calculateInstallmentsTotal())}
-                      </span>
-                    </div>
-                    {!installmentsMatchTotal() && (
-                      <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
-                        <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
-                          ⚠️ El total de cuotas ({getCurrencySymbol()}{" "}
-                          {formatNumber(calculateInstallmentsTotal())}) debe ser
-                          igual al total de la venta ({getCurrencySymbol()}{" "}
-                          {formatNumber(calculateDetailsTotal())})
-                        </p>
-                      </div>
-                    )}
+          {/* Subtotal */}
+          <div className="flex gap-2 items-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              Subtotal
+            </div>
+            <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+              {getCurrencySymbol()} {formatNumber(calculateDetailsSubtotal())}
+            </div>
+          </div>
+
+          {/* IGV */}
+          <div className="flex gap-2 items-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              IGV (18%)
+            </div>
+            <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
+              {getCurrencySymbol()} {formatNumber(calculateDetailsIGV())}
+            </div>
+          </div>
+
+          <div className="col-span-2">
+            <FormInput
+              name="discount_global"
+              control={form.control}
+              label="DESCUENTO GLOBAL"
+              placeholder="0"
+              type="number"
+              min={0}
+              step="0.01"
+              horizontalField
+            />
+          </div>
+
+          {/* Total a Pagar */}
+          <div className="flex gap-2 items-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              Total a Pagar
+            </div>
+            <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+              {getCurrencySymbol()} {formatNumber(calculateDetailsTotal())}
+            </div>
+          </div>
+
+          <div className="col-span-full">
+            <FormInput
+              name="observations"
+              control={form.control}
+              label="OBSERVACIONES"
+              placeholder="Ingrese observaciones adicionales"
+              uppercase
+            />
+          </div>
+        </GroupFormSection>
+
+        {/* Cuotas - Solo mostrar si es a crédito */}
+        {selectedPaymentType === "CREDITO" && (
+          <GroupFormSection
+            title="Cuotas de Pago"
+            icon={CreditCard}
+            cols={{ sm: 1 }}
+            bordered
+          >
+            <ExcelGrid
+              columns={installmentColumns}
+              data={installments}
+              onAddRow={handleAddInstallmentRow}
+              onRemoveRow={handleRemoveInstallment}
+              onCellChange={handleInstallmentCellChange}
+              emptyMessage="Agregue las cuotas de pago."
+              disabled={details.length === 0}
+              minHeight="0px"
+            />
+
+            {installments.length > 0 && (
+              <div className="mt-4 space-y-2">
+                {!installmentsMatchTotal() && (
+                  <div className="p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+                    <p className="text-sm text-orange-800 dark:text-orange-200 font-semibold">
+                      ⚠️ El total de cuotas ({getCurrencySymbol()}{" "}
+                      {formatNumber(calculateInstallmentsTotal())}) debe ser
+                      igual al total de la venta ({getCurrencySymbol()}{" "}
+                      {formatNumber(calculateDetailsTotal())})
+                    </p>
                   </div>
                 )}
-              </GroupFormSection>
-            )}
-          </div>
-
-          {/* Columna Derecha: Resumen Sticky */}
-          <div className="xl:sticky xl:top-4 xl:self-start">
-            <GroupFormSection
-              title="Resumen"
-              icon={FileText}
-              cols={{ sm: 1 }}
-              // headerExtra={
-              //   mode === "create" &&
-              //   autoSerie &&
-              //   autoNumero && (
-              //     <Badge variant="default" className="px-3 py-1" size="default">
-              //       {autoSerie} - {autoNumero}
-              //     </Badge>
-              //   )
-              // }
-            >
-              <div className="space-y-6">
-                {/* Peso Total */}
-                <div className="space-y-1">
-                  <div className="text-[10px] uppercase tracking-wider text-blue-600/70 dark:text-blue-400/70 font-medium">
-                    Peso Total
-                  </div>
-                  <div className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
-                    {formatDecimalTrunc(calculateTotalWeight(), 2)} kg
-                  </div>
-                </div>
-
-                <div className="border-t" />
-
-                {/* Desglose */}
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-medium text-foreground">
-                      {getCurrencySymbol()}{" "}
-                      {formatNumber(calculateDetailsSubtotal())}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">IGV (18%)</span>
-                    <span className="font-medium text-orange-600 dark:text-orange-400">
-                      {getCurrencySymbol()}{" "}
-                      {formatNumber(calculateDetailsIGV())}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="border-t" />
-
-                {/* Total a Pagar */}
-                <div className="space-y-1">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                    Total a Pagar
-                  </div>
-                  <div className="text-3xl font-semibold text-primary">
-                    {getCurrencySymbol()}{" "}
-                    {formatNumber(calculateDetailsTotal())}
-                  </div>
-                </div>
-
-                {/* Resumen de Cuotas si es a crédito */}
-                {selectedPaymentType === "CREDITO" &&
-                  installments.length > 0 && (
-                    <>
-                      <div className="border-t" />
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                            Cuotas ({installments.length})
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-baseline">
-                          <span className="text-sm text-muted-foreground">
-                            Total en cuotas
-                          </span>
-                          <span
-                            className={`text-lg font-semibold ${
-                              installmentsMatchTotal()
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-orange-600 dark:text-orange-400"
-                            }`}
-                          >
-                            {getCurrencySymbol()}{" "}
-                            {formatNumber(calculateInstallmentsTotal())}
-                          </span>
-                        </div>
-                        {!installmentsMatchTotal() && (
-                          <div className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
-                            <span>⚠</span>
-                            <span>No coincide con el total</span>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                <FormInput
-                  name="observations"
-                  control={form.control}
-                  label="OBSERVACIONES"
-                  placeholder="Ingrese observaciones adicionales"
-                  uppercase
-                />
               </div>
-            </GroupFormSection>
-          </div>
-        </div>
-
-        {/* <pre>
-          <code>{JSON.stringify(products, null, 2)}</code>
-          <code>{JSON.stringify(filteredProducts, null, 2)}</code>
-        </pre> */}
-
-        {/* <pre>
-          <code>{JSON.stringify(form.getValues(), null, 2)}</code>
-          <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-        </pre>
-        <Button onClick={() => form.trigger()}>Button</Button> */}
-
-        {/* <pre>
-          <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-        </pre> */}
+            )}
+          </GroupFormSection>
+        )}
       </form>
 
       {/* Modal de gestión de clientes */}

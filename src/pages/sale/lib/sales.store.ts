@@ -113,6 +113,7 @@ export const useSaleStore = create<SaleStore>((set) => ({
         document_type: data.document_type,
         issue_date: data.issue_date,
         payment_type: data.payment_type,
+        discount_global: Number(data.discount_global || 0),
         total_weight: data.total_weight || 0,
         currency: data.currency,
         observations: data.observations || "",
@@ -160,6 +161,9 @@ export const useSaleStore = create<SaleStore>((set) => ({
         ...(data.document_type && { document_type: data.document_type }),
         ...(data.issue_date && { issue_date: data.issue_date }),
         ...(data.payment_type && { payment_type: data.payment_type }),
+        ...(data.discount_global !== undefined && {
+          discount_global: Number(data.discount_global || 0),
+        }),
         ...(data.total_weight !== undefined && {
           total_weight: data.total_weight || 0,
         }),

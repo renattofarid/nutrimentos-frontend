@@ -11,6 +11,7 @@ import {
   Pencil,
   RefreshCw,
   FileText,
+  X,
 } from "lucide-react";
 import { PurchaseDetailTable } from "./PurchaseDetailTable";
 import { InstallmentPaymentsSheet } from "./sheets/InstallmentPaymentsSheet";
@@ -120,15 +121,25 @@ export const PurchaseDetailViewPage = () => {
     <PageWrapper>
       <div className="mb-6">
         <div className="flex items-center justify-between">
-          <Button
-            onClick={handleEditPurchase}
-            variant="outline"
-            color="primary"
-            size="sm"
-          >
-            <Pencil className="h-4 w-4 mr-2" />
-            Editar
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleEditPurchase}
+              variant="outline"
+              color="primary"
+              size="sm"
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
+            <Button
+              onClick={() => navigate("/compras")}
+              variant="outline"
+              size="sm"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancelar
+            </Button>
+          </div>
         </div>
       </div>
 

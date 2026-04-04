@@ -34,6 +34,7 @@ interface FormInputProps extends Omit<
   addonEnd?: React.ReactNode;
   error?: string;
   uppercase?: boolean;
+  horizontalField?: boolean; // Nueva prop para forzar layout horizontal
 }
 
 export function FormInput({
@@ -51,6 +52,7 @@ export function FormInput({
   value,
   onChange,
   uppercase,
+  horizontalField = false,
   ...inputProps
 }: FormInputProps) {
   const isNumberType = inputProps.type === "number";
@@ -85,61 +87,79 @@ export function FormInput({
       }
     };
 
-    return (
-      <div className="flex flex-col justify-between">
-        {label && (
-          <label className="flex justify-start items-center text-xs md:text-sm mb-0.5 leading-none h-fit font-bold uppercase text-muted-foreground">
-            {label}
-            {required && <RequiredField />}
-            {tooltip && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge
-                    color="tertiary"
-                    className="ml-2 p-0 aspect-square w-4 h-4 text-center justify-center"
-                  >
-                    ?
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>{tooltip}</TooltipContent>
-              </Tooltip>
-            )}
-          </label>
+    const standaloneLabelNode = label ? (
+      <label
+        className={cn(
+          "flex items-center text-xs md:text-sm leading-none font-bold uppercase text-muted-foreground",
+          horizontal
+            ? "w-48 shrink-0 justify-end text-right"
+            : horizontalField
+              ? "shrink-0 justify-end text-right"
+              : "justify-start h-fit mb-0.5",
         )}
-        <div className="flex flex-col gap-2 items-center">
-          <div className="relative w-full">
-            {addonStart && (
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-muted-foreground pointer-events-none z-10">
-                {addonStart}
-              </div>
-            )}
-            <Input
-              name={name}
-              className={cn(
-                "h-7 md:h-8 text-xs md:text-sm",
-                addonStart && "pl-10",
-                addonEnd && "pr-10",
-                className,
-              )}
-              {...inputProps}
-              onChange={handleStandaloneChange}
-              value={value ?? ""}
-            />
-            {addonEnd && (
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center text-muted-foreground z-10">
-                {addonEnd}
-              </div>
-            )}
-          </div>
-          {children}
-        </div>
+      >
+        {label}
+        {required && <RequiredField />}
+        {tooltip && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                color="tertiary"
+                className="ml-2 p-0 aspect-square w-4 h-4 text-center justify-center"
+              >
+                ?
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>{tooltip}</TooltipContent>
+          </Tooltip>
+        )}
+      </label>
+    ) : null;
 
-        {description && (
-          <p className="text-xs text-muted-foreground mt-1">{description}</p>
+    return (
+      <div
+        className={cn(
+          horizontal || horizontalField
+            ? "flex flex-row items-center gap-3"
+            : "flex flex-col justify-between",
         )}
-        {error && (
-          <p className="text-xs font-medium text-destructive mt-1">{error}</p>
-        )}
+      >
+        {standaloneLabelNode}
+        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+          <div className="flex flex-col gap-2 items-center">
+            <div className="relative w-full">
+              {addonStart && (
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-muted-foreground pointer-events-none z-10">
+                  {addonStart}
+                </div>
+              )}
+              <Input
+                name={name}
+                className={cn(
+                  "h-7 md:h-8 text-xs md:text-sm",
+                  addonStart && "pl-10",
+                  addonEnd && "pr-10",
+                  className,
+                )}
+                {...inputProps}
+                onChange={handleStandaloneChange}
+                value={value ?? ""}
+              />
+              {addonEnd && (
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center text-muted-foreground z-10">
+                  {addonEnd}
+                </div>
+              )}
+            </div>
+            {children}
+          </div>
+          {description && (
+            <p className="text-xs text-muted-foreground mt-1">{description}</p>
+          )}
+          {error && (
+            <p className="text-xs font-medium text-destructive mt-1">{error}</p>
+          )}
+        </div>
       </div>
     );
   }
@@ -169,7 +189,9 @@ export function FormInput({
               "flex items-center text-xs md:text-sm leading-none font-bold uppercase dark:text-muted-foreground",
               horizontal
                 ? "w-48 shrink-0 justify-end text-right"
-                : "justify-start h-fit",
+                : horizontalField
+                  ? "shrink-0 justify-end text-right"
+                  : "justify-start h-fit",
             )}
           >
             {label}
@@ -233,7 +255,7 @@ export function FormInput({
         return (
           <FormItem
             className={cn(
-              horizontal
+              horizontal || horizontalField
                 ? "flex flex-row items-center gap-3"
                 : "flex flex-col justify-between gap-0.5",
             )}

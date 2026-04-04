@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText } from "lucide-react";
+import { FileText, Loader, Save, X } from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { Separator } from "@/components/ui/separator";
 import { PriceMatrixTable } from "./PriceMatrixTable";
@@ -242,6 +242,21 @@ export default function PriceListForm({
         onSubmit={form.handleSubmit(handleFormSubmit)}
         className="space-y-6"
       >
+        {/* Form Actions */}
+        <div className="flex items-center gap-2">
+          <Button type="submit" size="sm" disabled={isSubmitting}>
+            {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+            {isSubmitting
+              ? "Guardando..."
+              : mode === "create"
+                ? "Guardar"
+                : "Guardar"}
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            <X /> Cancelar
+          </Button>
+        </div>
+
         {/* Información Básica */}
         <GroupFormSection
           title="Información Básica"
@@ -301,6 +316,7 @@ export default function PriceListForm({
               text="Estado Activo"
               textDescription="La lista de precios estará disponible para asignar a clientes"
               className="md:col-span-2"
+              autoHeight
             />
           )}
         </GroupFormSection>
@@ -339,20 +355,6 @@ export default function PriceListForm({
           <code>{JSON.stringify(form.getValues(), null, 2)}</code>
           <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
         </pre> */}
-
-        {/* Botones de Acción */}
-        <div className="flex gap-4 justify-end">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button type="submit" size="sm" disabled={isSubmitting}>
-            {isSubmitting
-              ? "Guardando..."
-              : mode === "create"
-                ? "Crear Lista de Precio"
-                : "Actualizar Lista de Precio"}
-          </Button>
-        </div>
       </form>
     </Form>
   );

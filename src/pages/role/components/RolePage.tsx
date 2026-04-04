@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRoles } from "../lib/role.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import RoleActions from "./RoleActions";
 import RoleTable from "./RoleTable";
@@ -17,6 +18,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { ROLE } from "../lib/role.interface";
 import RoleModal from "./RoleModal";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = ROLE;
 
@@ -24,13 +26,21 @@ export default function RolePage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
+  const [openCreate, setOpenCreate] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { data, meta, isLoading, refetch } = useRoles();
 
   useEffect(() => {
     refetch({ params: { page, search, per_page } });
   }, [page, search, per_page]);
+
+  const selectedRoleId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarRole = selectedRoleId
+    ? (data?.find((r) => r.id.toString() === selectedRoleId) ?? null)
+    : null;
+  const hasSelection = !!toolbarRole;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -46,18 +56,22 @@ export default function RolePage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <RoleActions />
-      </div>
+    <PageWrapper>
+      <RoleActions
+        hasSelection={hasSelection}
+        onNew={() => setOpenCreate(true)}
+        onEdit={() => toolbarRole && setEditId(toolbarRole.id)}
+        onDelete={() => toolbarRole && setDeleteId(toolbarRole.id)}
+      />
 
       <RoleTable
         isLoading={isLoading}
-        columns={RoleColumns({
-          onEdit: setEditId,
-          onDelete: setDeleteId,
-        })}
+        columns={RoleColumns()}
         data={data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={(role) => setEditId(role.id)}
       >
         <RoleOptions search={search} setSearch={setSearch} />
       </RoleTable>
@@ -70,6 +84,17 @@ export default function RolePage() {
         setPerPage={setPerPage}
         totalData={meta?.total || 0}
       />
+
+      {openCreate && (
+        <RoleModal
+          open={true}
+          onOpenChange={(open) => !open && setOpenCreate(false)}
+          onSuccess={() => {
+            setOpenCreate(false);
+            refetch({ params: { page } });
+          }}
+        />
+      )}
 
       {editId !== null && (
         <RoleModal
@@ -90,6 +115,6 @@ export default function RolePage() {
           onConfirm={handleDelete}
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

@@ -54,6 +54,7 @@ interface DatePickerFormFieldProps<T extends FieldValues> {
   captionLayout?: "label" | "dropdown" | "dropdown-months" | "dropdown-years";
   onChange?: (date: Date | undefined) => void;
   endMonth?: Date;
+  horizontalField?: boolean; // Nueva prop para forzar layout horizontal
 }
 
 export function DatePickerFormField<T extends FieldValues>({
@@ -68,6 +69,7 @@ export function DatePickerFormField<T extends FieldValues>({
   captionLayout = "label",
   onChange,
   endMonth,
+  horizontalField = false,
 }: DatePickerFormFieldProps<T>) {
   const isMobile = useIsMobile();
   const { field, fieldState } = useController({ control, name });
@@ -181,15 +183,24 @@ export function DatePickerFormField<T extends FieldValues>({
     </>
   );
 
-  if (horizontal) {
+  if (horizontal || horizontalField) {
     return (
       <FormItem className="flex flex-row items-center gap-3">
         {label && (
-          <FormLabel className="w-48 shrink-0 text-right justify-end font-bold uppercase">
+          <FormLabel
+            className={cn(
+              horizontal &&
+                "w-48 shrink-0 justify-end text-right font-bold uppercase",
+              horizontalField &&
+                "shrink-0 justify-end text-right font-bold uppercase",
+            )}
+          >
             {label}
           </FormLabel>
         )}
-        <div className="flex-1 min-w-0 flex flex-col gap-0.5">{pickerContent}</div>
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+          {pickerContent}
+        </div>
       </FormItem>
     );
   }

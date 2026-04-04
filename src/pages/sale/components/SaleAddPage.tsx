@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
-import { List, Loader, Save } from "lucide-react";
+import { Loader, Save, X } from "lucide-react";
 import { SaleForm } from "./SaleForm";
 import { type SaleSchema } from "../lib/sale.schema";
 import { useSaleStore } from "../lib/sales.store";
@@ -21,10 +21,15 @@ import { format } from "date-fns";
 import { ConfirmationDialog } from "@/components/ConfirmationDialog";
 import { exportBulkTickets } from "../lib/sale.actions";
 
+const LAST_VENDEDOR_STORAGE_KEY = "sale:last-vendedor-id";
+
 export const SaleAddPage = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const [lastVendedorId, setLastVendedorId] = useState<string>(() => {
+    return localStorage.getItem(LAST_VENDEDOR_STORAGE_KEY) || "";
+  });
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [showNextDialog, setShowNextDialog] = useState(false);
   const [pendingSaleId, setPendingSaleId] = useState<number | null>(null);
@@ -42,6 +47,10 @@ export const SaleAddPage = () => {
     onRefreshWarehouses();
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem(LAST_VENDEDOR_STORAGE_KEY, lastVendedorId);
+  }, [lastVendedorId]);
+
   const { createSale } = useSaleStore();
 
   const isLoading = branchesLoading || warehousesLoading;
@@ -50,10 +59,11 @@ export const SaleAddPage = () => {
     branch_id: "",
     customer_id: "",
     warehouse_id: "12",
-    vendedor_id: "",
+    vendedor_id: lastVendedorId,
     document_type: "BOLETA",
     issue_date: format(new Date(), "yyyy-MM-dd"),
     payment_type: "CONTADO",
+    discount_global: "0",
     currency: "PEN",
     observations: "",
     details: [],
@@ -63,6 +73,7 @@ export const SaleAddPage = () => {
   const handleSubmit = async (data: SaleSchema) => {
     setIsSubmitting(true);
     try {
+      setLastVendedorId(data.vendedor_id || "");
       const saleId = await createSale(data);
       successToast("Venta creada correctamente");
 
@@ -116,22 +127,25 @@ export const SaleAddPage = () => {
 
   return (
     <PageWrapper size="3xl">
-      <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => navigate("/ventas/listado")}
-        >
-          <List className="size-4 mr-2" /> Ver Listado
-        </Button>
+      <div className="flex items-center gap-2 border-b pb-1">
         <Button
           size="sm"
           type="submit"
+          variant="outline"
+          colorIcon="green"
           form="sale-form"
           disabled={isSubmitting}
         >
           {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
           {isSubmitting ? "Guardando..." : "Guardar"}
+        </Button>
+
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => navigate("/ventas/listado")}
+        >
+          <X /> Cancelar
         </Button>
       </div>
 
@@ -154,6 +168,7 @@ export const SaleAddPage = () => {
         <SaleForm
           key={formKey}
           defaultValues={getDefaultValues()}
+          onVendedorChange={setLastVendedorId}
           onSubmit={handleSubmit}
           mode="create"
           branches={branches!}

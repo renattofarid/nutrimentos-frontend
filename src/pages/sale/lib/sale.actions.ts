@@ -417,3 +417,17 @@ export const exportBulkTickets = async (sale_ids: number[]): Promise<Blob> => {
   );
   return response.data;
 };
+
+export const anularSale = async (id: number): Promise<{ message: string }> => {
+  const response = await api.patch<{ message: string }>(
+    `${SALE_ENDPOINT}/${id}/anular`,
+  );
+  return response.data;
+};
+
+export const cerrarSale = async (id: number): Promise<{ message: string }> => {
+  const response = await api.patch<{ message: string }>(
+    `${SALE_ENDPOINT}/${id}/cerrar`,
+  );
+  return response.data;
+};

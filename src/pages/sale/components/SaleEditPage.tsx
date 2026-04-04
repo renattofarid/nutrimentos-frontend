@@ -14,12 +14,17 @@ import FormSkeleton from "@/components/FormSkeleton";
 import { errorToast } from "@/lib/core.function";
 import PageWrapper from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
-import { List, Loader } from "lucide-react";
+import { Loader, Save, X } from "lucide-react";
+import { ConfirmationDialog } from "@/components/ConfirmationDialog";
+import { exportBulkTickets } from "../lib/sale.actions";
 
 export const SaleEditPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const [showNextDialog, setShowNextDialog] = useState(false);
+  const [pendingSaleId, setPendingSaleId] = useState<number | null>(null);
 
   const { data: companies, isLoading: companiesLoading } = useAllCompanies();
   const { data: branches, isLoading: branchesLoading } = useAllBranches();
@@ -50,16 +55,16 @@ export const SaleEditPage = () => {
   useEffect(() => {
     if (sale) {
       // Verificar si alguna cuota tiene pagos registrados
-      const hasPayments =
-        sale.installments?.some((inst) => inst.pending_amount < inst.amount) ??
-        false;
+      // const hasPayments =
+      //   sale.installments?.some((inst) => inst.pending_amount < inst.amount) ??
+      //   false;
 
-      if (hasPayments) {
-        errorToast(
-          "No se puede editar una venta que ya tiene pagos registrados",
-        );
-        navigate("/ventas");
-      }
+      // if (hasPayments) {
+      //   errorToast(
+      //     "No se puede editar una venta que ya tiene pagos registrados",
+      //   );
+      //   navigate("/ventas");
+      // }
     }
   }, [sale, navigate]);
 
@@ -71,6 +76,7 @@ export const SaleEditPage = () => {
     document_type: data.document_type,
     issue_date: data.issue_date.split("T")[0],
     payment_type: data.payment_type,
+    discount_global: (data.discount_global ?? 0).toString(),
     currency: data.currency,
     observations: data.observations || "",
     details:
@@ -97,8 +103,8 @@ export const SaleEditPage = () => {
     setIsSubmitting(true);
     try {
       await updateSale(Number(id), data);
-      // El toast de éxito se muestra en el store
-      navigate("/ventas");
+      setPendingSaleId(Number(id));
+      setShowPrintDialog(true);
     } catch (error: any) {
       errorToast(
         error.response?.data?.message || "Error al actualizar la venta",
@@ -106,6 +112,25 @@ export const SaleEditPage = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePrintConfirm = async () => {
+    if (pendingSaleId) {
+      try {
+        const blob = await exportBulkTickets([pendingSaleId]);
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, "_blank");
+      } catch {
+        // Si falla la exportación, continuamos igual
+      }
+    }
+    setShowPrintDialog(false);
+    setShowNextDialog(true);
+  };
+
+  const handlePrintCancel = () => {
+    setShowPrintDialog(false);
+    setShowNextDialog(true);
   };
 
   if (isLoading) {
@@ -128,13 +153,13 @@ export const SaleEditPage = () => {
 
   return (
     <PageWrapper size="3xl">
-      <div className="flex items-center justify-between">
-        <Button size="sm" variant="outline" onClick={() => navigate("/ventas")}>
-          <List className="size-4 mr-2" /> Ver Listado
-        </Button>
+      <div className="flex items-center gap-2">
         <Button size="sm" type="submit" form="sale-form" disabled={isSubmitting}>
-          <Loader className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`} />
+          {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
           {isSubmitting ? "Guardando..." : "Guardar"}
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => navigate("/ventas/listado")}>
+          <X /> Cancelar
         </Button>
       </div>
       <div className="space-y-6">
@@ -155,6 +180,33 @@ export const SaleEditPage = () => {
             />
           )}
       </div>
+
+      <ConfirmationDialog
+        open={showPrintDialog}
+        onOpenChange={setShowPrintDialog}
+        icon="info"
+        title="Venta actualizada"
+        description="¿Deseas imprimir la boleta?"
+        confirmText="Sí, imprimir"
+        cancelText="No, omitir"
+        onConfirm={handlePrintConfirm}
+        onCancel={handlePrintCancel}
+      />
+
+      <ConfirmationDialog
+        open={showNextDialog}
+        onOpenChange={setShowNextDialog}
+        icon="info"
+        title="¿Qué deseas hacer ahora?"
+        description="Puedes registrar una nueva venta o volver al listado."
+        confirmText="Nueva venta"
+        cancelText="Ir al listado"
+        onConfirm={() => {
+          setShowNextDialog(false);
+          navigate("/ventas/agregar");
+        }}
+        onCancel={() => navigate("/ventas/listado")}
+      />
     </PageWrapper>
   );
 };

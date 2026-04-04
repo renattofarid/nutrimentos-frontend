@@ -80,10 +80,8 @@ export default function ProductTypePage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <ProductTypeActions onCreateProductType={handleCreateProductType} />
-      </div>
+    <div className="space-y-2">
+      <ProductTypeActions onCreateProductType={handleCreateProductType} />
 
       <ProductTypeTable
         isLoading={isLoading}
@@ -92,6 +90,7 @@ export default function ProductTypePage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => handleEditProductType(row.id)}
       >
         <ProductTypeOptions search={search} setSearch={setSearch} />
       </ProductTypeTable>

@@ -1,16 +1,10 @@
 import type { PaymentConceptResource } from "../lib/payment-concept.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { Pencil } from "lucide-react"; // Import the Pencil icon
-import { ButtonAction } from "@/components/ButtonAction"; // Import ButtonAction component
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
-export const PaymentConceptColumns = ({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
+export const PaymentConceptColumns = (_options?: {
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
 }): ColumnDef<PaymentConceptResource>[] => [
   {
     accessorKey: "name",
@@ -44,24 +38,6 @@ export const PaymentConceptColumns = ({
         month: "short",
         day: "numeric",
       });
-    },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const id = row.original.id;
-
-      return (
-        <div className="flex gap-2">
-          <ButtonAction
-            onClick={() => onEdit(id)}
-            icon={Pencil}
-            tooltip="Editar"
-          />
-          <DeleteButton onClick={() => onDelete(id)} />
-        </div>
-      );
     },
   },
 ];

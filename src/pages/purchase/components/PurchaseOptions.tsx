@@ -1,9 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { SearchableSelect } from "@/components/SearchableSelect";
-import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
+import { DatePickerFilter } from "@/components/DatePickerFilter";
 import { Input } from "@/components/ui/input";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const DOCUMENT_TYPE_OPTIONS = [
   { value: "FACTURA", label: "Factura" },
@@ -17,10 +27,18 @@ const PAYMENT_TYPE_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: "PENDIENTE", label: "Pendiente" },
-  { value: "COMPLETADO", label: "Completado" },
+  { value: "REGISTRADO", label: "Registrado" },
+  { value: "PAGADA", label: "Pagada" },
   { value: "CANCELADO", label: "Cancelado" },
 ];
+
+type ActiveFilter =
+  | ""
+  | "reference_number"
+  | "warehouse"
+  | "document_type"
+  | "payment_type"
+  | "status";
 
 interface PurchaseOptionsProps {
   document_type: string;
@@ -37,7 +55,8 @@ interface PurchaseOptionsProps {
   setWarehouseId: (value: string) => void;
   start_date?: Date;
   end_date?: Date;
-  onDateChange: (from: Date | undefined, to: Date | undefined) => void;
+  setStartDate: (date: Date | undefined) => void;
+  setEndDate: (date: Date | undefined) => void;
 }
 
 export const PurchaseOptions = ({
@@ -55,9 +74,11 @@ export const PurchaseOptions = ({
   setWarehouseId,
   start_date,
   end_date,
-  onDateChange,
+  setStartDate,
+  setEndDate,
 }: PurchaseOptionsProps) => {
   const { data: warehouses } = useAllWarehouses();
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>("");
 
   const warehouseOptions = [
     ...(warehouses?.map((warehouse) => ({
@@ -66,9 +87,22 @@ export const PurchaseOptions = ({
     })) || []),
   ];
 
+  const resetAdditionalFilters = () => {
+    setReferenceNumber("");
+    setWarehouseId("");
+    setDocumentType("");
+    setPaymentType("");
+    setStatus("");
+  };
+
+  const handleFilterTypeChange = (value: string) => {
+    resetAdditionalFilters();
+    setActiveFilter((value === "none" ? "" : value) as ActiveFilter);
+  };
+
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      {/* Document Number Input */}
+      {/* Filtro base 1: Número de documento */}
       <Input
         type="text"
         value={document_number}
@@ -77,55 +111,79 @@ export const PurchaseOptions = ({
         className="w-[140px] h-8"
       />
 
-      {/* Reference Number Input */}
-      <Input
-        type="text"
-        value={reference_number}
-        onChange={(e) => setReferenceNumber(e.target.value)}
-        placeholder="N° Referencia"
-        className="w-[140px] h-8"
-      />
+      {/* Filtro base 2: Fecha de emisión */}
+      <DatePickerFilter label="Del" value={start_date} onChange={setStartDate} />
+      <DatePickerFilter label="Al" value={end_date} onChange={setEndDate} />
 
-      {/* Warehouse Filter */}
-      <SearchableSelect
-        options={warehouseOptions}
-        value={warehouse_id}
-        onChange={setWarehouseId}
-        placeholder="Almacén"
-      />
+      {/* Selector de filtro adicional */}
+      <Select
+        value={activeFilter || "none"}
+        onValueChange={handleFilterTypeChange}
+      >
+        <SelectTrigger
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "h-8!",
+          )}
+        >
+          <SelectValue placeholder="Filtro adicional" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">- Buscar por -</SelectItem>
+          <SelectItem value="reference_number">N° Referencia</SelectItem>
+          <SelectItem value="warehouse">Almacén</SelectItem>
+          <SelectItem value="document_type">Tipo de documento</SelectItem>
+          <SelectItem value="payment_type">Tipo de pago</SelectItem>
+          <SelectItem value="status">Estado</SelectItem>
+        </SelectContent>
+      </Select>
 
-      {/* Document Type Filter */}
-      <SearchableSelect
-        options={DOCUMENT_TYPE_OPTIONS}
-        value={document_type}
-        onChange={setDocumentType}
-        placeholder="Tipo de documento"
-      />
+      {/* Control dinámico según filtro adicional */}
+      {activeFilter === "reference_number" && (
+        <Input
+          type="text"
+          value={reference_number}
+          onChange={(e) => setReferenceNumber(e.target.value)}
+          placeholder="N° Referencia"
+          className="w-[140px] h-8"
+        />
+      )}
 
-      {/* Payment Type Filter */}
-      <SearchableSelect
-        options={PAYMENT_TYPE_OPTIONS}
-        value={payment_type}
-        onChange={setPaymentType}
-        placeholder="Tipo de Pago"
-      />
+      {activeFilter === "warehouse" && (
+        <SearchableSelect
+          options={warehouseOptions}
+          value={warehouse_id}
+          onChange={setWarehouseId}
+          placeholder="Almacén"
+        />
+      )}
 
-      {/* Status Filter */}
-      <SearchableSelect
-        options={STATUS_OPTIONS}
-        value={status}
-        onChange={setStatus}
-        placeholder="Estado"
-      />
+      {activeFilter === "document_type" && (
+        <SearchableSelect
+          options={DOCUMENT_TYPE_OPTIONS}
+          value={document_type}
+          onChange={setDocumentType}
+          placeholder="Tipo de documento"
+        />
+      )}
 
-      {/* Date Range Filter */}
-      <DateRangePickerFilter
-        dateFrom={start_date}
-        dateTo={end_date}
-        onDateChange={onDateChange}
-        placeholder="Rango de fechas"
-        className="w-[240px]"
-      />
+      {activeFilter === "payment_type" && (
+        <SearchableSelect
+          options={PAYMENT_TYPE_OPTIONS}
+          value={payment_type}
+          onChange={setPaymentType}
+          placeholder="Tipo de Pago"
+        />
+      )}
+
+      {activeFilter === "status" && (
+        <SearchableSelect
+          options={STATUS_OPTIONS}
+          value={status}
+          onChange={setStatus}
+          placeholder="Estado"
+        />
+      )}
     </div>
   );
 };

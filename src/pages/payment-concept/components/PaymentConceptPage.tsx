@@ -80,12 +80,10 @@ export default function PaymentConceptPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <PaymentConceptActions
-          onCreatePaymentConcept={handleCreatePaymentConcept}
-        />
-      </div>
+    <div className="space-y-2">
+      <PaymentConceptActions
+        onCreatePaymentConcept={handleCreatePaymentConcept}
+      />
 
       <PaymentConceptTable
         isLoading={isLoading}
@@ -94,6 +92,7 @@ export default function PaymentConceptPage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => handleEditPaymentConcept(row.id)}
       >
         <PaymentConceptOptions search={search} setSearch={setSearch} />
       </PaymentConceptTable>

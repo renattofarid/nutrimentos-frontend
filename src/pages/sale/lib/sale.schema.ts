@@ -39,8 +39,8 @@ export const saleInstallmentSchema = z.object({
   due_days: z
     .string()
     .min(1, { message: "Los días de vencimiento son requeridos" })
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Los días deben ser un número mayor a 0",
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "Los días deben ser un número mayor o igual a 0",
     }),
   amount: z
     .string()
@@ -72,6 +72,12 @@ export const saleSchemaCreate = z.object({
   payment_type: z
     .string()
     .min(1, { message: "Debe seleccionar un tipo de pago" }),
+  discount_global: z
+    .union([z.string(), z.number()])
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "El descuento global debe ser un número mayor o igual a 0",
+    })
+    .default("0"),
   total_weight: z
     .number()
     .nonnegative("El peso total debe ser mayor o igual a 0")
@@ -133,8 +139,8 @@ export const saleInstallmentSchemaCreate = z.object({
   due_days: z
     .string()
     .min(1, { message: "Los días de vencimiento son requeridos" })
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Los días deben ser un número mayor a 0",
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "Los días deben ser un número mayor o igual a 0",
     }),
   amount: z
     .string()

@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
   useCarLoadReport,
   useZonesToday,
@@ -11,19 +12,25 @@ import type { CarLoadReportParams } from "../lib/reports.interface";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form } from "@/components/ui/form";
-import { Search, Filter } from "lucide-react";
-import { GroupFormSection } from "@/components/GroupFormSection";
+import { Search } from "lucide-react";
 import PageWrapper from "@/components/PageWrapper";
 import { exportCarLoadReport } from "../lib/reports.actions";
 import ExportButtons from "@/components/ExportButtons";
+import { DataTable } from "@/components/DataTable";
 
 import { FormSelectAsync } from "@/components/FormSelectAsync";
-import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
+import { DatePickerFormField } from "@/components/DatePickerFormField";
 
 interface FilterFormValues {
   branch_id: string;
   date_from: Date | string;
   date_to: Date | string;
+}
+
+interface ZoneOption {
+  label: string;
+  value: string;
+  code: string;
 }
 
 const today = new Date();
@@ -36,7 +43,6 @@ function formatDateParam(v: Date | string | undefined | null): string | null {
 
 export default function CarLoadReportPage() {
   const [selectedZones, setSelectedZones] = useState<string[]>([]);
-  const [zoneSearch, setZoneSearch] = useState("");
   const isZoneAutoSelectRef = useRef(false);
 
   const { data: rawData, isLoading, fetch } = useCarLoadReport();
@@ -57,11 +63,17 @@ export default function CarLoadReportPage() {
     date_to: formatDateParam(watchedDateTo),
   });
 
-  const zoneOptions = (
-    (zonesData?.data ?? []) as { zone_id: number; zone_name: string }[]
+  const zoneOptions: ZoneOption[] = (
+    (zonesData?.data ?? []) as {
+      zone_id: number;
+      zone_name: string;
+      zone_code?: string;
+      sigla?: string;
+    }[]
   ).map((z) => ({
     label: z.zone_name,
     value: String(z.zone_id),
+    code: z.zone_code ?? z.sigla ?? "-",
   }));
 
   const buildParams = (
@@ -99,7 +111,10 @@ export default function CarLoadReportPage() {
 
   const handleExportPdf = async () => {
     const values = form.getValues();
-    const blob = await exportCarLoadReport(buildParams(values, selectedZones), "pdf");
+    const blob = await exportCarLoadReport(
+      buildParams(values, selectedZones),
+      "pdf",
+    );
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -118,21 +133,40 @@ export default function CarLoadReportPage() {
 
   const displayedZones = rawData ? zoneOptions : [];
 
-  const filteredZones = displayedZones.filter((z) =>
-    z.label.toLowerCase().includes(zoneSearch.toLowerCase())
+  const zoneColumns = useMemo<ColumnDef<ZoneOption>[]>(
+    () => [
+      // {
+      //   accessorKey: "code",
+      //   header: "Sigla",
+      // },
+      {
+        accessorKey: "label",
+        header: "Nombre",
+      },
+      {
+        id: "selector",
+        header: () => <span className="block text-center">Sel.</span>,
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <Checkbox
+              checked={selectedZones.includes(row.original.value)}
+              onCheckedChange={() => toggleZone(row.original.value)}
+            />
+          </div>
+        ),
+        enableSorting: false,
+      },
+    ],
+    [selectedZones],
   );
-
-  const allSelected =
-    displayedZones.length > 0 &&
-    displayedZones.every((z) => selectedZones.includes(z.value));
 
   return (
     <PageWrapper size="3xl">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-4">
           {/* Filtros */}
-          <div className="flex items-end gap-3 flex-wrap">
-            <div className="flex items-end gap-3 flex-1 flex-wrap">
+          <div className="flex flex-wrap items-end justify-start gap-3">
+            <div className="flex flex-wrap items-end gap-3">
               <FormSelectAsync
                 control={form.control}
                 name="branch_id"
@@ -144,12 +178,17 @@ export default function CarLoadReportPage() {
                   value: String(item.id),
                 })}
               />
-              <DateRangePickerFormField
+              <DatePickerFormField
                 control={form.control}
-                nameFrom="date_from"
-                nameTo="date_to"
-                label="Rango de Fechas"
-                placeholder="Seleccionar rango"
+                name="date_from"
+                label="Desde"
+                placeholder="Fecha inicio"
+              />
+              <DatePickerFormField
+                control={form.control}
+                name="date_to"
+                label="Hasta"
+                placeholder="Fecha fin"
               />
             </div>
             <div className="flex gap-2 pb-0.5">
@@ -157,70 +196,35 @@ export default function CarLoadReportPage() {
                 <Search className="mr-2 h-4 w-4" />
                 Buscar
               </Button>
-              <ExportButtons onPdfDownload={handleExportPdf} pdfLabel="Imprimir" />
+              <ExportButtons
+                onPdfDownload={handleExportPdf}
+                pdfLabel="Imprimir"
+              />
             </div>
           </div>
 
           {/* Zonas */}
-          <GroupFormSection
-            title="Zonas"
-            icon={Filter}
-            headerExtra={
-              <button
-                type="button"
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() =>
-                  setSelectedZones(
-                    allSelected ? [] : displayedZones.map((z) => z.value),
-                  )
-                }
-              >
-                {allSelected ? "Ninguna" : "Todas"}
-              </button>
-            }
-            cols={{ sm: 1 }}
-            gap="gap-0"
-          >
-            <div className="relative mb-2">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <input
-                type="text"
-                value={zoneSearch}
-                onChange={(e) => setZoneSearch(e.target.value)}
-                placeholder="Buscar zona..."
-                className="w-full rounded-md border bg-background pl-8 pr-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+          <div className="flex items-start justify-start">
+            <div className="w-full md:w-[420px]">
+              <DataTable
+                columns={zoneColumns}
+                data={displayedZones}
+                isLoading={false}
+                isVisibleColumnFilter={false}
+                onRowClick={(zone) => toggleZone(zone.value)}
               />
-            </div>
-            <div className="max-h-[420px] overflow-y-auto space-y-1.5 pr-0.5">
-              {filteredZones.map((zone) => (
-                <label
-                  key={zone.value}
-                  className="flex items-center justify-between gap-2 cursor-pointer border rounded-md px-3 py-2.5 hover:bg-muted/50 transition-colors"
-                >
-                  <span className="text-sm leading-tight">{zone.label}</span>
-                  <Checkbox
-                    checked={selectedZones.includes(zone.value)}
-                    onCheckedChange={() => toggleZone(zone.value)}
-                  />
-                </label>
-              ))}
-              {!rawData && (
-                <p className="text-xs text-muted-foreground py-2 text-center">
-                  Realiza una búsqueda para ver las zonas disponibles.
-                </p>
-              )}
-              {rawData && displayedZones.length === 0 && (
-                <p className="text-xs text-muted-foreground py-2 text-center">
-                  Sin zonas para este período.
+              {displayedZones.length > 0 && (
+                <p className="text-xs text-muted-foreground pt-2">
+                  {
+                    selectedZones.filter((id) =>
+                      displayedZones.some((z) => z.value === id),
+                    ).length
+                  }
+                  /{displayedZones.length} seleccionadas
                 </p>
               )}
             </div>
-            {displayedZones.length > 0 && (
-              <p className="text-xs text-muted-foreground pt-2">
-                {selectedZones.filter((id) => displayedZones.some((z) => z.value === id)).length}/{displayedZones.length} seleccionadas
-              </p>
-            )}
-          </GroupFormSection>
+          </div>
         </form>
       </Form>
     </PageWrapper>

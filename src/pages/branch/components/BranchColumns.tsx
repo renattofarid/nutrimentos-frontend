@@ -1,16 +1,8 @@
 import type { BranchResource } from "../lib/branch.interface";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Check, Pencil, X } from "lucide-react";
-import { ButtonAction } from "@/components/ButtonAction";
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
+import { Check, X } from "lucide-react";
 
-export const BranchColumns = ({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-}): ColumnDef<BranchResource>[] => [
+export const BranchColumns = (): ColumnDef<BranchResource>[] => [
   {
     accessorKey: "name",
     header: "Nombre",
@@ -72,24 +64,6 @@ export const BranchColumns = ({
     cell: ({ getValue }) => {
       const name = getValue() as string;
       return name ? name.trim() : "Sin responsable";
-    },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const id = row.original.id;
-
-      return (
-        <div className="flex items-center gap-2">
-          <ButtonAction
-            icon={Pencil}
-            onClick={() => onEdit(id)}
-            tooltip="Editar"
-          />
-          <DeleteButton onClick={() => onDelete(id)} />
-        </div>
-      );
     },
   },
 ];

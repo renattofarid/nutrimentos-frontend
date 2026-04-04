@@ -1,18 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDrivers } from "../lib/driver.hook";
+import type { RowSelectionState } from "@tanstack/react-table";
 
 import DriverActions from "./DriverActions";
 import PersonTable from "@/pages/person/components/PersonTable";
 import PersonOptions from "@/pages/person/components/PersonOptions";
 import { deletePerson } from "@/pages/person/lib/person.actions";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   successToast,
   errorToast,
@@ -22,29 +17,37 @@ import {
 import { PersonColumns } from "@/pages/person/components/PersonColumns";
 import DataTablePagination from "@/components/DataTablePagination";
 import { DRIVER, DRIVER_ROLE_ID } from "../lib/driver.interface";
-import { PersonRoleAssignment } from "@/pages/person/components/PersonRoleAssignment";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
-import type { PersonResource } from "@/pages/person/lib/person.interface";
+import type { PersonSearchField } from "@/pages/person/components/PersonOptions";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = DRIVER;
 
 export default function DriverPage() {
   const navigate = useNavigate();
+  const [searchField, setSearchField] = useState<PersonSearchField>("search");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [roleAssignmentPerson, setRoleAssignmentPerson] =
-    useState<PersonResource | null>(null);
-  const { data, isLoading, refetch } = useDrivers({
-    page,
-    per_page,
-    search,
-  });
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  const queryParams: Record<string, unknown> = { page, per_page };
+  if (search.trim()) {
+    queryParams[searchField] = search.trim();
+  }
+
+  const { data, isLoading, refetch } = useDrivers(queryParams);
 
   useEffect(() => {
     setPage(1);
-  }, [search, per_page]);
+  }, [search, searchField, per_page]);
+
+  const selectedDriverId = Object.keys(rowSelection).find((key) => rowSelection[key]);
+  const toolbarDriver = selectedDriverId
+    ? (data?.data?.find((d) => d.id.toString() === selectedDriverId) ?? null)
+    : null;
+  const hasSelection = !!toolbarDriver;
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -62,31 +65,30 @@ export default function DriverPage() {
     }
   };
 
-  // const handleManageRoles = (person: PersonResource) => {
-  //   setRoleAssignmentPerson(person);
-  // };
-
-  const handleCloseRoleAssignment = () => {
-    setRoleAssignmentPerson(null);
-    refetch(); // Refresh the data to show updated roles
-  };
-
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <DriverActions />
-      </div>
+    <PageWrapper>
+      <DriverActions
+        hasSelection={hasSelection}
+        onNew={() => navigate("/conductores/agregar")}
+        onEdit={() => toolbarDriver && navigate(`/conductores/editar/${toolbarDriver.id}`)}
+        onDelete={() => toolbarDriver && setDeleteId(toolbarDriver.id)}
+      />
 
       <PersonTable
         isLoading={isLoading}
-        columns={PersonColumns({
-          onEdit: (person) => navigate(`/conductores/editar/${person}`),
-          onDelete: setDeleteId,
-          // onManageRoles: handleManageRoles,
-        })}
+        columns={PersonColumns()}
         data={data?.data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        onRowDoubleClick={(person) => navigate(`/conductores/editar/${person.id}`)}
       >
-        <PersonOptions search={search} setSearch={setSearch} />
+        <PersonOptions
+          searchField={searchField}
+          setSearchField={setSearchField}
+          search={search}
+          setSearch={setSearch}
+        />
       </PersonTable>
 
       <DataTablePagination
@@ -98,26 +100,6 @@ export default function DriverPage() {
         totalData={data?.meta?.total || 0}
       />
 
-      {/* Role Assignment Modal */}
-      <Dialog
-        open={!!roleAssignmentPerson}
-        onOpenChange={(open) => !open && handleCloseRoleAssignment()}
-      >
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Asignación de Roles - {MODEL.name}</DialogTitle>
-          </DialogHeader>
-          {roleAssignmentPerson && (
-            <PersonRoleAssignment
-              open={!!roleAssignmentPerson}
-              personId={roleAssignmentPerson.id}
-              personName={roleAssignmentPerson.names}
-              onClose={handleCloseRoleAssignment}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
       {deleteId !== null && (
         <SimpleDeleteDialog
           open={true}
@@ -125,6 +107,6 @@ export default function DriverPage() {
           onConfirm={handleDelete}
         />
       )}
-    </div>
+    </PageWrapper>
   );
 }

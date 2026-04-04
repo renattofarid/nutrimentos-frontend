@@ -1,6 +1,8 @@
 export { default as DeliverySheetPage } from "./DeliverySheetPage";
 export { default as DeliverySheetAddPage } from "./DeliverySheetAddPage";
+export { default as DeliverySheetEditPage } from "./DeliverySheetEditPage";
 export { default as DeliverySheetTable } from "./DeliverySheetTable";
+export { default as DeliverySheetActions } from "./DeliverySheetActions";
 export { default as DeliverySheetDetailSheet } from "./DeliverySheetDetailSheet";
 export { DeliverySheetForm } from "./DeliverySheetForm";
 export { getDeliverySheetColumns } from "./DeliverySheetColumns";

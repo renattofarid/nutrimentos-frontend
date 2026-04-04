@@ -21,7 +21,7 @@ export function NotificationBell() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="default" color="muted" size="icon-xs" className="relative">
           <Bell className="h-5 w-5" />
           {alertCount > 0 && (
             <Badge

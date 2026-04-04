@@ -1,17 +1,8 @@
 import type { CompanyResource } from "../lib/company.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { Pencil } from "lucide-react";
-import { ButtonAction } from "@/components/ButtonAction";
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
-export const CompanyColumns = ({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-}): ColumnDef<CompanyResource>[] => [
+export const CompanyColumns = (): ColumnDef<CompanyResource>[] => [
   {
     accessorKey: "social_reason",
     header: "Razón Social",
@@ -52,23 +43,5 @@ export const CompanyColumns = ({
     accessorKey: "responsible_full_name",
     header: "Nombre del Responsable",
     cell: ({ getValue }) => getValue() as string,
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const id = row.original.id;
-
-      return (
-        <div className="flex gap-2">
-          <ButtonAction
-            onClick={() => onEdit(id)}
-            icon={Pencil}
-            tooltip="Editar"
-          />
-          <DeleteButton onClick={() => onDelete(id)} />
-        </div>
-      );
-    },
   },
 ];

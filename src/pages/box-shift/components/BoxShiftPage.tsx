@@ -69,10 +69,8 @@ export default function BoxShiftPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <BoxShiftActions refetch={refetch} />
-      </div>
+    <div className="space-y-2">
+      <BoxShiftActions refetch={refetch} />
 
       <BoxShiftTable
         columns={BoxShiftColumns({
@@ -82,6 +80,7 @@ export default function BoxShiftPage() {
         })}
         data={data || []}
         isLoading={isLoading}
+        onRowDoubleClick={(row) => handleView(row.id)}
       >
         <BoxShiftOptions search={search} setSearch={setSearch} />
       </BoxShiftTable>

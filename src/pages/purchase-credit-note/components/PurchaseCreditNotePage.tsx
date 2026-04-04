@@ -54,10 +54,8 @@ export default function PurchaseCreditNotePage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <PurchaseCreditNoteActions />
-      </div>
+    <div className="space-y-2">
+      <PurchaseCreditNoteActions />
 
       <PurchaseCreditNoteTable
         isLoading={isLoading}
@@ -66,6 +64,7 @@ export default function PurchaseCreditNotePage() {
           onDelete: setDeleteId,
         })}
         data={data || []}
+        onRowDoubleClick={(row) => handleEdit(row.id)}
       >
         <PurchaseCreditNoteOptions search={search} setSearch={setSearch} />
       </PurchaseCreditNoteTable>

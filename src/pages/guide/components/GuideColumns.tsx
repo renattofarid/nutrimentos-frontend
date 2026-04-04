@@ -1,20 +1,8 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { GuideResource } from "../lib/guide.interface";
 import { Badge } from "@/components/ui/badge";
-import { ButtonAction } from "@/components/ButtonAction";
-import { Eye, Pencil } from "lucide-react";
-import ExportButtons from "@/components/ExportButtons";
 
-interface GuideColumnsProps {
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-  onView: (id: number) => void;
-}
-
-export const GuideColumns = ({
-  onEdit,
-  onView,
-}: GuideColumnsProps): ColumnDef<GuideResource>[] => [
+export const GuideColumns = (): ColumnDef<GuideResource>[] => [
   {
     accessorKey: "full_document_number",
     header: "N° Documento",
@@ -115,29 +103,5 @@ export const GuideColumns = ({
 
       return <Badge color={statusVariant}>{status}</Badge>;
     },
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <ExportButtons
-          variant="separate"
-          pdfEndpoint={`/sale-shipping-guides/${row.original.id}/pdf`}
-        />
-        <ButtonAction
-          onClick={() => onView(row.original.id)}
-          icon={Eye}
-          color="blue"
-          tooltip="Ver"
-        />
-        <ButtonAction
-          icon={Pencil}
-          onClick={() => onEdit(row.original.id)}
-          tooltip="Editar"
-        />
-        {/* <DeleteButton onClick={() => onDelete(row.original.id)} /> */}
-      </div>
-    ),
   },
 ];

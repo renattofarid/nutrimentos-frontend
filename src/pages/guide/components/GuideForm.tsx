@@ -25,10 +25,13 @@ import {
   Truck,
   Search,
   Plus,
+  Settings2,
   Eye,
   EyeOff,
   Package,
   ShoppingCart,
+  Save,
+  X,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
@@ -60,7 +63,7 @@ import { useDrivers } from "@/pages/driver/lib/driver.hook";
 import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
 import { errorToast, successToast, warningToast } from "@/lib/core.function";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
-import { useUbigeosFrom, useUbigeosTo } from "../lib/ubigeo.hook";
+import { useUbigeosFrom } from "../lib/ubigeo.hook";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useProduct } from "@/pages/product/lib/product.hook";
@@ -69,6 +72,14 @@ import {
   type ExcelGridColumn,
   type ProductOption,
 } from "@/components/ExcelGrid";
+import { useClients } from "@/pages/client/lib/client.hook";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
+import { FormTextArea } from "@/components/FormTextArea";
+import { Alert } from "@/components/ui/alert";
+import { usePersonZones } from "@/pages/client/lib/personzone.hook";
+import type { PersonZoneResource } from "@/pages/client/lib/personzone.interface";
+import ClientAddressesSheet from "@/pages/client/components/ClientAddressesSheet";
+import { getUbigeos } from "../lib/ubigeo.actions";
 
 interface GuideFormProps {
   defaultValues: Partial<GuideSchema>;
@@ -293,29 +304,9 @@ export const GuideForm = ({
       }
 
       setSalesByRange(response.data);
-
-      // Detectar clientes únicos en los resultados
-      const uniqueCustomers = Array.from(
-        new Map(
-          response.data.map((sale) => {
-            const name =
-              sale.customer.business_name ||
-              `${sale.customer.names} ${sale.customer.father_surname}`.trim();
-            return [sale.customer.id, { id: sale.customer.id, name }];
-          }),
-        ).values(),
-      );
-      if (uniqueCustomers.length === 1) {
-        const c = uniqueCustomers[0];
-        form.setValue("customer_id", c.id.toString());
-        setDetectedCustomerName(c.name);
-      } else if (uniqueCustomers.length > 1) {
-        warningToast(
-          `Las ventas pertenecen a ${uniqueCustomers.length} clientes distintos`,
-        );
-        form.setValue("customer_id", "");
-        setDetectedCustomerName(null);
-      }
+      setSelectedSales([]);
+      form.setValue("customer_id", "");
+      setDetectedCustomerName(null);
 
       successToast(
         `Se encontraron ${response.data.length} ventas`,
@@ -349,6 +340,25 @@ export const GuideForm = ({
       if (prev.includes(saleId)) {
         return prev.filter((id) => id !== saleId);
       }
+
+      const saleToAdd = salesByRange.find((sale) => sale.id === saleId);
+      if (!saleToAdd) return prev;
+
+      if (prev.length > 0) {
+        const firstSelectedSale = salesByRange.find(
+          (sale) => sale.id === prev[0],
+        );
+        if (
+          firstSelectedSale &&
+          firstSelectedSale.customer.id !== saleToAdd.customer.id
+        ) {
+          warningToast(
+            "Solo puede seleccionar ventas de un mismo cliente para generar la guía",
+          );
+          return prev;
+        }
+      }
+
       return [...prev, saleId];
     });
   };
@@ -358,7 +368,26 @@ export const GuideForm = ({
     if (selectedSales.length === salesByRange.length) {
       setSelectedSales([]);
     } else {
-      setSelectedSales(salesByRange.map((sale) => sale.id));
+      if (salesByRange.length === 0) {
+        setSelectedSales([]);
+        return;
+      }
+
+      const referenceCustomerId =
+        selectedSales.length > 0
+          ? salesByRange.find((sale) => sale.id === selectedSales[0])?.customer
+              .id
+          : salesByRange[0].customer.id;
+
+      const sameCustomerSales = salesByRange.filter(
+        (sale) => sale.customer.id === referenceCustomerId,
+      );
+
+      if (sameCustomerSales.length !== salesByRange.length) {
+        warningToast("Se seleccionaron solo las ventas de un mismo cliente");
+      }
+
+      setSelectedSales(sameCustomerSales.map((sale) => sale.id));
     }
   };
 
@@ -490,9 +519,52 @@ export const GuideForm = ({
     }
   }, [selectedSales, salesByRange, form]);
 
+  // Sincronizar cliente detectado según ventas seleccionadas (no por resultados buscados)
+  useEffect(() => {
+    if (useCustomDetails) return;
+
+    const selectedSalesData = salesByRange.filter((sale) =>
+      selectedSales.includes(sale.id),
+    );
+
+    if (selectedSalesData.length === 0) {
+      form.setValue("customer_id", "");
+      setDetectedCustomerName(null);
+      return;
+    }
+
+    const firstCustomerId = selectedSalesData[0].customer.id;
+    const sameCustomerSales = selectedSalesData.filter(
+      (sale) => sale.customer.id === firstCustomerId,
+    );
+
+    if (sameCustomerSales.length !== selectedSalesData.length) {
+      warningToast(
+        "Solo puede mantener ventas de un mismo cliente en la selección",
+      );
+      setSelectedSales(sameCustomerSales.map((sale) => sale.id));
+      return;
+    }
+
+    const firstCustomer = selectedSalesData[0].customer;
+    const customerName =
+      firstCustomer.business_name ||
+      `${firstCustomer.names} ${firstCustomer.father_surname}`.trim();
+
+    form.setValue("customer_id", firstCustomer.id.toString());
+    setDetectedCustomerName(customerName);
+  }, [selectedSales, salesByRange, useCustomDetails, form]);
+
   const handleFormSubmit = (data: any) => {
     if (!useCustomDetails && selectedSales.length === 0) {
       errorToast("Debe seleccionar al menos una venta");
+      return;
+    }
+
+    if (!selectedPersonZoneId) {
+      errorToast(
+        "Debe seleccionar una dirección del cliente para completar el destino",
+      );
       return;
     }
 
@@ -504,11 +576,36 @@ export const GuideForm = ({
       }
     }
 
+    let customerId = parseInt(data.customer_id);
+
+    if (!useCustomDetails) {
+      const selectedSalesData = salesByRange.filter((sale) =>
+        selectedSales.includes(sale.id),
+      );
+      const uniqueCustomerIds = Array.from(
+        new Set(selectedSalesData.map((sale) => sale.customer.id)),
+      );
+
+      if (uniqueCustomerIds.length !== 1) {
+        errorToast(
+          "Las ventas seleccionadas deben pertenecer a un solo cliente",
+        );
+        return;
+      }
+
+      customerId = uniqueCustomerIds[0];
+    }
+
+    if (Number.isNaN(customerId)) {
+      errorToast("No se pudo determinar el cliente de la guía");
+      return;
+    }
+
     const base = {
       use_custom_details: useCustomDetails,
       branch_id: parseInt(data.branch_id),
       warehouse_id: parseInt(data.warehouse_id),
-      customer_id: parseInt(data.customer_id),
+      customer_id: customerId,
       issue_date: data.issue_date,
       transfer_date: data.transfer_date,
       modality: data.modality,
@@ -623,436 +720,677 @@ export const GuideForm = ({
     useState<VehicleResource | null>(null);
 
   const customerValue = form.watch("customer_id");
+  const selectedCustomerId = customerValue ? Number(customerValue) : null;
+
+  const {
+    data: personZones,
+    isLoading: isLoadingPersonZones,
+    fetch: fetchPersonZones,
+    refetch: refetchPersonZones,
+  } = usePersonZones(selectedCustomerId);
 
   // Cliente auto-detectado desde la búsqueda por rango
   const [detectedCustomerName, setDetectedCustomerName] = useState<
     string | null
   >(null);
+  const [selectedCustomerName, setSelectedCustomerName] = useState("");
+  const [customerAddresses, setCustomerAddresses] = useState<
+    PersonZoneResource[]
+  >([]);
+  const [selectedPersonZoneId, setSelectedPersonZoneId] = useState("");
+  const [isAddressManagerOpen, setIsAddressManagerOpen] = useState(false);
+  const ubigeoAutofillRequestRef = useRef(0);
+  const autoAppliedCustomerRef = useRef<string | null>(null);
 
-  const selectedCustomerAddresses: {
-    id: number;
-    address: string;
-    is_primary: boolean;
-    zone_name: string;
-  }[] = [];
+  const autofillDestinationByAddress = useCallback(
+    async (address: PersonZoneResource) => {
+      form.setValue("destination_address", address.address, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
 
-  // Setear automáticamente la primera person_zone cuando se selecciona un cliente y solo hay una
+      const requestId = ++ubigeoAutofillRequestRef.current;
+      try {
+        const response = await getUbigeos({
+          params: {
+            per_page: 2000,
+          },
+        });
+
+        if (requestId !== ubigeoAutofillRequestRef.current) return;
+
+        const normalizedZone = address.zone.name.trim().toLowerCase();
+        const normalizedZoneCode = address.zone.code.trim().toLowerCase();
+        const matchedUbigeo =
+          response.data.find(
+            (ubigeo) =>
+              ubigeo.ubigeo_code.trim().toLowerCase() === normalizedZoneCode,
+          ) ||
+          response.data.find(
+            (ubigeo) => ubigeo.name.trim().toLowerCase() === normalizedZone,
+          );
+
+        if (matchedUbigeo) {
+          form.setValue("ubigeo_destination_id", matchedUbigeo.id.toString(), {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+        }
+      } catch {
+        // Si no se puede resolver ubigeo automático, la dirección queda editable manualmente.
+      }
+    },
+    [form],
+  );
+
+  const handleSelectPersonZone = useCallback(
+    async (zoneId: string) => {
+      setSelectedPersonZoneId(zoneId);
+      if (!zoneId) return;
+
+      const selectedZone = customerAddresses.find(
+        (address) => address.id.toString() === zoneId,
+      );
+
+      if (!selectedZone) return;
+
+      await autofillDestinationByAddress(selectedZone);
+    },
+    [customerAddresses, autofillDestinationByAddress],
+  );
+
+  // Cargar direcciones del cliente cuando cambia la selección
   useEffect(() => {
-    if (customerValue && selectedCustomerAddresses.length === 1) {
-      const newId = selectedCustomerAddresses[0].id.toString();
-      setSearchParams((prev) =>
-        prev.person_zone_id === newId
-          ? prev
-          : { ...prev, person_zone_id: newId },
-      );
-    } else if (!customerValue) {
-      setSearchParams((prev) =>
-        prev.person_zone_id === "" ? prev : { ...prev, person_zone_id: "" },
-      );
+    if (!customerValue || !selectedCustomerId) {
+      setCustomerAddresses([]);
+      setSelectedPersonZoneId("");
+      autoAppliedCustomerRef.current = null;
+      setSearchParams((prev) => ({ ...prev, person_zone_id: "" }));
+      return;
     }
-  }, [customerValue, selectedCustomerAddresses]);
+
+    fetchPersonZones();
+  }, [customerValue, selectedCustomerId, fetchPersonZones]);
+
+  // Sincronizar selector y autocompletar dirección por defecto
+  useEffect(() => {
+    if (!customerValue) return;
+
+    const addresses = personZones || [];
+    setCustomerAddresses(addresses);
+
+    if (addresses.length === 0) {
+      setSelectedPersonZoneId("");
+      setSearchParams((prev) => ({ ...prev, person_zone_id: "" }));
+      return;
+    }
+
+    const hasCurrentSelection = addresses.some(
+      (address) => address.id.toString() === selectedPersonZoneId,
+    );
+    const primary = addresses.find((address) => address.is_primary);
+    const fallback = primary || addresses[0];
+    const nextZoneId = hasCurrentSelection
+      ? selectedPersonZoneId
+      : fallback.id.toString();
+
+    if (nextZoneId !== selectedPersonZoneId) {
+      setSelectedPersonZoneId(nextZoneId);
+    }
+
+    setSearchParams((prev) =>
+      prev.person_zone_id === nextZoneId
+        ? prev
+        : { ...prev, person_zone_id: nextZoneId },
+    );
+
+    if (
+      !hasCurrentSelection ||
+      autoAppliedCustomerRef.current !== customerValue ||
+      !form.getValues("destination_address")
+    ) {
+      autoAppliedCustomerRef.current = customerValue;
+      const selectedAddress = addresses.find(
+        (address) => address.id.toString() === nextZoneId,
+      );
+      if (selectedAddress) {
+        void autofillDestinationByAddress(selectedAddress);
+      }
+    }
+  }, [
+    personZones,
+    selectedPersonZoneId,
+    customerValue,
+    form,
+    autofillDestinationByAddress,
+  ]);
+
+  const handleCustomerChange = (_value: string, customer?: PersonResource) => {
+    if (!customer) {
+      setSelectedCustomerName("");
+      return;
+    }
+
+    setSelectedCustomerName(
+      customer.business_name ||
+        `${customer.names ?? ""} ${customer.father_surname ?? ""} ${customer.mother_surname ?? ""}`.trim(),
+    );
+  };
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(handleFormSubmit)}
-        className="w-full grid grid-cols-1 md:grid-cols-2 gap-6"
-      >
-        {/* Información de la Guía */}
-        <GroupFormSection
-          title="Información de la Guía"
-          icon={Truck}
-          cols={{ sm: 1, md: 2, lg: 4 }}
-          className="col-span-full"
-          headerExtra={
+    <>
+      <Form {...form}>
+        <form
+          id="guide-form"
+          onSubmit={form.handleSubmit(handleFormSubmit)}
+          className="w-full grid grid-cols-1 lg:grid-cols-3 gap-4"
+        >
+          {/* Botones */}
+          <div className="flex gap-2 col-span-full border-b pb-2">
+            <Button
+              size="sm"
+              type="submit"
+              variant="outline"
+              colorIcon="emerald"
+              disabled={
+                isSubmitting ||
+                (!useCustomDetails && selectedSales.length === 0) ||
+                (useCustomDetails && customDetails.every((d) => !d.product_id))
+              }
+            >
+              {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+              {isSubmitting ? "Guardando..." : "Guardar"}
+            </Button>
             <Button
               type="button"
               variant="outline"
-              size="xs"
-              onClick={() => setShowAdvancedFields((v) => !v)}
+              size="sm"
+              onClick={onCancel}
             >
-              {showAdvancedFields ? <EyeOff /> : <Eye />}
-              {showAdvancedFields
-                ? "Ocultar campos adicionales"
-                : "Mostrar campos adicionales"}
+              <X /> Cancelar
             </Button>
-          }
-        >
-          <div className={showAdvancedFields ? "" : "hidden"}>
-            <FormSelect
-              control={form.control}
-              name="branch_id"
-              label="Tienda"
-              placeholder="Seleccione una tienda"
-              options={branches.map((branch) => ({
-                value: branch.id.toString(),
-                label: branch.name,
-                description: branch.address,
-              }))}
-            />
           </div>
 
-          <div className={showAdvancedFields ? "" : "hidden"}>
-            <FormSelect
-              control={form.control}
-              name="warehouse_id"
-              label="Almacén"
-              placeholder="Seleccione un almacén"
-              options={filteredWarehouses.map((warehouse) => ({
-                value: warehouse.id.toString(),
-                label: warehouse.name,
-                description: warehouse.address,
-              }))}
-            />
-          </div>
+          <div className="lg:col-span-1 space-y-4">
+            {/* Información de la Guía */}
+            <GroupFormSection
+              title="Información de la Guía"
+              icon={Truck}
+              cols={{ sm: 1 }}
+              className="col-span-full"
+              headerExtra={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  onClick={() => setShowAdvancedFields((v) => !v)}
+                >
+                  {showAdvancedFields ? <EyeOff /> : <Eye />}
+                  {showAdvancedFields
+                    ? "Ocultar campos adicionales"
+                    : "Mostrar campos adicionales"}
+                </Button>
+              }
+            >
+              <div className={showAdvancedFields ? "" : "hidden"}>
+                <FormSelect
+                  control={form.control}
+                  name="branch_id"
+                  label="Tienda"
+                  placeholder="Seleccione una tienda"
+                  options={branches.map((branch) => ({
+                    value: branch.id.toString(),
+                    label: branch.name,
+                    description: branch.address,
+                  }))}
+                />
+              </div>
 
-          {detectedCustomerName && (
-            <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Cliente: </span>
-              {detectedCustomerName}
-            </div>
-          )}
+              <div className={showAdvancedFields ? "" : "hidden"}>
+                <FormSelect
+                  control={form.control}
+                  name="warehouse_id"
+                  label="Almacén"
+                  placeholder="Seleccione un almacén"
+                  options={filteredWarehouses.map((warehouse) => ({
+                    value: warehouse.id.toString(),
+                    label: warehouse.name,
+                    description: warehouse.address,
+                  }))}
+                />
+              </div>
 
-          <div className="hidden">
-            <FormSelect
-              control={form.control}
-              name="motive_id"
-              label="Motivo de Traslado"
-              placeholder="Seleccione un motivo"
-              options={motives
-                .sort((a, b) => a.id - b.id)
-                .map((motive) => ({
-                  value: motive.id.toString(),
-                  label: motive.name,
-                  description: "CÓDIGO: " + motive.code,
-                }))}
-            />
-          </div>
+              {useCustomDetails ? (
+                <FormSelectAsync
+                  control={form.control}
+                  name="customer_id"
+                  label="Cliente"
+                  placeholder="Buscar cliente..."
+                  useQueryHook={useClients}
+                  mapOptionFn={(customer: PersonResource) => ({
+                    value: customer.id.toString(),
+                    label:
+                      customer.business_name ||
+                      `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
+                    description: customer.number_document || "",
+                  })}
+                  onValueChange={handleCustomerChange}
+                />
+              ) : (
+                detectedCustomerName && (
+                  <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">
+                      Cliente:{" "}
+                    </span>
+                    {detectedCustomerName}
+                  </div>
+                )
+              )}
 
-          <div className="hidden">
-            <FormSelect
-              control={form.control}
-              name="modality"
-              label="Modalidad de Transporte"
-              placeholder="Seleccione modalidad"
-              options={MODALITIES.map((mod) => ({
-                value: mod.value,
-                label: mod.label,
-              }))}
-            />
-          </div>
+              {customerValue && (
+                <div className="space-y-2">
+                  <SearchableSelect
+                    label="Dirección del Cliente"
+                    buttonSize="default"
+                    options={customerAddresses.map((address) => ({
+                      value: address.id.toString(),
+                      label: address.address,
+                      description: `${address.zone.name}${address.is_primary ? " - Principal" : ""}`,
+                    }))}
+                    value={selectedPersonZoneId}
+                    onChange={(value) => {
+                      void handleSelectPersonZone(value);
+                    }}
+                    placeholder={
+                      isLoadingPersonZones
+                        ? "Cargando direcciones..."
+                        : "Seleccione una dirección"
+                    }
+                    disabled={
+                      isLoadingPersonZones || customerAddresses.length === 0
+                    }
+                    className="w-full"
+                  />
 
-          <div className="hidden">
-            <DatePickerFormField
-              control={form.control}
-              name="issue_date"
-              label="Fecha de Emisión"
-              placeholder="Seleccione fecha"
-            />
-          </div>
-
-          <div className="hidden">
-            <DatePickerFormField
-              control={form.control}
-              name="transfer_date"
-              label="Fecha de Traslado"
-              placeholder="Seleccione fecha"
-            />
-          </div>
-
-          <div className="hidden">
-            <FormSelectAsync
-              control={form.control}
-              name="ubigeo_origin_id"
-              label="Ubigeo de Origen"
-              placeholder="Buscar ubigeo..."
-              useQueryHook={useUbigeosFrom}
-              additionalParams={{
-                per_page: 1300,
-              }}
-              mapOptionFn={(item: UbigeoResource) => ({
-                value: item.id.toString(),
-                label: item.name,
-                description: item.cadena,
-              })}
-              preloadItemId={defaultValues.ubigeo_origin_id}
-            />
-          </div>
-
-          <div className="hidden">
-            <FormInput
-              control={form.control}
-              name="origin_address"
-              label="Dirección de Origen"
-              placeholder="Ej: Av. Principal 123"
-            />
-          </div>
-
-          <FormSelectAsync
-            control={form.control}
-            name="ubigeo_destination_id"
-            label="Ubigeo de Destino"
-            placeholder="Buscar ubigeo..."
-            useQueryHook={useUbigeosTo}
-            mapOptionFn={(item: UbigeoResource) => ({
-              value: item.id.toString(),
-              label: item.name,
-              description: item.cadena,
-            })}
-          />
-
-          <FormInput
-            control={form.control}
-            name="destination_address"
-            label="Dirección de Destino"
-            placeholder="Ej: Av. Secundaria 456"
-          />
-
-          <div className="col-span-full hidden">
-            <FormInput
-              control={form.control}
-              name="observations"
-              label="Observaciones"
-              placeholder="Observaciones adicionales"
-            />
-          </div>
-
-          {showAdvancedFields && <Separator className="col-span-full my-1" />}
-
-          {modalityValue !== "PRIVADO" && (
-            <FormField
-              control={form.control}
-              name="carrier_document_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    RUC del Transportista
-                    {modalityValue === "PUBLICO" ? "" : " "}
-                  </FormLabel>
-                  <div className="flex gap-2">
-                    <FormControl>
-                      <Input
-                        variant="default"
-                        placeholder="Ingrese 11 dígitos"
-                        {...field}
-                        maxLength={11}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "");
-                          field.onChange(value);
-
-                          // Auto-search cuando se completa el RUC
-                          if (value.length === 11) {
-                            setTimeout(
-                              () => handleSearchCarrierDocument(),
-                              100,
-                            );
-                          }
-                        }}
-                      />
-                    </FormControl>
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       type="button"
                       variant="outline"
-                      size="icon"
-                      onClick={handleSearchCarrierDocument}
-                      disabled={
-                        isSearchingCarrier ||
-                        !field.value ||
-                        field.value.length !== 11
-                      }
+                      onClick={() => setIsAddressManagerOpen(true)}
+                      disabled={!selectedCustomerId}
+                      className="w-full sm:w-auto"
                     >
-                      {isSearchingCarrier ? (
-                        <Loader className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Search className="h-4 w-4" />
-                      )}
+                      <Settings2 className="h-4 w-4" />
+                      Gestionar
                     </Button>
                   </div>
-                  <FormMessage />
-                </FormItem>
+
+                  {customerAddresses.length === 0 && !isLoadingPersonZones && (
+                    <p className="text-xs text-muted-foreground">
+                      Este cliente no tiene direcciones configuradas. Use
+                      "Gestionar" para registrar una dirección.
+                    </p>
+                  )}
+                </div>
               )}
-            />
-          )}
 
-          {modalityValue !== "PRIVADO" && (
-            <FormInput
-              control={form.control}
-              name="carrier_name"
-              label="Nombre del Transportista"
-              placeholder="Ej: Transportes SAC"
-            />
-          )}
-
-          <div className="space-y-2">
-            <FormSelectAsync
-              name="vehicle_id"
-              label="Placa del Vehículo"
-              control={form.control}
-              placeholder="Buscar placa..."
-              useQueryHook={useVehiclesSearch}
-              mapOptionFn={(vehicle: VehicleResource) => ({
-                value: vehicle.id.toString(),
-                label: vehicle.plate,
-                description: `${vehicle.brand} ${vehicle.model}${vehicle.owner ? ` — ${vehicle.owner.full_name}` : ""}`,
-              })}
-              onValueChange={(_value, vehicle) => {
-                if (vehicle) {
-                  setSelectedVehicle(vehicle);
-                  if (vehicle.mtc) {
-                    form.setValue("carrier_mtc_number", vehicle.mtc);
-                  }
-                  if (vehicle.owner) {
-                    const docNum = vehicle.owner.number_document || "";
-                    const docType = docNum.length === 8 ? "DNI" : "CE";
-                    form.setValue("driver_document_type", docType);
-                    form.setValue("driver_document_number", docNum);
-                    form.setValue("driver_name", vehicle.owner.full_name);
-                  }
-                } else {
-                  setSelectedVehicle(null);
-                }
-              }}
-            />
-            {selectedVehicle?.owner && (
-              <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Chofer: </span>
-                {selectedVehicle.owner.full_name}
-                <span className="ml-2 text-xs">
-                  (DNI: {selectedVehicle.owner.number_document ?? "sin documento"})
-                </span>
+              <div className="hidden">
+                <FormSelect
+                  control={form.control}
+                  name="motive_id"
+                  label="Motivo de Traslado"
+                  placeholder="Seleccione un motivo"
+                  options={motives
+                    .sort((a, b) => a.id - b.id)
+                    .map((motive) => ({
+                      value: motive.id.toString(),
+                      label: motive.name,
+                      description: "CÓDIGO: " + motive.code,
+                    }))}
+                />
               </div>
-            )}
-          </div>
 
-          {/* Campos adicionales (ocultos por defecto) */}
-          <div className={showAdvancedFields ? "contents" : "hidden"}>
-            {/* Selector de Conductor */}
-            <div className="md:col-span-2">
-              <FormSelectAsync
-                name="driver_id"
-                label="Conductor"
-                control={form.control}
-                placeholder="Buscar conductor..."
-                useQueryHook={useDrivers}
-                mapOptionFn={(driver) => ({
-                  value: driver.id.toString(),
-                  label:
-                    driver.business_name ||
-                    `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
-                  description: driver.number_document || "",
-                })}
-                onValueChange={(_value, driver) => {
-                  if (driver) {
-                    const docType =
-                      driver.document_type_name ||
-                      (driver.number_document?.length === 8 ? "DNI" : "CE");
-                    form.setValue("driver_document_type", docType);
-                    form.setValue(
-                      "driver_document_number",
-                      driver.number_document || "",
-                    );
-                    const fullName =
-                      driver.business_name ||
-                      `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
-                    form.setValue("driver_name", fullName);
-                  }
+              <div className="hidden">
+                <FormSelect
+                  control={form.control}
+                  name="modality"
+                  label="Modalidad de Transporte"
+                  placeholder="Seleccione modalidad"
+                  options={MODALITIES.map((mod) => ({
+                    value: mod.value,
+                    label: mod.label,
+                  }))}
+                />
+              </div>
+
+              <div className="hidden">
+                <DatePickerFormField
+                  control={form.control}
+                  name="issue_date"
+                  label="Fecha de Emisión"
+                  placeholder="Seleccione fecha"
+                />
+              </div>
+
+              <div className="hidden">
+                <DatePickerFormField
+                  control={form.control}
+                  name="transfer_date"
+                  label="Fecha de Traslado"
+                  placeholder="Seleccione fecha"
+                />
+              </div>
+
+              <div className="hidden">
+                <FormSelectAsync
+                  control={form.control}
+                  name="ubigeo_origin_id"
+                  label="Ubigeo de Origen"
+                  placeholder="Buscar ubigeo..."
+                  useQueryHook={useUbigeosFrom}
+                  additionalParams={{
+                    per_page: 1300,
+                  }}
+                  mapOptionFn={(item: UbigeoResource) => ({
+                    value: item.id.toString(),
+                    label: item.name,
+                    description: item.cadena,
+                  })}
+                  preloadItemId={defaultValues.ubigeo_origin_id}
+                />
+              </div>
+
+              <div className="hidden">
+                <FormInput
+                  control={form.control}
+                  name="origin_address"
+                  label="Dirección de Origen"
+                  placeholder="Ej: Av. Principal 123"
+                />
+              </div>
+
+              <div className="hidden">
+                <FormSelectAsync
+                  control={form.control}
+                  name="ubigeo_destination_id"
+                  label="Ubigeo de Destino"
+                  placeholder="Buscar ubigeo..."
+                  useQueryHook={useUbigeosFrom}
+                  mapOptionFn={(item: UbigeoResource) => ({
+                    value: item.id.toString(),
+                    label: item.name,
+                    description: item.cadena,
+                  })}
+                />
+              </div>
+
+              <div className="hidden">
+                <FormTextArea
+                  control={form.control}
+                  name="destination_address"
+                  label="Dirección de Destino"
+                  placeholder="Ej: Av. Secundaria 456"
+                />
+              </div>
+
+              <div className="col-span-full hidden">
+                <FormInput
+                  control={form.control}
+                  name="observations"
+                  label="Observaciones"
+                  placeholder="Observaciones adicionales"
+                />
+              </div>
+
+              {showAdvancedFields && (
+                <Separator className="col-span-full my-1" />
+              )}
+
+              {modalityValue !== "PRIVADO" && (
+                <FormField
+                  control={form.control}
+                  name="carrier_document_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        RUC del Transportista
+                        {modalityValue === "PUBLICO" ? "" : " "}
+                      </FormLabel>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input
+                            variant="default"
+                            placeholder="Ingrese 11 dígitos"
+                            {...field}
+                            maxLength={11}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, "");
+                              field.onChange(value);
+
+                              // Auto-search cuando se completa el RUC
+                              if (value.length === 11) {
+                                setTimeout(
+                                  () => handleSearchCarrierDocument(),
+                                  100,
+                                );
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={handleSearchCarrierDocument}
+                          disabled={
+                            isSearchingCarrier ||
+                            !field.value ||
+                            field.value.length !== 11
+                          }
+                        >
+                          {isSearchingCarrier ? (
+                            <Loader className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Search className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {modalityValue !== "PRIVADO" && (
+                <FormInput
+                  control={form.control}
+                  name="carrier_name"
+                  label="Nombre del Transportista"
+                  placeholder="Ej: Transportes SAC"
+                />
+              )}
+
+              <div className="space-y-2">
+                <FormSelectAsync
+                  name="vehicle_id"
+                  label="Placa del Vehículo"
+                  control={form.control}
+                  placeholder="Buscar placa..."
+                  useQueryHook={useVehiclesSearch}
+                  mapOptionFn={(vehicle: VehicleResource) => ({
+                    value: vehicle.id.toString(),
+                    label: vehicle.plate,
+                    description: `${vehicle.brand} ${vehicle.model}${vehicle.owner ? ` — ${vehicle.owner.full_name}` : ""}`,
+                  })}
+                  onValueChange={(_value, vehicle) => {
+                    if (vehicle) {
+                      setSelectedVehicle(vehicle);
+                      if (vehicle.mtc) {
+                        form.setValue("carrier_mtc_number", vehicle.mtc);
+                      }
+                      if (vehicle.owner) {
+                        const docNum = vehicle.owner.number_document || "";
+                        const docType = docNum.length === 8 ? "DNI" : "CE";
+                        form.setValue("driver_document_type", docType);
+                        form.setValue("driver_document_number", docNum);
+                        form.setValue("driver_name", vehicle.owner.full_name);
+                      }
+                    } else {
+                      setSelectedVehicle(null);
+                    }
+                  }}
+                />
+                {selectedVehicle?.owner && (
+                  <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">
+                      Chofer:{" "}
+                    </span>
+                    {selectedVehicle.owner.full_name}
+                    <span className="ml-2 text-xs">
+                      (DNI:{" "}
+                      {selectedVehicle.owner.number_document ?? "sin documento"}
+                      )
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Campos adicionales (ocultos por defecto) */}
+              <div className={showAdvancedFields ? "contents" : "hidden"}>
+                {/* Selector de Conductor */}
+                <div className="md:col-span-2">
+                  <FormSelectAsync
+                    name="driver_id"
+                    label="Conductor"
+                    control={form.control}
+                    placeholder="Buscar conductor..."
+                    useQueryHook={useDrivers}
+                    mapOptionFn={(driver) => ({
+                      value: driver.id.toString(),
+                      label:
+                        driver.business_name ||
+                        `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
+                      description: driver.number_document || "",
+                    })}
+                    onValueChange={(_value, driver) => {
+                      if (driver) {
+                        const docType =
+                          driver.document_type_name ||
+                          (driver.number_document?.length === 8 ? "DNI" : "CE");
+                        form.setValue("driver_document_type", docType);
+                        form.setValue(
+                          "driver_document_number",
+                          driver.number_document || "",
+                        );
+                        const fullName =
+                          driver.business_name ||
+                          `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
+                        form.setValue("driver_name", fullName);
+                      }
+                    }}
+                    preloadItemId={"37"}
+                  >
+                    <Button type="button" variant="outline" size="icon" asChild>
+                      <Link to={DRIVER.ROUTE_ADD} target="_blank">
+                        <Plus className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </FormSelectAsync>
+                </div>
+
+                <FormSelect
+                  control={form.control}
+                  name="driver_document_type"
+                  label={`Tipo de Documento del Conductor${modalityValue === "PUBLICO" ? "" : " "}`}
+                  placeholder="Seleccione tipo"
+                  options={[
+                    { value: "DNI", label: "DNI" },
+                    { value: "CE", label: "Carnet de Extranjería" },
+                    { value: "PASAPORTE", label: "Pasaporte" },
+                  ]}
+                />
+
+                <FormInput
+                  control={form.control}
+                  name="driver_document_number"
+                  label="Número de Documento del Conductor"
+                  placeholder="Ej: 12345678"
+                />
+
+                <FormInput
+                  control={form.control}
+                  name="driver_name"
+                  label="Nombre Completo del Conductor"
+                  placeholder="Ej: Juan Pérez García"
+                />
+
+                <FormInput
+                  control={form.control}
+                  name="driver_license"
+                  label="Licencia de Conducir"
+                  placeholder="Ej: Q12345678"
+                />
+
+                <FormInput
+                  control={form.control}
+                  name="carrier_mtc_number"
+                  label="Número MTC"
+                  placeholder="Ej: MTC-123456"
+                />
+
+                <FormSelect
+                  control={form.control}
+                  name="unit_measurement"
+                  label="Unidad de Medida"
+                  placeholder="Seleccione"
+                  options={UNIT_MEASUREMENTS.map((um) => ({
+                    value: um.value,
+                    label: um.label,
+                  }))}
+                />
+
+                <FormInput
+                  control={form.control}
+                  name="total_packages"
+                  label="Total de Bultos (sacos)"
+                  type="number"
+                  placeholder="0"
+                  className="bg-muted"
+                />
+              </div>
+            </GroupFormSection>
+
+            {/* Switch: Por Ventas / Por Productos */}
+            <div className="flex items-center gap-3 p-4 bg-sidebar rounded-lg border">
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="detail-mode" className="text-sm font-medium">
+                Por Ventas
+              </Label>
+              <Switch
+                id="detail-mode"
+                checked={useCustomDetails}
+                onCheckedChange={(checked) => {
+                  setUseCustomDetails(checked);
+                  form.setValue("total_packages", 0 as any);
+                  form.setValue("customer_id", "");
+                  setDetectedCustomerName(null);
                 }}
-                preloadItemId={"37"}
-              >
-                <Button type="button" variant="outline" size="icon" asChild>
-                  <Link to={DRIVER.ROUTE_ADD} target="_blank">
-                    <Plus className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </FormSelectAsync>
+              />
+              <Label htmlFor="detail-mode" className="text-sm font-medium">
+                Por Productos
+              </Label>
+              <Package className="h-4 w-4 text-muted-foreground" />
             </div>
 
-            <FormSelect
-              control={form.control}
-              name="driver_document_type"
-              label={`Tipo de Documento del Conductor${modalityValue === "PUBLICO" ? "" : " "}`}
-              placeholder="Seleccione tipo"
-              options={[
-                { value: "DNI", label: "DNI" },
-                { value: "CE", label: "Carnet de Extranjería" },
-                { value: "PASAPORTE", label: "Pasaporte" },
-              ]}
-            />
-
-            <FormInput
-              control={form.control}
-              name="driver_document_number"
-              label="Número de Documento del Conductor"
-              placeholder="Ej: 12345678"
-            />
-
-            <FormInput
-              control={form.control}
-              name="driver_name"
-              label="Nombre Completo del Conductor"
-              placeholder="Ej: Juan Pérez García"
-            />
-
-            <FormInput
-              control={form.control}
-              name="driver_license"
-              label="Licencia de Conducir"
-              placeholder="Ej: Q12345678"
-            />
-
-            <FormInput
-              control={form.control}
-              name="carrier_mtc_number"
-              label="Número MTC"
-              placeholder="Ej: MTC-123456"
-            />
-
-            <FormSelect
-              control={form.control}
-              name="unit_measurement"
-              label="Unidad de Medida"
-              placeholder="Seleccione"
-              options={UNIT_MEASUREMENTS.map((um) => ({
-                value: um.value,
-                label: um.label,
-              }))}
-            />
-
-            <FormInput
-              control={form.control}
-              name="total_packages"
-              label="Total de Bultos (sacos)"
-              type="number"
-              placeholder="0"
-              className="bg-muted"
-            />
-          </div>
-
-          {/* Switch: Por Ventas / Por Productos */}
-          <div className="col-span-full flex items-center gap-3 p-4 bg-sidebar rounded-lg border">
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-            <Label htmlFor="detail-mode" className="text-sm font-medium">
-              Por Ventas
-            </Label>
-            <Switch
-              id="detail-mode"
-              checked={useCustomDetails}
-              onCheckedChange={(checked) => {
-                setUseCustomDetails(checked);
-                form.setValue("total_packages", 0 as any);
-              }}
-            />
-            <Label htmlFor="detail-mode" className="text-sm font-medium">
-              Por Productos
-            </Label>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </div>
-
-          {/* Detalle por Ventas */}
-          {!useCustomDetails && (
-            <div className="col-span-full space-y-4">
-              {/* Filtros de búsqueda */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-sidebar rounded-lg">
+            {/* Filtros por ventas abajo y en horizontal */}
+            {!useCustomDetails && (
+              <GroupFormSection
+                title="Formulario de Ventas"
+                icon={Search}
+                cols={{ sm: 1 }}
+                className="col-span-full"
+                bordered
+              >
                 <SearchableSelect
                   buttonSize="default"
                   label="Tipo de Documento"
@@ -1068,36 +1406,6 @@ export const GuideForm = ({
                   className="md:w-full"
                 />
 
-                <div className="space-y-2">
-                  <SearchableSelect
-                    buttonSize="default"
-                    label="Dirección del Cliente"
-                    placeholder="Seleccione una dirección"
-                    disabled={
-                      !customerValue || selectedCustomerAddresses.length === 0
-                    }
-                    value={searchParams.person_zone_id}
-                    onChange={(value) => {
-                      setSearchParams((prev) => ({
-                        ...prev,
-                        person_zone_id: value,
-                      }));
-                    }}
-                    options={selectedCustomerAddresses.map((address) => ({
-                      value: address.id.toString(),
-                      label: `${address.address}${address.is_primary ? " (Principal)" : ""}`,
-                      description: address.zone_name,
-                    }))}
-                    withValue={false}
-                    className="md:w-full"
-                  />
-                  {customerValue && selectedCustomerAddresses.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      El cliente no tiene direcciones registradas
-                    </p>
-                  )}
-                </div>
-
                 <FormInput
                   name="serie"
                   label="Serie"
@@ -1108,28 +1416,26 @@ export const GuideForm = ({
                   }
                 />
 
-                <FormInput
-                  name="numero_inicio"
-                  label="Número Inicio"
-                  type="number"
-                  placeholder="Ej: 1"
-                  value={searchParams.numero_inicio}
-                  onChange={(e) =>
-                    setSearchParams({
-                      ...searchParams,
-                      numero_inicio: e.target.value,
-                    })
-                  }
-                />
-
-                <div className="flex flex-col justify-between">
-                  <label className="flex justify-start items-center text-xs md:text-sm mb-0.5 leading-none h-fit font-medium text-muted-foreground">
-                    Número Fin
+                <div className="space-y-2">
+                  <label className="flex uppercase font-bold justify-start items-center text-xs md:text-sm leading-none h-fit text-muted-foreground">
+                    Rango de Números
                   </label>
-                  <div className="flex gap-2 items-center">
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2 items-center">
                     <Input
                       type="number"
-                      placeholder="Ej: 100"
+                      placeholder="Número inicio"
+                      value={searchParams.numero_inicio}
+                      onChange={(e) =>
+                        setSearchParams({
+                          ...searchParams,
+                          numero_inicio: e.target.value,
+                        })
+                      }
+                      className="h-7 md:h-8 text-xs md:text-sm"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Número fin"
                       value={searchParams.numero_fin}
                       onChange={(e) =>
                         setSearchParams({
@@ -1139,223 +1445,182 @@ export const GuideForm = ({
                       }
                       className="h-7 md:h-8 text-xs md:text-sm"
                     />
-                    <Button
-                      type="button"
-                      variant="default"
-                      onClick={handleSearchSalesByRange}
-                      disabled={isSearchingSales}
-                      className="shrink-0"
-                    >
-                      {isSearchingSales ? (
-                        <>
-                          <Loader className="mr-2 h-4 w-4 animate-spin" />
-                          Buscando...
-                        </>
-                      ) : (
-                        <>
-                          <Search className="mr-2 h-4 w-4" />
-                          Buscar Ventas
-                        </>
-                      )}
-                    </Button>
                   </div>
                 </div>
-              </div>
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={handleSearchSalesByRange}
+                  disabled={isSearchingSales}
+                  className="shrink-0 w-full md:w-auto"
+                >
+                  {isSearchingSales ? (
+                    <>
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-4 w-4" />
+                      Buscar Ventas
+                    </>
+                  )}
+                </Button>
+              </GroupFormSection>
+            )}
+          </div>
 
-              {/* Lista de ventas encontradas */}
-              {salesByRange.length > 0 && (
-                <div className="border rounded-lg overflow-hidden">
-                  <div className="p-4 bg-sidebar border-b flex justify-between items-center">
-                    <h3 className="font-semibold">
-                      Ventas encontradas ({salesByRange.length})
-                    </h3>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleSelectAllSales}
-                    >
-                      {selectedSales.length === salesByRange.length
-                        ? "Deseleccionar Todas"
-                        : "Seleccionar Todas"}
-                    </Button>
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-12">
+          <div className="lg:col-span-2 space-y-4">
+            <Alert variant="info">
+              {selectedSales.length} venta(s) seleccionada(s) para la guía
+            </Alert>
+
+            {!useCustomDetails && salesByRange.length > 0 && (
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={
+                            salesByRange.length > 0 &&
+                            selectedSales.length === salesByRange.length
+                          }
+                          onCheckedChange={handleSelectAllSales}
+                          className="cursor-pointer"
+                        />
+                      </TableHead>
+                      <TableHead>Documento ({salesByRange.length})</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salesByRange.map((sale) => (
+                      <TableRow
+                        key={sale.id}
+                        className={`cursor-pointer hover:bg-muted/30 ${
+                          selectedSales.includes(sale.id) ? "bg-muted/50" : ""
+                        }`}
+                        onClick={() => handleToggleSale(sale.id)}
+                      >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <Checkbox
-                            checked={
-                              salesByRange.length > 0 &&
-                              selectedSales.length === salesByRange.length
-                            }
-                            onCheckedChange={handleSelectAllSales}
+                            checked={selectedSales.includes(sale.id)}
+                            onCheckedChange={() => handleToggleSale(sale.id)}
                             className="cursor-pointer"
                           />
-                        </TableHead>
-                        <TableHead>Documento</TableHead>
-                        <TableHead>Cliente</TableHead>
-                        <TableHead>Fecha</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {salesByRange.map((sale) => (
-                        <TableRow
-                          key={sale.id}
-                          className={`cursor-pointer hover:bg-muted/30 ${
-                            selectedSales.includes(sale.id) ? "bg-muted/50" : ""
-                          }`}
-                          onClick={() => handleToggleSale(sale.id)}
-                        >
-                          <TableCell onClick={(e) => e.stopPropagation()}>
-                            <Checkbox
-                              checked={selectedSales.includes(sale.id)}
-                              onCheckedChange={() => handleToggleSale(sale.id)}
-                              className="cursor-pointer"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">
-                                {sale.full_document_number}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {sale.document_type}
-                              </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">
+                              {sale.full_document_number}
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            {sale.customer.business_name ||
-                              `${sale.customer.names} ${sale.customer.father_surname}`}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(sale.issue_date).toLocaleDateString(
-                              "es-PE",
-                              {
-                                year: "numeric",
-                                month: "2-digit",
-                                day: "2-digit",
-                              },
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {sale.currency} {sale.total_amount.toFixed(2)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-
-              {/* Resumen de ventas seleccionadas */}
-              {selectedSales.length > 0 && (
-                <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-                  <p className="text-sm font-medium text-green-900 dark:text-green-100">
-                    {selectedSales.length} venta(s) seleccionada(s) para la guía
-                  </p>
-                </div>
-              )}
-
-              {form.formState.errors &&
-                Object.keys(form.formState.errors).length > 0 && (
-                  <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
-                    <ul className="list-disc list-inside text-sm text-red-900 dark:text-red-100">
-                      {Object.entries(form.formState.errors).map(
-                        ([fieldName, error]) => (
-                          <li key={fieldName}>{error?.message as string}</li>
-                        ),
-                      )}
-                    </ul>
-                  </div>
-                )}
-            </div>
-          )}
-        </GroupFormSection>
-
-        {/* Detalle por Productos */}
-        {useCustomDetails && (
-          <GroupFormSection
-            className="col-span-full"
-            title="Detalle de Productos"
-            icon={Package}
-            cols={{ sm: 1 }}
-            headerExtra={
-              <div className="flex items-center gap-2">
-                <FormField
-                  control={form.control}
-                  name="sale_document_number"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-2 mb-0">
-                      <FormLabel className="whitespace-nowrap text-sm">
-                        N° Documento de Venta
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          variant="default"
-                          placeholder="Ej: F001-00000123"
-                          className="w-44"
-                          {...field}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                            {/* <div className="text-xs text-muted-foreground">
+                            {sale.document_type}
+                          </div> */}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {sale.customer.business_name ||
+                            `${sale.customer.names} ${sale.customer.father_surname}`}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(sale.issue_date).toLocaleDateString(
+                            "es-PE",
+                            {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                            },
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {sale.currency} {sale.total_amount.toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            }
-          >
-            <div className="space-y-3">
-              <ExcelGrid
-                columns={gridColumns}
-                data={customDetails}
-                onAddRow={handleAddDetail}
-                onRemoveRow={handleRemoveDetail}
-                onCellChange={handleDetailChange}
-                productOptions={productOptions}
-                onProductSelect={handleProductSelect}
-                onProductCodeTab={handleProductCodeTab}
-                emptyMessage="Agregue productos al detalle"
-              />
+            )}
 
-              {form.formState.errors &&
-                Object.keys(form.formState.errors).length > 0 && (
-                  <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
-                    <ul className="list-disc list-inside text-sm text-red-900 dark:text-red-100">
-                      {Object.entries(form.formState.errors).map(
-                        ([fieldName, error]) => (
-                          <li key={fieldName}>{error?.message as string}</li>
-                        ),
+            {useCustomDetails && (
+              <GroupFormSection
+                className="col-span-full"
+                title="Detalle de Productos"
+                icon={Package}
+                cols={{ sm: 1 }}
+                headerExtra={
+                  <div className="flex items-center gap-2">
+                    <FormField
+                      control={form.control}
+                      name="sale_document_number"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-2 mb-0">
+                          <FormLabel className="whitespace-nowrap text-sm">
+                            N° Documento de Venta
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              variant="default"
+                              placeholder="Ej: F001-00000123"
+                              className="w-44"
+                              {...field}
+                            />
+                          </FormControl>
+                        </FormItem>
                       )}
-                    </ul>
+                    />
                   </div>
-                )}
-            </div>
-          </GroupFormSection>
-        )}
+                }
+              >
+                <div className="space-y-3">
+                  <ExcelGrid
+                    columns={gridColumns}
+                    data={customDetails}
+                    onAddRow={handleAddDetail}
+                    onRemoveRow={handleRemoveDetail}
+                    onCellChange={handleDetailChange}
+                    productOptions={productOptions}
+                    onProductSelect={handleProductSelect}
+                    onProductCodeTab={handleProductCodeTab}
+                    emptyMessage="Agregue productos al detalle"
+                  />
+                </div>
+              </GroupFormSection>
+            )}
 
-        {/* Botones */}
-        <div className="flex gap-4 w-full justify-end col-span-full">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-            Cancelar
-          </Button>
+            {form.formState.errors &&
+              Object.keys(form.formState.errors).length > 0 && (
+                <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
+                  <ul className="list-disc list-inside text-sm text-red-900 dark:text-red-100">
+                    {Object.entries(form.formState.errors).map(
+                      ([fieldName, error]) => (
+                        <li key={fieldName}>{error?.message as string}</li>
+                      ),
+                    )}
+                  </ul>
+                </div>
+              )}
+          </div>
+        </form>
+      </Form>
 
-          <Button
-            size="sm"
-            type="submit"
-            disabled={
-              isSubmitting ||
-              (!useCustomDetails && selectedSales.length === 0) ||
-              (useCustomDetails && customDetails.every((d) => !d.product_id))
+      {selectedCustomerId !== null && (
+        <ClientAddressesSheet
+          open={isAddressManagerOpen}
+          onOpenChange={(open) => {
+            setIsAddressManagerOpen(open);
+            if (!open) {
+              void refetchPersonZones();
             }
-          >
-            <Loader
-              className={`mr-2 h-4 w-4 ${!isSubmitting ? "hidden" : ""}`}
-            />
-            {isSubmitting ? "Guardando..." : "Guardar"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+          }}
+          personId={selectedCustomerId}
+          personName={detectedCustomerName || selectedCustomerName || "Cliente"}
+        />
+      )}
+    </>
   );
 };

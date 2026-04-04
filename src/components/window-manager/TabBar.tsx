@@ -8,22 +8,22 @@ export function TabBar() {
   if (tabs.length === 0) return null;
 
   return (
-    <div className="flex items-end gap-0 px-2 pt-1.5 bg-muted/30 border-b shrink-0 min-h-[42px]">
+    <div className="flex items-stretch gap-1 px-2 bg-muted/30 border-b shrink-0 min-h-8">
       {tabs.map((tab) => (
-        <div
+        <button
           key={tab.id}
           className={cn(
-            "group flex items-center gap-2 px-4 py-2 rounded-t-md text-sm cursor-pointer border border-b-0 transition-colors shrink-0 max-w-56 select-none",
+            "group relative flex items-center px-8 rounded-md text-sm cursor-pointer transition-colors shrink-0 max-w-56 select-none",
             tab.id === activeTabId
-              ? "bg-primary border-primary text-primary-foreground font-medium -mb-px pb-[9px]"
-              : "bg-primary/20 border-transparent text-primary hover:text-primary hover:bg-primary/30"
+              ? "bg-primary text-primary-foreground font-medium"
+              : "bg-primary/20 text-primary hover:bg-primary/30"
           )}
           onClick={() => setActiveTab(tab.id)}
         >
           <span className="truncate">{tab.title}</span>
-          <button
+          <span
             className={cn(
-              "shrink-0 rounded p-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20",
+              "absolute top-0.5 right-0.5 rounded p-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20",
               tab.id === activeTabId && "opacity-60 hover:opacity-100"
             )}
             onClick={(e) => {
@@ -32,9 +32,9 @@ export function TabBar() {
             }}
             title="Cerrar"
           >
-            <X size={12} />
-          </button>
-        </div>
+            <X size={10} />
+          </span>
+        </button>
       ))}
     </div>
   );

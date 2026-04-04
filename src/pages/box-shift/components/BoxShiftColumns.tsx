@@ -1,19 +1,12 @@
 import type { BoxShiftResource } from "../lib/box-shift.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { Eye, DoorClosed } from "lucide-react";
 import { formatCurrency } from "@/lib/formatCurrency";
-import { ButtonAction } from "@/components/ButtonAction";
-import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
-export const BoxShiftColumns = ({
-  onDelete,
-  onView,
-  onClose,
-}: {
-  onDelete: (id: number) => void;
-  onView: (id: number) => void;
-  onClose: (id: number) => void;
+export const BoxShiftColumns = (_options?: {
+  onDelete?: (id: number) => void;
+  onView?: (id: number) => void;
+  onClose?: (id: number) => void;
 }): ColumnDef<BoxShiftResource>[] => [
   {
     accessorKey: "id",
@@ -98,31 +91,5 @@ export const BoxShiftColumns = ({
         -{formatCurrency(getValue() as number)}
       </span>
     ),
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const shift = row.original;
-      const isOpen = shift.is_open;
-
-      return (
-        <div className="flex items-center gap-2">
-          <ButtonAction
-            onClick={() => onView(shift.id)}
-            icon={Eye}
-            tooltip="Ver Detalle"
-          />
-          {isOpen && (
-            <ButtonAction
-              onClick={() => onClose(shift.id)}
-              icon={DoorClosed}
-              tooltip="Cerrar Turno"
-            />
-          )}
-          <DeleteButton onClick={() => onDelete(shift.id)} />
-        </div>
-      );
-    },
   },
 ];

@@ -1,64 +1,15 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Trash2,
-  Eye,
-  Wallet,
-  AlertTriangle,
-  Pencil,
-  FileMinus,
-  PanelRightOpen,
-} from "lucide-react";
-import { ButtonAction } from "@/components/ButtonAction";
+import { AlertTriangle } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { SaleResource } from "../lib/sale.interface";
 
-interface SaleColumnsProps {
-  onEdit: (sale: SaleResource) => void;
-  onDelete: (id: number) => void;
-  onViewDetails: (sale: SaleResource) => void;
-  onManage: (sale: SaleResource) => void;
-  onQuickPay: (sale: SaleResource) => void;
-  onCreateCreditNote: (sale: SaleResource) => void;
-}
-
-export const getSaleColumns = ({
-  onEdit,
-  onDelete,
-  onViewDetails,
-  onManage,
-  onQuickPay,
-  onCreateCreditNote,
-}: SaleColumnsProps): ColumnDef<SaleResource>[] => [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Seleccionar todos"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Seleccionar fila"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+export const getSaleColumns = (): ColumnDef<SaleResource>[] => [
   {
     accessorKey: "id",
     header: "ID",
@@ -72,14 +23,9 @@ export const getSaleColumns = ({
     accessorKey: "full_document_number",
     header: "Documento",
     cell: ({ row }) => (
-      <div className="flex flex-col">
-        <span className="font-medium text-xs text-muted-foreground">
-          {row.original.document_type}
-        </span>
-        <span className="font-mono font-semibold">
-          {row.original.full_document_number}
-        </span>
-      </div>
+      <span className="font-mono font-semibold">
+        {row.original.full_document_number}
+      </span>
     ),
   },
   {
@@ -195,16 +141,7 @@ export const getSaleColumns = ({
     accessorKey: "details",
     header: "Detalles",
     cell: ({ row }) => (
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onManage(row.original)}
-        className="h-auto p-1"
-      >
-        <Badge variant="outline" className="cursor-pointer hover:bg-accent">
-          {row.original.details?.length || 0} item(s)
-        </Badge>
-      </Button>
+      <Badge variant="outline">{row.original.details?.length || 0} item(s)</Badge>
     ),
   },
   {
@@ -238,19 +175,9 @@ export const getSaleColumns = ({
       return (
         <TooltipProvider>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onManage(row.original)}
-              className="h-auto p-1"
-            >
-              <Badge
-                variant="outline"
-                className="cursor-pointer hover:bg-accent"
-              >
-                {row.original.installments?.length || 0} cuota(s)
-              </Badge>
-            </Button>
+            <Badge variant="outline">
+              {row.original.installments?.length || 0} cuota(s)
+            </Badge>
 
             {!isValid && (
               <Tooltip>
@@ -268,31 +195,10 @@ export const getSaleColumns = ({
               </Tooltip>
             )}
 
-            {hasPendingPayments && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onQuickPay(row.original)}
-                    className="h-8 w-8 p-0"
-                    disabled={!isValid}
-                  >
-                    <Wallet
-                      className={`h-4 w-4 ${
-                        isValid ? "text-primary" : "text-gray-400"
-                      }`}
-                    />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">
-                    {isValid
-                      ? "Pago rápido"
-                      : "No se puede realizar pago rápido. Debe sincronizar las cuotas primero."}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
+            {hasPendingPayments && !isValid && (
+              <span className="text-xs text-muted-foreground">
+                Sincronizar cuotas
+              </span>
             )}
           </div>
         </TooltipProvider>
@@ -305,63 +211,5 @@ export const getSaleColumns = ({
     cell: ({ getValue }) => (
       <span className="font-semibold">{getValue() as string}</span>
     ),
-  },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const isPaid = row.original.status === "PAGADA";
-
-      // Verificar si alguna cuota tiene pagos registrados
-      // (si pending_amount es menor que amount, significa que tiene pagos)
-      const hasPayments =
-        row.original.installments?.some(
-          (inst) => inst.pending_amount < inst.amount,
-        ) ?? false;
-
-      return (
-        <div className="flex items-center gap-1">
-          <ButtonAction
-            icon={Eye}
-            onClick={() => onManage(row.original)}
-            tooltip="Gestionar Venta"
-          />
-          <ButtonAction
-            icon={PanelRightOpen}
-            onClick={() => onViewDetails(row.original)}
-            tooltip="Ver Detalles"
-          />
-          <ButtonAction
-            icon={Pencil}
-            onClick={() => !hasPayments && onEdit(row.original)}
-            disabled={hasPayments}
-            tooltip={
-              hasPayments
-                ? "No se puede editar una venta con pagos registrados"
-                : "Editar Venta"
-            }
-          />
-          <ButtonAction
-            icon={FileMinus}
-            color="purple"
-            onClick={() => onCreateCreditNote(row.original)}
-            tooltip="Crear Nota de Crédito"
-          />
-          <ButtonAction
-            icon={Trash2}
-            onClick={() => !isPaid && onDelete(row.original.id)}
-            disabled={isPaid || hasPayments}
-            variant="destructive"
-            tooltip={
-              isPaid
-                ? "No se puede eliminar una venta pagada"
-                : hasPayments
-                  ? "No se puede eliminar una venta con pagos registrados"
-                  : "Eliminar Venta"
-            }
-          />
-        </div>
-      );
-    },
   },
 ];

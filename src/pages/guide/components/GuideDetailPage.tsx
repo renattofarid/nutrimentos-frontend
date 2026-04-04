@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import {
   FileText,
@@ -14,15 +14,19 @@ import {
   Flag,
   FileCheck,
   Receipt,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useGuideById } from "../lib/guide.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import PageWrapper from "@/components/PageWrapper";
 import { GroupFormSection } from "@/components/GroupFormSection";
+import { GUIDE } from "../lib/guide.interface";
 
 export default function GuideDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { data: guide, isFinding } = useGuideById(Number(id));
 
   if (isFinding || !guide) {
@@ -91,6 +95,11 @@ export default function GuideDetailPage() {
 
   return (
     <PageWrapper>
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant="outline" onClick={() => navigate(GUIDE.ROUTE)}>
+          <X /> Cerrar
+        </Button>
+      </div>
       <div className="space-y-4">
         {/* Cards de resumen */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

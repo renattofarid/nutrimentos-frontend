@@ -1,23 +1,11 @@
 import type { PersonResource } from "../lib/person.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { ButtonAction } from "@/components/ButtonAction";
-import { Pencil, Trash2, MapPin, List, ListPlus } from "lucide-react";
 
-export const PersonColumns = ({
-  onEdit,
-  onDelete,
-  onViewPriceList,
-  onAssignPriceList,
-  onViewAddresses,
-}: // onManageRoles,
-{
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-  onViewPriceList?: (person: PersonResource) => void;
-  onAssignPriceList?: (person: PersonResource) => void;
-  onViewAddresses?: (person: PersonResource) => void;
-  // onManageRoles: (person: PersonResource) => void;
+export const PersonColumns = (_options?: {
+  onEdit?: (id: number) => void;
+  onDelete?: (id: number) => void;
+  onManageRoles?: (id: number) => void;
 }): ColumnDef<PersonResource>[] => [
   {
     accessorKey: "id",
@@ -29,24 +17,16 @@ export const PersonColumns = ({
     cell: ({ row }) => {
       const person = row.original;
       const typeDocument = person?.document_type_name;
-      const numberDocument = person?.number_document;
       return (
-        <div>
-          <div className="font-medium">
-            {typeDocument === "RUC"
-              ? person.business_name
-              : typeDocument === "PASAPORTE"
+        <div className="font-medium">
+          {typeDocument === "RUC"
+            ? person.business_name
+            : typeDocument === "PASAPORTE"
+              ? person.names
+              : typeDocument === "CE"
                 ? person.names
-                : typeDocument === "CE"
-                  ? person.names
-                  : (person.business_name ??
-                    `${person.names} ${person.father_surname} ${person.mother_surname}`)}
-          </div>
-          <div className="text-sm text-muted-foreground">
-            {typeDocument &&
-              numberDocument &&
-              `${typeDocument}: ${person.number_document}`}
-          </div>
+                : (person.business_name ??
+                  `${person.names ?? ""} ${person.father_surname ?? ""} ${person.mother_surname ?? ""}`)}
         </div>
       );
     },
@@ -125,47 +105,4 @@ export const PersonColumns = ({
   //     );
   //   },
   // },
-  {
-    id: "actions",
-    header: "Acciones",
-    cell: ({ row }) => {
-      const person = row.original;
-
-      return (
-        <div className="flex items-center gap-1">
-          <ButtonAction
-            icon={List}
-            canRender={!!onViewPriceList}
-            onClick={() => onViewPriceList?.(person)}
-            tooltip="Ver Lista de Precios"
-            color="blue"
-          />
-          <ButtonAction
-            icon={ListPlus}
-            canRender={!!onAssignPriceList}
-            onClick={() => onAssignPriceList?.(person)}
-            tooltip="Asignar Lista de Precios"
-          />
-          <ButtonAction
-            icon={MapPin}
-            color="indigo"
-            canRender={!!onViewAddresses}
-            onClick={() => onViewAddresses?.(person)}
-            tooltip="Ver Direcciones"
-          />
-          <ButtonAction
-            icon={Pencil}
-            onClick={() => onEdit(person.id)}
-            tooltip="Editar"
-          />
-          <ButtonAction
-            icon={Trash2}
-            color="red"
-            onClick={() => onDelete(person.id)}
-            tooltip="Eliminar"
-          />
-        </div>
-      );
-    },
-  },
 ];

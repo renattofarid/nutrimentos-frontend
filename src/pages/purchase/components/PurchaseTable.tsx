@@ -5,36 +5,22 @@ import { DataTable } from "@/components/DataTable";
 
 interface PurchaseTableProps {
   data: PurchaseResource[];
-  onEdit: (purchase: PurchaseResource) => void;
-  onDelete: (id: number) => void;
-  onViewDetails: (purchase: PurchaseResource) => void;
-  onManage: (purchase: PurchaseResource) => void;
-  onQuickPay: (purchase: PurchaseResource) => void;
   isLoading: boolean;
   children?: React.ReactNode;
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  onRowDoubleClick?: (purchase: PurchaseResource) => void;
 }
 
 export const PurchaseTable = ({
   data,
-  onEdit,
-  onDelete,
-  onViewDetails,
-  onManage,
-  onQuickPay,
   isLoading,
   children,
   rowSelection,
   onRowSelectionChange,
+  onRowDoubleClick,
 }: PurchaseTableProps) => {
-  const columns = getPurchaseColumns({
-    onEdit,
-    onDelete,
-    onViewDetails,
-    onManage,
-    onQuickPay,
-  });
+  const columns = getPurchaseColumns();
 
   return (
     <div className="border-none text-muted-foreground max-w-full">
@@ -46,6 +32,7 @@ export const PurchaseTable = ({
         enableMultiRowSelection={false}
         rowSelection={rowSelection}
         onRowSelectionChange={onRowSelectionChange}
+        onRowDoubleClick={onRowDoubleClick}
         getRowId={(row) => String(row.id)}
       >
         {children}

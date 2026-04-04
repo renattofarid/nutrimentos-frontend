@@ -393,17 +393,6 @@ export const DeliverySheetForm = ({
       >
         {showHeaderActions && (
           <div className="flex items-center gap-2 col-span-full">
-            <Button
-              size="sm"
-              type="submit"
-              variant="outline"
-              colorIcon="green"
-              disabled={isSubmitting || selectedSaleIds.length === 0}
-            >
-              {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
-              {mode === "create" ? "Guardar Planilla" : "Actualizar Planilla"}
-            </Button>
-
             {onPreview && (
               <Button
                 type="button"
@@ -418,9 +407,21 @@ export const DeliverySheetForm = ({
                 ) : (
                   <Printer />
                 )}
-                Imprimir
+                Ver
               </Button>
             )}
+            <Button
+              size="sm"
+              type="submit"
+              variant="outline"
+              colorIcon="green"
+              disabled={isSubmitting || selectedSaleIds.length === 0}
+            >
+              {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+              {mode === "create"
+                ? "Guardar e Imprimir Planilla"
+                : "Actualizar Planilla"}
+            </Button>
 
             {onCancel && (
               <Button
@@ -443,6 +444,7 @@ export const DeliverySheetForm = ({
           cols={{
             sm: 1,
             md: 3,
+            lg: 4,
           }}
           headerExtra={
             <Button
@@ -497,6 +499,49 @@ export const DeliverySheetForm = ({
             />
           )}
 
+          <div className="flex items-end gap-2 lg:col-span-2">
+            {/* {showDateFilter && ( */}
+            <DatePickerFilter
+              label="Del"
+              value={searchParams.date_from}
+              onChange={(dateFrom) =>
+                setSearchParams((prev) => ({
+                  ...prev,
+                  date_from: dateFrom,
+                }))
+              }
+              placeholder="Fecha desde"
+              vertical
+            />
+            <DatePickerFilter
+              label="Al"
+              value={searchParams.date_to}
+              onChange={(dateTo) =>
+                setSearchParams((prev) => ({
+                  ...prev,
+                  date_to: dateTo,
+                }))
+              }
+              placeholder="Fecha hasta"
+              vertical
+            />
+            {/* )} */}
+            {/* {showDateFilter && ( */}
+            <Button
+              type="button"
+              onClick={handleSearchSales}
+              disabled={!searchParams.payment_type || isLoadingAvailableSales}
+            >
+              {isLoadingAvailableSales ? (
+                <Loader className="animate-spin" />
+              ) : (
+                <Search />
+              )}
+              {isLoadingAvailableSales ? "Buscando..." : "Buscar ventas"}
+            </Button>
+            {/* )} */}
+          </div>
+
           {showMoreFields && (
             <>
               <FormSelect
@@ -533,12 +578,6 @@ export const DeliverySheetForm = ({
             </>
           )}
 
-          {isLoadingAvailableSales && (
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Loader className="h-3 w-3 animate-spin" />
-              Buscando ventas...
-            </span>
-          )}
           {/* <Button
             type="button"
             variant="ghost"
@@ -554,47 +593,6 @@ export const DeliverySheetForm = ({
               <ChevronDown className="h-4 w-4" />
             )}
           </Button> */}
-          <div className="flex gap-2">
-            {/* {showDateFilter && ( */}
-            <DatePickerFilter
-              label="Del"
-              value={searchParams.date_from}
-              onChange={(dateFrom) =>
-                setSearchParams((prev) => ({
-                  ...prev,
-                  date_from: dateFrom,
-                }))
-              }
-              placeholder="Fecha desde"
-            />
-            <DatePickerFilter
-              label="Al"
-              value={searchParams.date_to}
-              onChange={(dateTo) =>
-                setSearchParams((prev) => ({
-                  ...prev,
-                  date_to: dateTo,
-                }))
-              }
-              placeholder="Fecha hasta"
-            />
-            {/* )} */}
-            {/* {showDateFilter && ( */}
-            <Button
-              type="button"
-              onClick={handleSearchSales}
-              disabled={!searchParams.payment_type || isLoadingAvailableSales}
-              size="sm"
-            >
-              {isLoadingAvailableSales ? (
-                <Loader className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Search className="mr-2 h-4 w-4" />
-              )}
-              Buscar
-            </Button>
-            {/* )} */}
-          </div>
         </GroupFormSection>
 
         {hasSearched &&
@@ -614,6 +612,7 @@ export const DeliverySheetForm = ({
               columns={saleColumns}
               data={availableSales}
               isVisibleColumnFilter={false}
+              onRowClick={(sale) => handleToggleSale(sale.id)}
               mobileCardRender={(sale) => {
                 const hasCreditNotes = !!sale.credit_notes?.length;
                 const creditNoteAmount = hasCreditNotes

@@ -20,6 +20,7 @@ interface DatePickerFilterProps {
   placeholder?: string;
   dateFormat?: string;
   className?: string;
+  vertical?: boolean;
 }
 
 export function DatePickerFilter({
@@ -29,11 +30,17 @@ export function DatePickerFilter({
   placeholder = "Fecha",
   dateFormat = "dd/MM/yyyy",
   className,
+  vertical = false,
 }: DatePickerFilterProps) {
   return (
-    <div className="flex items-center gap-1">
+    <div
+      className={cn(
+        "flex items-center gap-1",
+        vertical && "flex-col items-start gap-0.5",
+      )}
+    >
       {label && (
-        <span className="text-sm text-muted-foreground whitespace-nowrap">
+        <span className="text-sm text-muted-foreground whitespace-nowrap leading-none uppercase font-bold">
           {label}
         </span>
       )}

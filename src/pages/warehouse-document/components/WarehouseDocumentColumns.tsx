@@ -17,6 +17,18 @@ export const WarehouseDocumentColumns =
       ),
     },
     {
+      accessorKey: "movement_date",
+      header: "Fecha",
+      cell: ({ getValue }) => {
+        const date = parse(getValue() as string, "yyyy-MM-dd", new Date());
+        return date.toLocaleDateString("es-ES", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      },
+    },
+    {
       id: "warehouse_origin_name",
       accessorFn: (row) => row.warehouse_origin?.name ?? "",
       header: "Almacén Origen",
@@ -81,18 +93,6 @@ export const WarehouseDocumentColumns =
       accessorFn: (row) => row.responsible_destination?.name ?? "",
       header: "Responsable Destino",
       cell: ({ getValue }) => (getValue() as string) || "-",
-    },
-    {
-      accessorKey: "movement_date",
-      header: "Fecha",
-      cell: ({ getValue }) => {
-        const date = parse(getValue() as string, "yyyy-MM-dd", new Date());
-        return date.toLocaleDateString("es-ES", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        });
-      },
     },
     {
       accessorKey: "status",

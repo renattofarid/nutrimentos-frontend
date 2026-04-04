@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -64,6 +65,19 @@ export const ProductForm = ({
     },
     mode: "onChange",
   });
+
+  const pricePerKg = form.watch("price_per_kg");
+
+  useEffect(() => {
+    if (pricePerKg === undefined || pricePerKg === null) return;
+
+    const parsedPrice = Number(pricePerKg);
+    const hasPricePerKg = String(pricePerKg).trim() !== "" && parsedPrice > 0;
+
+    if (hasPricePerKg && !form.getValues("is_kg")) {
+      form.setValue("is_kg", true, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [pricePerKg, form]);
 
   return (
     <Form {...form}>

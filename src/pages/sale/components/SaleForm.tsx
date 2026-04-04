@@ -42,10 +42,19 @@ import { FormInput } from "@/components/FormInput";
 interface SaleFormProps {
   defaultValues: Partial<SaleSchema>;
   onSubmit: (data: any) => void;
+  onVendedorChange?: (vendedorId: string) => void;
   mode?: "create" | "update";
   branches: BranchResource[];
   warehouses: WarehouseResource[];
   sale?: SaleResource;
+}
+
+interface CustomerAddress {
+  id: number;
+  zone_id: number;
+  zone_name: string;
+  address: string;
+  is_primary: boolean;
 }
 
 interface DetailRow {
@@ -75,6 +84,7 @@ interface InstallmentRow {
 export const SaleForm = ({
   defaultValues,
   onSubmit,
+  onVendedorChange,
   mode = "create",
   branches,
   warehouses,
@@ -108,9 +118,9 @@ export const SaleForm = ({
     )[0];
 
   // Estado para las direcciones del cliente seleccionado
-  const [customerAddresses, setCustomerAddresses] = useState<
-    { id: number; zone_name: string; address: string; is_primary: boolean }[]
-  >([]);
+  const [customerAddresses, setCustomerAddresses] = useState<CustomerAddress[]>(
+    [],
+  );
 
   // Referencia al zone_id actual para detectar cambio de zona al cambiar cliente
   const currentZoneIdRef = useRef<number | null>(null);
@@ -251,6 +261,7 @@ export const SaleForm = ({
           if (zones && zones.length > 0) {
             const mapped = zones.map((z) => ({
               id: z.id,
+              zone_id: z.zone_id,
               zone_name: z.zone.name,
               address: z.address,
               is_primary: z.is_primary,
@@ -259,8 +270,10 @@ export const SaleForm = ({
             const primary = mapped.find((pz) => pz.is_primary);
             if (primary) {
               form.setValue("person_zone_id", primary.id.toString());
+              currentZoneIdRef.current = primary.zone_id;
             } else {
               form.setValue("person_zone_id", mapped[0].id.toString());
+              currentZoneIdRef.current = mapped[0].zone_id;
             }
           }
         });
@@ -280,6 +293,17 @@ export const SaleForm = ({
   const selectedWarehouseId = form.watch("warehouse_id");
   const selectedDocumentType = form.watch("document_type");
   const selectedCustomerId = form.watch("customer_id");
+  const selectedVendedorId = form.watch("vendedor_id");
+
+  const mapCustomerZones = (zones: any[]): CustomerAddress[] => {
+    return zones.map((z) => ({
+      id: z.id,
+      zone_id: z.zone_id,
+      zone_name: z.zone_name ?? z.zone?.name ?? "Sin zona",
+      address: z.address,
+      is_primary: Boolean(z.is_primary),
+    }));
+  };
 
   const getCurrencySymbol = () => "S/.";
 
@@ -311,7 +335,10 @@ export const SaleForm = ({
   }, [selectedBranchId, warehouses]);
 
   // Actualizar direcciones al seleccionar un cliente en el FormSelectAsync
-  const handleCustomerChange = (_value: string, item?: PersonResource) => {
+  const handleCustomerChange = async (
+    _value: string,
+    item?: PersonResource,
+  ) => {
     const resolvedItem =
       item ??
       (pendingExternalPersonRef.current?.id.toString() === _value
@@ -324,14 +351,24 @@ export const SaleForm = ({
           `${resolvedItem.names ?? ""} ${resolvedItem.father_surname ?? ""} ${resolvedItem.mother_surname ?? ""}`.trim(),
       );
     }
-    if (
-      resolvedItem &&
-      resolvedItem.person_zones &&
-      resolvedItem.person_zones.length > 0
-    ) {
-      setCustomerAddresses(resolvedItem.person_zones);
-      const primary = resolvedItem.person_zones.find((pz) => pz.is_primary);
-      const selectedZone = primary || resolvedItem.person_zones[0];
+    const personId = resolvedItem?.id ?? Number(_value);
+
+    let zones: CustomerAddress[] = [];
+    if (resolvedItem?.person_zones?.length) {
+      zones = mapCustomerZones(resolvedItem.person_zones);
+    } else if (personId) {
+      try {
+        const fetchedZones = await getPersonZones(personId);
+        zones = mapCustomerZones(fetchedZones);
+      } catch (error) {
+        console.error("Error fetching customer zones:", error);
+      }
+    }
+
+    if (zones.length > 0) {
+      setCustomerAddresses(zones);
+      const primary = zones.find((pz) => pz.is_primary);
+      const selectedZone = primary || zones[0];
       form.setValue("person_zone_id", selectedZone.id.toString());
 
       // Limpiar vendedor solo si la zona cambia respecto a la anterior
@@ -341,6 +378,7 @@ export const SaleForm = ({
         currentZoneIdRef.current !== newZoneId
       ) {
         form.setValue("vendedor_id", "");
+        onVendedorChange?.("");
       }
       currentZoneIdRef.current = newZoneId;
     } else {
@@ -348,10 +386,16 @@ export const SaleForm = ({
       form.setValue("person_zone_id", "");
       if (currentZoneIdRef.current !== null) {
         form.setValue("vendedor_id", "");
+        onVendedorChange?.("");
       }
       currentZoneIdRef.current = null;
     }
   };
+
+  useEffect(() => {
+    if (!onVendedorChange) return;
+    onVendedorChange(selectedVendedorId || "");
+  }, [selectedVendedorId, onVendedorChange]);
 
   // Efecto para obtener serie y número automático
   useEffect(() => {

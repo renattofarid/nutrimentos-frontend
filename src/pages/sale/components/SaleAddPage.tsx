@@ -21,10 +21,15 @@ import { format } from "date-fns";
 import { ConfirmationDialog } from "@/components/ConfirmationDialog";
 import { exportBulkTickets } from "../lib/sale.actions";
 
+const LAST_VENDEDOR_STORAGE_KEY = "sale:last-vendedor-id";
+
 export const SaleAddPage = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const [lastVendedorId, setLastVendedorId] = useState<string>(() => {
+    return localStorage.getItem(LAST_VENDEDOR_STORAGE_KEY) || "";
+  });
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [showNextDialog, setShowNextDialog] = useState(false);
   const [pendingSaleId, setPendingSaleId] = useState<number | null>(null);
@@ -42,6 +47,10 @@ export const SaleAddPage = () => {
     onRefreshWarehouses();
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem(LAST_VENDEDOR_STORAGE_KEY, lastVendedorId);
+  }, [lastVendedorId]);
+
   const { createSale } = useSaleStore();
 
   const isLoading = branchesLoading || warehousesLoading;
@@ -50,7 +59,7 @@ export const SaleAddPage = () => {
     branch_id: "",
     customer_id: "",
     warehouse_id: "12",
-    vendedor_id: "",
+    vendedor_id: lastVendedorId,
     document_type: "BOLETA",
     issue_date: format(new Date(), "yyyy-MM-dd"),
     payment_type: "CONTADO",
@@ -63,6 +72,7 @@ export const SaleAddPage = () => {
   const handleSubmit = async (data: SaleSchema) => {
     setIsSubmitting(true);
     try {
+      setLastVendedorId(data.vendedor_id || "");
       const saleId = await createSale(data);
       successToast("Venta creada correctamente");
 
@@ -155,6 +165,7 @@ export const SaleAddPage = () => {
         <SaleForm
           key={formKey}
           defaultValues={getDefaultValues()}
+          onVendedorChange={setLastVendedorId}
           onSubmit={handleSubmit}
           mode="create"
           branches={branches!}

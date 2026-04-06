@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { RowSelectionState } from "@tanstack/react-table";
 import { useTypeUsers } from "../lib/typeUser.hook";
 
 import TypeUserActions from "./TypeUserActions";
@@ -25,11 +26,18 @@ export default function TypeUserPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
+  const [createOpen, setCreateOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { data, meta, isLoading, refetch } = useTypeUsers();
   const [permissionId, setPermissionId] = useState<number | null>(null);
   const [accessDialogOpen, setAccessDialogOpen] = useState(false);
+
+  const selectedId = (() => {
+    const key = Object.entries(rowSelection).find(([, v]) => v)?.[0];
+    return key ? parseInt(key) : null;
+  })();
 
   useEffect(() => {
     refetch({ page, search, per_page });
@@ -40,6 +48,7 @@ export default function TypeUserPage() {
     try {
       await deleteTypeUser(deleteId);
       await refetch();
+      setRowSelection({});
       successToast(SUCCESS_MESSAGE(MODEL, "delete"));
     } catch (error: any) {
       errorToast(error.response.data.message, ERROR_MESSAGE(MODEL, "delete"));
@@ -56,16 +65,21 @@ export default function TypeUserPage() {
 
   return (
     <div className="space-y-2">
-      <TypeUserActions />
+      <TypeUserActions
+        hasSelection={!!selectedId}
+        onNew={() => setCreateOpen(true)}
+        onEdit={() => selectedId && setEditId(selectedId)}
+        onDelete={() => selectedId && setDeleteId(selectedId)}
+        onPermissions={() => selectedId && handleAccessDialog(selectedId)}
+      />
 
       <TypeUserTable
         isLoading={isLoading}
-        columns={TypeUserColumns({
-          onEdit: setEditId,
-          onDelete: setDeleteId,
-          onPermissions: handleAccessDialog,
-        })}
+        columns={TypeUserColumns()}
         data={data || []}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
         onRowDoubleClick={(row) => setEditId(row.id)}
       >
         <TypeUserOptions search={search} setSearch={setSearch} />
@@ -80,7 +94,17 @@ export default function TypeUserPage() {
         totalData={meta?.total || 0}
       />
 
-      {/* Formularios */}
+      {/* Crear */}
+      {createOpen && (
+        <TypeUserModal
+          open={true}
+          onClose={() => setCreateOpen(false)}
+          title={`Nuevo ${MODEL.name}`}
+          mode="create"
+        />
+      )}
+
+      {/* Editar */}
       {editId !== null && (
         <TypeUserModal
           id={editId}
@@ -100,7 +124,6 @@ export default function TypeUserPage() {
             setAccessDialogOpen(o);
             if (!o) {
               setTimeout(() => setPermissionId(null), 300);
-              setAccessDialogOpen(false);
             }
           }}
         />

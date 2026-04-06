@@ -89,7 +89,7 @@ export default function TypeUserModal({
           defaultValues={mapTypeUserToForm(typeUser)}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
-          mode="update"
+          mode={mode}
           onCancel={onClose}
         />
       ) : (

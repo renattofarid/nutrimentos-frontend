@@ -115,7 +115,7 @@ export default function SaleTicketsPrintPage() {
       <GroupFormSection
         title="Filtros"
         icon={Filter}
-        cols={{ sm: 1, md: 2, lg: 4 }}
+        cols={{ sm: 1, md: 2, lg: 5 }}
       >
         <SearchableSelect
           label="Tipo de documento"
@@ -154,40 +154,40 @@ export default function SaleTicketsPrintPage() {
           className="h-8"
         />
 
-        <div className="flex gap-2 items-end">
-          <FormInput
-            label="Número fin"
-            name="numero_fin"
-            type="number"
-            value={searchParams.numero_fin}
-            onChange={(e) =>
-              setSearchParams({ ...searchParams, numero_fin: e.target.value })
-            }
-            placeholder="Ej: 100"
-            className="h-8"
-          />
+        <FormInput
+          label="Número fin"
+          name="numero_fin"
+          type="number"
+          value={searchParams.numero_fin}
+          onChange={(e) =>
+            setSearchParams({ ...searchParams, numero_fin: e.target.value })
+          }
+          placeholder="Ej: 100"
+          className="h-8"
+        />
+
+        <div className="flex justify-end items-end h-full gap-2">
           <Button
             size="sm"
             variant="secondary"
             onClick={handleSearch}
             disabled={isSearching}
-            className="shrink-0"
           >
             {isSearching ? (
               <Loader className="h-4 w-4 animate-spin" />
             ) : (
               <Search className="h-4 w-4" />
             )}
+            Buscar
           </Button>
           <Button
             onClick={handlePrint}
-            disabled={isPrinting}
-            className="shrink-0"
+            disabled={isPrinting || selectedSales.length === 0}
           >
             {isPrinting ? (
-              <Loader className="mr-2 h-4 w-4 animate-spin" />
+              <Loader className="h-4 w-4 animate-spin" />
             ) : (
-              <Printer className="mr-2 h-4 w-4" />
+              <Printer className="h-4 w-4" />
             )}
             Imprimir
             {selectedSales.length > 0 && ` (${selectedSales.length})`}

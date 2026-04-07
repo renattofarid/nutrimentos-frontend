@@ -1,6 +1,6 @@
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Form,
   FormField,
@@ -10,22 +10,22 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Loader, Save, X } from "lucide-react";
+import { Loader, Save, X, ListChecks, FileText, Settings2 } from "lucide-react";
 import {
   creditNoteSchemaCreate,
   type CreditNoteSchema,
-  type CreditNoteDetailSchema,
 } from "../lib/credit-note.schema";
 import { Textarea } from "@/components/ui/textarea";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
+import { ExcelGrid, type ExcelGridColumn } from "@/components/ExcelGrid";
+import { formatNumber } from "@/lib/formatCurrency";
+import { formatDecimalTrunc } from "@/lib/utils";
+import { warningToast } from "@/lib/core.function";
+import { GroupFormSection } from "@/components/GroupFormSection";
 
 interface CreditNoteFormProps {
   defaultValues: Partial<CreditNoteSchema>;
@@ -39,6 +39,42 @@ interface CreditNoteFormProps {
   readOnlySale?: boolean;
 }
 
+interface CreditNoteDetailRow {
+  index: number;
+  sale_detail_id: number;
+  product_id: number;
+  product_code: string;
+  product_name: string;
+  product_weight: number;
+  quantity_sacks: string;
+  quantity_kg: string;
+  unit_price: string;
+  subtotal: number;
+  total_kg: number;
+}
+
+const round2 = (v: number) => Math.round(v * 100) / 100;
+const round6 = (v: number) => Math.round(v * 1_000_000) / 1_000_000;
+
+function calcRow(row: CreditNoteDetailRow): CreditNoteDetailRow {
+  const sacks = parseFloat(row.quantity_sacks) || 0;
+  const kg = parseFloat(row.quantity_kg) || 0;
+  const price = parseFloat(row.unit_price) || 0;
+
+  let subtotal = 0;
+  let total_kg = 0;
+
+  if (sacks > 0) {
+    subtotal = round6(sacks * price);
+    total_kg = round6(sacks * row.product_weight);
+  } else if (kg > 0) {
+    subtotal = round6(kg * price);
+    total_kg = kg;
+  }
+
+  return { ...row, subtotal, total_kg };
+}
+
 export const CreditNoteForm = ({
   defaultValues,
   onSubmit,
@@ -50,6 +86,8 @@ export const CreditNoteForm = ({
   onSaleChange,
   readOnlySale = false,
 }: CreditNoteFormProps) => {
+  const [details, setDetails] = useState<CreditNoteDetailRow[]>([]);
+
   const form = useForm<CreditNoteSchema>({
     resolver: zodResolver(creditNoteSchemaCreate),
     defaultValues: {
@@ -64,53 +102,167 @@ export const CreditNoteForm = ({
     mode: "onChange",
   });
 
-  const { fields, replace } = useFieldArray({
-    control: form.control,
-    name: "details",
-  });
-
-  // Observar cambios en el campo sale_id
   const watchSaleId = form.watch("sale_id");
 
   useEffect(() => {
     if (watchSaleId) {
-      const saleId = Number(watchSaleId);
-      onSaleChange?.(saleId);
+      onSaleChange?.(Number(watchSaleId));
     } else {
       onSaleChange?.(null);
     }
   }, [watchSaleId, onSaleChange]);
 
-  // Cuando cambia la venta seleccionada, cargar sus detalles
+  // Cargar detalles de la venta seleccionada
   useEffect(() => {
     if (selectedSale?.details) {
-      const mappedDetails: CreditNoteDetailSchema[] = selectedSale.details.map(
-        (detail) => ({
+      const rows: CreditNoteDetailRow[] = selectedSale.details.map((detail, i) => {
+        const base: CreditNoteDetailRow = {
+          index: i + 1,
           sale_detail_id: detail.id,
           product_id: detail.product_id,
-          quantity_sacks: detail.quantity_sacks || 0,
-          quantity_kg: detail.quantity_kg || 0,
-          unit_price: detail.unit_price,
-          selected: false,
-        }),
-      );
-      replace(mappedDetails);
+          product_code: detail.product?.codigo ?? "",
+          product_name: detail.product?.name ?? "",
+          product_weight: detail.product?.weight ?? 0,
+          quantity_sacks: (detail.quantity_sacks ?? 0).toString(),
+          quantity_kg: (detail.quantity_kg ?? 0).toString(),
+          unit_price: parseFloat(detail.unit_price?.toString() ?? "0").toString(),
+          subtotal: 0,
+          total_kg: 0,
+        };
+        return calcRow(base);
+      });
+      setDetails(rows);
+      syncFormDetails(rows);
     } else {
-      replace([]);
+      setDetails([]);
+      form.setValue("details", []);
     }
-  }, [selectedSale, replace]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSale]);
 
-  // Handler para transformar los datos antes de enviar
+  const syncFormDetails = (rows: CreditNoteDetailRow[]) => {
+    form.setValue(
+      "details",
+      rows.map((r) => ({
+        sale_detail_id: r.sale_detail_id,
+        product_id: r.product_id,
+        quantity_sacks: parseFloat(r.quantity_sacks) || 0,
+        quantity_kg: parseFloat(r.quantity_kg) || 0,
+        unit_price: parseFloat(r.unit_price) || 0,
+      })) as any,
+    );
+  };
+
+  const handleCellChange = (index: number, field: string, value: string) => {
+    setDetails((prev) => {
+      const updated = [...prev];
+      const row = calcRow({ ...updated[index], [field]: value });
+      updated[index] = row;
+      syncFormDetails(updated);
+      return updated;
+    });
+  };
+
+  const handleRemoveRow = (index: number) => {
+    setDetails((prev) => {
+      const updated = prev
+        .filter((_, i) => i !== index)
+        .map((r, i) => ({ ...r, index: i + 1 }));
+      syncFormDetails(updated);
+      return updated;
+    });
+  };
+
+  const handleAddRow = () => {
+    warningToast("No se pueden agregar nuevos productos a una nota de crédito");
+  };
+
+  // Totales
+  const grossTotal = round2(details.reduce((s, r) => s + r.subtotal, 0));
+  const igv = round2((grossTotal / 1.18) * 0.18);
+  const netSubtotal = round2(grossTotal - igv);
+  const totalKg = round6(details.reduce((s, r) => s + r.total_kg, 0));
+
+  const currencySymbol = selectedSale?.currency === "USD" ? "$" : "S/.";
+
+  const gridColumns: ExcelGridColumn<CreditNoteDetailRow>[] = [
+    {
+      id: "index",
+      header: "#",
+      type: "readonly",
+      width: "40px",
+      render: (row) => (
+        <div className="h-full flex items-center justify-center px-2 py-1 text-sm text-muted-foreground">
+          {row.index}
+        </div>
+      ),
+    },
+    {
+      id: "product_code",
+      header: "Código",
+      type: "readonly",
+      width: "100px",
+      render: (row) => (
+        <div className="h-full flex items-center px-2 py-1 text-sm font-mono bg-muted/30">
+          {row.product_code || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "product_name",
+      header: "Descripción",
+      type: "readonly",
+      width: "320px",
+      render: (row) => (
+        <div className="h-full flex items-center px-2 py-1 text-sm bg-muted/30">
+          {row.product_name || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "quantity_sacks",
+      header: "Cant. Sacos",
+      type: "number",
+      width: "110px",
+      accessor: "quantity_sacks",
+    },
+    {
+      id: "quantity_kg",
+      header: "Cant. Kg",
+      type: "number",
+      width: "100px",
+      accessor: "quantity_kg",
+    },
+    {
+      id: "unit_price",
+      header: "Precio",
+      type: "number",
+      width: "110px",
+      accessor: "unit_price",
+    },
+    {
+      id: "subtotal",
+      header: "Subtotal",
+      type: "readonly",
+      width: "120px",
+      render: (row) => (
+        <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold">
+          {row.subtotal > 0 ? `${currencySymbol} ${formatNumber(row.subtotal)}` : "-"}
+        </div>
+      ),
+    },
+  ];
+
   const handleSubmit = (data: CreditNoteSchema) => {
-    // Filtrar solo los detalles seleccionados y remover el campo 'selected'
-    const filteredDetails = data.details
-      .filter((detail) => detail.selected)
-      .map(({ selected, ...rest }) => rest);
-
-    // Enviar los datos transformados
     onSubmit({
       ...data,
-      details: filteredDetails as any,
+      details: details.map((r) => ({
+        sale_detail_id: r.sale_detail_id,
+        product_id: r.product_id,
+        quantity_sacks: parseFloat(r.quantity_sacks) || 0,
+        quantity_kg: parseFloat(r.quantity_kg) || 0,
+        unit_price: parseFloat(r.unit_price) || 0,
+      })) as any,
     });
   };
 
@@ -118,9 +270,9 @@ export const CreditNoteForm = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-4 w-full"
+        className="space-y-2 w-full"
       >
-        {/* Form Actions */}
+        {/* Acciones */}
         <div className="flex items-center gap-2">
           <Button
             size="sm"
@@ -135,10 +287,19 @@ export const CreditNoteForm = ({
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-sidebar p-4 rounded-lg">
+        {/* Campos del encabezado */}
+        <GroupFormSection
+          title="Información General"
+          icon={Settings2}
+          cols={{ sm: 1, md: 2, lg: 4 }}
+          bordered
+          gap="gap-2"
+        >
           {readOnlySale ? (
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium">Venta</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Venta
+              </span>
               <div className="flex items-center gap-2 h-9 px-3 rounded-md border bg-muted text-sm text-muted-foreground">
                 {selectedSale
                   ? `${selectedSale.document_type} ${selectedSale.serie}-${selectedSale.numero}`
@@ -149,46 +310,61 @@ export const CreditNoteForm = ({
             <FormSelect
               control={form.control}
               name="sale_id"
-              label="Venta"
+              label="VENTA"
               placeholder="Seleccione una venta"
               options={sales}
+              uppercase
             />
           )}
 
           <DatePickerFormField
             control={form.control}
             name="issue_date"
-            label="Fecha de Emisión"
+            label="FECHA DE EMISIÓN"
             placeholder="Seleccione la fecha"
           />
 
           <FormSelect
             control={form.control}
             name="credit_note_motive_id"
-            label="Motivo"
+            label="MOTIVO"
             placeholder="Seleccione un motivo"
             options={motives}
+            uppercase
           />
 
           <FormSwitch
             control={form.control}
             name="affects_stock"
-            label="Afecta Stock"
+            label="AFECTA STOCK"
             text="Indica si la nota de crédito afecta el inventario"
           />
 
-          <div className="md:col-span-2">
+          {selectedSale && (
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Cliente
+              </span>
+              <div className="flex items-center h-9 px-3 rounded-md border bg-muted text-sm truncate">
+                {selectedSale.customer.business_name || selectedSale.customer.names}
+              </div>
+            </div>
+          )}
+
+          <div className="md:col-span-2 lg:col-span-2">
             <FormField
               control={form.control}
               name="observations"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
+                  <FormLabel className="text-xs font-semibold uppercase tracking-wider">
+                    Observaciones
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Ingrese observaciones adicionales"
                       className="resize-none"
-                      rows={4}
+                      rows={2}
                       {...field}
                     />
                   </FormControl>
@@ -197,261 +373,83 @@ export const CreditNoteForm = ({
               )}
             />
           </div>
-        </div>
+        </GroupFormSection>
 
-        {/* Resumen de la venta seleccionada */}
-        {selectedSale && (
-          <Card className="bg-muted/50">
-            <CardHeader>
-              <CardTitle className="text-lg">Resumen de la Venta</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Documento</p>
-                  <p className="font-semibold">
-                    {selectedSale.document_type} {selectedSale.serie}-
-                    {selectedSale.numero}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Fecha</p>
-                  <p className="font-semibold">
-                    {new Date(selectedSale.issue_date).toLocaleDateString(
-                      "es-PE",
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Cliente</p>
-                  <p className="font-semibold">
-                    {selectedSale.customer.business_name ||
-                      selectedSale.customer.names}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedSale.customer.number_document}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Estado</p>
-                  <Badge
-                    color={
-                      selectedSale.status === "PAGADA" ? "default" : "secondary"
-                    }
-                  >
-                    {selectedSale.status}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Subtotal</p>
-                  <p className="font-semibold">
-                    {selectedSale.currency === "USD" ? "$" : "S/."}{" "}
-                    {parseFloat(selectedSale.subtotal.toString()).toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">IGV</p>
-                  <p className="font-semibold">
-                    {selectedSale.currency === "USD" ? "$" : "S/."}{" "}
-                    {parseFloat(selectedSale.tax_amount.toString()).toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total</p>
-                  <p className="font-bold text-lg">
-                    {selectedSale.currency === "USD" ? "$" : "S/."}{" "}
-                    {parseFloat(selectedSale.total_amount.toString()).toFixed(
-                      2,
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Tipo de Pago</p>
-                  <Badge color="secondary">{selectedSale.payment_type}</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Grid de detalles */}
+        <GroupFormSection
+          title="Detalles de la Nota de Crédito"
+          icon={ListChecks}
+          cols={{ sm: 1 }}
+          bordered
+        >
+          <ExcelGrid<CreditNoteDetailRow>
+            columns={gridColumns}
+            data={details}
+            onAddRow={handleAddRow}
+            onRemoveRow={handleRemoveRow}
+            onCellChange={handleCellChange}
+            emptyMessage={
+              selectedSale
+                ? "Esta venta no tiene productos"
+                : "Seleccione una venta para cargar los productos"
+            }
+            minHeight="180px"
+          />
 
-        {/* Detalles seleccionables para la nota de crédito */}
-        {fields.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">
-                Detalles de la Nota de Crédito
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Seleccione los productos y ajuste las cantidades/precios para
-                incluir en la nota de crédito
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {fields.map((field, index) => {
-                  const detail = selectedSale?.details[index];
-                  if (!detail) return null;
+          {(form.formState.errors.details as any)?.message && (
+            <p className="text-sm text-destructive">
+              {(form.formState.errors.details as any).message}
+            </p>
+          )}
+        </GroupFormSection>
 
-                  return (
-                    <div
-                      key={field.id}
-                      className="border rounded-lg p-4 space-y-3"
-                    >
-                      <div className="flex items-start gap-3">
-                        <FormField
-                          control={form.control}
-                          name={`details.${index}.selected`}
-                          render={({ field: checkboxField }) => (
-                            <FormItem className="flex items-center space-y-0 pt-2">
-                              <FormControl>
-                                <Checkbox
-                                  checked={checkboxField.value}
-                                  onCheckedChange={checkboxField.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
+        {/* Resumen */}
+        <GroupFormSection
+          title="Resumen"
+          icon={FileText}
+          cols={{ sm: 1, md: 2, lg: 6 }}
+          bordered
+        >
+          {/* Peso Total */}
+          <div className="flex gap-2 items-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              Peso Total
+            </div>
+            <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+              {formatDecimalTrunc(totalKg, 2)} kg
+            </div>
+          </div>
 
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <p className="font-semibold">
-                                {detail.product.name}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Código: {detail.product.codigo} | Unidad:{" "}
-                                {detail.product.unit}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-sm text-muted-foreground">
-                                Total Original
-                              </p>
-                              <p className="font-bold">
-                                {selectedSale.currency === "USD" ? "$" : "S/."}{" "}
-                                {parseFloat(detail.total.toString()).toFixed(2)}
-                              </p>
-                            </div>
-                          </div>
+          {/* Subtotal */}
+          <div className="flex gap-2 items-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              Subtotal
+            </div>
+            <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+              {currencySymbol} {formatNumber(netSubtotal)}
+            </div>
+          </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <FormField
-                              control={form.control}
-                              name={`details.${index}.quantity_sacks`}
-                              render={({ field: qtySacksField }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs">
-                                    Cantidad Sacos
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      placeholder="0"
-                                      {...qtySacksField}
-                                      onChange={(e) =>
-                                        qtySacksField.onChange(
-                                          parseFloat(e.target.value) || 0,
-                                        )
-                                      }
-                                      disabled={
-                                        !form.watch(`details.${index}.selected`)
-                                      }
-                                    />
-                                  </FormControl>
-                                  <p className="text-xs text-muted-foreground">
-                                    Máx: {detail.quantity_sacks}
-                                  </p>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+          {/* IGV */}
+          <div className="flex gap-2 items-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              IGV (18%)
+            </div>
+            <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
+              {currencySymbol} {formatNumber(igv)}
+            </div>
+          </div>
 
-                            <FormField
-                              control={form.control}
-                              name={`details.${index}.quantity_kg`}
-                              render={({ field: qtyKgField }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs">
-                                    Cantidad Kg
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      placeholder="0"
-                                      {...qtyKgField}
-                                      onChange={(e) =>
-                                        qtyKgField.onChange(
-                                          parseFloat(e.target.value) || 0,
-                                        )
-                                      }
-                                      disabled={
-                                        !form.watch(`details.${index}.selected`)
-                                      }
-                                    />
-                                  </FormControl>
-                                  <p>
-                                    <span className="text-xs text-muted-foreground">
-                                      Máx: {detail.quantity_kg}
-                                    </span>
-                                  </p>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name={`details.${index}.unit_price`}
-                              render={({ field: priceField }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs">
-                                    Precio Unitario
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      placeholder="0.00"
-                                      {...priceField}
-                                      onChange={(e) =>
-                                        priceField.onChange(
-                                          parseFloat(e.target.value) || 0,
-                                        )
-                                      }
-                                      disabled={
-                                        !form.watch(`details.${index}.selected`)
-                                      }
-                                    />
-                                  </FormControl>
-                                  <p className="text-xs text-muted-foreground">
-                                    Original:{" "}
-                                    {parseFloat(
-                                      detail.unit_price.toString(),
-                                    ).toFixed(2)}
-                                  </p>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              {form.formState.errors.details?.root && (
-                <p className="text-sm text-destructive mt-2">
-                  {form.formState.errors.details.root.message}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
+          {/* Total */}
+          <div className="flex gap-2 items-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              Total
+            </div>
+            <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+              {currencySymbol} {formatNumber(grossTotal)}
+            </div>
+          </div>
+        </GroupFormSection>
       </form>
     </Form>
   );

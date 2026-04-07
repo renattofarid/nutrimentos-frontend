@@ -31,6 +31,8 @@ export default function DetailedSalesReportPage() {
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
+  const today = new Date().toISOString().split("T")[0];
+
   const form = useForm<FilterFormValues>({
     defaultValues: {
       branch_id: "",
@@ -39,8 +41,8 @@ export default function DetailedSalesReportPage() {
       payment_type: "",
       user_id: "",
       warehouse_id: "",
-      start_date: "",
-      end_date: "",
+      start_date: today,
+      end_date: today,
     },
   });
 
@@ -207,18 +209,21 @@ export default function DetailedSalesReportPage() {
                 })}
               />
 
-              <DatePickerFormField
-                control={form.control}
-                name="start_date"
-                label="Fecha Inicio"
-                placeholder="Seleccionar fecha"
-              />
-              <DatePickerFormField
-                control={form.control}
-                name="end_date"
-                label="Fecha Fin"
-                placeholder="Seleccionar fecha"
-              />
+              <div className="flex justify-start gap-2">
+                <DatePickerFormField
+                  control={form.control}
+                  name="start_date"
+                  label="Del"
+                  placeholder="Seleccionar fecha"
+                />
+                <DatePickerFormField
+                  control={form.control}
+                  name="end_date"
+                  label="Al"
+                  placeholder="Seleccionar fecha"
+                  autoLabelWidth
+                />
+              </div>
 
               <div className="flex justify-end gap-2 pt-1">
                 <ExportButtons

@@ -7,7 +7,6 @@ export const creditNoteDetailSchema = z.object({
   quantity_sacks: z.number().min(0, "La cantidad no puede ser negativa"),
   quantity_kg: z.number().min(0, "La cantidad no puede ser negativa"),
   unit_price: z.number().min(0, "El precio no puede ser negativo"),
-  selected: z.boolean(),
 });
 
 export const creditNoteSchemaCreate = z.object({
@@ -20,13 +19,7 @@ export const creditNoteSchemaCreate = z.object({
     .max(500, "Las observaciones no pueden exceder 500 caracteres")
     .optional()
     .or(z.literal("")),
-  details: z
-    .array(creditNoteDetailSchema)
-    .min(1, "Debe incluir al menos un detalle")
-    .refine(
-      (details) => details.some((d) => d.selected),
-      "Debe seleccionar al menos un detalle"
-    ),
+  details: z.array(creditNoteDetailSchema).min(1, "Debe incluir al menos un detalle"),
 });
 
 export const creditNoteSchemaUpdate = creditNoteSchemaCreate.partial();

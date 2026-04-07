@@ -7,7 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader, Save, AlertCircle, Search } from "lucide-react";
+import { Loader, Save, AlertCircle, Search, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import PageWrapper from "@/components/PageWrapper";
 import { DataTable } from "@/components/DataTable";
@@ -23,13 +25,13 @@ import { DELIVERY_SHEET } from "../lib/deliverysheet.interface";
 import {
   settlementFormSchema,
   type SettlementFormSchema,
-  SettlementHeader,
   DeliverySheetInfo,
   getSaleTableColumns,
   SaleMobileCard,
   SaleTableWithNotes,
 } from "./settlement";
 import { errorToast, successToast } from "@/lib/core.function";
+import { Separator } from "@/components/ui/separator";
 
 export default function SettlementPage() {
   const navigate = useNavigate();
@@ -207,6 +209,33 @@ export default function SettlementPage() {
     }));
   }, [deliverySheet]);
 
+  const salesValues = form.watch("sales");
+
+  const totalPendiente = useMemo(() => {
+    if (!deliverySheet?.sheet_sales) return 0;
+    return deliverySheet.sheet_sales.reduce((sum, sheetSale) => {
+      const creditNotesTotal = sheetSale.sale.credit_notes_total_raw || 0;
+      const currentAmount = parseFormattedNumber(sheetSale.current_amount);
+      return sum + (currentAmount - creditNotesTotal);
+    }, 0);
+  }, [deliverySheet]);
+
+  const totalOriginal = useMemo(() => {
+    if (!deliverySheet?.sheet_sales) return 0;
+    return deliverySheet.sheet_sales.reduce(
+      (sum, s) => sum + parseFormattedNumber(s.original_amount),
+      0,
+    );
+  }, [deliverySheet]);
+
+  const totalPagando = useMemo(() => {
+    if (!salesValues?.length) return 0;
+    return salesValues.reduce(
+      (sum, sale) => sum + parseFloat(sale.payment_amount || "0"),
+      0,
+    );
+  }, [salesValues]);
+
   const columns = useMemo(
     () => getSaleTableColumns(form as any, expandedNotes, toggleNote),
     [form, expandedNotes],
@@ -216,45 +245,95 @@ export default function SettlementPage() {
     <SaleMobileCard sale={sale} form={form as any} />
   );
 
+  const totalsFooter = deliverySheet ? (
+    <TableRow className="font-semibold text-xs">
+      <TableCell colSpan={3} className="text-right text-muted-foreground">
+        TOTALES
+      </TableCell>
+      <TableCell>
+        <Badge variant="outline" className="font-mono">
+          S/. {totalOriginal.toFixed(2)}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        <Badge className="font-mono text-xs font-semibold">
+          S/. {totalPendiente.toFixed(2)}
+        </Badge>
+      </TableCell>
+      <TableCell colSpan={4} />
+      <TableCell>
+        <span className="font-mono text-primary font-bold">
+          S/. {totalPagando.toFixed(2)}
+        </span>
+      </TableCell>
+      <TableCell />
+    </TableRow>
+  ) : null;
+
   return (
     <PageWrapper>
-      <div className="space-y-6">
-        <SettlementHeader
-          sheetNumber={deliverySheet?.sheet_number}
-          onBack={() => navigate(DELIVERY_SHEET.ROUTE)}
-        />
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs md:text-sm font-medium text-muted-foreground">
-            Número de Planilla
-          </label>
-          <div className="flex gap-2 items-center">
-            <Input
-              placeholder="Ej: PL-0001"
-              value={sheetNumberInput}
-              onChange={(e) => {
-                setSheetNumberInput(e.target.value);
-                setSearchError("");
-              }}
-              onKeyDown={(e) => e.key === "Enter" && handleSearchSheet()}
-              className="h-7 md:h-8 text-xs md:text-sm max-w-64"
-            />
+      <div className="space-y-4">
+        {/* Toolbar */}
+        <div className="flex items-center justify-start mb-1 pb-1 border-b w-full">
+          <div className="flex items-center gap-1">
+            <Button
+              type="submit"
+              form="settlement-form"
+              size="sm"
+              colorIcon="emerald"
+              variant="outline"
+              disabled={isSubmitting || !deliverySheet}
+            >
+              {isSubmitting ? (
+                <Loader className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Save className="h-3.5 w-3.5" />
+              )}
+              {isSubmitting ? "Guardando..." : "Guardar Rendición"}
+            </Button>
             <Button
               type="button"
-              variant="outline"
               size="sm"
-              onClick={handleSearchSheet}
-              className="gap-1.5"
+              variant="outline"
+              onClick={() => navigate(DELIVERY_SHEET.ROUTE)}
+              disabled={isSubmitting}
             >
-              <Search className="h-3.5 w-3.5" />
-              Buscar
+              <X />
+              Cancelar
             </Button>
           </div>
-          {searchError && (
-            <p className="text-xs font-medium text-destructive">
-              {searchError}
-            </p>
-          )}
+          <div className="h-8 px-2">
+            <Separator orientation="vertical" className="h-full" />
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Ej: PL-0001"
+                value={sheetNumberInput}
+                onChange={(e) => {
+                  setSheetNumberInput(e.target.value);
+                  setSearchError("");
+                }}
+                onKeyDown={(e) => e.key === "Enter" && handleSearchSheet()}
+                className="h-7 md:h-8 text-xs md:text-sm w-40"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSearchSheet}
+                className="gap-1.5"
+              >
+                <Search className="h-3.5 w-3.5" />
+                Buscar
+              </Button>
+            </div>
+            {searchError && (
+              <p className="text-xs font-medium text-destructive">
+                {searchError}
+              </p>
+            )}
+          </div>
         </div>
 
         {selectedId && isLoading && (
@@ -279,6 +358,7 @@ export default function SettlementPage() {
         {selectedId && !isLoading && deliverySheet && errors.length === 0 && (
           <Form {...form}>
             <form
+              id="settlement-form"
               onSubmit={form.handleSubmit(handleSubmit)}
               className="space-y-6"
             >
@@ -299,37 +379,9 @@ export default function SettlementPage() {
                   mobileCardRender={mobileCardRender}
                   variant="outline"
                   isVisibleColumnFilter={false}
+                  footer={totalsFooter}
                 />
               </SaleTableWithNotes>
-
-              <div className="flex flex-col sm:flex-row justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate(DELIVERY_SHEET.ROUTE)}
-                  disabled={isSubmitting}
-                  className="w-full sm:w-auto"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full sm:w-auto"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader className="mr-2 h-4 w-4 animate-spin" />
-                      Guardando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Guardar Rendición
-                    </>
-                  )}
-                </Button>
-              </div>
             </form>
           </Form>
         )}

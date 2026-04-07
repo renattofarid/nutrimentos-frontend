@@ -81,14 +81,20 @@ type SearchField =
   | "phone"
   | "email";
 
-const SEARCH_FIELD_OPTIONS: { value: SearchField; label: string }[] = [
-  { value: "search", label: "General" },
-  { value: "names", label: "Nombre" },
-  { value: "number_document", label: "N° Documento" },
-  { value: "address", label: "Dirección" },
-  { value: "zone_id", label: "Zona" },
-  { value: "phone", label: "Teléfono" },
-  { value: "email", label: "Correo" },
+interface SearchFieldOption {
+  id: string;
+  apiField: SearchField;
+  label: string;
+}
+
+const SEARCH_FIELD_OPTIONS: SearchFieldOption[] = [
+  { id: "search", apiField: "search", label: "General" },
+  { id: "search_nombre", apiField: "search", label: "Nombre" },
+  { id: "number_document", apiField: "number_document", label: "N° Documento" },
+  { id: "address", apiField: "address", label: "Dirección" },
+  { id: "zone_id", apiField: "zone_id", label: "Zona" },
+  { id: "phone", apiField: "phone", label: "Teléfono" },
+  { id: "email", apiField: "email", label: "Correo" },
 ];
 
 export function ClientManagementModal({
@@ -101,7 +107,7 @@ export function ClientManagementModal({
 }: ClientManagementModalProps) {
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [searchField, setSearchField] = useState<SearchField>("search");
+  const [searchField, setSearchField] = useState<string>("search");
   const [search, setSearch] = useState(selectedClientName ?? "");
   const [debouncedSearch, setDebouncedSearch] = useState(selectedClientName ?? "");
   const [page, setPage] = useState(1);
@@ -154,8 +160,10 @@ export function ClientManagementModal({
     return () => clearTimeout(timer);
   }, [zoneSearch]);
 
+  const currentOption = SEARCH_FIELD_OPTIONS.find((o) => o.id === searchField);
+
   // Reset search values when field changes
-  const handleSearchFieldChange = (field: SearchField) => {
+  const handleSearchFieldChange = (field: string) => {
     setSearchField(field);
     setSearch("");
     setDebouncedSearch("");
@@ -170,7 +178,7 @@ export function ClientManagementModal({
   if (searchField === "zone_id") {
     if (selectedZoneId) clientParams.personZones$zone_id = selectedZoneId;
   } else if (debouncedSearch) {
-    clientParams[searchField] = debouncedSearch;
+    clientParams[currentOption?.apiField ?? searchField] = debouncedSearch;
   }
 
   const { data, isLoading, refetch } = useClients(clientParams);
@@ -279,14 +287,14 @@ export function ClientManagementModal({
             {/* Field selector */}
             <Select
               value={searchField}
-              onValueChange={(v) => handleSearchFieldChange(v as SearchField)}
+              onValueChange={(v) => handleSearchFieldChange(v)}
             >
               <SelectTrigger className="w-36 h-9 shrink-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {SEARCH_FIELD_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
+                  <SelectItem key={opt.id} value={opt.id}>
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -394,7 +402,7 @@ export function ClientManagementModal({
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
-                  placeholder={`Buscar por ${SEARCH_FIELD_OPTIONS.find((o) => o.value === searchField)?.label.toLowerCase()}...`}
+                  placeholder={`Buscar por ${currentOption?.label.toLowerCase()}...`}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className={search ? "pl-9 pr-9 h-9" : "pl-9 h-9"}

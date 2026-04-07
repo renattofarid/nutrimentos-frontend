@@ -55,6 +55,7 @@ interface DatePickerFormFieldProps<T extends FieldValues> {
   onChange?: (date: Date | undefined) => void;
   endMonth?: Date;
   horizontalField?: boolean; // Nueva prop para forzar layout horizontal
+  autoLabelWidth?: boolean; // Omite el ancho fijo w-48 en layout horizontal
 }
 
 export function DatePickerFormField<T extends FieldValues>({
@@ -70,6 +71,7 @@ export function DatePickerFormField<T extends FieldValues>({
   onChange,
   endMonth,
   horizontalField = false,
+  autoLabelWidth = false,
 }: DatePickerFormFieldProps<T>) {
   const isMobile = useIsMobile();
   const { field, fieldState } = useController({ control, name });
@@ -190,8 +192,9 @@ export function DatePickerFormField<T extends FieldValues>({
           <FormLabel
             className={cn(
               horizontal &&
+                !autoLabelWidth &&
                 "w-48 shrink-0 justify-end text-right font-bold uppercase",
-              horizontalField &&
+              (autoLabelWidth || horizontalField) &&
                 "shrink-0 justify-end text-right font-bold uppercase",
             )}
           >

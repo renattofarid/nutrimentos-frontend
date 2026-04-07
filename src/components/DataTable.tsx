@@ -14,6 +14,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -108,6 +109,7 @@ interface DataTableProps<TData, TValue> extends VariantProps<
   getRowId?: (originalRow: TData, index: number) => string;
   onRowClick?: (row: TData) => void;
   onRowDoubleClick?: (row: TData) => void;
+  footer?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -130,6 +132,7 @@ export function DataTable<TData, TValue>({
   getRowId,
   onRowClick,
   onRowDoubleClick,
+  footer,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -355,6 +358,7 @@ export function DataTable<TData, TValue>({
                 </TableRow>
               )}
             </TableBody>
+            {footer && <TableFooter>{footer}</TableFooter>}
           </Table>
         </div>
       </div>

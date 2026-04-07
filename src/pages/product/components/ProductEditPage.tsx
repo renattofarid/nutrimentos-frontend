@@ -13,11 +13,8 @@ import {
 } from "@/lib/core.function";
 import { PRODUCT, type ProductResource } from "../lib/product.interface";
 import { useProductStore } from "../lib/product.store";
-import { useAllCategories } from "@/pages/category/lib/category.hook";
-import { useAllBrands } from "@/pages/brand/lib/brand.hook";
 import { useAllUnits } from "@/pages/unit/lib/unit.hook";
 import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
-import { useAllNationalities } from "@/pages/nationality/lib/nationality.hook";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import FormSkeleton from "@/components/FormSkeleton";
@@ -32,11 +29,8 @@ export default function ProductEditPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
   const { data: companies } = useAllCompanies();
-  const { data: categories } = useAllCategories();
-  const { data: brands } = useAllBrands();
   const { data: units } = useAllUnits();
   const { data: productTypes } = useAllProductTypes();
-  const { data: nationalities } = useAllNationalities();
   const { data: suppliers } = useAllPersons();
 
   useEffect(() => {
@@ -66,22 +60,13 @@ export default function ProductEditPage() {
     codigo: product.codigo,
     name: product.name,
     company_id: product.company_id.toString(),
-    category_id: product.category_id.toString(),
     product_type_id: product.product_type_id.toString(),
-    brand_id: product.brand_id.toString(),
     unit_id: product.unit_id.toString(),
-    purchase_price: product.purchase_price?.toString() || "",
-    sale_price: product.sale_price?.toString() || "",
     is_taxed: product.is_taxed === 1,
     supplier_id: product.supplier_id.toString(),
-    nationality_id: product.nationality_id?.toString() || "",
-    comment: product.comment || "",
     weight: product.weight?.toString() || "0",
     is_kg: product.is_kg === 1,
     price_per_kg: product.price_per_kg?.toString() || "0",
-    commission_percentage: product.commission_percentage?.toString() || "",
-    accounting_cost: product.accounting_cost?.toString() || "",
-    inventory_cost: product.inventory_cost?.toString() || "",
   });
 
   const handleSubmit = async (data: ProductSchema) => {
@@ -112,15 +97,7 @@ export default function ProductEditPage() {
   };
 
   const isLoading =
-    isLoadingProduct ||
-    !categories ||
-    !brands ||
-    !units ||
-    !productTypes ||
-    !nationalities ||
-    !suppliers ||
-    !companies ||
-    !product;
+    isLoadingProduct || !units || !productTypes || !suppliers || !companies || !product;
 
   return (
     <PageWrapper size="3xl">
@@ -133,11 +110,8 @@ export default function ProductEditPage() {
           isSubmitting={isSubmitting}
           mode="update"
           companies={companies}
-          categories={categories}
-          brands={brands}
           units={units}
           productTypes={productTypes}
-          nationalities={nationalities}
           suppliers={suppliers}
           onCancel={() => navigate(ROUTE)}
         />

@@ -27,7 +27,7 @@ export function useZoneSearch(params?: Record<string, unknown>) {
     queryKey: [QUERY_KEY, params],
     queryFn: () =>
       getZone({
-        params: { params },
+        params,
       }),
   });
 }

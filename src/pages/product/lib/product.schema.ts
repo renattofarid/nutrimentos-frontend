@@ -11,28 +11,10 @@ export const productSchemaCreate = z.object({
     .min(1, { message: "El nombre es requerido" })
     .max(255, { message: "El nombre no puede exceder 255 caracteres" }),
   company_id: requiredStringId("Debe seleccionar una empresa"),
-  category_id: requiredStringId("Debe seleccionar una categoría"),
   product_type_id: requiredStringId("Debe seleccionar un tipo de producto"),
-  brand_id: requiredStringId("Debe seleccionar una marca"),
   unit_id: requiredStringId("Debe seleccionar una unidad"),
-  purchase_price: z
-    .string()
-    .optional()
-    .default("")
-    .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {
-      message: "Debe ser un número válido mayor o igual a 0",
-    }),
-  sale_price: z
-    .string()
-    .optional()
-    .default("")
-    .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {
-      message: "Debe ser un número válido mayor o igual a 0",
-    }),
   is_taxed: z.boolean().default(true),
   supplier_id: requiredStringId("Debe seleccionar un proveedor"),
-  nationality_id: z.string().optional().default(""),
-  comment: z.string().optional().default(""),
   weight: z.coerce
     .string()
     .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) > 0), {
@@ -42,27 +24,6 @@ export const productSchemaCreate = z.object({
   price_per_kg: z.coerce
     .string()
     .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) > 0), {
-      message: "Debe ser un número válido mayor o igual a 0",
-    }),
-  commission_percentage: z
-    .string()
-    .optional()
-    .default("")
-    .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {
-      message: "Debe ser un número válido mayor o igual a 0",
-    }),
-  accounting_cost: z
-    .string()
-    .optional()
-    .default("")
-    .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {
-      message: "Debe ser un número válido mayor o igual a 0",
-    }),
-  inventory_cost: z
-    .string()
-    .optional()
-    .default("")
-    .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {
       message: "Debe ser un número válido mayor o igual a 0",
     }),
 });

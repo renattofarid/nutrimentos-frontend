@@ -3,9 +3,7 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { FormInput } from "@/components/FormInput";
 import { Button } from "@/components/ui/button";
 import {
@@ -78,6 +76,8 @@ export const ProductForm = ({
           <Button
             size="sm"
             type="submit"
+            variant="outline"
+            colorIcon="green"
             disabled={isSubmitting || !form.formState.isValid}
           >
             {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
@@ -166,7 +166,6 @@ export const ProductForm = ({
             label="Impuestos"
             text="¿Está Gravado?"
           />
-
         </GroupFormSection>
 
         {/* Peso y Precio por Kg */}
@@ -203,7 +202,6 @@ export const ProductForm = ({
             placeholder="0.00"
           />
         </GroupFormSection>
-
       </form>
     </Form>
   );

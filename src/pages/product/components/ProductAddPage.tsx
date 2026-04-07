@@ -13,11 +13,8 @@ import {
 } from "@/lib/core.function";
 import { PRODUCT } from "../lib/product.interface";
 import { useProductStore } from "../lib/product.store";
-import { useAllCategories } from "@/pages/category/lib/category.hook";
-import { useAllBrands } from "@/pages/brand/lib/brand.hook";
 import { useAllUnits } from "@/pages/unit/lib/unit.hook";
 import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
-import { useAllNationalities } from "@/pages/nationality/lib/nationality.hook";
 import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import FormSkeleton from "@/components/FormSkeleton";
@@ -31,11 +28,8 @@ export default function ProductAddPage() {
   const { createProduct } = useProductStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { data: companies } = useAllCompanies();
-  const { data: categories } = useAllCategories();
-  const { data: brands } = useAllBrands();
   const { data: units } = useAllUnits();
   const { data: productTypes } = useAllProductTypes();
-  const { data: nationalities } = useAllNationalities();
   const { data: suppliers } = useAllPersons({
     role_names: [SUPPLIER_ROLE_CODE],
   });
@@ -43,22 +37,13 @@ export default function ProductAddPage() {
     codigo: "",
     name: "",
     company_id: undefined,
-    category_id: undefined,
     product_type_id: undefined,
-    brand_id: undefined,
     unit_id: undefined,
     is_taxed: false,
     is_kg: false,
-    purchase_price: "",
-    sale_price: "",
     supplier_id: undefined,
-    nationality_id: undefined,
-    comment: "",
     weight: "0",
     price_per_kg: "0",
-    commission_percentage: "",
-    accounting_cost: "",
-    inventory_cost: "",
   });
 
   const handleSubmit = async (data: ProductSchema) => {
@@ -86,14 +71,7 @@ export default function ProductAddPage() {
     }
   };
 
-  const isLoading =
-    !categories ||
-    !brands ||
-    !units ||
-    !productTypes ||
-    !nationalities ||
-    !suppliers ||
-    !companies;
+  const isLoading = !units || !productTypes || !suppliers || !companies;
 
   return (
     <PageWrapper size="3xl">
@@ -106,11 +84,8 @@ export default function ProductAddPage() {
           isSubmitting={isSubmitting}
           mode="create"
           companies={companies}
-          categories={categories}
-          brands={brands}
           units={units}
           productTypes={productTypes}
-          nationalities={nationalities}
           suppliers={suppliers}
           onCancel={() => navigate(ROUTE)}
         />

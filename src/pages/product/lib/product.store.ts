@@ -39,29 +39,16 @@ interface ProductStore {
 const createFormData = (data: ProductSchema): FormData => {
   const formData = new FormData();
 
-  // Required fields
   formData.append("codigo", data.codigo);
   formData.append("name", data.name);
   formData.append("company_id", data.company_id.toString());
-  formData.append("category_id", data.category_id.toString());
   formData.append("product_type_id", data.product_type_id.toString());
-  formData.append("brand_id", data.brand_id.toString());
   formData.append("unit_id", data.unit_id.toString());
   formData.append("is_taxed", data.is_taxed ? "1" : "0");
   formData.append("supplier_id", data.supplier_id.toString());
-  formData.append("nationality_id", data.nationality_id.toString());
-
-  // Optional fields
-  if (data.comment) formData.append("comment", data.comment);
   if (data.weight) formData.append("weight", data.weight);
   formData.append("is_kg", data.is_kg ? "1" : "0");
   if (data.price_per_kg) formData.append("price_per_kg", data.price_per_kg);
-  if (data.commission_percentage)
-    formData.append("commission_percentage", data.commission_percentage);
-  if (data.accounting_cost)
-    formData.append("accounting_cost", data.accounting_cost);
-  if (data.inventory_cost)
-    formData.append("inventory_cost", data.inventory_cost);
 
   return formData;
 };

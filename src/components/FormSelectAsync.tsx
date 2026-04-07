@@ -67,6 +67,7 @@ interface FormSelectAsyncProps {
   uppercase?: boolean;
   externalOption?: Option | null;
   horizontalField?: boolean; // Nueva prop para forzar layout horizontal
+  descriptionAsBadge?: boolean;
 }
 
 function getOptionLabel(opt: Option): string {
@@ -98,6 +99,7 @@ export function FormSelectAsync({
   uppercase = false,
   externalOption,
   horizontalField = false,
+  descriptionAsBadge = false,
 }: FormSelectAsyncProps) {
   const { horizontal } = useFormLayout();
   const { field: controlField } = useController({ name, control });
@@ -496,17 +498,34 @@ export function FormSelectAsync({
                                       ? option.label()
                                       : option.label}
                                   </span>
-                                  {option.description && (
-                                    <span
-                                      className={cn(
-                                        "text-[10px] text-muted-foreground truncate",
-                                        uppercase && "uppercase",
-                                      )}
-                                    >
-                                      {withValue && `${option.value} - `}{" "}
-                                      {option.description}
-                                    </span>
-                                  )}
+                                  {option.description &&
+                                    (descriptionAsBadge ? (
+                                      <div className="flex items-center gap-1 flex-wrap">
+                                        {withValue && (
+                                          <span className="text-[10px] text-muted-foreground">
+                                            {option.value} -{" "}
+                                          </span>
+                                        )}
+                                        <Badge
+                                          className={cn(
+                                            "text-[10px] h-4 px-1 pointer-events-none",
+                                            uppercase && "uppercase",
+                                          )}
+                                        >
+                                          {option.description}
+                                        </Badge>
+                                      </div>
+                                    ) : (
+                                      <span
+                                        className={cn(
+                                          "text-[10px] text-muted-foreground truncate",
+                                          uppercase && "uppercase",
+                                        )}
+                                      >
+                                        {withValue && `${option.value} - `}{" "}
+                                        {option.description}
+                                      </span>
+                                    ))}
                                 </div>
                               </CommandItem>
                             ))}

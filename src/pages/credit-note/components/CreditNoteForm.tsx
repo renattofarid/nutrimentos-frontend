@@ -1,21 +1,13 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Loader, Save, X, ListChecks, FileText, Settings2 } from "lucide-react";
 import {
   creditNoteSchemaCreate,
   type CreditNoteSchema,
 } from "../lib/credit-note.schema";
-import { Textarea } from "@/components/ui/textarea";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
@@ -26,6 +18,7 @@ import { formatNumber } from "@/lib/formatCurrency";
 import { formatDecimalTrunc } from "@/lib/utils";
 import { warningToast } from "@/lib/core.function";
 import { GroupFormSection } from "@/components/GroupFormSection";
+import { FormInput } from "@/components/FormInput";
 
 interface CreditNoteFormProps {
   defaultValues: Partial<CreditNoteSchema>;
@@ -115,22 +108,26 @@ export const CreditNoteForm = ({
   // Cargar detalles de la venta seleccionada
   useEffect(() => {
     if (selectedSale?.details) {
-      const rows: CreditNoteDetailRow[] = selectedSale.details.map((detail, i) => {
-        const base: CreditNoteDetailRow = {
-          index: i + 1,
-          sale_detail_id: detail.id,
-          product_id: detail.product_id,
-          product_code: detail.product?.codigo ?? "",
-          product_name: detail.product?.name ?? "",
-          product_weight: detail.product?.weight ?? 0,
-          quantity_sacks: (detail.quantity_sacks ?? 0).toString(),
-          quantity_kg: (detail.quantity_kg ?? 0).toString(),
-          unit_price: parseFloat(detail.unit_price?.toString() ?? "0").toString(),
-          subtotal: 0,
-          total_kg: 0,
-        };
-        return calcRow(base);
-      });
+      const rows: CreditNoteDetailRow[] = selectedSale.details.map(
+        (detail, i) => {
+          const base: CreditNoteDetailRow = {
+            index: i + 1,
+            sale_detail_id: detail.id,
+            product_id: detail.product_id,
+            product_code: detail.product?.codigo ?? "",
+            product_name: detail.product?.name ?? "",
+            product_weight: detail.product?.weight ?? 0,
+            quantity_sacks: (detail.quantity_sacks ?? 0).toString(),
+            quantity_kg: (detail.quantity_kg ?? 0).toString(),
+            unit_price: parseFloat(
+              detail.unit_price?.toString() ?? "0",
+            ).toString(),
+            subtotal: 0,
+            total_kg: 0,
+          };
+          return calcRow(base);
+        },
+      );
       setDetails(rows);
       syncFormDetails(rows);
     } else {
@@ -247,7 +244,9 @@ export const CreditNoteForm = ({
       width: "120px",
       render: (row) => (
         <div className="h-full flex items-center justify-end px-2 py-1 text-sm font-semibold">
-          {row.subtotal > 0 ? `${currencySymbol} ${formatNumber(row.subtotal)}` : "-"}
+          {row.subtotal > 0
+            ? `${currencySymbol} ${formatNumber(row.subtotal)}`
+            : "-"}
         </div>
       ),
     },
@@ -337,40 +336,28 @@ export const CreditNoteForm = ({
             control={form.control}
             name="affects_stock"
             label="AFECTA STOCK"
-            text="Indica si la nota de crédito afecta el inventario"
+            textDescription="Indica si la nota de crédito afecta el inventario"
           />
 
           {selectedSale && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Cliente
-              </span>
-              <div className="flex items-center h-9 px-3 rounded-md border bg-muted text-sm truncate">
-                {selectedSale.customer.business_name || selectedSale.customer.names}
-              </div>
-            </div>
+            <FormInput
+              label="Cliente"
+              value={
+                selectedSale.customer.business_name ||
+                selectedSale.customer.names ||
+                ""
+              }
+              readOnly
+              name="cliente"
+            />
           )}
 
-          <div className="md:col-span-2 lg:col-span-2">
-            <FormField
+          <div className="md:col-span-2 lg:col-span-3">
+            <FormInput
               control={form.control}
               name="observations"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-semibold uppercase tracking-wider">
-                    Observaciones
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Ingrese observaciones adicionales"
-                      className="resize-none"
-                      rows={2}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Observaciones"
+              placeholder="Ingrese observaciones adicionales"
             />
           </div>
         </GroupFormSection>

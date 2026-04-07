@@ -13,11 +13,11 @@ import {
   successToast,
 } from "@/lib/core.function";
 import { CREDIT_NOTE } from "../lib/credit-note.interface";
-import FormWrapper from "@/components/FormWrapper";
 import { useCreditNoteStore } from "../lib/credit-note.store";
 import FormSkeleton from "@/components/FormSkeleton";
 import { useAllSales } from "@/pages/sale/lib/sale.hook";
 import { useAllCreditNoteMotives } from "@/pages/credit-note-motive/lib/credit-note-motive.hook";
+import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL, ROUTE } = CREDIT_NOTE;
 
@@ -110,14 +110,14 @@ export default function CreditNoteAddPage() {
   // Mostrar skeleton mientras cargan los datos
   if ((isReadOnlySale ? false : isLoadingSales) || isLoadingMotives) {
     return (
-      <FormWrapper>
+      <PageWrapper>
         <FormSkeleton />
-      </FormWrapper>
+      </PageWrapper>
     );
   }
 
   return (
-    <FormWrapper>
+    <PageWrapper>
       <CreditNoteForm
         defaultValues={
           preselectedSale ? { sale_id: preselectedSale.id.toString() } : {}
@@ -131,6 +131,6 @@ export default function CreditNoteAddPage() {
         onSaleChange={setSelectedSaleId}
         readOnlySale={isReadOnlySale}
       />
-    </FormWrapper>
+    </PageWrapper>
   );
 }

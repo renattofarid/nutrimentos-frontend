@@ -1231,6 +1231,7 @@ export const SaleForm = ({
                     `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
                   description: getCustomerZoneLabel(customer),
                 })}
+                descriptionAsBadge
                 onValueChange={handleCustomerChange}
                 defaultOption={
                   mode === "update" && sale?.customer

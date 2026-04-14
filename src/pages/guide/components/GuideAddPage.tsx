@@ -101,7 +101,7 @@ export default function GuideAddPage() {
     transfer_date: "",
     modality: "PRIVADO",
     motive_id: "3",
-    sale_document_number: "-",
+    sale_document_number: "",
     carrier_document_type: "RUC",
     carrier_document_number: "",
     carrier_name: "",

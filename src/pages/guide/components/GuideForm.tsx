@@ -62,11 +62,14 @@ import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import { useDrivers } from "@/pages/driver/lib/driver.hook";
 import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
 import { errorToast, successToast, warningToast } from "@/lib/core.function";
+import { promiseToast } from "@/lib/core.function";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useUbigeosFrom } from "../lib/ubigeo.hook";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useProduct } from "@/pages/product/lib/product.hook";
+import { useProductStore } from "@/pages/product/lib/product.store";
+import { getProduct } from "@/pages/product/lib/product.actions";
 import {
   ExcelGrid,
   type ExcelGridColumn,
@@ -74,12 +77,18 @@ import {
 } from "@/components/ExcelGrid";
 import { useClients } from "@/pages/client/lib/client.hook";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
+import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { FormTextArea } from "@/components/FormTextArea";
 import { Alert } from "@/components/ui/alert";
 import { usePersonZones } from "@/pages/client/lib/personzone.hook";
 import type { PersonZoneResource } from "@/pages/client/lib/personzone.interface";
 import ClientAddressesSheet from "@/pages/client/components/ClientAddressesSheet";
 import { getUbigeos } from "../lib/ubigeo.actions";
+import { useAuthStore } from "@/pages/auth/lib/auth.store";
+import { useAllCompanies } from "@/pages/company/lib/company.hook";
+import { useAllUnits } from "@/pages/unit/lib/unit.hook";
+import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
+import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 
 interface GuideFormProps {
   defaultValues: Partial<GuideSchema>;
@@ -103,6 +112,15 @@ export const GuideForm = ({
   warehouses,
   motives,
 }: GuideFormProps) => {
+  const { user } = useAuthStore();
+  const { createProduct } = useProductStore();
+  const { data: companies } = useAllCompanies();
+  const { data: units } = useAllUnits();
+  const { data: productTypes } = useAllProductTypes();
+  const { data: suppliers } = useAllPersons({
+    role_names: [SUPPLIER_ROLE_CODE],
+  });
+
   const [filteredWarehouses, setFilteredWarehouses] = useState<
     WarehouseResource[]
   >([]);
@@ -445,6 +463,160 @@ export const GuideForm = ({
     [],
   );
 
+  const createMissingProductForRow = useCallback(
+    async (rowIndex: number, code: string) => {
+      const row = customDetails[rowIndex];
+      const normalizedCode = code.trim();
+      const normalizedUnitCode = row?.unit_code?.trim().toUpperCase();
+
+      if (!row || !normalizedCode) {
+        throw new Error("No se pudo determinar el producto a crear");
+      }
+
+      const companyId = user?.company_id ?? companies?.[0]?.id;
+      const productTypeId = productTypes?.[0]?.id;
+      const supplierId = suppliers?.[0]?.id;
+      const matchedUnit =
+        units?.find(
+          (unit) => unit.code.trim().toUpperCase() === normalizedUnitCode,
+        ) ?? units?.[0];
+
+      if (!companyId || !productTypeId || !supplierId || !matchedUnit?.id) {
+        throw new Error(
+          "Faltan catálogos base para crear el producto automáticamente",
+        );
+      }
+
+      const productName =
+        row.product_name?.trim() || row.description?.trim() || normalizedCode;
+
+      const creationPromise = (async () => {
+        await createProduct({
+          codigo: normalizedCode,
+          name: productName,
+          company_id: companyId.toString(),
+          product_type_id: productTypeId.toString(),
+          unit_id: matchedUnit.id.toString(),
+          is_taxed: false,
+          supplier_id: supplierId.toString(),
+          weight: "0",
+          is_kg: normalizedUnitCode === "KGM",
+          price_per_kg: "0",
+          price: "0",
+        });
+
+        const response = await getProduct({
+          params: {
+            codigo: normalizedCode,
+            direction: "asc",
+            sort: "codigo",
+          },
+        });
+
+        const exactProduct = response.data.find(
+          (product) => product.codigo.trim().toUpperCase() === normalizedCode,
+        );
+
+        if (!exactProduct) {
+          throw new Error("No se pudo recuperar el producto recién creado");
+        }
+
+        return exactProduct;
+      })();
+
+      promiseToast(creationPromise, {
+        loading: `Creando producto ${normalizedCode}...`,
+        success: "Producto creado automáticamente",
+        error: (error) =>
+          error instanceof Error
+            ? error.message
+            : "No se pudo crear el producto automáticamente",
+      });
+
+      return creationPromise;
+    },
+    [
+      companies,
+      createProduct,
+      customDetails,
+      productTypes,
+      suppliers,
+      units,
+      user?.company_id,
+    ],
+  );
+
+  const buildAutoProductCode = useCallback(
+    (name: string, rowIndex: number) => {
+      const base = name
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, "")
+        .slice(0, 16);
+
+      const suffix = `${Date.now()}`.slice(-6);
+      return `AUTO${base || "PROD"}${rowIndex + 1}${suffix}`.slice(0, 50);
+    },
+    [],
+  );
+
+  const resolveDetailProduct = useCallback(
+    async (
+      row: (typeof customDetails)[0],
+      rowIndex: number,
+      cache: Map<string, string>,
+    ) => {
+      if (row.product_id) {
+        return row.product_id;
+      }
+
+      const productName = row.description?.trim() || row.product_name?.trim();
+      if (!productName) {
+        throw new Error(
+          `La fila ${rowIndex + 1} no tiene producto ni descripción para crear automáticamente`,
+        );
+      }
+
+      const normalizedCode =
+        row.product_code?.trim() || buildAutoProductCode(productName, rowIndex);
+      const cacheKey = normalizedCode.toUpperCase();
+
+      const cachedProductId = cache.get(cacheKey);
+      if (cachedProductId) {
+        return cachedProductId;
+      }
+
+      const existingResponse = await getProduct({
+        params: {
+          codigo: normalizedCode,
+          direction: "asc",
+          sort: "codigo",
+        },
+      });
+
+      const existingProduct = existingResponse.data.find(
+        (product) => product.codigo.trim().toUpperCase() === cacheKey,
+      );
+
+      if (existingProduct) {
+        const existingId = existingProduct.id.toString();
+        cache.set(cacheKey, existingId);
+        return existingId;
+      }
+
+      const createdProduct = await createMissingProductForRow(
+        rowIndex,
+        normalizedCode,
+      );
+
+      const createdId = createdProduct.id.toString();
+      cache.set(cacheKey, createdId);
+      return createdId;
+    },
+    [buildAutoProductCode, createMissingProductForRow],
+  );
+
   // Cuando useProduct retorna resultado, auto-seleccionar primer producto y avanzar celda
   useEffect(() => {
     if (!productCodeSearch || isSearchingProduct) return;
@@ -460,31 +632,94 @@ export const GuideForm = ({
         weight: p.weight,
       });
       callbacks.advance();
+      productCodeCallbacksRef.current = null;
+      setProductCodeSearch(null);
     } else if (productSearchResult !== undefined) {
-      // Producto no encontrado: avanzar sin bloquear (se puede ingresar manualmente)
-      callbacks.advance();
+      void (async () => {
+        try {
+          const createdProduct = await createMissingProductForRow(
+            productCodeSearch.rowIndex,
+            productCodeSearch.code,
+          );
+
+          handleProductSelect(productCodeSearch.rowIndex, {
+            id: createdProduct.id.toString(),
+            codigo: createdProduct.codigo,
+            name: createdProduct.name,
+            weight: createdProduct.weight,
+          });
+          callbacks.advance();
+        } catch (error) {
+          callbacks.setError(
+            error instanceof Error
+              ? error.message
+              : "No se pudo crear el producto automáticamente",
+          );
+          errorToast(
+            error instanceof Error
+              ? error.message
+              : "No se pudo crear el producto automáticamente",
+          );
+        } finally {
+          productCodeCallbacksRef.current = null;
+          setProductCodeSearch(null);
+        }
+      })();
     }
-
-    productCodeCallbacksRef.current = null;
-    setProductCodeSearch(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productSearchResult, isSearchingProduct]);
+  }, [
+    createMissingProductForRow,
+    handleProductSelect,
+    isSearchingProduct,
+    productCodeSearch,
+    productSearchResult,
+  ]);
 
-  const handleProductCodeTab = useCallback(
+  const handleDescriptionTab = useCallback(
     (
       rowIndex: number,
-      code: string,
+      description: string,
       advance: () => void,
       setError: (msg: string) => void,
     ) => {
-      if (!code.trim()) {
+      const row = customDetails[rowIndex];
+      if (!row) {
+        setError("No se pudo obtener la fila del detalle");
+        return;
+      }
+
+      if (row.product_id) {
         advance();
         return;
       }
+
+      const trimmedDescription = description.trim();
+      if (!trimmedDescription) {
+        setError("Ingrese la descripción del producto");
+        return;
+      }
+
+      const resolvedCode =
+        row.product_code.trim() ||
+        buildAutoProductCode(trimmedDescription, rowIndex);
+
+      setCustomDetails((prev) =>
+        prev.map((item, index) =>
+          index === rowIndex
+            ? {
+                ...item,
+                product_code: item.product_code || resolvedCode,
+                description: trimmedDescription,
+                product_name: item.product_name || trimmedDescription,
+              }
+            : item,
+        ),
+      );
+
       productCodeCallbacksRef.current = { advance, setError };
-      setProductCodeSearch({ rowIndex, code });
+      setProductCodeSearch({ rowIndex, code: resolvedCode });
     },
-    [],
+    [buildAutoProductCode, customDetails],
   );
 
   // Auto-calcular totales cuando cambian los productos personalizados
@@ -526,7 +761,7 @@ export const GuideForm = ({
     // En modo por productos, limpiar si no hay cliente seleccionado
   }, [useCustomDetails]);
 
-  const handleFormSubmit = (data: any) => {
+  const handleFormSubmit = async (data: any) => {
     if (!useCustomDetails && selectedSales.length === 0) {
       errorToast("Debe seleccionar al menos una venta");
       return;
@@ -558,6 +793,11 @@ export const GuideForm = ({
       return;
     }
 
+    const saleDocumentNumber =
+      typeof data.sale_document_number === "string"
+        ? data.sale_document_number.trim()
+        : "";
+
     const base = {
       use_custom_details: useCustomDetails,
       branch_id: parseInt(data.branch_id),
@@ -567,9 +807,10 @@ export const GuideForm = ({
       transfer_date: data.transfer_date,
       modality: data.modality,
       motive_id: parseInt(data.motive_id),
-      sale_document_number: useCustomDetails
-        ? data.sale_document_number || null
-        : null,
+      sale_document_number:
+        useCustomDetails && saleDocumentNumber && saleDocumentNumber !== "-"
+          ? saleDocumentNumber
+          : null,
       carrier_document_type: data.carrier_document_type || null,
       carrier_document_number: data.carrier_document_number || null,
       carrier_name: data.carrier_name || null,
@@ -590,29 +831,72 @@ export const GuideForm = ({
       observations: data.observations || null,
     };
 
-    const payload = useCustomDetails
-      ? {
-          ...base,
-          details: customDetails
-            .filter(
-              (d) =>
-                d.product_id ||
-                d.description ||
-                d.quantity_sacks ||
-                d.quantity_kg,
-            )
-            .map((d) => ({
-              product_id: d.product_id ? parseInt(d.product_id) : null,
-              description: d.description || null,
-              quantity_sacks: parseFloat(d.quantity_sacks) || 0,
-              quantity_kg: parseFloat(d.quantity_kg) || 0,
-              unit_code: d.unit_code,
-            })),
-        }
-      : {
-          ...base,
-          sale_ids: selectedSales,
-        };
+    let payload: any;
+
+    if (useCustomDetails) {
+      const detailsToProcess = customDetails.filter(
+        (d) =>
+          d.product_id || d.description || d.quantity_sacks || d.quantity_kg,
+      );
+
+      const resolvePromise = (async () => {
+        const createdProductsCache = new Map<string, string>();
+
+        const resolved = await Promise.all(
+          detailsToProcess.map(async (detail, index) => {
+            const resolvedProductId = await resolveDetailProduct(
+              detail,
+              index,
+              createdProductsCache,
+            );
+
+            return {
+              product_id: parseInt(resolvedProductId),
+              description:
+                detail.description || detail.product_name || null,
+              quantity_sacks: parseFloat(detail.quantity_sacks) || 0,
+              quantity_kg: parseFloat(detail.quantity_kg) || 0,
+              unit_code: detail.unit_code,
+            };
+          }),
+        );
+
+        return resolved;
+      })();
+
+      promiseToast(resolvePromise, {
+        loading: "Resolviendo productos del detalle...",
+        success: "Productos listos para registrar la guía",
+        error: (error) =>
+          error instanceof Error
+            ? error.message
+            : "No se pudieron resolver los productos del detalle",
+      });
+
+      let resolvedDetails: Array<{
+        product_id: number;
+        description: string | null;
+        quantity_sacks: number;
+        quantity_kg: number;
+        unit_code: string;
+      }> = [];
+
+      try {
+        resolvedDetails = await resolvePromise;
+      } catch {
+        return;
+      }
+
+      payload = {
+        ...base,
+        details: resolvedDetails,
+      };
+    } else {
+      payload = {
+        ...base,
+        sale_ids: selectedSales,
+      };
+    }
 
     console.log("[GuideForm] raw form data:", data);
     console.log("[GuideForm] payload:", payload);
@@ -626,24 +910,17 @@ export const GuideForm = ({
     {
       id: "product_code",
       header: "Código",
-      type: "product-code",
+      type: "text",
       width: "120px",
       accessor: "product_code",
     },
     {
-      id: "product",
-      header: "Producto",
-      type: "product-search",
+      id: "description",
+      header: "Descripción",
+      type: "product-code",
       width: "250px",
-      accessor: "product_name",
+      accessor: "description",
     },
-    // {
-    //   id: "description",
-    //   header: "Descripción",
-    //   type: "text",
-    //   width: "200px",
-    //   accessor: "description",
-    // },
     {
       id: "quantity_sacks",
       header: "Sacos",
@@ -1546,7 +1823,7 @@ export const GuideForm = ({
                     onCellChange={handleDetailChange}
                     productOptions={productOptions}
                     onProductSelect={handleProductSelect}
-                    onProductCodeTab={handleProductCodeTab}
+                    onProductCodeTab={handleDescriptionTab}
                     emptyMessage="Agregue productos al detalle"
                   />
                 </div>

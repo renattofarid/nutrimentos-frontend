@@ -26,6 +26,7 @@ interface ConfirmationDialogProps {
   onCancel?: () => void;
   variant?: "default" | "destructive";
   icon?: "warning" | "danger" | "info";
+  confirmFirst?: boolean;
 }
 
 export const ConfirmationDialog = ({
@@ -40,6 +41,7 @@ export const ConfirmationDialog = ({
   onCancel,
   variant = "default",
   icon = "warning",
+  confirmFirst = false,
 }: ConfirmationDialogProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
 
@@ -88,19 +90,33 @@ export const ConfirmationDialog = ({
         {description}
       </AlertDialogDescription>
       <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+        {confirmFirst && (
+          <AlertDialogAction
+            onClick={handleConfirm}
+            className={
+              variant === "destructive"
+                ? "bg-secondary hover:bg-red-700 text-white"
+                : ""
+            }
+          >
+            {confirmText}
+          </AlertDialogAction>
+        )}
         <AlertDialogCancel className="mt-0" onClick={handleCancel}>
           {cancelText}
         </AlertDialogCancel>
-        <AlertDialogAction
-          onClick={handleConfirm}
-          className={
-            variant === "destructive"
-              ? "bg-secondary hover:bg-red-700 text-white"
-              : ""
-          }
-        >
-          {confirmText}
-        </AlertDialogAction>
+        {!confirmFirst && (
+          <AlertDialogAction
+            onClick={handleConfirm}
+            className={
+              variant === "destructive"
+                ? "bg-secondary hover:bg-red-700 text-white"
+                : ""
+            }
+          >
+            {confirmText}
+          </AlertDialogAction>
+        )}
       </AlertDialogFooter>
     </AlertDialogContent>
   );

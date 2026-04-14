@@ -1,80 +1,26 @@
-import { useEffect } from "react";
-import { useSaleStore } from "./sales.store";
+import { useQuery } from "@tanstack/react-query";
+import { getSales, getAllSales, findSaleById } from "./sale.actions";
 import type { GetSalesParams } from "./sale.actions";
-import type { SaleResource } from "./sale.interface";
-import type { Meta } from "@/lib/pagination.interface";
+import { SALE_QUERY_KEY } from "./sale.interface";
 
-// ============================================
-// SALE HOOKS
-// ============================================
+export function useSale(params?: GetSalesParams) {
+  return useQuery({
+    queryKey: [SALE_QUERY_KEY, params],
+    queryFn: () => getSales(params),
+  });
+}
 
-/**
- * Hook to fetch sales with pagination and filters
- */
-export const useSale = (params?: GetSalesParams) => {
-  const { sales, meta, isLoading, error, fetchSales } = useSaleStore();
+export function useAllSales() {
+  return useQuery({
+    queryKey: [SALE_QUERY_KEY, "all"],
+    queryFn: getAllSales,
+  });
+}
 
-  useEffect(() => {
-    fetchSales(params);
-  }, []);
-
-  const refetch = async (newParams?: GetSalesParams) => {
-    await fetchSales(newParams || params);
-  };
-
-  return {
-    data: sales as SaleResource[] | null,
-    meta: meta as Meta | null,
-    isLoading,
-    error,
-    refetch,
-  };
-};
-
-/**
- * Hook to fetch all sales (no pagination)
- */
-export const useAllSales = () => {
-  const { allSales, isLoadingAll, error, fetchAllSales } = useSaleStore();
-
-  useEffect(() => {
-    fetchAllSales();
-  }, []);
-
-  const refetch = async () => {
-    await fetchAllSales();
-  };
-
-  return {
-    data: allSales as SaleResource[] | null,
-    isLoading: isLoadingAll,
-    error,
-    refetch,
-  };
-};
-
-/**
- * Hook to fetch a single sale by ID
- */
-export const useSaleById = (id: number) => {
-  const { sale, isFinding, error, fetchSale } = useSaleStore();
-
-  useEffect(() => {
-    if (id) {
-      fetchSale(id);
-    }
-  }, [id]);
-
-  const refetch = async () => {
-    if (id) {
-      await fetchSale(id);
-    }
-  };
-
-  return {
-    data: sale as SaleResource | null,
-    isFinding,
-    error,
-    refetch,
-  };
-};
+export function useSaleById(id: number) {
+  return useQuery({
+    queryKey: [SALE_QUERY_KEY, id],
+    queryFn: () => findSaleById(id),
+    enabled: !!id,
+  });
+}

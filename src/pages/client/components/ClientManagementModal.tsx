@@ -16,6 +16,7 @@ import {
   User,
   Star,
   Check,
+  Tag,
   ChevronsUpDown,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
@@ -452,11 +453,25 @@ export function ClientManagementModal({
                   return (
                     <div
                       key={person.id}
+                      onDoubleClick={(e) => {
+                        if (
+                          onSelectClient &&
+                          !(e.target as HTMLElement).closest("button")
+                        ) {
+                          onSelectClient(
+                            person.id,
+                            getPersonName(person),
+                            person,
+                          );
+                          onOpenChange(false);
+                        }
+                      }}
                       className={cn(
                         "rounded-lg border p-4 flex items-center justify-between gap-4",
                         isSelected
                           ? "bg-primary/5 border-primary/40"
                           : "bg-sidebar",
+                        onSelectClient && "cursor-pointer hover:border-primary/30 hover:bg-accent/40 transition-colors select-none",
                       )}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -506,20 +521,27 @@ export function ClientManagementModal({
                                       }
                                       className="text-xs gap-1 pointer-events-none"
                                     >
-                                      {zone.is_primary && (
+                                      {zone.is_primary ? (
                                         <Star className="size-2.5 fill-current" />
+                                      ) : (
+                                        <MapPin className="size-2.5" />
                                       )}
                                       {zone.zone_name}
                                     </Badge>
                                   </button>
                                 ))
                               : person.zone_name && (
-                                  <Badge variant="outline" className="text-xs">
+                                  <Badge variant="outline" className="text-xs gap-1">
+                                    <MapPin className="size-2.5" />
                                     {person.zone_name}
                                   </Badge>
                                 )}
                             {person.client_category && (
-                              <Badge variant="outline" className="text-xs">
+                              <Badge
+                                variant="outline"
+                                className="text-xs gap-1 border-amber-400/60 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-500/40"
+                              >
+                                <Tag className="size-2.5" />
                                 {person.client_category.name}
                               </Badge>
                             )}
@@ -527,25 +549,6 @@ export function ClientManagementModal({
                         </div>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        {onSelectClient && (
-                          <Button
-                            variant={isSelected ? "default" : "outline"}
-                            size="sm"
-                            className="h-8 px-2 text-xs"
-                            onClick={() => {
-                              onSelectClient(
-                                person.id,
-                                getPersonName(person),
-                                person,
-                              );
-                              onOpenChange(false);
-                            }}
-                            tooltip="Seleccionar cliente"
-                          >
-                            <Check className="size-3.5 mr-1" />
-                            Seleccionar
-                          </Button>
-                        )}
                         <Button
                           variant="outline"
                           size="icon"

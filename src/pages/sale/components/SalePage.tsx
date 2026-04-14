@@ -60,6 +60,13 @@ export default function SalePage() {
   });
   const [end_date, setEndDate] = useState<Date | undefined>(() => new Date());
   const [documento, setDocumento] = useState("");
+  const [debouncedDocumento, setDebouncedDocumento] = useState("");
+
+  // Debounce para evitar race conditions al escribir el documento
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedDocumento(documento), 400);
+    return () => clearTimeout(timer);
+  }, [documento]);
 
   const [openDelete, setOpenDelete] = useState(false);
   const [saleToDelete, setSaleToDelete] = useState<number | null>(null);
@@ -71,11 +78,10 @@ export default function SalePage() {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const company_id = user?.company_id;
 
-  const { serie: parsedSerie, numero: parsedNumero } = parseDocumento(documento);
+  const { serie: parsedSerie, numero: parsedNumero } = parseDocumento(debouncedDocumento);
 
   const {
-    data: sales,
-    meta,
+    data: salesResponse,
     isLoading,
     refetch,
   } = useSale({
@@ -93,7 +99,10 @@ export default function SalePage() {
     serie: parsedSerie,
   });
 
-  // Effect para resetear a página 1 cuando cambian los filtros
+  const sales = salesResponse?.data ?? [];
+  const meta = salesResponse?.meta ?? null;
+
+  // Resetear a página 1 cuando cambian los filtros
   useEffect(() => {
     if (page !== 1) {
       setPage(1);
@@ -106,40 +115,9 @@ export default function SalePage() {
     vendedor_id,
     start_date,
     end_date,
-    documento,
+    debouncedDocumento,
     company_id,
     per_page,
-  ]);
-
-  // Effect para hacer el refetch cuando cambian los parámetros
-  useEffect(() => {
-    const { serie, numero } = parseDocumento(documento);
-    refetch({
-      company_id,
-      page,
-      per_page,
-      branch_id: branch_id ? Number(branch_id) : undefined,
-      document_type: document_type || undefined,
-      status: status || undefined,
-      warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
-      vendedor_id: vendedor_id ? Number(vendedor_id) : undefined,
-      start_date: start_date?.toISOString().split("T")[0],
-      end_date: end_date?.toISOString().split("T")[0],
-      numero,
-      serie,
-    });
-  }, [
-    company_id,
-    page,
-    per_page,
-    branch_id,
-    document_type,
-    status,
-    warehouse_id,
-    vendedor_id,
-    start_date,
-    end_date,
-    documento,
   ]);
 
   const { removeSale } = useSaleStore();
@@ -222,7 +200,7 @@ export default function SalePage() {
   // Construir el endpoint con query params para exportación
   const exportEndpoint = useMemo(() => {
     const params = new URLSearchParams();
-    const { serie, numero } = parseDocumento(documento);
+    const { serie, numero } = parseDocumento(debouncedDocumento);
 
     if (company_id) params.append("company_id", company_id.toString());
     if (branch_id) params.append("branch_id", branch_id);
@@ -246,7 +224,7 @@ export default function SalePage() {
     warehouse_id,
     start_date,
     end_date,
-    documento,
+    debouncedDocumento,
   ]);
 
   // Derive the single selected sale for toolbar actions

@@ -41,11 +41,7 @@ export default function SaleTicketsPrintPage() {
   const [isPrinting, setIsPrinting] = useState(false);
 
   const handleSearch = async () => {
-    if (
-      !searchParams.serie ||
-      !searchParams.numero_inicio ||
-      !searchParams.numero_fin
-    ) {
+    if (!searchParams.numero_inicio || !searchParams.numero_fin) {
       errorToast("Complete todos los campos de búsqueda");
       return;
     }

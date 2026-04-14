@@ -114,7 +114,6 @@ export const GuideForm = ({
   const [isSearchingSales, setIsSearchingSales] = useState(false);
   const [searchParams, setSearchParams] = useState({
     document_type: "BOLETA",
-    person_zone_id: "",
     serie: "",
     numero_inicio: "",
     numero_fin: "",
@@ -305,8 +304,6 @@ export const GuideForm = ({
 
       setSalesByRange(response.data);
       setSelectedSales([]);
-      form.setValue("customer_id", "");
-      setDetectedCustomerName(null);
 
       successToast(
         `Se encontraron ${response.data.length} ventas`,
@@ -398,6 +395,8 @@ export const GuideForm = ({
     form.setValue("issue_date", formattedDate);
     form.setValue("transfer_date", formattedDate);
     form.setValue("motive_id", "3");
+    // En modo por ventas (default), el cliente siempre es "Clientes Varios" (id=30)
+    form.setValue("customer_id", "30");
     if (form.getValues("modality") !== "PRIVADO") {
       form.setValue("carrier_document_type", "RUC");
     }
@@ -462,9 +461,8 @@ export const GuideForm = ({
       });
       callbacks.advance();
     } else if (productSearchResult !== undefined) {
-      callbacks.setError(
-        `No se encontró ningún producto con código "${productCodeSearch.code}"`,
-      );
+      // Producto no encontrado: avanzar sin bloquear (se puede ingresar manualmente)
+      callbacks.advance();
     }
 
     productCodeCallbacksRef.current = null;
@@ -492,7 +490,9 @@ export const GuideForm = ({
   // Auto-calcular totales cuando cambian los productos personalizados
   useEffect(() => {
     if (!useCustomDetails) return;
-    const totalPackages = customDetails.filter((d) => d.product_id).length;
+    const totalPackages = customDetails.filter(
+      (d) => d.product_id || d.description || d.quantity_sacks || d.quantity_kg,
+    ).length;
     form.setValue("total_packages", totalPackages as any);
   }, [customDetails, useCustomDetails, form]);
 
@@ -519,41 +519,12 @@ export const GuideForm = ({
     }
   }, [selectedSales, salesByRange, form]);
 
-  // Sincronizar cliente detectado según ventas seleccionadas (no por resultados buscados)
+  // En modo por ventas, el cliente es siempre "Clientes Varios" (id=30).
+  // No se sincroniza desde las ventas seleccionadas.
   useEffect(() => {
-    if (useCustomDetails) return;
-
-    const selectedSalesData = salesByRange.filter((sale) =>
-      selectedSales.includes(sale.id),
-    );
-
-    if (selectedSalesData.length === 0) {
-      form.setValue("customer_id", "");
-      setDetectedCustomerName(null);
-      return;
-    }
-
-    const firstCustomerId = selectedSalesData[0].customer.id;
-    const sameCustomerSales = selectedSalesData.filter(
-      (sale) => sale.customer.id === firstCustomerId,
-    );
-
-    if (sameCustomerSales.length !== selectedSalesData.length) {
-      warningToast(
-        "Solo puede mantener ventas de un mismo cliente en la selección",
-      );
-      setSelectedSales(sameCustomerSales.map((sale) => sale.id));
-      return;
-    }
-
-    const firstCustomer = selectedSalesData[0].customer;
-    const customerName =
-      firstCustomer.business_name ||
-      `${firstCustomer.names} ${firstCustomer.father_surname}`.trim();
-
-    form.setValue("customer_id", firstCustomer.id.toString());
-    setDetectedCustomerName(customerName);
-  }, [selectedSales, salesByRange, useCustomDetails, form]);
+    if (!useCustomDetails) return;
+    // En modo por productos, limpiar si no hay cliente seleccionado
+  }, [useCustomDetails]);
 
   const handleFormSubmit = (data: any) => {
     if (!useCustomDetails && selectedSales.length === 0) {
@@ -569,34 +540,20 @@ export const GuideForm = ({
     }
 
     if (useCustomDetails) {
-      const validDetails = customDetails.filter((d) => d.product_id);
+      const validDetails = customDetails.filter(
+        (d) =>
+          d.product_id || d.description || d.quantity_sacks || d.quantity_kg,
+      );
       if (validDetails.length === 0) {
         errorToast("Debe agregar al menos un producto");
         return;
       }
     }
 
-    let customerId = parseInt(data.customer_id);
+    // En modo por ventas el cliente siempre es "Clientes Varios" (id=30)
+    const customerId = !useCustomDetails ? 30 : parseInt(data.customer_id);
 
-    if (!useCustomDetails) {
-      const selectedSalesData = salesByRange.filter((sale) =>
-        selectedSales.includes(sale.id),
-      );
-      const uniqueCustomerIds = Array.from(
-        new Set(selectedSalesData.map((sale) => sale.customer.id)),
-      );
-
-      if (uniqueCustomerIds.length !== 1) {
-        errorToast(
-          "Las ventas seleccionadas deben pertenecer a un solo cliente",
-        );
-        return;
-      }
-
-      customerId = uniqueCustomerIds[0];
-    }
-
-    if (Number.isNaN(customerId)) {
+    if (useCustomDetails && Number.isNaN(customerId)) {
       errorToast("No se pudo determinar el cliente de la guía");
       return;
     }
@@ -637,10 +594,16 @@ export const GuideForm = ({
       ? {
           ...base,
           details: customDetails
-            .filter((d) => d.product_id)
+            .filter(
+              (d) =>
+                d.product_id ||
+                d.description ||
+                d.quantity_sacks ||
+                d.quantity_kg,
+            )
             .map((d) => ({
-              product_id: parseInt(d.product_id),
-              description: d.description,
+              product_id: d.product_id ? parseInt(d.product_id) : null,
+              description: d.description || null,
               quantity_sacks: parseFloat(d.quantity_sacks) || 0,
               quantity_kg: parseFloat(d.quantity_kg) || 0,
               unit_code: d.unit_code,
@@ -805,7 +768,6 @@ export const GuideForm = ({
       setCustomerAddresses([]);
       setSelectedPersonZoneId("");
       autoAppliedCustomerRef.current = null;
-      setSearchParams((prev) => ({ ...prev, person_zone_id: "" }));
       return;
     }
 
@@ -821,7 +783,6 @@ export const GuideForm = ({
 
     if (addresses.length === 0) {
       setSelectedPersonZoneId("");
-      setSearchParams((prev) => ({ ...prev, person_zone_id: "" }));
       return;
     }
 
@@ -838,11 +799,6 @@ export const GuideForm = ({
       setSelectedPersonZoneId(nextZoneId);
     }
 
-    setSearchParams((prev) =>
-      prev.person_zone_id === nextZoneId
-        ? prev
-        : { ...prev, person_zone_id: nextZoneId },
-    );
 
     if (
       !hasCurrentSelection ||
@@ -895,7 +851,14 @@ export const GuideForm = ({
               disabled={
                 isSubmitting ||
                 (!useCustomDetails && selectedSales.length === 0) ||
-                (useCustomDetails && customDetails.every((d) => !d.product_id))
+                (useCustomDetails &&
+                  customDetails.every(
+                    (d) =>
+                      !d.product_id &&
+                      !d.description &&
+                      !d.quantity_sacks &&
+                      !d.quantity_kg,
+                  ))
               }
             >
               {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
@@ -977,52 +940,51 @@ export const GuideForm = ({
                   onValueChange={handleCustomerChange}
                 />
               ) : (
-                detectedCustomerName && (
-                  <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">
-                      Cliente:{" "}
-                    </span>
-                    {detectedCustomerName}
-                  </div>
-                )
+                <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Cliente: </span>
+                  Clientes Varios
+                </div>
               )}
 
               {customerValue && (
-                <div className="space-y-2">
-                  <SearchableSelect
-                    label="Dirección del Cliente"
-                    buttonSize="default"
-                    options={customerAddresses.map((address) => ({
-                      value: address.id.toString(),
-                      label: address.address,
-                      description: `${address.zone.name}${address.is_primary ? " - Principal" : ""}`,
-                    }))}
-                    value={selectedPersonZoneId}
-                    onChange={(value) => {
-                      void handleSelectPersonZone(value);
-                    }}
-                    placeholder={
-                      isLoadingPersonZones
-                        ? "Cargando direcciones..."
-                        : "Seleccione una dirección"
-                    }
-                    disabled={
-                      isLoadingPersonZones || customerAddresses.length === 0
-                    }
-                    className="w-full"
-                  />
+                <div className="space-y-2 w-full">
+                  <div className="w-full flex gap-1 items-end">
+                    <SearchableSelect
+                      label="Dirección del Cliente"
+                      buttonSize="default"
+                      options={customerAddresses.map((address) => ({
+                        value: address.id.toString(),
+                        label: address.address,
+                        description: `${address.zone.name}${address.is_primary ? " - Principal" : ""}`,
+                      }))}
+                      value={selectedPersonZoneId}
+                      onChange={(value) => {
+                        void handleSelectPersonZone(value);
+                      }}
+                      placeholder={
+                        isLoadingPersonZones
+                          ? "Cargando direcciones..."
+                          : "Seleccione una dirección"
+                      }
+                      disabled={
+                        isLoadingPersonZones || customerAddresses.length === 0
+                      }
+                      className="w-full!"
+                      classNameDiv="w-full!"
+                      classNameLabel="w-full!"
+                    />
 
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsAddressManagerOpen(true)}
-                      disabled={!selectedCustomerId}
-                      className="w-full sm:w-auto"
-                    >
-                      <Settings2 className="h-4 w-4" />
-                      Gestionar
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        onClick={() => setIsAddressManagerOpen(true)}
+                        disabled={!selectedCustomerId}
+                      >
+                        <Settings2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
 
                   {customerAddresses.length === 0 && !isLoadingPersonZones && (
@@ -1370,7 +1332,8 @@ export const GuideForm = ({
                 onCheckedChange={(checked) => {
                   setUseCustomDetails(checked);
                   form.setValue("total_packages", 0 as any);
-                  form.setValue("customer_id", "");
+                  // Por ventas → Clientes Varios (id=30); por productos → selección manual
+                  form.setValue("customer_id", checked ? "" : "30");
                   setDetectedCustomerName(null);
                 }}
               />

@@ -276,7 +276,7 @@ export const CreditNoteForm = ({
           <Button
             size="sm"
             type="submit"
-            disabled={isSubmitting || !form.formState.isValid}
+            disabled={isSubmitting}
           >
             {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
             {isSubmitting ? "Guardando..." : "Guardar"}

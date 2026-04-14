@@ -32,6 +32,8 @@ import {
   ShoppingCart,
   Save,
   X,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
@@ -129,6 +131,7 @@ export const GuideForm = ({
   // Estados para búsqueda de ventas por rango
   const [salesByRange, setSalesByRange] = useState<SaleResource[]>([]);
   const [selectedSales, setSelectedSales] = useState<number[]>([]);
+  const [expandedSales, setExpandedSales] = useState<number[]>([]);
   const [isSearchingSales, setIsSearchingSales] = useState(false);
   const [searchParams, setSearchParams] = useState({
     document_type: "BOLETA",
@@ -321,7 +324,7 @@ export const GuideForm = ({
       }
 
       setSalesByRange(response.data);
-      setSelectedSales([]);
+      setSelectedSales(response.data.map((sale) => sale.id));
 
       successToast(
         `Se encontraron ${response.data.length} ventas`,
@@ -1776,6 +1779,7 @@ export const GuideForm = ({
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-8"></TableHead>
                       <TableHead className="w-12">
                         <Checkbox
                           checked={
@@ -1793,50 +1797,105 @@ export const GuideForm = ({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {salesByRange.map((sale) => (
-                      <TableRow
-                        key={sale.id}
-                        className={`cursor-pointer hover:bg-muted/30 ${
-                          selectedSales.includes(sale.id) ? "bg-muted/50" : ""
-                        }`}
-                        onClick={() => handleToggleSale(sale.id)}
-                      >
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <Checkbox
-                            checked={selectedSales.includes(sale.id)}
-                            onCheckedChange={() => handleToggleSale(sale.id)}
-                            className="cursor-pointer"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {sale.full_document_number}
-                            </div>
-                            {/* <div className="text-xs text-muted-foreground">
-                            {sale.document_type}
-                          </div> */}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {sale.customer.business_name ||
-                            `${sale.customer.names} ${sale.customer.father_surname}`}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(sale.issue_date).toLocaleDateString(
-                            "es-PE",
-                            {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                            },
+                    {salesByRange.map((sale) => {
+                      const isExpanded = expandedSales.includes(sale.id);
+                      return (
+                        <>
+                          <TableRow
+                            key={sale.id}
+                            className={`cursor-pointer hover:bg-muted/30 ${
+                              selectedSales.includes(sale.id)
+                                ? "bg-muted/50"
+                                : ""
+                            }`}
+                            onClick={() => handleToggleSale(sale.id)}
+                          >
+                            <TableCell
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedSales((prev) =>
+                                  isExpanded
+                                    ? prev.filter((id) => id !== sale.id)
+                                    : [...prev, sale.id],
+                                );
+                              }}
+                              className="text-muted-foreground"
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="w-4 h-4" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4" />
+                              )}
+                            </TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <Checkbox
+                                checked={selectedSales.includes(sale.id)}
+                                onCheckedChange={() =>
+                                  handleToggleSale(sale.id)
+                                }
+                                className="cursor-pointer"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium">
+                                {sale.full_document_number}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {sale.customer.business_name ||
+                                `${sale.customer.names} ${sale.customer.father_surname}`}
+                            </TableCell>
+                            <TableCell>
+                              {new Date(sale.issue_date).toLocaleDateString(
+                                "es-PE",
+                                {
+                                  year: "numeric",
+                                  month: "2-digit",
+                                  day: "2-digit",
+                                },
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {sale.currency} {sale.total_amount.toFixed(2)}
+                            </TableCell>
+                          </TableRow>
+                          {isExpanded && sale.details.length > 0 && (
+                            <TableRow key={`${sale.id}-details`}>
+                              <TableCell colSpan={6} className="p-0 bg-muted/20">
+                                <div className="px-8 py-2">
+                                  <table className="w-full text-xs">
+                                    <thead>
+                                      <tr className="text-muted-foreground border-b">
+                                        <th className="text-left py-1 font-medium">Producto</th>
+                                        <th className="text-right py-1 font-medium">Sacos</th>
+                                        <th className="text-right py-1 font-medium">Kg</th>
+                                        <th className="text-right py-1 font-medium">P. Unit.</th>
+                                        <th className="text-right py-1 font-medium">Subtotal</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {sale.details.map((detail) => (
+                                        <tr key={detail.id} className="border-b last:border-0">
+                                          <td className="py-1">
+                                            <span className="font-medium">{detail.product.codigo}</span>
+                                            {" — "}
+                                            {detail.product.name}
+                                          </td>
+                                          <td className="text-right py-1">{detail.quantity_sacks}</td>
+                                          <td className="text-right py-1">{detail.quantity_kg}</td>
+                                          <td className="text-right py-1">{detail.unit_price.toFixed(2)}</td>
+                                          <td className="text-right py-1">{detail.subtotal.toFixed(2)}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </TableCell>
+                            </TableRow>
                           )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {sale.currency} {sale.total_amount.toFixed(2)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                        </>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>

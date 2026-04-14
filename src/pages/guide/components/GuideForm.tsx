@@ -617,6 +617,37 @@ export const GuideForm = ({
     [buildAutoProductCode, createMissingProductForRow],
   );
 
+  const findProductByCode = useCallback(
+    async (rowIndex: number, code: string) => {
+      const normalizedCode = code.trim().toUpperCase();
+      if (!normalizedCode) return null;
+
+      const response = await getProduct({
+        params: {
+          codigo: normalizedCode,
+          direction: "asc",
+          sort: "codigo",
+        },
+      });
+
+      const found = response.data.find(
+        (product) => product.codigo.trim().toUpperCase() === normalizedCode,
+      );
+
+      if (!found) return null;
+
+      handleProductSelect(rowIndex, {
+        id: found.id.toString(),
+        codigo: found.codigo,
+        name: found.name,
+        weight: found.weight,
+      });
+
+      return found;
+    },
+    [handleProductSelect],
+  );
+
   // Cuando useProduct retorna resultado, auto-seleccionar primer producto y avanzar celda
   useEffect(() => {
     if (!productCodeSearch || isSearchingProduct) return;
@@ -675,16 +706,43 @@ export const GuideForm = ({
     productSearchResult,
   ]);
 
-  const handleDescriptionTab = useCallback(
+  const handleProductGridTab = useCallback(
     (
       rowIndex: number,
-      description: string,
+      value: string,
       advance: () => void,
       setError: (msg: string) => void,
+      columnId?: string,
     ) => {
       const row = customDetails[rowIndex];
       if (!row) {
         setError("No se pudo obtener la fila del detalle");
+        return;
+      }
+
+      if (columnId === "product_code") {
+        const code = value.trim();
+
+        if (!code) {
+          advance();
+          return;
+        }
+
+        setCustomDetails((prev) =>
+          prev.map((item, index) =>
+            index === rowIndex ? { ...item, product_code: code } : item,
+          ),
+        );
+
+        void (async () => {
+          try {
+            await findProductByCode(rowIndex, code);
+            advance();
+          } catch {
+            setError("No se pudo buscar el producto por código");
+          }
+        })();
+
         return;
       }
 
@@ -693,7 +751,7 @@ export const GuideForm = ({
         return;
       }
 
-      const trimmedDescription = description.trim();
+      const trimmedDescription = value.trim();
       if (!trimmedDescription) {
         setError("Ingrese la descripción del producto");
         return;
@@ -719,7 +777,7 @@ export const GuideForm = ({
       productCodeCallbacksRef.current = { advance, setError };
       setProductCodeSearch({ rowIndex, code: resolvedCode });
     },
-    [buildAutoProductCode, customDetails],
+    [buildAutoProductCode, customDetails, findProductByCode],
   );
 
   // Auto-calcular totales cuando cambian los productos personalizados
@@ -910,7 +968,7 @@ export const GuideForm = ({
     {
       id: "product_code",
       header: "Código",
-      type: "text",
+      type: "product-code",
       width: "120px",
       accessor: "product_code",
     },
@@ -1823,7 +1881,7 @@ export const GuideForm = ({
                     onCellChange={handleDetailChange}
                     productOptions={productOptions}
                     onProductSelect={handleProductSelect}
-                    onProductCodeTab={handleDescriptionTab}
+                    onProductCodeTab={handleProductGridTab}
                     emptyMessage="Agregue productos al detalle"
                   />
                 </div>

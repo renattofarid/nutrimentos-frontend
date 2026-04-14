@@ -26,6 +26,11 @@ export const productSchemaCreate = z.object({
     .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) > 0), {
       message: "Debe ser un número válido mayor o igual a 0",
     }),
+  price: z.coerce
+    .string()
+    .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) > 0), {
+      message: "Debe ser un número válido mayor o igual a 0",
+    }),
 });
 
 export const productSchemaUpdate = productSchemaCreate.partial();

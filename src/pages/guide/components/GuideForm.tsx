@@ -1034,21 +1034,19 @@ export const GuideForm = ({
                 </div>
               )}
 
-              <div className="hidden">
-                <FormSelect
-                  control={form.control}
-                  name="motive_id"
-                  label="Motivo de Traslado"
-                  placeholder="Seleccione un motivo"
-                  options={motives
-                    .sort((a, b) => a.id - b.id)
-                    .map((motive) => ({
-                      value: motive.id.toString(),
-                      label: motive.name,
-                      description: "CÓDIGO: " + motive.code,
-                    }))}
-                />
-              </div>
+              <FormSelect
+                control={form.control}
+                name="motive_id"
+                label="Motivo de Traslado"
+                placeholder="Seleccione un motivo"
+                options={motives
+                  .sort((a, b) => a.id - b.id)
+                  .map((motive) => ({
+                    value: motive.id.toString(),
+                    label: motive.name,
+                    description: "CÓDIGO: " + motive.code,
+                  }))}
+              />
 
               <div className="hidden">
                 <FormSelect
@@ -1258,7 +1256,7 @@ export const GuideForm = ({
               {/* Campos adicionales (ocultos por defecto) */}
               <div className={showAdvancedFields ? "contents" : "hidden"}>
                 {/* Selector de Conductor */}
-                <div className="md:col-span-2">
+                <div>
                   <FormSelectAsync
                     name="driver_id"
                     label="Conductor"

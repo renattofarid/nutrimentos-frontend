@@ -160,6 +160,16 @@ export const ProductForm = ({
             }))}
           />
 
+          <FormInput
+            control={form.control}
+            name="price"
+            label="Precio"
+            type="number"
+            step="0.01"
+            min={0}
+            placeholder="0.00"
+          />
+
           <FormSwitch
             control={form.control}
             name="is_taxed"

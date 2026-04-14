@@ -45,6 +45,7 @@ export const PRODUCT: ModelComplete<ProductSchema> = {
     is_kg: true,
     price_per_kg: "",
     weight: "",
+    price: "",
   },
 };
 
@@ -77,6 +78,7 @@ export interface ProductResource {
   weight?: string;
   is_kg: number;
   price_per_kg?: string;
+  price?: string;
   commission_percentage?: string;
   accounting_cost?: string;
   inventory_cost?: string;

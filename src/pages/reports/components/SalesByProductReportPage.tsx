@@ -44,9 +44,7 @@ const columns: ColumnDef<SalesByProductItem>[] = [
     accessorKey: "producto",
     header: "Producto",
     size: 280,
-    cell: ({ row }) => (
-      <span className="text-sm">{row.original.producto}</span>
-    ),
+    cell: ({ row }) => <span className="text-sm">{row.original.producto}</span>,
   },
   {
     accessorKey: "sacos",
@@ -122,9 +120,7 @@ const columns: ColumnDef<SalesByProductItem>[] = [
     header: "Afecto IGV",
     size: 90,
     cell: ({ row }) => (
-      <span className="text-sm">
-        {row.original.is_taxed ? "Sí" : "No"}
-      </span>
+      <span className="text-sm">{row.original.is_taxed ? "Sí" : "No"}</span>
     ),
   },
 ];
@@ -145,7 +141,9 @@ export default function SalesByProductReportPage() {
     },
   });
 
-  const buildParams = (values: FilterFormValues): SalesByProductReportParams => ({
+  const buildParams = (
+    values: FilterFormValues,
+  ): SalesByProductReportParams => ({
     branch_id: values.branch_id ? Number(values.branch_id) : null,
     user_id: values.user_id ? Number(values.user_id) : null,
     warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
@@ -162,7 +160,10 @@ export default function SalesByProductReportPage() {
     if (format === "excel") setIsExportingExcel(true);
     else setIsExportingPdf(true);
     try {
-      const blob = await exportSalesByProductReport(buildParams(values), format);
+      const blob = await exportSalesByProductReport(
+        buildParams(values),
+        format,
+      );
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -184,7 +185,6 @@ export default function SalesByProductReportPage() {
 
   return (
     <PageWrapper>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">
           <GroupFormSection
@@ -194,14 +194,14 @@ export default function SalesByProductReportPage() {
             cols={{ sm: 1, md: 2, lg: 4 }}
             headerExtra={
               <div className="flex gap-2">
-                <Button type="submit" disabled={isLoading} size="sm">
+                <Button type="submit" disabled={isLoading} size="xs">
                   <Search className="mr-2 h-4 w-4" />
                   Buscar
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="xs"
                   onClick={() => handleExport("excel")}
                   disabled={isExportingExcel}
                 >
@@ -211,7 +211,7 @@ export default function SalesByProductReportPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="xs"
                   onClick={() => handleExport("pdf")}
                   disabled={isExportingPdf}
                 >
@@ -266,11 +266,7 @@ export default function SalesByProductReportPage() {
             />
           </GroupFormSection>
 
-          <DataTable
-            columns={columns}
-            data={tableData}
-            isLoading={isLoading}
-          />
+          <DataTable columns={columns} data={tableData} isLoading={isLoading} />
         </form>
       </Form>
     </PageWrapper>

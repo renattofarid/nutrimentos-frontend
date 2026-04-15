@@ -48,7 +48,6 @@ export const warehouseDocumentSchemaCreate = z
         },
         { message: "La fecha no puede ser posterior a hoy" }
       ),
-    purchase_id: z.string().optional(),
     observations: z
       .string()
       .max(1000, {

@@ -60,6 +60,7 @@ export interface PreviewDeliverySheetParams {
   type: "CONTADO" | "CREDITO";
   zone_id?: number;
   branch_id?: number;
+  driver_id?: number;
 }
 
 export const previewDeliverySheet = async (

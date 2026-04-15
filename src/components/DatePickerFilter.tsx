@@ -28,7 +28,7 @@ export function DatePickerFilter({
   value,
   onChange,
   placeholder = "Fecha",
-  dateFormat = "dd/MM/yyyy",
+  dateFormat = "dd-MM-yyyy",
   className,
   vertical = false,
 }: DatePickerFilterProps) {

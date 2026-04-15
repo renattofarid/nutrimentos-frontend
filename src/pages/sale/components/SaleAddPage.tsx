@@ -195,6 +195,7 @@ export const SaleAddPage = () => {
         title="¿Crear otra venta?"
         description="¿Deseas registrar otra venta?"
         confirmText="Sí, crear otra"
+        confirmFirst={true}
         cancelText="No, ir al listado"
         onConfirm={() => {
           setFormKey((k) => k + 1);

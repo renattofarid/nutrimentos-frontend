@@ -49,6 +49,7 @@ const createFormData = (data: ProductSchema): FormData => {
   if (data.weight) formData.append("weight", data.weight);
   formData.append("is_kg", data.is_kg ? "1" : "0");
   if (data.price_per_kg) formData.append("price_per_kg", data.price_per_kg);
+  if (data.price) formData.append("price", data.price);
 
   return formData;
 };

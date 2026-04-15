@@ -86,7 +86,7 @@ export const CreditNoteForm = ({
     defaultValues: {
       sale_id: "0",
       issue_date: format(new Date(), "yyyy-MM-dd"),
-      credit_note_motive_id: "0",
+      credit_note_motive_id: "7",
       affects_stock: true,
       observations: "",
       details: [],
@@ -276,7 +276,7 @@ export const CreditNoteForm = ({
           <Button
             size="sm"
             type="submit"
-            disabled={isSubmitting || !form.formState.isValid}
+            disabled={isSubmitting}
           >
             {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
             {isSubmitting ? "Guardando..." : "Guardar"}
@@ -323,14 +323,16 @@ export const CreditNoteForm = ({
             placeholder="Seleccione la fecha"
           />
 
-          <FormSelect
-            control={form.control}
-            name="credit_note_motive_id"
-            label="MOTIVO"
-            placeholder="Seleccione un motivo"
-            options={motives}
-            uppercase
-          />
+          <div className="hidden">
+            <FormSelect
+              control={form.control}
+              name="credit_note_motive_id"
+              label="MOTIVO"
+              placeholder="Seleccione un motivo"
+              options={motives}
+              uppercase
+            />
+          </div>
 
           <FormSwitch
             control={form.control}

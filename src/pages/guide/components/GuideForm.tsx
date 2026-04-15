@@ -32,6 +32,8 @@ import {
   ShoppingCart,
   Save,
   X,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
@@ -62,11 +64,14 @@ import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import { useDrivers } from "@/pages/driver/lib/driver.hook";
 import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
 import { errorToast, successToast, warningToast } from "@/lib/core.function";
+import { promiseToast } from "@/lib/core.function";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useUbigeosFrom } from "../lib/ubigeo.hook";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useProduct } from "@/pages/product/lib/product.hook";
+import { useProductStore } from "@/pages/product/lib/product.store";
+import { getProduct } from "@/pages/product/lib/product.actions";
 import {
   ExcelGrid,
   type ExcelGridColumn,
@@ -74,12 +79,18 @@ import {
 } from "@/components/ExcelGrid";
 import { useClients } from "@/pages/client/lib/client.hook";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
+import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { FormTextArea } from "@/components/FormTextArea";
 import { Alert } from "@/components/ui/alert";
 import { usePersonZones } from "@/pages/client/lib/personzone.hook";
 import type { PersonZoneResource } from "@/pages/client/lib/personzone.interface";
 import ClientAddressesSheet from "@/pages/client/components/ClientAddressesSheet";
 import { getUbigeos } from "../lib/ubigeo.actions";
+import { useAuthStore } from "@/pages/auth/lib/auth.store";
+import { useAllCompanies } from "@/pages/company/lib/company.hook";
+import { useAllUnits } from "@/pages/unit/lib/unit.hook";
+import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
+import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 
 interface GuideFormProps {
   defaultValues: Partial<GuideSchema>;
@@ -103,6 +114,15 @@ export const GuideForm = ({
   warehouses,
   motives,
 }: GuideFormProps) => {
+  const { user } = useAuthStore();
+  const { createProduct } = useProductStore();
+  const { data: companies } = useAllCompanies();
+  const { data: units } = useAllUnits();
+  const { data: productTypes } = useAllProductTypes();
+  const { data: suppliers } = useAllPersons({
+    role_names: [SUPPLIER_ROLE_CODE],
+  });
+
   const [filteredWarehouses, setFilteredWarehouses] = useState<
     WarehouseResource[]
   >([]);
@@ -111,10 +131,10 @@ export const GuideForm = ({
   // Estados para búsqueda de ventas por rango
   const [salesByRange, setSalesByRange] = useState<SaleResource[]>([]);
   const [selectedSales, setSelectedSales] = useState<number[]>([]);
+  const [expandedSales, setExpandedSales] = useState<number[]>([]);
   const [isSearchingSales, setIsSearchingSales] = useState(false);
   const [searchParams, setSearchParams] = useState({
     document_type: "BOLETA",
-    person_zone_id: "",
     serie: "",
     numero_inicio: "",
     numero_fin: "",
@@ -304,9 +324,7 @@ export const GuideForm = ({
       }
 
       setSalesByRange(response.data);
-      setSelectedSales([]);
-      form.setValue("customer_id", "");
-      setDetectedCustomerName(null);
+      setSelectedSales(response.data.map((sale) => sale.id));
 
       successToast(
         `Se encontraron ${response.data.length} ventas`,
@@ -398,6 +416,8 @@ export const GuideForm = ({
     form.setValue("issue_date", formattedDate);
     form.setValue("transfer_date", formattedDate);
     form.setValue("motive_id", "3");
+    // En modo por ventas (default), el cliente siempre es "Clientes Varios" (id=30)
+    form.setValue("customer_id", "30");
     if (form.getValues("modality") !== "PRIVADO") {
       form.setValue("carrier_document_type", "RUC");
     }
@@ -446,6 +466,191 @@ export const GuideForm = ({
     [],
   );
 
+  const createMissingProductForRow = useCallback(
+    async (rowIndex: number, code: string) => {
+      const row = customDetails[rowIndex];
+      const normalizedCode = code.trim();
+      const normalizedUnitCode = row?.unit_code?.trim().toUpperCase();
+
+      if (!row || !normalizedCode) {
+        throw new Error("No se pudo determinar el producto a crear");
+      }
+
+      const companyId = user?.company_id ?? companies?.[0]?.id;
+      const productTypeId = productTypes?.[0]?.id;
+      const supplierId = suppliers?.[0]?.id;
+      const matchedUnit =
+        units?.find(
+          (unit) => unit.code.trim().toUpperCase() === normalizedUnitCode,
+        ) ?? units?.[0];
+
+      if (!companyId || !productTypeId || !supplierId || !matchedUnit?.id) {
+        throw new Error(
+          "Faltan catálogos base para crear el producto automáticamente",
+        );
+      }
+
+      const productName =
+        row.product_name?.trim() || row.description?.trim() || normalizedCode;
+
+      const creationPromise = (async () => {
+        await createProduct({
+          codigo: normalizedCode,
+          name: productName,
+          company_id: companyId.toString(),
+          product_type_id: productTypeId.toString(),
+          unit_id: matchedUnit.id.toString(),
+          is_taxed: false,
+          supplier_id: supplierId.toString(),
+          weight: "0",
+          is_kg: normalizedUnitCode === "KGM",
+          price_per_kg: "0",
+          price: "0",
+        });
+
+        const response = await getProduct({
+          params: {
+            codigo: normalizedCode,
+            direction: "asc",
+            sort: "codigo",
+          },
+        });
+
+        const exactProduct = response.data.find(
+          (product) => product.codigo.trim().toUpperCase() === normalizedCode,
+        );
+
+        if (!exactProduct) {
+          throw new Error("No se pudo recuperar el producto recién creado");
+        }
+
+        return exactProduct;
+      })();
+
+      promiseToast(creationPromise, {
+        loading: `Creando producto ${normalizedCode}...`,
+        success: "Producto creado automáticamente",
+        error: (error) =>
+          error instanceof Error
+            ? error.message
+            : "No se pudo crear el producto automáticamente",
+      });
+
+      return creationPromise;
+    },
+    [
+      companies,
+      createProduct,
+      customDetails,
+      productTypes,
+      suppliers,
+      units,
+      user?.company_id,
+    ],
+  );
+
+  const buildAutoProductCode = useCallback(
+    (name: string, rowIndex: number) => {
+      const base = name
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, "")
+        .slice(0, 16);
+
+      const suffix = `${Date.now()}`.slice(-6);
+      return `AUTO${base || "PROD"}${rowIndex + 1}${suffix}`.slice(0, 50);
+    },
+    [],
+  );
+
+  const resolveDetailProduct = useCallback(
+    async (
+      row: (typeof customDetails)[0],
+      rowIndex: number,
+      cache: Map<string, string>,
+    ) => {
+      if (row.product_id) {
+        return row.product_id;
+      }
+
+      const productName = row.description?.trim() || row.product_name?.trim();
+      if (!productName) {
+        throw new Error(
+          `La fila ${rowIndex + 1} no tiene producto ni descripción para crear automáticamente`,
+        );
+      }
+
+      const normalizedCode =
+        row.product_code?.trim() || buildAutoProductCode(productName, rowIndex);
+      const cacheKey = normalizedCode.toUpperCase();
+
+      const cachedProductId = cache.get(cacheKey);
+      if (cachedProductId) {
+        return cachedProductId;
+      }
+
+      const existingResponse = await getProduct({
+        params: {
+          codigo: normalizedCode,
+          direction: "asc",
+          sort: "codigo",
+        },
+      });
+
+      const existingProduct = existingResponse.data.find(
+        (product) => product.codigo.trim().toUpperCase() === cacheKey,
+      );
+
+      if (existingProduct) {
+        const existingId = existingProduct.id.toString();
+        cache.set(cacheKey, existingId);
+        return existingId;
+      }
+
+      const createdProduct = await createMissingProductForRow(
+        rowIndex,
+        normalizedCode,
+      );
+
+      const createdId = createdProduct.id.toString();
+      cache.set(cacheKey, createdId);
+      return createdId;
+    },
+    [buildAutoProductCode, createMissingProductForRow],
+  );
+
+  const findProductByCode = useCallback(
+    async (rowIndex: number, code: string) => {
+      const normalizedCode = code.trim().toUpperCase();
+      if (!normalizedCode) return null;
+
+      const response = await getProduct({
+        params: {
+          codigo: normalizedCode,
+          direction: "asc",
+          sort: "codigo",
+        },
+      });
+
+      const found = response.data.find(
+        (product) => product.codigo.trim().toUpperCase() === normalizedCode,
+      );
+
+      if (!found) return null;
+
+      handleProductSelect(rowIndex, {
+        id: found.id.toString(),
+        codigo: found.codigo,
+        name: found.name,
+        weight: found.weight,
+      });
+
+      return found;
+    },
+    [handleProductSelect],
+  );
+
   // Cuando useProduct retorna resultado, auto-seleccionar primer producto y avanzar celda
   useEffect(() => {
     if (!productCodeSearch || isSearchingProduct) return;
@@ -461,38 +666,129 @@ export const GuideForm = ({
         weight: p.weight,
       });
       callbacks.advance();
+      productCodeCallbacksRef.current = null;
+      setProductCodeSearch(null);
     } else if (productSearchResult !== undefined) {
-      callbacks.setError(
-        `No se encontró ningún producto con código "${productCodeSearch.code}"`,
-      );
+      void (async () => {
+        try {
+          const createdProduct = await createMissingProductForRow(
+            productCodeSearch.rowIndex,
+            productCodeSearch.code,
+          );
+
+          handleProductSelect(productCodeSearch.rowIndex, {
+            id: createdProduct.id.toString(),
+            codigo: createdProduct.codigo,
+            name: createdProduct.name,
+            weight: createdProduct.weight,
+          });
+          callbacks.advance();
+        } catch (error) {
+          callbacks.setError(
+            error instanceof Error
+              ? error.message
+              : "No se pudo crear el producto automáticamente",
+          );
+          errorToast(
+            error instanceof Error
+              ? error.message
+              : "No se pudo crear el producto automáticamente",
+          );
+        } finally {
+          productCodeCallbacksRef.current = null;
+          setProductCodeSearch(null);
+        }
+      })();
     }
-
-    productCodeCallbacksRef.current = null;
-    setProductCodeSearch(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productSearchResult, isSearchingProduct]);
+  }, [
+    createMissingProductForRow,
+    handleProductSelect,
+    isSearchingProduct,
+    productCodeSearch,
+    productSearchResult,
+  ]);
 
-  const handleProductCodeTab = useCallback(
+  const handleProductGridTab = useCallback(
     (
       rowIndex: number,
-      code: string,
+      value: string,
       advance: () => void,
       setError: (msg: string) => void,
+      columnId?: string,
     ) => {
-      if (!code.trim()) {
+      const row = customDetails[rowIndex];
+      if (!row) {
+        setError("No se pudo obtener la fila del detalle");
+        return;
+      }
+
+      if (columnId === "product_code") {
+        const code = value.trim();
+
+        if (!code) {
+          advance();
+          return;
+        }
+
+        setCustomDetails((prev) =>
+          prev.map((item, index) =>
+            index === rowIndex ? { ...item, product_code: code } : item,
+          ),
+        );
+
+        void (async () => {
+          try {
+            await findProductByCode(rowIndex, code);
+            advance();
+          } catch {
+            setError("No se pudo buscar el producto por código");
+          }
+        })();
+
+        return;
+      }
+
+      if (row.product_id) {
         advance();
         return;
       }
+
+      const trimmedDescription = value.trim();
+      if (!trimmedDescription) {
+        setError("Ingrese la descripción del producto");
+        return;
+      }
+
+      const resolvedCode =
+        row.product_code.trim() ||
+        buildAutoProductCode(trimmedDescription, rowIndex);
+
+      setCustomDetails((prev) =>
+        prev.map((item, index) =>
+          index === rowIndex
+            ? {
+                ...item,
+                product_code: item.product_code || resolvedCode,
+                description: trimmedDescription,
+                product_name: item.product_name || trimmedDescription,
+              }
+            : item,
+        ),
+      );
+
       productCodeCallbacksRef.current = { advance, setError };
-      setProductCodeSearch({ rowIndex, code });
+      setProductCodeSearch({ rowIndex, code: resolvedCode });
     },
-    [],
+    [buildAutoProductCode, customDetails, findProductByCode],
   );
 
   // Auto-calcular totales cuando cambian los productos personalizados
   useEffect(() => {
     if (!useCustomDetails) return;
-    const totalPackages = customDetails.filter((d) => d.product_id).length;
+    const totalPackages = customDetails.filter(
+      (d) => d.product_id || d.description || d.quantity_sacks || d.quantity_kg,
+    ).length;
     form.setValue("total_packages", totalPackages as any);
   }, [customDetails, useCustomDetails, form]);
 
@@ -519,43 +815,14 @@ export const GuideForm = ({
     }
   }, [selectedSales, salesByRange, form]);
 
-  // Sincronizar cliente detectado según ventas seleccionadas (no por resultados buscados)
+  // En modo por ventas, el cliente es siempre "Clientes Varios" (id=30).
+  // No se sincroniza desde las ventas seleccionadas.
   useEffect(() => {
-    if (useCustomDetails) return;
+    if (!useCustomDetails) return;
+    // En modo por productos, limpiar si no hay cliente seleccionado
+  }, [useCustomDetails]);
 
-    const selectedSalesData = salesByRange.filter((sale) =>
-      selectedSales.includes(sale.id),
-    );
-
-    if (selectedSalesData.length === 0) {
-      form.setValue("customer_id", "");
-      setDetectedCustomerName(null);
-      return;
-    }
-
-    const firstCustomerId = selectedSalesData[0].customer.id;
-    const sameCustomerSales = selectedSalesData.filter(
-      (sale) => sale.customer.id === firstCustomerId,
-    );
-
-    if (sameCustomerSales.length !== selectedSalesData.length) {
-      warningToast(
-        "Solo puede mantener ventas de un mismo cliente en la selección",
-      );
-      setSelectedSales(sameCustomerSales.map((sale) => sale.id));
-      return;
-    }
-
-    const firstCustomer = selectedSalesData[0].customer;
-    const customerName =
-      firstCustomer.business_name ||
-      `${firstCustomer.names} ${firstCustomer.father_surname}`.trim();
-
-    form.setValue("customer_id", firstCustomer.id.toString());
-    setDetectedCustomerName(customerName);
-  }, [selectedSales, salesByRange, useCustomDetails, form]);
-
-  const handleFormSubmit = (data: any) => {
+  const handleFormSubmit = async (data: any) => {
     if (!useCustomDetails && selectedSales.length === 0) {
       errorToast("Debe seleccionar al menos una venta");
       return;
@@ -569,37 +836,28 @@ export const GuideForm = ({
     }
 
     if (useCustomDetails) {
-      const validDetails = customDetails.filter((d) => d.product_id);
+      const validDetails = customDetails.filter(
+        (d) =>
+          d.product_id || d.description || d.quantity_sacks || d.quantity_kg,
+      );
       if (validDetails.length === 0) {
         errorToast("Debe agregar al menos un producto");
         return;
       }
     }
 
-    let customerId = parseInt(data.customer_id);
+    // En modo por ventas el cliente siempre es "Clientes Varios" (id=30)
+    const customerId = !useCustomDetails ? 30 : parseInt(data.customer_id);
 
-    if (!useCustomDetails) {
-      const selectedSalesData = salesByRange.filter((sale) =>
-        selectedSales.includes(sale.id),
-      );
-      const uniqueCustomerIds = Array.from(
-        new Set(selectedSalesData.map((sale) => sale.customer.id)),
-      );
-
-      if (uniqueCustomerIds.length !== 1) {
-        errorToast(
-          "Las ventas seleccionadas deben pertenecer a un solo cliente",
-        );
-        return;
-      }
-
-      customerId = uniqueCustomerIds[0];
-    }
-
-    if (Number.isNaN(customerId)) {
+    if (useCustomDetails && Number.isNaN(customerId)) {
       errorToast("No se pudo determinar el cliente de la guía");
       return;
     }
+
+    const saleDocumentNumber =
+      typeof data.sale_document_number === "string"
+        ? data.sale_document_number.trim()
+        : "";
 
     const base = {
       use_custom_details: useCustomDetails,
@@ -610,9 +868,10 @@ export const GuideForm = ({
       transfer_date: data.transfer_date,
       modality: data.modality,
       motive_id: parseInt(data.motive_id),
-      sale_document_number: useCustomDetails
-        ? data.sale_document_number || null
-        : null,
+      sale_document_number:
+        useCustomDetails && saleDocumentNumber && saleDocumentNumber !== "-"
+          ? saleDocumentNumber
+          : null,
       carrier_document_type: data.carrier_document_type || null,
       carrier_document_number: data.carrier_document_number || null,
       carrier_name: data.carrier_name || null,
@@ -633,23 +892,72 @@ export const GuideForm = ({
       observations: data.observations || null,
     };
 
-    const payload = useCustomDetails
-      ? {
-          ...base,
-          details: customDetails
-            .filter((d) => d.product_id)
-            .map((d) => ({
-              product_id: parseInt(d.product_id),
-              description: d.description,
-              quantity_sacks: parseFloat(d.quantity_sacks) || 0,
-              quantity_kg: parseFloat(d.quantity_kg) || 0,
-              unit_code: d.unit_code,
-            })),
-        }
-      : {
-          ...base,
-          sale_ids: selectedSales,
-        };
+    let payload: any;
+
+    if (useCustomDetails) {
+      const detailsToProcess = customDetails.filter(
+        (d) =>
+          d.product_id || d.description || d.quantity_sacks || d.quantity_kg,
+      );
+
+      const resolvePromise = (async () => {
+        const createdProductsCache = new Map<string, string>();
+
+        const resolved = await Promise.all(
+          detailsToProcess.map(async (detail, index) => {
+            const resolvedProductId = await resolveDetailProduct(
+              detail,
+              index,
+              createdProductsCache,
+            );
+
+            return {
+              product_id: parseInt(resolvedProductId),
+              description:
+                detail.description || detail.product_name || null,
+              quantity_sacks: parseFloat(detail.quantity_sacks) || 0,
+              quantity_kg: parseFloat(detail.quantity_kg) || 0,
+              unit_code: detail.unit_code,
+            };
+          }),
+        );
+
+        return resolved;
+      })();
+
+      promiseToast(resolvePromise, {
+        loading: "Resolviendo productos del detalle...",
+        success: "Productos listos para registrar la guía",
+        error: (error) =>
+          error instanceof Error
+            ? error.message
+            : "No se pudieron resolver los productos del detalle",
+      });
+
+      let resolvedDetails: Array<{
+        product_id: number;
+        description: string | null;
+        quantity_sacks: number;
+        quantity_kg: number;
+        unit_code: string;
+      }> = [];
+
+      try {
+        resolvedDetails = await resolvePromise;
+      } catch {
+        return;
+      }
+
+      payload = {
+        ...base,
+        details: resolvedDetails,
+      };
+    } else {
+      payload = {
+        ...base,
+        sale_ids: selectedSales,
+      };
+    }
 
     console.log("[GuideForm] raw form data:", data);
     console.log("[GuideForm] payload:", payload);
@@ -668,19 +976,12 @@ export const GuideForm = ({
       accessor: "product_code",
     },
     {
-      id: "product",
-      header: "Producto",
-      type: "product-search",
+      id: "description",
+      header: "Descripción",
+      type: "product-code",
       width: "250px",
-      accessor: "product_name",
+      accessor: "description",
     },
-    // {
-    //   id: "description",
-    //   header: "Descripción",
-    //   type: "text",
-    //   width: "200px",
-    //   accessor: "description",
-    // },
     {
       id: "quantity_sacks",
       header: "Sacos",
@@ -805,7 +1106,6 @@ export const GuideForm = ({
       setCustomerAddresses([]);
       setSelectedPersonZoneId("");
       autoAppliedCustomerRef.current = null;
-      setSearchParams((prev) => ({ ...prev, person_zone_id: "" }));
       return;
     }
 
@@ -821,7 +1121,6 @@ export const GuideForm = ({
 
     if (addresses.length === 0) {
       setSelectedPersonZoneId("");
-      setSearchParams((prev) => ({ ...prev, person_zone_id: "" }));
       return;
     }
 
@@ -838,11 +1137,6 @@ export const GuideForm = ({
       setSelectedPersonZoneId(nextZoneId);
     }
 
-    setSearchParams((prev) =>
-      prev.person_zone_id === nextZoneId
-        ? prev
-        : { ...prev, person_zone_id: nextZoneId },
-    );
 
     if (
       !hasCurrentSelection ||
@@ -895,7 +1189,14 @@ export const GuideForm = ({
               disabled={
                 isSubmitting ||
                 (!useCustomDetails && selectedSales.length === 0) ||
-                (useCustomDetails && customDetails.every((d) => !d.product_id))
+                (useCustomDetails &&
+                  customDetails.every(
+                    (d) =>
+                      !d.product_id &&
+                      !d.description &&
+                      !d.quantity_sacks &&
+                      !d.quantity_kg,
+                  ))
               }
             >
               {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
@@ -977,52 +1278,51 @@ export const GuideForm = ({
                   onValueChange={handleCustomerChange}
                 />
               ) : (
-                detectedCustomerName && (
-                  <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">
-                      Cliente:{" "}
-                    </span>
-                    {detectedCustomerName}
-                  </div>
-                )
+                <div className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Cliente: </span>
+                  Clientes Varios
+                </div>
               )}
 
               {customerValue && (
-                <div className="space-y-2">
-                  <SearchableSelect
-                    label="Dirección del Cliente"
-                    buttonSize="default"
-                    options={customerAddresses.map((address) => ({
-                      value: address.id.toString(),
-                      label: address.address,
-                      description: `${address.zone.name}${address.is_primary ? " - Principal" : ""}`,
-                    }))}
-                    value={selectedPersonZoneId}
-                    onChange={(value) => {
-                      void handleSelectPersonZone(value);
-                    }}
-                    placeholder={
-                      isLoadingPersonZones
-                        ? "Cargando direcciones..."
-                        : "Seleccione una dirección"
-                    }
-                    disabled={
-                      isLoadingPersonZones || customerAddresses.length === 0
-                    }
-                    className="w-full"
-                  />
+                <div className="space-y-2 w-full">
+                  <div className="w-full flex gap-1 items-end">
+                    <SearchableSelect
+                      label="Dirección del Cliente"
+                      buttonSize="default"
+                      options={customerAddresses.map((address) => ({
+                        value: address.id.toString(),
+                        label: address.address,
+                        description: `${address.zone.name}${address.is_primary ? " - Principal" : ""}`,
+                      }))}
+                      value={selectedPersonZoneId}
+                      onChange={(value) => {
+                        void handleSelectPersonZone(value);
+                      }}
+                      placeholder={
+                        isLoadingPersonZones
+                          ? "Cargando direcciones..."
+                          : "Seleccione una dirección"
+                      }
+                      disabled={
+                        isLoadingPersonZones || customerAddresses.length === 0
+                      }
+                      className="w-full!"
+                      classNameDiv="w-full!"
+                      classNameLabel="w-full!"
+                    />
 
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsAddressManagerOpen(true)}
-                      disabled={!selectedCustomerId}
-                      className="w-full sm:w-auto"
-                    >
-                      <Settings2 className="h-4 w-4" />
-                      Gestionar
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        onClick={() => setIsAddressManagerOpen(true)}
+                        disabled={!selectedCustomerId}
+                      >
+                        <Settings2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
 
                   {customerAddresses.length === 0 && !isLoadingPersonZones && (
@@ -1034,21 +1334,19 @@ export const GuideForm = ({
                 </div>
               )}
 
-              <div className="hidden">
-                <FormSelect
-                  control={form.control}
-                  name="motive_id"
-                  label="Motivo de Traslado"
-                  placeholder="Seleccione un motivo"
-                  options={motives
-                    .sort((a, b) => a.id - b.id)
-                    .map((motive) => ({
-                      value: motive.id.toString(),
-                      label: motive.name,
-                      description: "CÓDIGO: " + motive.code,
-                    }))}
-                />
-              </div>
+              <FormSelect
+                control={form.control}
+                name="motive_id"
+                label="Motivo de Traslado"
+                placeholder="Seleccione un motivo"
+                options={motives
+                  .sort((a, b) => a.id - b.id)
+                  .map((motive) => ({
+                    value: motive.id.toString(),
+                    label: motive.name,
+                    description: "CÓDIGO: " + motive.code,
+                  }))}
+              />
 
               <div className="hidden">
                 <FormSelect
@@ -1258,7 +1556,7 @@ export const GuideForm = ({
               {/* Campos adicionales (ocultos por defecto) */}
               <div className={showAdvancedFields ? "contents" : "hidden"}>
                 {/* Selector de Conductor */}
-                <div className="md:col-span-2">
+                <div>
                   <FormSelectAsync
                     name="driver_id"
                     label="Conductor"
@@ -1372,7 +1670,8 @@ export const GuideForm = ({
                 onCheckedChange={(checked) => {
                   setUseCustomDetails(checked);
                   form.setValue("total_packages", 0 as any);
-                  form.setValue("customer_id", "");
+                  // Por ventas → Clientes Varios (id=30); por productos → selección manual
+                  form.setValue("customer_id", checked ? "" : "30");
                   setDetectedCustomerName(null);
                 }}
               />
@@ -1480,6 +1779,7 @@ export const GuideForm = ({
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-8"></TableHead>
                       <TableHead className="w-12">
                         <Checkbox
                           checked={
@@ -1497,50 +1797,105 @@ export const GuideForm = ({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {salesByRange.map((sale) => (
-                      <TableRow
-                        key={sale.id}
-                        className={`cursor-pointer hover:bg-muted/30 ${
-                          selectedSales.includes(sale.id) ? "bg-muted/50" : ""
-                        }`}
-                        onClick={() => handleToggleSale(sale.id)}
-                      >
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <Checkbox
-                            checked={selectedSales.includes(sale.id)}
-                            onCheckedChange={() => handleToggleSale(sale.id)}
-                            className="cursor-pointer"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {sale.full_document_number}
-                            </div>
-                            {/* <div className="text-xs text-muted-foreground">
-                            {sale.document_type}
-                          </div> */}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {sale.customer.business_name ||
-                            `${sale.customer.names} ${sale.customer.father_surname}`}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(sale.issue_date).toLocaleDateString(
-                            "es-PE",
-                            {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                            },
+                    {salesByRange.map((sale) => {
+                      const isExpanded = expandedSales.includes(sale.id);
+                      return (
+                        <>
+                          <TableRow
+                            key={sale.id}
+                            className={`cursor-pointer hover:bg-muted/30 ${
+                              selectedSales.includes(sale.id)
+                                ? "bg-muted/50"
+                                : ""
+                            }`}
+                            onClick={() => handleToggleSale(sale.id)}
+                          >
+                            <TableCell
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedSales((prev) =>
+                                  isExpanded
+                                    ? prev.filter((id) => id !== sale.id)
+                                    : [...prev, sale.id],
+                                );
+                              }}
+                              className="text-muted-foreground"
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="w-4 h-4" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4" />
+                              )}
+                            </TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <Checkbox
+                                checked={selectedSales.includes(sale.id)}
+                                onCheckedChange={() =>
+                                  handleToggleSale(sale.id)
+                                }
+                                className="cursor-pointer"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium">
+                                {sale.full_document_number}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {sale.customer.business_name ||
+                                `${sale.customer.names} ${sale.customer.father_surname}`}
+                            </TableCell>
+                            <TableCell>
+                              {new Date(sale.issue_date).toLocaleDateString(
+                                "es-PE",
+                                {
+                                  year: "numeric",
+                                  month: "2-digit",
+                                  day: "2-digit",
+                                },
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {sale.currency} {sale.total_amount.toFixed(2)}
+                            </TableCell>
+                          </TableRow>
+                          {isExpanded && sale.details.length > 0 && (
+                            <TableRow key={`${sale.id}-details`}>
+                              <TableCell colSpan={6} className="p-0 bg-muted/20">
+                                <div className="px-8 py-2">
+                                  <table className="w-full text-xs">
+                                    <thead>
+                                      <tr className="text-muted-foreground border-b">
+                                        <th className="text-left py-1 font-medium">Producto</th>
+                                        <th className="text-right py-1 font-medium">Sacos</th>
+                                        <th className="text-right py-1 font-medium">Kg</th>
+                                        <th className="text-right py-1 font-medium">P. Unit.</th>
+                                        <th className="text-right py-1 font-medium">Subtotal</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {sale.details.map((detail) => (
+                                        <tr key={detail.id} className="border-b last:border-0">
+                                          <td className="py-1">
+                                            <span className="font-medium">{detail.product.codigo}</span>
+                                            {" — "}
+                                            {detail.product.name}
+                                          </td>
+                                          <td className="text-right py-1">{detail.quantity_sacks}</td>
+                                          <td className="text-right py-1">{detail.quantity_kg}</td>
+                                          <td className="text-right py-1">{detail.unit_price.toFixed(2)}</td>
+                                          <td className="text-right py-1">{detail.subtotal.toFixed(2)}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </TableCell>
+                            </TableRow>
                           )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {sale.currency} {sale.total_amount.toFixed(2)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                        </>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
@@ -1585,7 +1940,7 @@ export const GuideForm = ({
                     onCellChange={handleDetailChange}
                     productOptions={productOptions}
                     onProductSelect={handleProductSelect}
-                    onProductCodeTab={handleProductCodeTab}
+                    onProductCodeTab={handleProductGridTab}
                     emptyMessage="Agregue productos al detalle"
                   />
                 </div>

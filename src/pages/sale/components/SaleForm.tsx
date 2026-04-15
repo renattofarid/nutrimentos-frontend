@@ -954,7 +954,7 @@ export const SaleForm = ({
     const date = new Date(issueDate);
     date.setDate(date.getDate() + daysNum);
 
-    // Formatear como DD/MM/YYYY
+    // Formatear como dd-MM-yyyy
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
@@ -1196,7 +1196,7 @@ export const SaleForm = ({
             name="issue_date"
             label="FECHA EMISIÓN"
             placeholder="Seleccione fecha"
-            dateFormat="dd/MM/yyyy"
+            dateFormat="dd-MM-yyyy"
             disabledRange={{
               after: new Date(),
             }}

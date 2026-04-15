@@ -67,6 +67,7 @@ export default function ProductEditPage() {
     weight: product.weight?.toString() || "0",
     is_kg: product.is_kg === 1,
     price_per_kg: product.price_per_kg?.toString() || "0",
+    price: product.price?.toString() || "0",
   });
 
   const handleSubmit = async (data: ProductSchema) => {
@@ -97,7 +98,12 @@ export default function ProductEditPage() {
   };
 
   const isLoading =
-    isLoadingProduct || !units || !productTypes || !suppliers || !companies || !product;
+    isLoadingProduct ||
+    !units ||
+    !productTypes ||
+    !suppliers ||
+    !companies ||
+    !product;
 
   return (
     <PageWrapper size="3xl">

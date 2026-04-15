@@ -33,7 +33,7 @@ import {
 
 export interface GetSalesByRangeParams {
   document_type: string;
-  serie: string;
+  serie?: string;
   numero_inicio: string;
   numero_fin: string;
 }

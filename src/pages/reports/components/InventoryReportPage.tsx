@@ -197,14 +197,14 @@ export default function InventoryReportPage() {
             cols={{ sm: 1, md: 2, lg: 4 }}
             headerExtra={
               <div className="flex gap-2">
-                <Button type="submit" disabled={isLoading} size="sm">
+                <Button type="submit" disabled={isLoading} size="xs">
                   <Search className="mr-2 h-4 w-4" />
                   Buscar
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="xs"
                   onClick={handleExport}
                   disabled={isExporting}
                 >

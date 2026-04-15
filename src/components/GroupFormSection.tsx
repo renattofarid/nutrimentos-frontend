@@ -142,7 +142,7 @@ export const GroupFormSection = ({
           {headerExtra && <span className="shrink-0">{headerExtra}</span>}
         </div>
       )}
-      <div className={bordered ? "p-2 pt-4" : "p-2"}>
+      <div className={bordered ? "p-2 pt-6" : "p-2"}>
         <FormLayoutContext.Provider value={{ horizontal }}>
           <div className={cn(gridClasses)}>{children}</div>
         </FormLayoutContext.Provider>

@@ -264,7 +264,6 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
 
       await createSettlement(id, request);
       set({ isSubmitting: false });
-      successToast("Rendición registrada exitosamente");
     } catch (error: any) {
       set({ error: "Error al registrar la rendición", isSubmitting: false });
       errorToast(

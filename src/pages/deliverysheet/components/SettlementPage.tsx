@@ -7,14 +7,28 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader, Save, AlertCircle, Search, X } from "lucide-react";
+import {
+  Loader,
+  Save,
+  AlertCircle,
+  Search,
+  X,
+  FileSearch,
+  CheckCircle2,
+  Clock,
+  XCircle,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import PageWrapper from "@/components/PageWrapper";
 import { DataTable } from "@/components/DataTable";
-import { parseFormattedNumber } from "@/lib/utils";
-import { findDeliverySheetById } from "../lib/deliverysheet.actions";
+import { cn, parseFormattedNumber } from "@/lib/utils";
+import {
+  findDeliverySheetById,
+  previewDeliverySheet,
+  exportDeliverySheetById,
+} from "../lib/deliverysheet.actions";
 import { useDeliverySheetStore } from "../lib/deliverysheet.store";
 import { useAllDeliverySheets } from "../lib/deliverysheet.hook";
 import type {
@@ -33,6 +47,44 @@ import {
 import { errorToast, successToast } from "@/lib/core.function";
 import { Separator } from "@/components/ui/separator";
 
+// ============================================================
+// Payment status helpers
+// ============================================================
+
+type PaymentStatus = "CANCELADO" | "PENDIENTE" | "NO_CANCELADO";
+
+const PAYMENT_STATUS_CONFIG: Record<
+  PaymentStatus,
+  { label: string; icon: React.ElementType; className: string }
+> = {
+  CANCELADO: {
+    label: "CANCELADO",
+    icon: CheckCircle2,
+    className:
+      "bg-green-50 text-green-700 border-green-300 dark:bg-green-950 dark:text-green-300 dark:border-green-700",
+  },
+  PENDIENTE: {
+    label: "PENDIENTE",
+    icon: Clock,
+    className:
+      "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-700",
+  },
+  NO_CANCELADO: {
+    label: "NO CANCELADO",
+    icon: XCircle,
+    className:
+      "bg-red-50 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-300 dark:border-red-700",
+  },
+};
+
+function resolvePaymentStatus(sheet: DeliverySheetById): PaymentStatus {
+  const pending = parseFloat(sheet.pending_amount_raw);
+  const collected = parseFloat(sheet.collected_amount_raw);
+  if (pending === 0 || sheet.status === "RENDIDA") return "CANCELADO";
+  if (collected > 0) return "PENDIENTE";
+  return "NO_CANCELADO";
+}
+
 export default function SettlementPage() {
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string>("");
@@ -45,6 +97,34 @@ export default function SettlementPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const { submitSettlement } = useDeliverySheetStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+
+  const getPreviewErrorMessage = async (error: any): Promise<string> => {
+    const fallback = "Error al generar la vista previa";
+
+    const responseData = error?.response?.data;
+    if (!responseData) return fallback;
+
+    if (responseData instanceof Blob) {
+      try {
+        const text = await responseData.text();
+        const parsed = JSON.parse(text);
+        if (typeof parsed?.message === "string") return parsed.message;
+        if (typeof parsed?.error === "string") return parsed.error;
+      } catch {
+        // Si el blob no es JSON valido, intentamos usar el texto plano.
+        try {
+          const plainText = await responseData.text();
+          if (plainText.trim()) return plainText;
+        } catch {
+          return fallback;
+        }
+      }
+      return fallback;
+    }
+
+    return responseData?.message || responseData?.error || fallback;
+  };
 
   const { data: sheetsData } = useAllDeliverySheets();
 
@@ -56,12 +136,10 @@ export default function SettlementPage() {
       return;
     }
     const match = (sheetsData ?? []).find(
-      (item) =>
-        item.sheet_number.toLowerCase() === trimmed.toLowerCase() &&
-        parseFloat(item.pending_amount_raw) > 0,
+      (item) => item.sheet_number.toLowerCase() === trimmed.toLowerCase(),
     );
     if (!match) {
-      setSearchError("No se encontró una planilla pendiente con ese número");
+      setSearchError("No se encontró una planilla con ese número");
       setSelectedId("");
       setDeliverySheet(null);
       return;
@@ -174,18 +252,54 @@ export default function SettlementPage() {
       };
 
       await submitSettlement(deliverySheet.id, settlementData);
+
+      // Reload in place — no redirect
+      const reloadResponse = await findDeliverySheetById(deliverySheet.id);
+      if (reloadResponse.data) {
+        setDeliverySheet(reloadResponse.data);
+      }
+
       successToast("Rendición registrada exitosamente");
-      navigate(DELIVERY_SHEET.ROUTE);
     } catch (error: any) {
       console.error("Error al registrar la rendición:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        "Error al registrar la rendición";
-      setErrors([errorMessage]);
-      errorToast(errorMessage);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleViewPdf = async () => {
+    if (!deliverySheet) return;
+    try {
+      setIsLoadingPreview(true);
+      let blob: Blob;
+      if (isAlreadyPaid) {
+        blob = await exportDeliverySheetById(deliverySheet.id);
+      } else {
+        const saleIds = deliverySheet.sheet_sales
+          .filter((sheetSale, index) => {
+            const creditNotesTotal = sheetSale.sale.credit_notes_total_raw || 0;
+            const pendingAmount =
+              parseFormattedNumber(sheetSale.current_amount) - creditNotesTotal;
+            const paymentAmount = parseFloat(
+              salesValues[index]?.payment_amount || "0",
+            );
+            return paymentAmount === pendingAmount;
+          })
+          .map((s) => s.sale_id);
+        blob = await previewDeliverySheet({
+          type: deliverySheet.type,
+          zone_id: deliverySheet.zone?.id,
+          driver_id: deliverySheet.driver?.id,
+          sale_ids: saleIds,
+        });
+      }
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (error: any) {
+      const errorMessage = await getPreviewErrorMessage(error);
+      errorToast(errorMessage);
+    } finally {
+      setIsLoadingPreview(false);
     }
   };
 
@@ -210,6 +324,13 @@ export default function SettlementPage() {
   }, [deliverySheet]);
 
   const salesValues = form.watch("sales");
+
+  const paymentStatus = useMemo<PaymentStatus | null>(() => {
+    if (!deliverySheet) return null;
+    return resolvePaymentStatus(deliverySheet);
+  }, [deliverySheet]);
+
+  const isAlreadyPaid = paymentStatus === "CANCELADO";
 
   const totalPendiente = useMemo(() => {
     if (!deliverySheet?.sheet_sales) return 0;
@@ -274,23 +395,26 @@ export default function SettlementPage() {
     <PageWrapper>
       <div className="space-y-4">
         {/* Toolbar */}
-        <div className="flex items-center justify-start mb-1 pb-1 border-b w-full">
+        <div className="flex flex-wrap items-center gap-2 mb-1 pb-1 border-b w-full">
+          {/* Action buttons */}
           <div className="flex items-center gap-1">
-            <Button
-              type="submit"
-              form="settlement-form"
-              size="sm"
-              colorIcon="emerald"
-              variant="outline"
-              disabled={isSubmitting || !deliverySheet}
-            >
-              {isSubmitting ? (
-                <Loader className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Save className="h-3.5 w-3.5" />
-              )}
-              {isSubmitting ? "Guardando..." : "Guardar Rendición"}
-            </Button>
+            {!isAlreadyPaid && (
+              <Button
+                type="submit"
+                form="settlement-form"
+                size="sm"
+                colorIcon="emerald"
+                variant="outline"
+                disabled={isSubmitting || !deliverySheet}
+              >
+                {isSubmitting ? (
+                  <Loader className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Save className="h-3.5 w-3.5" />
+                )}
+                {isSubmitting ? "Guardando..." : "Guardar Rendición"}
+              </Button>
+            )}
             <Button
               type="button"
               size="sm"
@@ -301,11 +425,33 @@ export default function SettlementPage() {
               <X />
               Cancelar
             </Button>
+            <Button
+              type="button"
+              size="sm"
+              colorIcon="blue"
+              variant="outline"
+              onClick={handleViewPdf}
+              disabled={!deliverySheet || isLoadingPreview}
+            >
+              {isLoadingPreview ? (
+                <Loader className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <FileSearch className="h-3.5 w-3.5" />
+              )}
+              {isLoadingPreview
+                ? "Generando..."
+                : isAlreadyPaid
+                  ? "Ver PDF Planilla"
+                  : "Vista Previa PDF"}
+            </Button>
           </div>
-          <div className="h-8 px-2">
+
+          <div className="h-8 px-1">
             <Separator orientation="vertical" className="h-full" />
           </div>
-          <div className="flex flex-col items-end gap-1">
+
+          {/* Search */}
+          <div className="flex flex-col items-start gap-1">
             <div className="flex items-center gap-2">
               <Input
                 placeholder="Ej: PL-0001"
@@ -334,6 +480,30 @@ export default function SettlementPage() {
               </p>
             )}
           </div>
+
+          {/* Payment status indicator */}
+          {deliverySheet &&
+            paymentStatus &&
+            (() => {
+              const cfg = PAYMENT_STATUS_CONFIG[paymentStatus];
+              const Icon = cfg.icon;
+              return (
+                <>
+                  <div className="h-8 px-1">
+                    <Separator orientation="vertical" className="h-full" />
+                  </div>
+                  <div
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border",
+                      cfg.className,
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {cfg.label}
+                  </div>
+                </>
+              );
+            })()}
         </div>
 
         {selectedId && isLoading && (

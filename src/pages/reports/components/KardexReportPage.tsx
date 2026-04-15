@@ -356,7 +356,7 @@ export default function KardexReportPage() {
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
+                size="xs"
                 onClick={handleExport}
                 disabled={isExporting || tableData.length === 0}
               >

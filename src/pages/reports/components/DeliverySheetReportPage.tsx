@@ -342,14 +342,14 @@ export default function DeliverySheetReportPage() {
             cols={{ sm: 1, md: 2, lg: 4, xl: 6 }}
             headerExtra={
               <div className="flex gap-2">
-                <Button type="submit" disabled={isLoading} size="sm">
+                <Button type="submit" disabled={isLoading} size="xs">
                   <Search className="mr-2 h-4 w-4" />
                   Buscar
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="xs"
                   onClick={() => handleExport("excel")}
                   disabled={isExportingExcel || tableData.length === 0}
                 >
@@ -359,7 +359,7 @@ export default function DeliverySheetReportPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
+                  size="xs"
                   onClick={() => handleExport("pdf")}
                   disabled={isExportingPdf || tableData.length === 0}
                 >

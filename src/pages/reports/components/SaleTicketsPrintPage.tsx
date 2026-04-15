@@ -41,18 +41,20 @@ export default function SaleTicketsPrintPage() {
   const [isPrinting, setIsPrinting] = useState(false);
 
   const handleSearch = async () => {
-    if (
-      !searchParams.serie ||
-      !searchParams.numero_inicio ||
-      !searchParams.numero_fin
-    ) {
+    if (!searchParams.numero_inicio || !searchParams.numero_fin) {
       errorToast("Complete todos los campos de búsqueda");
       return;
     }
 
     setIsSearching(true);
     try {
-      const response = await getSalesByRange(searchParams);
+      const params = {
+        document_type: searchParams.document_type,
+        numero_inicio: searchParams.numero_inicio,
+        numero_fin: searchParams.numero_fin,
+        ...(searchParams.serie && { serie: searchParams.serie }),
+      };
+      const response = await getSalesByRange(params);
       if (response.data.length === 0) {
         errorToast("No se encontraron ventas en el rango especificado");
         setSalesByRange([]);
@@ -61,8 +63,8 @@ export default function SaleTicketsPrintPage() {
       }
       setSalesByRange(response.data);
       setSelectedSales(response.data.map((s) => s.id));
-    } catch {
-      errorToast("Error al buscar ventas");
+    } catch (error: any) {
+      errorToast(error.response?.data?.message || "Error al buscar ventas");
       setSalesByRange([]);
       setSelectedSales([]);
     } finally {

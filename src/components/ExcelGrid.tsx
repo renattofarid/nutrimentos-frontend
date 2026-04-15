@@ -56,6 +56,7 @@ interface ExcelGridProps<T> {
     code: string,
     advance: () => void,
     setError: (msg: string) => void,
+    columnId?: string,
   ) => void;
   onRemoveEmptyRows?: () => void;
   className?: string;
@@ -221,7 +222,7 @@ export function ExcelGrid<T extends Record<string, any>>({
             setTimeout(() => inputEl.setCustomValidity(""), 2500);
           };
 
-          onProductCodeTab(rowIndex, code, advance, setError);
+          onProductCodeTab(rowIndex, code, advance, setError, column.id);
           return;
         }
 
@@ -343,7 +344,7 @@ export function ExcelGrid<T extends Record<string, any>>({
           inputEl.reportValidity();
           setTimeout(() => inputEl.setCustomValidity(""), 2500);
         };
-        onProductCodeTab(rowIndex, code, advanceEnter, setError);
+        onProductCodeTab(rowIndex, code, advanceEnter, setError, column.id);
         return;
       }
 

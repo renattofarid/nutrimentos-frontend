@@ -9,8 +9,6 @@ import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { successToast, errorToast } from "@/lib/core.function";
 import PageSkeleton from "@/components/PageSkeleton";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
-import { useAllPurchases } from "@/pages/purchase/lib/purchase.hook";
-
 export default function WarehouseDocumentEditPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -18,7 +16,6 @@ export default function WarehouseDocumentEditPage() {
 
   const { data: warehouses } = useAllWarehouses();
   const { data: persons = [] } = useAllWorkers();
-  const { data: purchases = [] } = useAllPurchases();
 
   const { data: document, isFinding } = useWarehouseDocumentById(parseInt(id!));
   const { updateDocument } = useWarehouseDocumentStore();
@@ -42,7 +39,6 @@ export default function WarehouseDocumentEditPage() {
         document_type: data.document_type as any,
         motive: data.motive as any,
         movement_date: data.movement_date,
-        purchase_id: data.purchase_id ? parseInt(data.purchase_id) : undefined,
         observations: data.observations,
         details: data.details.map((detail) => ({
           id: detail.id,
@@ -98,7 +94,6 @@ export default function WarehouseDocumentEditPage() {
     responsible_origin_id: document.responsible_origin
       ? document.responsible_origin.id.toString()
       : "",
-    purchase_id: document.purchase ? document.purchase.id.toString() : "",
     movement_date: document.movement_date,
     observations: document.observations || "",
     details: document.details?.map((detail) => ({
@@ -123,7 +118,6 @@ export default function WarehouseDocumentEditPage() {
           mode="update"
           warehouses={warehouses}
           persons={persons}
-          purchases={purchases || []}
           onCancel={() => navigate("/documentos-almacen")}
         />
       )}

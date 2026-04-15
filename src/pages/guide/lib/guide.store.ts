@@ -129,6 +129,11 @@ export const useGuideStore = create<GuideStore>((set) => ({
   updateGuide: async (id: number, data: Partial<GuideSchema>) => {
     set({ isSubmitting: true, error: null });
     try {
+      const saleDocumentNumber =
+        typeof data.sale_document_number === "string"
+          ? data.sale_document_number.trim()
+          : "";
+
       const request: UpdateGuideRequest = {
         ...(data.branch_id && { branch_id: Number(data.branch_id) }),
         ...(data.warehouse_id && { warehouse_id: Number(data.warehouse_id) }),
@@ -138,8 +143,8 @@ export const useGuideStore = create<GuideStore>((set) => ({
         ...(data.transfer_date && { transfer_date: data.transfer_date }),
         ...(data.modality && { modality: data.modality }),
         ...(data.motive_id && { motive_id: Number(data.motive_id) }),
-        ...(data.sale_document_number && {
-          sale_document_number: data.sale_document_number,
+        ...(saleDocumentNumber && saleDocumentNumber !== "-" && {
+          sale_document_number: saleDocumentNumber,
         }),
         ...(data.carrier_document_type && {
           carrier_document_type: data.carrier_document_type,

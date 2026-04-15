@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSaleById } from "../lib/sale.hook";
+import { useSaleStore } from "../lib/sales.store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +29,15 @@ import PageWrapper from "@/components/PageWrapper";
 export default function SaleManagePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: sale, isFinding, refetch } = useSaleById(Number(id));
+  const { fetchSale, sale, isFinding } = useSaleStore();
+
+  useEffect(() => {
+    if (id) fetchSale(Number(id));
+  }, [id]);
+
+  const refetch = () => {
+    if (id) fetchSale(Number(id));
+  };
 
   const [selectedInstallment, setSelectedInstallment] =
     useState<SaleInstallmentResource | null>(null);

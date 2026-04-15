@@ -28,7 +28,7 @@ export function DateRangePickerFilter({
   dateTo,
   onDateChange,
   placeholder = "Selecciona un rango",
-  dateFormat = "dd/MM/yyyy",
+  dateFormat = "dd-MM-yyyy",
   className,
 }: DateRangePickerFilterProps) {
   const dateRange: DateRange = {

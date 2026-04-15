@@ -291,7 +291,7 @@ export const DeliverySheetForm = ({
                 "yyyy-MM-dd",
                 new Date(),
               ),
-              "dd/MM/yyyy",
+              "dd-MM-yyyy",
             )}
           </Badge>
         ),
@@ -564,7 +564,7 @@ export const DeliverySheetForm = ({
                 name="issue_date"
                 label="Fecha de Emisión"
                 placeholder="Seleccione la fecha de emisión"
-                dateFormat="dd/MM/yyyy"
+                dateFormat="dd-MM-yyyy"
               />
 
               <div className="col-span-full">
@@ -648,7 +648,7 @@ export const DeliverySheetForm = ({
                             "yyyy-MM-dd",
                             new Date(),
                           ),
-                          "dd/MM/yyyy",
+                          "dd-MM-yyyy",
                         )}
                       </Badge>
                       <span className="font-semibold">
@@ -692,7 +692,7 @@ export const DeliverySheetForm = ({
         <div className="col-span-full text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{user?.name}</span>
           <span className="mx-2">·</span>
-          <span>{format(now, "dd/MM/yyyy HH:mm:ss")}</span>
+          <span>{format(now, "dd-MM-yyyy HH:mm:ss")}</span>
         </div>
       </form>
 
@@ -745,7 +745,7 @@ export const DeliverySheetForm = ({
                             "yyyy-MM-dd",
                             new Date(),
                           ),
-                          "dd/MM/yyyy",
+                          "dd-MM-yyyy",
                         )}
                       </Badge>
                     </TableCell>

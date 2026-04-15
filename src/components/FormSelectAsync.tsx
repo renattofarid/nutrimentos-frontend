@@ -120,6 +120,7 @@ export function FormSelectAsync({
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
+  const mousedownOnListRef = useRef(false);
   const rawItemsMap = useRef<Map<string, any>>(new Map());
   const hasAutoSelected = useRef(false);
   const displayLabelRef = useRef("");
@@ -284,6 +285,10 @@ export function FormSelectAsync({
   };
 
   const handleBlur = () => {
+    if (mousedownOnListRef.current) {
+      mousedownOnListRef.current = false;
+      return;
+    }
     closeTimerRef.current = setTimeout(() => {
       setOpen(false);
       setSearch("");
@@ -291,6 +296,7 @@ export function FormSelectAsync({
   };
 
   const handleListMouseDown = () => {
+    mousedownOnListRef.current = true;
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
   };
 

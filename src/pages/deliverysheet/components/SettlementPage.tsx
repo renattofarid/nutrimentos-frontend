@@ -262,12 +262,6 @@ export default function SettlementPage() {
       successToast("Rendición registrada exitosamente");
     } catch (error: any) {
       console.error("Error al registrar la rendición:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        "Error al registrar la rendición";
-      setErrors([errorMessage]);
-      errorToast(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -283,8 +277,7 @@ export default function SettlementPage() {
       } else {
         const saleIds = deliverySheet.sheet_sales
           .filter((sheetSale, index) => {
-            const creditNotesTotal =
-              sheetSale.sale.credit_notes_total_raw || 0;
+            const creditNotesTotal = sheetSale.sale.credit_notes_total_raw || 0;
             const pendingAmount =
               parseFormattedNumber(sheetSale.current_amount) - creditNotesTotal;
             const paymentAmount = parseFloat(
@@ -489,26 +482,28 @@ export default function SettlementPage() {
           </div>
 
           {/* Payment status indicator */}
-          {deliverySheet && paymentStatus && (() => {
-            const cfg = PAYMENT_STATUS_CONFIG[paymentStatus];
-            const Icon = cfg.icon;
-            return (
-              <>
-                <div className="h-8 px-1">
-                  <Separator orientation="vertical" className="h-full" />
-                </div>
-                <div
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border",
-                    cfg.className,
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {cfg.label}
-                </div>
-              </>
-            );
-          })()}
+          {deliverySheet &&
+            paymentStatus &&
+            (() => {
+              const cfg = PAYMENT_STATUS_CONFIG[paymentStatus];
+              const Icon = cfg.icon;
+              return (
+                <>
+                  <div className="h-8 px-1">
+                    <Separator orientation="vertical" className="h-full" />
+                  </div>
+                  <div
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border",
+                      cfg.className,
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {cfg.label}
+                  </div>
+                </>
+              );
+            })()}
         </div>
 
         {selectedId && isLoading && (

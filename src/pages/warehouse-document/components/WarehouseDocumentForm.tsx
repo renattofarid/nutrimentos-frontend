@@ -20,7 +20,6 @@ import {
   type ExcelGridColumn,
   type ProductOption,
 } from "@/components/ExcelGrid";
-import type { PurchaseResource } from "@/pages/purchase/lib/purchase.interface";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useProduct } from "@/pages/product/lib/product.hook";
 
@@ -31,7 +30,6 @@ interface WarehouseDocumentFormProps {
   mode: "create" | "update";
   warehouses: WarehouseResource[];
   persons: PersonResource[];
-  purchases?: PurchaseResource[];
   onCancel?: () => void;
 }
 
@@ -55,7 +53,6 @@ export default function WarehouseDocumentForm({
   mode,
   warehouses,
   persons,
-  purchases = [],
   onCancel,
 }: WarehouseDocumentFormProps) {
   const [details, setDetails] = useState<DetailRow[]>([]);
@@ -87,7 +84,6 @@ export default function WarehouseDocumentForm({
       responsible_origin_id: "",
       responsible_dest_id: "",
       movement_date: "",
-      purchase_id: "",
       observations: "",
       details: [],
     },
@@ -95,7 +91,6 @@ export default function WarehouseDocumentForm({
 
   const documentType = form.watch("document_type");
   const isTraslado = documentType === "TRASLADO";
-  const selectedPurchaseId = form.watch("purchase_id");
 
   // Inicializar detalles desde defaultValues (para modo edición)
   useEffect(() => {
@@ -121,59 +116,6 @@ export default function WarehouseDocumentForm({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Cargar detalles cuando se selecciona una compra
-  useEffect(() => {
-    if (selectedPurchaseId && selectedPurchaseId !== "") {
-      const selectedPurchase = purchases.find(
-        (p) => p.id.toString() === selectedPurchaseId,
-      );
-
-      if (selectedPurchase) {
-        // Llenar automáticamente el almacén, tipo de documento y motivo
-        form.setValue(
-          "warehouse_origin_id",
-          selectedPurchase.warehouse_id.toString(),
-        );
-        form.setValue("document_type", "TRASLADO");
-        form.setValue("motive", "COMPRA");
-
-        // Llenar los detalles si existen
-        if (selectedPurchase.details) {
-          const mappedDetails: DetailRow[] = selectedPurchase.details.map(
-            (detail) => {
-              return {
-                product_id: detail.product.id.toString(),
-                product_code: detail.product.codigo,
-                product_name: detail.product.name,
-                quantity_sacks: detail.quantity_sacks.toString(),
-                quantity_kg: detail.quantity_kg.toString(),
-                unit_price: detail.unit_price?.toString() || "0",
-                observations: "",
-                total: 0,
-              };
-            },
-          );
-
-          setDetails(mappedDetails);
-          // Actualizar el campo details del formulario
-          form.setValue(
-            "details",
-            convertDetailsToSchema(mappedDetails) as any,
-          );
-          form.clearErrors("details");
-        }
-      }
-    } else if (selectedPurchaseId === "" && mode === "create") {
-      // Si se deselecciona la compra, limpiar los detalles y los campos relacionados
-      setDetails([]);
-      form.setValue("details", []);
-      form.setValue("warehouse_origin_id", "");
-      form.setValue("document_type", "TRASLADO");
-      form.setValue("motive", "");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPurchaseId]);
 
   // Función para convertir DetailRow[] a formato del schema
   const convertDetailsToSchema = (details: DetailRow[]) => {
@@ -446,21 +388,6 @@ export default function WarehouseDocumentForm({
             label="Fecha del Movimiento"
           />
 
-          <FormSelect
-            control={form.control}
-            name="purchase_id"
-            label="Compra (Opcional)"
-            placeholder="Seleccione una compra"
-            options={[
-              { value: "", label: "Ninguna" },
-              ...purchases.map((purchase) => ({
-                value: purchase.id.toString(),
-                label: `${purchase.document_number} - ${purchase.supplier_fullname}`,
-                description: `Total: S/. ${purchase.total_amount}`,
-              })),
-            ]}
-          />
-
           {isTraslado && (
             <>
               <FormSelect
@@ -561,7 +488,6 @@ function getFieldLabel(field: string): string {
     responsible_origin_id: "Responsable de Origen",
     responsible_dest_id: "Responsable de Destino",
     movement_date: "Fecha del Movimiento",
-    purchase_id: "Compra",
     observations: "Observaciones",
     details: "Detalles del Documento",
   };

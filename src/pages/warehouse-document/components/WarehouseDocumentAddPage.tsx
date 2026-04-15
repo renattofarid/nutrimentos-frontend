@@ -8,7 +8,6 @@ import { storeWarehouseDocument } from "../lib/warehouse-document.actions";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { successToast, errorToast } from "@/lib/core.function";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
-import { useAllPurchases } from "@/pages/purchase/lib/purchase.hook";
 import PageWrapper from "@/components/PageWrapper";
 
 const { EMPTY } = WAREHOUSE_DOCUMENT;
@@ -19,7 +18,6 @@ export default function WarehouseDocumentAddPage() {
 
   const { data: warehouses } = useAllWarehouses();
   const { data: persons = [] } = useAllWorkers();
-  const { data: purchases = [] } = useAllPurchases();
 
   const handleSubmit = async (data: WarehouseDocumentSchema) => {
     setIsSubmitting(true);
@@ -36,7 +34,6 @@ export default function WarehouseDocumentAddPage() {
           ? parseInt(data.responsible_dest_id)
           : undefined,
         movement_date: data.movement_date,
-        purchase_id: data.purchase_id ? parseInt(data.purchase_id) : undefined,
         observations: data.observations,
         details: data.details.map((detail) => ({
           product_id: parseInt(detail.product_id),
@@ -76,7 +73,6 @@ export default function WarehouseDocumentAddPage() {
             mode="create"
             warehouses={warehouses}
             persons={persons}
-            purchases={purchases || []}
             onCancel={handleCancel}
           />
         )}

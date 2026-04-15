@@ -81,6 +81,7 @@ export function FormSelect({
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
+  const mousedownOnListRef = useRef(false);
   const displayLabelRef = useRef("");
 
   const handleFocus = () => {
@@ -90,6 +91,10 @@ export function FormSelect({
   };
 
   const handleBlur = () => {
+    if (mousedownOnListRef.current) {
+      mousedownOnListRef.current = false;
+      return;
+    }
     closeTimerRef.current = setTimeout(() => {
       setOpen(false);
       setSearch("");
@@ -98,6 +103,7 @@ export function FormSelect({
   };
 
   const handleListMouseDown = () => {
+    mousedownOnListRef.current = true;
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
   };
 

@@ -113,7 +113,7 @@ export function PurchasePaymentForm({
           name="payment_date"
           label="Fecha de Pago"
           placeholder="Seleccione la fecha"
-          dateFormat="dd/MM/yyyy"
+          dateFormat="dd-MM-yyyy"
         />
 
         <FormField

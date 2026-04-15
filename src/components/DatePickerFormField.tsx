@@ -64,7 +64,7 @@ export function DatePickerFormField<T extends FieldValues>({
   label,
   placeholder = "Selecciona una fecha",
   description,
-  dateFormat = "dd/MM/yyyy",
+  dateFormat = "dd-MM-yyyy",
   disabled = false,
   disabledRange,
   captionLayout = "label",

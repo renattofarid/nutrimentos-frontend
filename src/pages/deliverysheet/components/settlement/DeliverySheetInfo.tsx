@@ -33,7 +33,7 @@ export function DeliverySheetInfo({
         name="payment_date"
         label="Fecha de Pago"
         placeholder="Selecciona la fecha de pago"
-        dateFormat="dd/MM/yyyy"
+        dateFormat="dd-MM-yyyy"
         captionLayout="dropdown"
       />
 

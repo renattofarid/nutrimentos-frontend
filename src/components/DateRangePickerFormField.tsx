@@ -55,7 +55,7 @@ export function DateRangePickerFormField<T extends FieldValues>({
   placeholder = "Selecciona un rango",
   description,
   tooltip,
-  dateFormat = "dd/MM/yyyy",
+  dateFormat = "dd-MM-yyyy",
   disabled,
   required = false,
   size,

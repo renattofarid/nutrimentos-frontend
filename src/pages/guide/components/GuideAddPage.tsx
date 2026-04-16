@@ -28,7 +28,7 @@ import { ConfirmationDialog } from "@/components/ConfirmationDialog";
 import { api } from "@/lib/config";
 
 export default function GuideAddPage() {
-  const { ROUTE, MODEL } = GUIDE;
+  const { MODEL } = GUIDE;
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formKey, setFormKey] = useState(0);
@@ -148,9 +148,12 @@ export default function GuideAddPage() {
   const handlePrintConfirm = async () => {
     if (pendingGuideId) {
       try {
-        const response = await api.get(`/sale-shipping-guides/${pendingGuideId}/pdf`, {
-          responseType: "blob",
-        });
+        const response = await api.get(
+          `/sale-shipping-guides/${pendingGuideId}/pdf`,
+          {
+            responseType: "blob",
+          },
+        );
         const blob = new Blob([response.data], { type: "application/pdf" });
         const url = window.URL.createObjectURL(blob);
         window.open(url, "_blank");

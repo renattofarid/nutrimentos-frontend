@@ -12,7 +12,6 @@ import {
   storeCreditNote,
   updateCreditNote,
   deleteCreditNote,
-  getCreditNoteTicket,
 } from "./credit-note.actions";
 
 interface CreditNoteStore {

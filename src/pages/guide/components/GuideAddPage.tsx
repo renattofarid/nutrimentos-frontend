@@ -24,11 +24,17 @@ import type { GuideSchema } from "../lib/guide.schema";
 import { GUIDE } from "../lib/guide.interface";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
+import { ConfirmationDialog } from "@/components/ConfirmationDialog";
+import { api } from "@/lib/config";
 
 export default function GuideAddPage() {
   const { ROUTE, MODEL } = GUIDE;
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const [showNextDialog, setShowNextDialog] = useState(false);
+  const [pendingGuideId, setPendingGuideId] = useState<number | null>(null);
   const { user } = useAuthStore();
 
   const {
@@ -124,14 +130,42 @@ export default function GuideAddPage() {
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      await createGuide(data);
+      const guideId = await createGuide(data);
       successToast(SUCCESS_MESSAGE(MODEL, "create"));
-      navigate(ROUTE);
+      if (guideId) {
+        setPendingGuideId(guideId);
+        setShowPrintDialog(true);
+      } else {
+        setShowNextDialog(true);
+      }
     } catch (error: any) {
       errorToast(error.response?.data?.message || ERROR_MESSAGE);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePrintConfirm = async () => {
+    if (pendingGuideId) {
+      try {
+        const response = await api.get(`/sale-shipping-guides/${pendingGuideId}/pdf`, {
+          responseType: "blob",
+        });
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, "_blank");
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+      } catch {
+        // Si falla la exportación, continuamos igual
+      }
+    }
+    setShowPrintDialog(false);
+    setShowNextDialog(true);
+  };
+
+  const handlePrintCancel = () => {
+    setShowPrintDialog(false);
+    setShowNextDialog(true);
   };
 
   if (isLoading) {
@@ -161,6 +195,7 @@ export default function GuideAddPage() {
         nationalities &&
         nationalities.length > 0 && (
           <GuideForm
+            key={formKey}
             defaultValues={getDefaultValues()}
             onSubmit={handleSubmit}
             onCancel={() => navigate(GUIDE.ROUTE)}
@@ -171,6 +206,34 @@ export default function GuideAddPage() {
             motives={motives}
           />
         )}
+
+      <ConfirmationDialog
+        open={showPrintDialog}
+        onOpenChange={setShowPrintDialog}
+        icon="info"
+        title="Guía registrada"
+        description="¿Deseas imprimir la guía de remisión?"
+        confirmText="Sí, imprimir"
+        cancelText="No, omitir"
+        onConfirm={handlePrintConfirm}
+        onCancel={handlePrintCancel}
+      />
+
+      <ConfirmationDialog
+        open={showNextDialog}
+        onOpenChange={setShowNextDialog}
+        icon="info"
+        title="¿Crear otra guía?"
+        description="¿Deseas registrar otra guía de remisión?"
+        confirmText="Sí, crear otra"
+        confirmFirst={true}
+        cancelText="No, ir al listado"
+        onConfirm={() => {
+          setFormKey((k) => k + 1);
+          setShowNextDialog(false);
+        }}
+        onCancel={() => navigate(GUIDE.ROUTE)}
+      />
     </PageWrapper>
   );
 }

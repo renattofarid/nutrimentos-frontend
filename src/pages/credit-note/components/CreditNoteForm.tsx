@@ -295,11 +295,11 @@ export const CreditNoteForm = ({
           gap="gap-2"
         >
           {readOnlySale ? (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-bold uppercase leading-none">
                 Venta
               </span>
-              <div className="flex items-center gap-2 h-9 px-3 rounded-md border bg-muted text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 h-8 px-3 rounded-md border bg-muted text-sm text-muted-foreground">
                 {selectedSale
                   ? `${selectedSale.document_type} ${selectedSale.serie}-${selectedSale.numero}`
                   : "—"}

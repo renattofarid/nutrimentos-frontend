@@ -49,8 +49,8 @@ export const findGuideById = async (id: number): Promise<GuideResourceById> => {
 
 export const storeGuide = async (
   data: CreateGuideRequest,
-): Promise<{ message: string }> => {
-  const response = await api.post<{ message: string }>(GUIDE_ENDPOINT, data);
+): Promise<{ message: string; data?: { id: number } }> => {
+  const response = await api.post<{ message: string; data?: { id: number } }>(GUIDE_ENDPOINT, data);
   return response.data;
 };
 

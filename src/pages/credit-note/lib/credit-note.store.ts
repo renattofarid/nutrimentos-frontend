@@ -12,6 +12,7 @@ import {
   storeCreditNote,
   updateCreditNote,
   deleteCreditNote,
+  getCreditNoteTicket,
 } from "./credit-note.actions";
 
 interface CreditNoteStore {
@@ -32,7 +33,7 @@ interface CreditNoteStore {
   fetchAllCreditNotes: () => Promise<void>;
   fetchCreditNotes: (params?: Record<string, any>) => Promise<void>;
   fetchCreditNote: (id: number) => Promise<void>;
-  createCreditNote: (data: CreateCreditNoteRequest) => Promise<void>;
+  createCreditNote: (data: CreateCreditNoteRequest) => Promise<number | undefined>;
   updateCreditNote: (
     id: number,
     data: UpdateCreditNoteRequest
@@ -98,8 +99,9 @@ export const useCreditNoteStore = create<CreditNoteStore>((set) => ({
   createCreditNote: async (data: CreateCreditNoteRequest) => {
     set({ isSubmitting: true, error: null });
     try {
-      await storeCreditNote(data);
+      const result = await storeCreditNote(data);
       set({ isSubmitting: false });
+      return result.data?.id;
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.error ||

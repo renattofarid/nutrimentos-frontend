@@ -47,8 +47,16 @@ export async function findCreditNoteById(
 // Crear
 export async function storeCreditNote(
   data: CreateCreditNoteRequest
-): Promise<CreditNoteResponse> {
-  const response = await api.post<CreditNoteResponse>(ENDPOINT, data);
+): Promise<CreditNoteResourceById> {
+  const response = await api.post<CreditNoteResourceById>(ENDPOINT, data);
+  return response.data;
+}
+
+// Ticket de impresión
+export async function getCreditNoteTicket(id: number): Promise<Blob> {
+  const response = await api.get(`${ENDPOINT}/${id}/ticket`, {
+    responseType: "blob",
+  });
   return response.data;
 }
 

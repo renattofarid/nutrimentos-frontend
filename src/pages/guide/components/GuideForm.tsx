@@ -362,21 +362,6 @@ export const GuideForm = ({
       const saleToAdd = salesByRange.find((sale) => sale.id === saleId);
       if (!saleToAdd) return prev;
 
-      if (prev.length > 0) {
-        const firstSelectedSale = salesByRange.find(
-          (sale) => sale.id === prev[0],
-        );
-        if (
-          firstSelectedSale &&
-          firstSelectedSale.customer.id !== saleToAdd.customer.id
-        ) {
-          warningToast(
-            "Solo puede seleccionar ventas de un mismo cliente para generar la guía",
-          );
-          return prev;
-        }
-      }
-
       return [...prev, saleId];
     });
   };
@@ -391,21 +376,7 @@ export const GuideForm = ({
         return;
       }
 
-      const referenceCustomerId =
-        selectedSales.length > 0
-          ? salesByRange.find((sale) => sale.id === selectedSales[0])?.customer
-              .id
-          : salesByRange[0].customer.id;
-
-      const sameCustomerSales = salesByRange.filter(
-        (sale) => sale.customer.id === referenceCustomerId,
-      );
-
-      if (sameCustomerSales.length !== salesByRange.length) {
-        warningToast("Se seleccionaron solo las ventas de un mismo cliente");
-      }
-
-      setSelectedSales(sameCustomerSales.map((sale) => sale.id));
+      setSelectedSales(salesByRange.map((sale) => sale.id));
     }
   };
 

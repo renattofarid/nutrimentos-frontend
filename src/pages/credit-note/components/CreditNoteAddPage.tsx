@@ -14,10 +14,12 @@ import {
 } from "@/lib/core.function";
 import { CREDIT_NOTE } from "../lib/credit-note.interface";
 import { useCreditNoteStore } from "../lib/credit-note.store";
+import { getCreditNoteTicket } from "../lib/credit-note.actions";
 import FormSkeleton from "@/components/FormSkeleton";
 import { useAllSales } from "@/pages/sale/lib/sale.hook";
 import { useAllCreditNoteMotives } from "@/pages/credit-note-motive/lib/credit-note-motive.hook";
 import PageWrapper from "@/components/PageWrapper";
+import { ConfirmationDialog } from "@/components/ConfirmationDialog";
 
 const { MODEL, ROUTE } = CREDIT_NOTE;
 
@@ -32,6 +34,8 @@ export default function CreditNoteAddPage() {
   const [selectedSaleId, setSelectedSaleId] = useState<number | null>(
     preselectedSale?.id || null,
   );
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const [pendingCreditNoteId, setPendingCreditNoteId] = useState<number | null>(null);
 
   // Obtener ventas (solo necesario cuando no hay venta preseleccionada) y motivos
   const { data: sales, isLoading: isLoadingSales } = useAllSales();
@@ -80,7 +84,7 @@ export default function CreditNoteAddPage() {
   const handleSubmit = async (data: CreditNoteSchema) => {
     setIsSubmitting(true);
     try {
-      await createCreditNote({
+      const creditNoteId = await createCreditNote({
         sale_id: Number(data.sale_id),
         issue_date: data.issue_date,
         credit_note_motive_id: Number(data.credit_note_motive_id),
@@ -95,7 +99,12 @@ export default function CreditNoteAddPage() {
         })),
       });
       successToast(SUCCESS_MESSAGE(MODEL, "create"));
-      navigate(ROUTE);
+      if (creditNoteId) {
+        setPendingCreditNoteId(creditNoteId);
+        setShowPrintDialog(true);
+      } else {
+        navigate(ROUTE);
+      }
     } catch (error: any) {
       const message =
         error.response?.data?.error ||
@@ -105,6 +114,25 @@ export default function CreditNoteAddPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePrintConfirm = async () => {
+    if (pendingCreditNoteId) {
+      try {
+        const blob = await getCreditNoteTicket(pendingCreditNoteId);
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, "_blank");
+      } catch {
+        // Si falla la exportación, continuamos igual
+      }
+    }
+    setShowPrintDialog(false);
+    navigate(ROUTE);
+  };
+
+  const handlePrintCancel = () => {
+    setShowPrintDialog(false);
+    navigate(ROUTE);
   };
 
   // Mostrar skeleton mientras cargan los datos
@@ -130,6 +158,18 @@ export default function CreditNoteAddPage() {
         selectedSale={selectedSale}
         onSaleChange={setSelectedSaleId}
         readOnlySale={isReadOnlySale}
+      />
+
+      <ConfirmationDialog
+        open={showPrintDialog}
+        onOpenChange={setShowPrintDialog}
+        icon="info"
+        title="Nota de crédito registrada"
+        description="¿Deseas imprimir el ticket?"
+        confirmText="Sí, imprimir"
+        cancelText="No, omitir"
+        onConfirm={handlePrintConfirm}
+        onCancel={handlePrintCancel}
       />
     </PageWrapper>
   );

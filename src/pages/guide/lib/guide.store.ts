@@ -41,7 +41,7 @@ interface GuideStore {
   fetchGuides: (params?: GetGuidesParams) => Promise<void>;
   fetchGuide: (id: number) => Promise<void>;
   fetchMotives: () => Promise<void>;
-  createGuide: (data: CreateGuideRequest) => Promise<void>;
+  createGuide: (data: CreateGuideRequest) => Promise<number | undefined>;
   updateGuide: (id: number, data: Partial<GuideSchema>) => Promise<void>;
   removeGuide: (id: number) => Promise<void>;
   resetGuide: () => void;
@@ -117,8 +117,9 @@ export const useGuideStore = create<GuideStore>((set) => ({
   createGuide: async (data: CreateGuideRequest) => {
     set({ isSubmitting: true, error: null });
     try {
-      await storeGuide(data);
+      const response = await storeGuide(data);
       set({ isSubmitting: false });
+      return response.data?.id;
     } catch (error) {
       set({ error: ERROR_MESSAGE(MODEL, "create"), isSubmitting: false });
       throw error;

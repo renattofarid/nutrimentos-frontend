@@ -26,7 +26,7 @@ export function NotificationBell() {
           {alertCount > 0 && (
             <Badge
               color="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              className="absolute -top-1 -right-1 h-3.5 w-3.5 flex items-center justify-center p-0 text-[10px]"
             >
               {alertCount}
             </Badge>

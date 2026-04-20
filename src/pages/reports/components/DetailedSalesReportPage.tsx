@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useUserAsyncSearch, useBranchAsyncSearch } from "../lib/reports.hook";
+import { useBranchAsyncSearch } from "../lib/reports.hook";
 import type { DetailedSalesReportParams } from "../lib/reports.interface";
 import { Form } from "@/components/ui/form";
 import { Filter } from "lucide-react";
@@ -15,6 +15,8 @@ import ExportButtons from "@/components/ExportButtons";
 import { useBrandSearch } from "@/pages/brand/lib/brand.hook";
 import { useProduct } from "@/pages/product/lib/product.hook";
 import { useZoneSearch } from "@/pages/zone/lib/zone.hook";
+import { useWorkers } from "@/pages/worker/lib/worker.hook";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
 
 interface FilterFormValues {
   branch_id: string;
@@ -202,11 +204,14 @@ export default function DetailedSalesReportPage() {
                 name="user_id"
                 label="Vendedor"
                 placeholder="Buscar vendedor..."
-                useQueryHook={useUserAsyncSearch}
-                mapOptionFn={(item) => ({
-                  label: item.name,
+                useQueryHook={useWorkers}
+                mapOptionFn={(item: PersonResource) => ({
+                  label:
+                    `${item.names} ${item.father_surname} ${item.mother_surname}`.trim(),
+                  description: item.number_document ?? undefined,
                   value: String(item.id),
                 })}
+                withValue={false}
               />
 
               <div className="flex justify-start gap-2">

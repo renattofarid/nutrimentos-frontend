@@ -395,7 +395,7 @@ export default function SettlementPage() {
     <PageWrapper>
       <div className="space-y-4">
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 mb-1 pb-1 border-b w-full">
+        <div className="flex flex-wrap items-center gap-2 mb-6 pb-1 border-b w-full">
           {/* Action buttons */}
           <div className="flex items-center gap-1">
             {!isAlreadyPaid && (

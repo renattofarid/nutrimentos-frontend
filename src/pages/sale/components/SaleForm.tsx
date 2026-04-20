@@ -1229,8 +1229,13 @@ export const SaleForm = ({
                   label:
                     customer.business_name ||
                     `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
-                  description: getCustomerZoneLabel(customer),
+                  description:
+                    getCustomerZoneLabel(customer) +
+                    (customer.number_document
+                      ? ` - ${customer.number_document}`
+                      : ""),
                 })}
+                withValue={false}
                 descriptionAsBadge
                 onValueChange={handleCustomerChange}
                 defaultOption={

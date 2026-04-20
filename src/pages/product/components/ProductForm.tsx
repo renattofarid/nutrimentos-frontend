@@ -160,16 +160,6 @@ export const ProductForm = ({
             }))}
           />
 
-          <FormInput
-            control={form.control}
-            name="price"
-            label="Precio"
-            type="number"
-            step="0.01"
-            min={0}
-            placeholder="0.00"
-          />
-
           <FormSwitch
             control={form.control}
             name="is_taxed"
@@ -204,12 +194,25 @@ export const ProductForm = ({
 
           <FormInput
             control={form.control}
+            name="price"
+            label="Precio por Saco"
+            type="number"
+            step="0.01"
+            min={0}
+            addonStart="S/."
+            placeholder="0.00"
+          />
+
+          <FormInput
+            control={form.control}
             name="price_per_kg"
-            label="Precio por Kg"
+            label="Precio por kilo"
             type="number"
             step="0.01"
             min={0}
             placeholder="0.00"
+            addonStart="S/."
+            addonEnd="/kg"
           />
         </GroupFormSection>
       </form>

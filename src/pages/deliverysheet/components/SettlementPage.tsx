@@ -357,17 +357,26 @@ export default function SettlementPage() {
     );
   }, [salesValues]);
 
-  const allPaid = useMemo(() => {
-    if (!salesWithIndex.length || !salesValues?.length) return false;
-    return salesWithIndex.every((sale) => {
+  const [allPaid, setAllPaid] = useState<boolean | "indeterminate">(false);
+
+  useEffect(() => {
+    if (!salesWithIndex.length || !salesValues?.length) {
+      setAllPaid(false);
+      return;
+    }
+    const isPaid = (sale: (typeof salesWithIndex)[number]) => {
       const creditNotesTotal = sale.sale.credit_notes_total_raw || 0;
       const pendingAmount = parseFormattedNumber(sale.current_amount) - creditNotesTotal;
-      return parseFloat((parseFloat(salesValues[sale.index]?.payment_amount || "0")).toFixed(2)) === parseFloat(pendingAmount.toFixed(2));
-    });
-  }, [salesWithIndex, salesValues]);
+      return Math.abs(parseFloat(salesValues[sale.index]?.payment_amount || "0") - pendingAmount) < 0.01;
+    };
+    const every = salesWithIndex.every(isPaid);
+    const some = salesWithIndex.some(isPaid);
+    setAllPaid(every ? true : some ? "indeterminate" : false);
+  }, [salesValues, salesWithIndex]);
 
   const handlePayAll = useCallback(
     (checked: boolean) => {
+      setAllPaid(!!checked);
       salesWithIndex.forEach((sale) => {
         const creditNotesTotal = sale.sale.credit_notes_total_raw || 0;
         const pendingAmount = parseFormattedNumber(sale.current_amount) - creditNotesTotal;

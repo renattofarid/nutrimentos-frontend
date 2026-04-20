@@ -29,7 +29,7 @@ export function getSaleTableColumns(
   form: UseFormReturn<SettlementFormSchema, any, undefined>,
   expandedNotes: Set<number>,
   toggleNote: (index: number) => void,
-  allPaid: boolean,
+  allPaid: boolean | "indeterminate",
   handlePayAll: (checked: boolean) => void,
 ): ColumnDef<SheetSaleWithIndex>[] {
   return [
@@ -48,7 +48,7 @@ export function getSaleTableColumns(
         const creditNotesTotal = row.original.sale.credit_notes_total_raw || 0;
         const currentAmount = parseFormattedNumber(row.original.current_amount);
         const pendingAmount = currentAmount - creditNotesTotal;
-        const isAutoFilled = parseFloat(parseFloat(formValues?.payment_amount || "0").toFixed(2)) === parseFloat(pendingAmount.toFixed(2));
+        const isAutoFilled = Math.abs(parseFloat(formValues?.payment_amount || "0") - pendingAmount) < 0.01;
 
         const handleAutoFill = (checked: boolean) => {
           form.setValue(

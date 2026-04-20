@@ -32,6 +32,16 @@ function DetailField({
   );
 }
 
+function formatSoles(value?: string, suffix = "") {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return `S/ 0.00${suffix}`;
+  }
+
+  return `S/ ${numericValue.toFixed(2)}${suffix}`;
+}
+
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -96,7 +106,15 @@ export default function ProductDetail() {
 
           <DetailField label="Peso (Kg)" value={product.weight} />
 
-          <DetailField label="Precio por Kg" value={product.price_per_kg} />
+          <DetailField
+            label="Precio"
+            value={formatSoles(product.price)}
+          />
+
+          <DetailField
+            label="Precio por kilo"
+            value={formatSoles(product.price_per_kg, "/kg")}
+          />
 
           <div>
             <DetailField

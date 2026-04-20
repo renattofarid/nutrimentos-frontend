@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -357,9 +357,42 @@ export default function SettlementPage() {
     );
   }, [salesValues]);
 
+  const [allPaid, setAllPaid] = useState<boolean | "indeterminate">(false);
+
+  useEffect(() => {
+    if (!salesWithIndex.length || !salesValues?.length) {
+      setAllPaid(false);
+      return;
+    }
+    const isPaid = (sale: (typeof salesWithIndex)[number]) => {
+      const creditNotesTotal = sale.sale.credit_notes_total_raw || 0;
+      const pendingAmount = parseFormattedNumber(sale.current_amount) - creditNotesTotal;
+      return Math.abs(parseFloat(salesValues[sale.index]?.payment_amount || "0") - pendingAmount) < 0.01;
+    };
+    const every = salesWithIndex.every(isPaid);
+    const some = salesWithIndex.some(isPaid);
+    setAllPaid(every ? true : some ? "indeterminate" : false);
+  }, [salesValues, salesWithIndex]);
+
+  const handlePayAll = useCallback(
+    (checked: boolean) => {
+      setAllPaid(!!checked);
+      salesWithIndex.forEach((sale) => {
+        const creditNotesTotal = sale.sale.credit_notes_total_raw || 0;
+        const pendingAmount = parseFormattedNumber(sale.current_amount) - creditNotesTotal;
+        form.setValue(
+          `sales.${sale.index}.payment_amount`,
+          checked ? pendingAmount.toFixed(2) : "0",
+          { shouldValidate: true },
+        );
+      });
+    },
+    [salesWithIndex, form],
+  );
+
   const columns = useMemo(
-    () => getSaleTableColumns(form as any, expandedNotes, toggleNote),
-    [form, expandedNotes],
+    () => getSaleTableColumns(form as any, expandedNotes, toggleNote, allPaid, handlePayAll),
+    [form, expandedNotes, allPaid, handlePayAll],
   );
 
   const mobileCardRender = (sale: SheetSale & { index: number }) => (
@@ -395,7 +428,7 @@ export default function SettlementPage() {
     <PageWrapper>
       <div className="space-y-4">
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 mb-1 pb-1 border-b w-full">
+        <div className="flex flex-wrap items-center gap-2 mb-6 pb-1 border-b w-full">
           {/* Action buttons */}
           <div className="flex items-center gap-1">
             {!isAlreadyPaid && (

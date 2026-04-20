@@ -44,7 +44,7 @@ export default function DeliverySheetAddPage() {
   const handleSubmit = (data: DeliverySheetSchema) => {
     const promise = createDeliverySheet(data)
       .then((response: DeliverySheetCreateResponse) => {
-        (handleExportById(response.data.id), navigate("/planillas/listado"));
+        handleExportById(response.data.id);
       })
       .catch((error) => {
         console.error("Error creating delivery sheet:", error);

@@ -13,12 +13,7 @@ import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import {
-  FileSpreadsheet,
-  Search,
-  DollarSign,
-  Filter,
-} from "lucide-react";
+import { FileSpreadsheet, Search, DollarSign, Filter } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useClients } from "@/pages/client/lib/client.hook";
@@ -35,8 +30,7 @@ import {
 } from "../lib/reports.utils";
 import { errorToast, successToast } from "@/lib/core.function";
 
-export const RealCustomerAccountStatementTitle =
-  "Reporte Estado Cuenta Real";
+export const RealCustomerAccountStatementTitle = "Reporte Estado Cuenta Real";
 
 interface FilterFormValues {
   zone_id: string;
@@ -411,9 +405,7 @@ export default function RealCustomerAccountStatementPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleExport("excel")}
-                    disabled={
-                      isExporting || !tableData || tableData.length === 0
-                    }
+                    disabled={isExporting}
                   >
                     <FileSpreadsheet className="mr-2 h-4 w-4" />
                     Excel
@@ -450,7 +442,9 @@ export default function RealCustomerAccountStatementPage() {
                     </p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Total Pagado</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Pagado
+                    </p>
                     <p className="text-2xl font-bold text-green-600">
                       S/ {meta.total_paid?.toFixed(2) || "0.00"}
                     </p>

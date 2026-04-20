@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -357,9 +357,33 @@ export default function SettlementPage() {
     );
   }, [salesValues]);
 
+  const allPaid = useMemo(() => {
+    if (!salesWithIndex.length || !salesValues?.length) return false;
+    return salesWithIndex.every((sale) => {
+      const creditNotesTotal = sale.sale.credit_notes_total_raw || 0;
+      const pendingAmount = parseFormattedNumber(sale.current_amount) - creditNotesTotal;
+      return parseFloat((parseFloat(salesValues[sale.index]?.payment_amount || "0")).toFixed(2)) === parseFloat(pendingAmount.toFixed(2));
+    });
+  }, [salesWithIndex, salesValues]);
+
+  const handlePayAll = useCallback(
+    (checked: boolean) => {
+      salesWithIndex.forEach((sale) => {
+        const creditNotesTotal = sale.sale.credit_notes_total_raw || 0;
+        const pendingAmount = parseFormattedNumber(sale.current_amount) - creditNotesTotal;
+        form.setValue(
+          `sales.${sale.index}.payment_amount`,
+          checked ? pendingAmount.toFixed(2) : "0",
+          { shouldValidate: true },
+        );
+      });
+    },
+    [salesWithIndex, form],
+  );
+
   const columns = useMemo(
-    () => getSaleTableColumns(form as any, expandedNotes, toggleNote),
-    [form, expandedNotes],
+    () => getSaleTableColumns(form as any, expandedNotes, toggleNote, allPaid, handlePayAll),
+    [form, expandedNotes, allPaid, handlePayAll],
   );
 
   const mobileCardRender = (sale: SheetSale & { index: number }) => (

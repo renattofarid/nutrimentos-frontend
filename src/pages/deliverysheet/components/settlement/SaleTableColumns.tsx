@@ -29,19 +29,44 @@ export function getSaleTableColumns(
   form: UseFormReturn<SettlementFormSchema, any, undefined>,
   expandedNotes: Set<number>,
   toggleNote: (index: number) => void,
+  allPaid: boolean,
+  handlePayAll: (checked: boolean) => void,
 ): ColumnDef<SheetSaleWithIndex>[] {
   return [
     {
-      accessorKey: "sale.issue_date",
-      header: "Fecha",
+      id: "pay_all_col",
+      header: () => (
+        <Checkbox
+          id="pay-all-header"
+          checked={allPaid}
+          onCheckedChange={handlePayAll}
+        />
+      ),
       cell: ({ row }) => {
-        const issueDate = row.original.sale.issue_date || "";
-        const formattedDate = new Date(issueDate).toLocaleDateString("es-PE", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "2-digit",
-        });
-        return <span className="font-mono">{formattedDate}</span>;
+        const index = row.original.index;
+        const formValues = form.watch(`sales.${index}`);
+        const creditNotesTotal = row.original.sale.credit_notes_total_raw || 0;
+        const currentAmount = parseFormattedNumber(row.original.current_amount);
+        const pendingAmount = currentAmount - creditNotesTotal;
+        const isAutoFilled = parseFloat(parseFloat(formValues?.payment_amount || "0").toFixed(2)) === parseFloat(pendingAmount.toFixed(2));
+
+        const handleAutoFill = (checked: boolean) => {
+          form.setValue(
+            `sales.${index}.payment_amount`,
+            checked ? pendingAmount.toFixed(2) : "0",
+            { shouldValidate: true },
+          );
+        };
+
+        return (
+          <div className="flex justify-center">
+            <Checkbox
+              id={`auto-fill-${index}`}
+              checked={isAutoFilled}
+              onCheckedChange={handleAutoFill}
+            />
+          </div>
+        );
       },
     },
     {
@@ -54,11 +79,22 @@ export function getSaleTableColumns(
     {
       accessorKey: "sale.full_document_number",
       header: "Documento",
-      cell: ({ row }) => (
-        <Badge variant="outline" className="font-mono">
-          {row.original.sale.full_document_number}
-        </Badge>
-      ),
+      cell: ({ row }) => {
+        const issueDate = row.original.sale.issue_date || "";
+        const formattedDate = new Date(issueDate).toLocaleDateString("es-PE", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+        });
+        return (
+          <div className="flex flex-col gap-0.5">
+            <Badge variant="outline" className="font-mono w-fit">
+              {row.original.sale.full_document_number}
+            </Badge>
+            <span className="font-mono text-xs text-muted-foreground">{formattedDate}</span>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "original_amount",
@@ -214,25 +250,8 @@ export function getSaleTableColumns(
         const currentAmount = parseFormattedNumber(row.original.current_amount);
         const pendingAmount = currentAmount - creditNotesTotal;
 
-        const handleAutoFill = (checked: boolean) => {
-          if (checked) {
-            form.setValue(
-              `sales.${index}.payment_amount`,
-              pendingAmount.toFixed(2),
-              { shouldValidate: true },
-            );
-          } else {
-            form.setValue(`sales.${index}.payment_amount`, "0", {
-              shouldValidate: true,
-            });
-          }
-        };
-
-        const isAutoFilled =
-          parseFloat(formValues?.payment_amount || "0") === pendingAmount;
-
         return (
-          <div className="min-w-[280px] space-y-2">
+          <div className="min-w-[140px] space-y-2">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-muted-foreground">
                 S/.
@@ -251,25 +270,10 @@ export function getSaleTableColumns(
                   form.setValue(
                     `sales.${index}.payment_amount`,
                     e.target.value,
-                    {
-                      shouldValidate: true,
-                    },
+                    { shouldValidate: true },
                   )
                 }
               />
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id={`auto-fill-${index}`}
-                  checked={isAutoFilled}
-                  onCheckedChange={handleAutoFill}
-                />
-                <label
-                  htmlFor={`auto-fill-${index}`}
-                  className="text-sm font-medium cursor-pointer select-none whitespace-nowrap"
-                >
-                  Pagar todo
-                </label>
-              </div>
             </div>
             {formErrors?.payment_amount && (
               <p className="text-xs text-red-500">

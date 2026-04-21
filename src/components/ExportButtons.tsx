@@ -123,6 +123,7 @@ export default function ExportButtons({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                type="button"
                 size="sm"
                 variant={buttonVariant}
                 color={canColored ? "emerald" : undefined}
@@ -143,6 +144,7 @@ export default function ExportButtons({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                type="button"
                 size="sm"
                 variant={buttonVariant}
                 color={canColored ? "primary" : undefined}
@@ -169,6 +171,7 @@ export default function ExportButtons({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               size="icon-sm"
               variant={buttonVariant}
               color={canColored ? "emerald" : undefined}
@@ -188,6 +191,7 @@ export default function ExportButtons({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               size="icon-sm"
               variant={buttonVariant}
               color={canColored ? "primary" : undefined}

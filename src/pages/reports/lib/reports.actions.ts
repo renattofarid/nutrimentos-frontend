@@ -1,5 +1,6 @@
 import { api } from "@/lib/config";
 import type {
+  AccountingSalesReportParams,
   AnnualSalesReportParams,
   AnnualSalesReportResponse,
   CarLoadReportParams,
@@ -302,6 +303,16 @@ export async function exportCarLoadReport(
       "zone_ids[]": zone_ids,
       format,
     },
+    responseType: "blob",
+  });
+  return data;
+}
+
+export async function exportAccountingSalesReport(
+  params: AccountingSalesReportParams,
+): Promise<Blob> {
+  const { data } = await api.get<Blob>("/reports/accounting-sales", {
+    params,
     responseType: "blob",
   });
   return data;

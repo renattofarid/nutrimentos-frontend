@@ -13,11 +13,21 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
 import { useFormLayout } from "@/components/GroupFormSection";
-import { Loader, Search, Paperclip, IdCard, ChevronDown, ChevronUp, Save, X } from "lucide-react";
+import {
+  Loader,
+  Search,
+  Paperclip,
+  IdCard,
+  ChevronDown,
+  ChevronUp,
+  Save,
+  X,
+} from "lucide-react";
 import {
   personCreateSchema,
   personCreateSchemaClient,
   personCreateSchemaWorker,
+  personCreateSchemaDriver,
   type PersonSchema,
   type PersonSchemaClient,
 } from "../lib/person.schema";
@@ -68,8 +78,7 @@ function NumberDocumentContent({
 
   const labelText = (
     <>
-      Número de Documento{" "}
-      {!isClient && errors.number_document && "*"}
+      Número de Documento {!isClient && errors.number_document && "*"}
       {isClient && " (Opcional)"}
     </>
   );
@@ -90,20 +99,27 @@ function NumberDocumentContent({
                     : "Ingrese el número"
           }
           {...field}
-          className={`
+          className={`h-8 
             ${fieldsFromSearch.names ? "bg-blue-50 border-blue-200" : ""}
             ${errors.number_document ? "border-destructive focus-visible:ring-destructive" : ""}
             ${dirtyFields.number_document && !errors.number_document ? "border-primary" : ""}
           `}
           maxLength={
-            document_type_id === TYPE_DOCUMENT.DNI.id ? 8
-            : document_type_id === TYPE_DOCUMENT.RUC.id ? 11
-            : document_type_id === "CE" ? 9
-            : 11
+            document_type_id === TYPE_DOCUMENT.DNI.id
+              ? 8
+              : document_type_id === TYPE_DOCUMENT.RUC.id
+                ? 11
+                : document_type_id === "CE"
+                  ? 9
+                  : 11
           }
           onChange={(e) => {
             let value;
-            if (document_type_id === TYPE_DOCUMENT.DNI.id || document_type_id === TYPE_DOCUMENT.RUC.id || document_type_id === "CE") {
+            if (
+              document_type_id === TYPE_DOCUMENT.DNI.id ||
+              document_type_id === TYPE_DOCUMENT.RUC.id ||
+              document_type_id === "CE"
+            ) {
               value = e.target.value.replace(/\D/g, "");
             } else {
               value = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
@@ -111,14 +127,17 @@ function NumberDocumentContent({
             field.onChange(value);
             if (
               value &&
-              ((document_type_id === TYPE_DOCUMENT.DNI.id && value.length === 8) ||
-                (document_type_id === TYPE_DOCUMENT.RUC.id && value.length === 11))
+              ((document_type_id === TYPE_DOCUMENT.DNI.id &&
+                value.length === 8) ||
+                (document_type_id === TYPE_DOCUMENT.RUC.id &&
+                  value.length === 11))
             ) {
               setTimeout(() => handleDocumentSearch(), 100);
             }
           }}
         />
-        {(document_type_id === TYPE_DOCUMENT.DNI.id || document_type_id === TYPE_DOCUMENT.RUC.id) && (
+        {(document_type_id === TYPE_DOCUMENT.DNI.id ||
+          document_type_id === TYPE_DOCUMENT.RUC.id) && (
           <Button
             type="button"
             variant="ghost"
@@ -127,7 +146,11 @@ function NumberDocumentContent({
             onClick={handleDocumentSearch}
             disabled={isSearching || !field.value}
           >
-            {isSearching ? <Loader className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            {isSearching ? (
+              <Loader className="h-4 w-4 animate-spin" />
+            ) : (
+              <Search className="h-4 w-4" />
+            )}
           </Button>
         )}
       </div>
@@ -137,7 +160,7 @@ function NumberDocumentContent({
   if (horizontal) {
     return (
       <FormItem className="flex flex-row items-center gap-3">
-        <FormLabel className="w-48 shrink-0 text-right text-xs font-bold uppercase dark:text-muted-foreground">
+        <FormLabel className="w-48 shrink-0 justify-end text-right text-sm font-bold uppercase dark:text-muted-foreground">
           {labelText}
         </FormLabel>
         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
@@ -167,6 +190,7 @@ interface PersonFormProps {
   roleId: number; // Role ID to assign automatically
   isWorker?: boolean; // If true, only allow DNI and NATURAL person
   isClient?: boolean; // If true, number_document is optional
+  isDriver?: boolean; // If true, driver_license is required
   showJobPosition?: boolean; // Show job position field
   showBusinessType?: boolean; // Show business type field
   showZone?: boolean; // Show zone field
@@ -182,6 +206,7 @@ export const PersonForm = ({
   roleId,
   isWorker = false,
   isClient = false,
+  isDriver = false,
   showJobPosition = false,
   showBusinessType = false,
   showZone = false,
@@ -195,7 +220,9 @@ export const PersonForm = ({
     ? personCreateSchemaClient
     : isWorker
       ? personCreateSchemaWorker
-      : personCreateSchema;
+      : isDriver
+        ? personCreateSchemaDriver
+        : personCreateSchema;
   type FormSchema = PersonSchema | PersonSchemaClient;
 
   const form = useForm<FormSchema>({
@@ -220,6 +247,7 @@ export const PersonForm = ({
       business_type_id: initialData?.business_type_id?.toString() || "",
       client_category_id: initialData?.client_category?.id.toString() || "",
       zone_id: initialData?.zone_id?.toString() || "",
+      driver_license: initialData?.driver_license || "",
     },
     mode: "onChange", // Validate on change for immediate feedback
   });
@@ -413,7 +441,12 @@ export const PersonForm = ({
                 : "Guardar"}
           </Button>
           {onCancel && (
-            <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onCancel}
+            >
               <X /> Cancelar
             </Button>
           )}
@@ -493,7 +526,9 @@ export const PersonForm = ({
                 name="names"
                 label="Nombres"
                 placeholder="Ingrese los nombres"
-                className={fieldsFromSearch.names ? "bg-blue-50 border-blue-200" : ""}
+                className={
+                  fieldsFromSearch.names ? "bg-blue-50 border-blue-200" : ""
+                }
               />
 
               <FormInput
@@ -551,7 +586,11 @@ export const PersonForm = ({
                 name="business_name"
                 label="Razón Social"
                 placeholder="Ingrese la razón social"
-                className={fieldsFromSearch.business_name ? "bg-blue-50 border-blue-200" : ""}
+                className={
+                  fieldsFromSearch.business_name
+                    ? "bg-blue-50 border-blue-200"
+                    : ""
+                }
               />
 
               <FormInput
@@ -565,7 +604,11 @@ export const PersonForm = ({
         </GroupFormSection>
 
         {/* Optional Fields - Context specific */}
-        {(showJobPosition || showBusinessType || showZone || showPriceList) && (
+        {(showJobPosition ||
+          showBusinessType ||
+          showZone ||
+          showPriceList ||
+          isDriver) && (
           <GroupFormSection
             title="Información Adicional"
             icon={Paperclip}
@@ -689,6 +732,15 @@ export const PersonForm = ({
                         label: z.name,
                       }))
                 }
+              />
+            )}
+
+            {isDriver && (
+              <FormInput
+                control={form.control}
+                name="driver_license"
+                label="Licencia de Conducir"
+                placeholder="Ingrese el número de licencia"
               />
             )}
           </GroupFormSection>

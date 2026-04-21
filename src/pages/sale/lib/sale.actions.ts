@@ -68,6 +68,16 @@ export const getSalesByRange = async (
   return response.data;
 };
 
+export const getSalesByRangeShippings = async (
+  params: GetSalesByRangeParams,
+): Promise<SalesByRangeResponse> => {
+  const response = await api.post<SalesByRangeResponse>(
+    `${SALE_ENDPOINT}/by-range-shippings`,
+    params,
+  );
+  return response.data;
+};
+
 // ============================================
 // SALE - Main CRUD Actions
 // ============================================

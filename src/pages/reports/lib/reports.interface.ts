@@ -75,8 +75,14 @@ export const PURCHASE_REGISTER_REPORT_ROUTE = `${ROUTE}/registro-compras`;
 // Annual Sales Report
 export const ANNUAL_SALES_REPORT_ROUTE = `${ROUTE}/ventas-anuales`;
 
+// Accounting Sales Report
+export const ACCOUNTING_SALES_REPORT_ROUTE = `${ROUTE}/ventas-contabilidad`;
+
 // Sale Tickets Print Report
 export const SALE_TICKETS_PRINT_ROUTE = `${ROUTE}/imprimir-tickets`;
+
+// Cost of Sales Report
+export const COST_OF_SALES_REPORT_ROUTE = `${ROUTE}/costo-de-ventas`;
 
 export interface CustomerAccountStatementParams {
   zone_id?: number | null;
@@ -672,6 +678,20 @@ export interface AnnualSalesReportParams {
   year?: number | null;
 }
 
+/**
+ * ACCOUNTING SALES REPORT
+ */
+
+export interface AccountingSalesReportParams {
+  branch_id?: number | null;
+  document_type?: "FACTURA" | "BOLETA" | "TICKET" | null;
+  end_date?: string | null;
+  format?: "excel" | "pdf" | null;
+  payment_type?: "CONTADO" | "CREDITO" | null;
+  start_date?: string | null;
+  warehouse_id?: number | null;
+}
+
 export interface AnnualSalesMonths {
   "1": number;
   "2": number;
@@ -699,4 +719,18 @@ export interface AnnualSalesItem {
 export interface AnnualSalesReportResponse {
   data: AnnualSalesItem[];
   total: number;
+}
+
+/**
+ * COST OF SALES REPORT
+ */
+
+export interface CostOfSalesReportParams {
+  branch_id?: number | null;
+  brand_id?: number | null;
+  end_date?: string | null;
+  format?: "excel" | "pdf" | null;
+  product_id?: number | null;
+  start_date?: string | null;
+  warehouse_id?: number | null;
 }

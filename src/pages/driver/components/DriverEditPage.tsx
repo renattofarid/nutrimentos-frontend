@@ -85,6 +85,7 @@ export default function DriverEditPage() {
         address: data.address || "",
         phone: data.phone,
         email: data.email,
+        driver_license: data.driver_license || "",
       };
 
       await updatePerson(personData.id, updatePersonData);
@@ -124,6 +125,7 @@ export default function DriverEditPage() {
         onCancel={() => navigate("/conductores")}
         roleId={DRIVER_ROLE_ID}
         isWorker={false}
+        isDriver
         showBusinessType
       />
     </FormWrapper>

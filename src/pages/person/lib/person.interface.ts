@@ -82,6 +82,7 @@ export interface PersonResource {
   business_type_name?: string;
   zone_id?: string;
   zone_name?: string;
+  driver_license?: string;
   user_id?: string;
   created_at: string;
   roles?: Role[];
@@ -155,6 +156,7 @@ export interface CreatePersonRequest {
   business_type_id?: number;
   zone_id?: number;
   client_category_id?: number;
+  driver_license?: string;
 }
 
 export interface UpdatePersonRequest {
@@ -176,6 +178,7 @@ export interface UpdatePersonRequest {
   business_type_id?: number;
   zone_id?: number;
   client_category_id?: number;
+  driver_license?: string;
 }
 
 export interface GetPersonsProps {

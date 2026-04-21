@@ -72,6 +72,7 @@ export interface VehicleResource {
     id: number;
     full_name: string;
     number_document: string | null;
+    driver_license?: string | null;
   } | null;
   created_at: string;
 }

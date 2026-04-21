@@ -56,6 +56,7 @@ export default function DriverAddPage() {
         email: data.email || "",
         status: "Activo",
         role_id: Number(data.role_id),
+        driver_license: data.driver_license || "",
       };
 
       await createPersonWithRole(createPersonData, Number(data.role_id));
@@ -85,6 +86,7 @@ export default function DriverAddPage() {
         onCancel={() => navigate("/conductores")}
         roleId={DRIVER_ROLE_ID}
         isWorker={false}
+        isDriver
         showBusinessType
       />
     </FormWrapper>

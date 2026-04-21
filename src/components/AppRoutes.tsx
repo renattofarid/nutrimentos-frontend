@@ -83,6 +83,8 @@ import AnnualSalesReportPage from "@/pages/reports/components/AnnualSalesReportP
 import SalesRegisterReportPage from "@/pages/reports/components/SalesRegisterReportPage";
 import PurchaseRegisterReportPage from "@/pages/reports/components/PurchaseRegisterReportPage";
 import SaleTicketsPrintPage from "@/pages/reports/components/SaleTicketsPrintPage";
+import AccountingSalesReportPage from "@/pages/reports/components/AccountingSalesReportPage";
+import CostOfSalesReportPage from "@/pages/reports/components/CostOfSalesReportPage";
 import { TYPE_USER } from "@/pages/type-users/lib/typeUser.interface";
 import { USER } from "@/pages/users/lib/User.interface";
 import { COMPANY } from "@/pages/company/lib/company.interface";
@@ -122,8 +124,10 @@ import {
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import {
   CAR_LOAD_REPORT_ROUTE,
+  ACCOUNTING_SALES_REPORT_ROUTE,
   COMMISSIONS_REPORT_ROUTE,
   ANNUAL_SALES_REPORT_ROUTE,
+  COST_OF_SALES_REPORT_ROUTE,
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
   DELIVERY_SHEET_REPORT_ROUTE,
   DETAILED_SALES_REPORT_ROUTE,
@@ -316,6 +320,8 @@ export function AppRoutes() {
       <Route path={SALES_BY_PRODUCT_REPORT_ROUTE} element={<SalesByProductReportPage />} />
       <Route path={SALES_REGISTER_REPORT_ROUTE} element={<SalesRegisterReportPage />} />
       <Route path={PURCHASE_REGISTER_REPORT_ROUTE} element={<PurchaseRegisterReportPage />} />
+      <Route path={ACCOUNTING_SALES_REPORT_ROUTE} element={<AccountingSalesReportPage />} />
+      <Route path={COST_OF_SALES_REPORT_ROUTE} element={<CostOfSalesReportPage />} />
 
       <Route path={PurchaseInstallmentRoute} element={<PurchaseInstallmentPage />} />
 

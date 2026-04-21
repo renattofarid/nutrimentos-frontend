@@ -93,6 +93,7 @@ const basePersonSchema = z.object({
   business_type_id: z.string().optional().or(z.literal("")),
   zone_id: z.string().optional().or(z.literal("")),
   client_category_id: z.string().optional().or(z.literal("")),
+  driver_license: z.string().optional().or(z.literal("")),
 
   // ocupation: z
   //   .string()
@@ -106,7 +107,8 @@ const basePersonSchema = z.object({
 // Factory function to create person schema with optional number_document for clients
 export const createPersonSchema = (
   isClient: boolean = false,
-  isWorker: boolean = false
+  isWorker: boolean = false,
+  isDriver: boolean = false
 ) => {
   return basePersonSchema
     .extend({
@@ -173,6 +175,7 @@ export const createPersonSchema = (
       business_type_id: z.string().optional().or(z.literal("")),
       zone_id: z.string().optional().or(z.literal("")),
       client_category_id: z.string().optional().or(z.literal("")),
+      driver_license: z.string().optional().or(z.literal("")),
 
       role_id: requiredStringId("Debe seleccionar un rol válido"),
     })
@@ -186,6 +189,17 @@ export const createPersonSchema = (
             expected: "string",
             message: "El número de documento es obligatorio",
             path: ["number_document"],
+          });
+        }
+      }
+
+      if (isDriver) {
+        if (!data.driver_license || data.driver_license.trim() === "") {
+          ctx.addIssue({
+            code: "invalid_type",
+            expected: "string",
+            message: "La licencia de conducir es obligatoria para conductores",
+            path: ["driver_license"],
           });
         }
       }
@@ -321,6 +335,9 @@ export const personCreateSchema = createPersonSchema(false);
 export const personCreateSchemaClient = createPersonSchema(true);
 
 export const personCreateSchemaWorker = createPersonSchema(false, true);
+
+// Schema for Driver - driver_license is required
+export const personCreateSchemaDriver = createPersonSchema(false, false, true);
 
 export const personUpdateSchema = personCreateSchema.partial().extend({
   business_name: personCreateSchema.shape.business_name

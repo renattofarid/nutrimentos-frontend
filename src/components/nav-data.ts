@@ -47,9 +47,11 @@ import {
 } from "@/pages/deliverysheet/lib/deliverysheet.interface";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import {
+  ACCOUNTING_SALES_REPORT_ROUTE,
   ANNUAL_SALES_REPORT_ROUTE,
   CAR_LOAD_REPORT_ROUTE,
   COMMISSIONS_REPORT_ROUTE,
+  COST_OF_SALES_REPORT_ROUTE,
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
   DETAILED_SALES_REPORT_ROUTE,
   INVENTORY_REPORT_ROUTE,
@@ -369,6 +371,16 @@ export const navData: NavItem[] = [
       {
         title: "Registro de Compras",
         url: PURCHASE_REGISTER_REPORT_ROUTE,
+        icon: ReportsIcon,
+      },
+      {
+        title: "Ventas Contabilidad",
+        url: ACCOUNTING_SALES_REPORT_ROUTE,
+        icon: ReportsIcon,
+      },
+      {
+        title: "Costo de Ventas",
+        url: COST_OF_SALES_REPORT_ROUTE,
         icon: ReportsIcon,
       },
     ],

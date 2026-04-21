@@ -21,6 +21,7 @@ interface DateRangePickerFilterProps {
   placeholder?: string;
   dateFormat?: string;
   className?: string;
+  label?: string;
 }
 
 export function DateRangePickerFilter({
@@ -30,6 +31,7 @@ export function DateRangePickerFilter({
   placeholder = "Selecciona un rango",
   dateFormat = "dd-MM-yyyy",
   className,
+  label,
 }: DateRangePickerFilterProps) {
   const dateRange: DateRange = {
     from: dateFrom,
@@ -54,6 +56,8 @@ export function DateRangePickerFilter({
   };
 
   return (
+    <div className="flex flex-col gap-1">
+      {label && <span className="text-sm font-medium">{label}</span>}
     <Popover>
       <PopoverTrigger asChild>
         <Button
@@ -81,5 +85,6 @@ export function DateRangePickerFilter({
         />
       </PopoverContent>
     </Popover>
+    </div>
   );
 }

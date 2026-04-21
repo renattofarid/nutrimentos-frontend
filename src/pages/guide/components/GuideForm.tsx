@@ -59,7 +59,7 @@ import type { VehicleResource } from "@/pages/vehicle/lib/vehicle.interface";
 import { useVehiclesSearch } from "@/pages/vehicle/lib/vehicle.hook";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { format } from "date-fns";
-import { getSalesByRange } from "@/pages/sale/lib/sale.actions";
+import { getSalesByRangeShippings } from "@/pages/sale/lib/sale.actions";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import { useDrivers } from "@/pages/driver/lib/driver.hook";
 import { useAllCarriers } from "@/pages/carrier/lib/carrier.hook";
@@ -315,7 +315,7 @@ export const GuideForm = ({
 
     setIsSearchingSales(true);
     try {
-      const response = await getSalesByRange(searchParams);
+      const response = await getSalesByRangeShippings(searchParams);
 
       if (response.data.length === 0) {
         warningToast("No se encontraron ventas en el rango especificado");
@@ -799,7 +799,7 @@ export const GuideForm = ({
       return;
     }
 
-    if (!selectedPersonZoneId) {
+    if (useCustomDetails && !selectedPersonZoneId) {
       errorToast(
         "Debe seleccionar una dirección del cliente para completar el destino",
       );
@@ -1255,7 +1255,7 @@ export const GuideForm = ({
                 </div>
               )}
 
-              {customerValue && (
+              {useCustomDetails && customerValue && (
                 <div className="space-y-2 w-full">
                   <div className="w-full flex gap-1 items-end">
                     <SearchableSelect
@@ -1378,7 +1378,7 @@ export const GuideForm = ({
                 />
               </div>
 
-              <div className="hidden">
+              <div className={useCustomDetails ? "hidden" : ""}>
                 <FormSelectAsync
                   control={form.control}
                   name="ubigeo_destination_id"
@@ -1390,10 +1390,11 @@ export const GuideForm = ({
                     label: item.name,
                     description: item.cadena,
                   })}
+
                 />
               </div>
 
-              <div className="hidden">
+              <div className={useCustomDetails ? "hidden" : ""}>
                 <FormTextArea
                   control={form.control}
                   name="destination_address"
@@ -1503,6 +1504,9 @@ export const GuideForm = ({
                         form.setValue("driver_document_type", docType);
                         form.setValue("driver_document_number", docNum);
                         form.setValue("driver_name", vehicle.owner.full_name);
+                        if (vehicle.owner.driver_license) {
+                          form.setValue("driver_license", vehicle.owner.driver_license);
+                        }
                       }
                     } else {
                       setSelectedVehicle(null);
@@ -1520,6 +1524,11 @@ export const GuideForm = ({
                       {selectedVehicle.owner.number_document ?? "sin documento"}
                       )
                     </span>
+                    {selectedVehicle.owner.driver_license && (
+                      <span className="ml-2 text-xs">
+                        — Licencia: {selectedVehicle.owner.driver_license}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -1555,6 +1564,7 @@ export const GuideForm = ({
                           driver.business_name ||
                           `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
                         form.setValue("driver_name", fullName);
+                        form.setValue("driver_license", driver.driver_license || "");
                       }
                     }}
                     preloadItemId={"37"}

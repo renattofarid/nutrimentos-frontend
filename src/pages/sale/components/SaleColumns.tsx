@@ -8,6 +8,7 @@ import {
 import { AlertTriangle } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { SaleResource } from "../lib/sale.interface";
+import { parse } from "date-fns";
 
 export const getSaleColumns = (): ColumnDef<SaleResource>[] => [
   {
@@ -55,7 +56,11 @@ export const getSaleColumns = (): ColumnDef<SaleResource>[] => [
     accessorKey: "issue_date",
     header: "Fecha Emisión",
     cell: ({ row }) => {
-      const date = new Date(row.original.issue_date);
+      const date = parse(
+        row.original.issue_date.split("T")[0],
+        "yyyy-MM-dd",
+        new Date(),
+      );
       return (
         <Badge variant="outline">
           {date.toLocaleDateString("es-ES", {
@@ -141,7 +146,9 @@ export const getSaleColumns = (): ColumnDef<SaleResource>[] => [
     accessorKey: "details",
     header: "Detalles",
     cell: ({ row }) => (
-      <Badge variant="outline">{row.original.details?.length || 0} item(s)</Badge>
+      <Badge variant="outline">
+        {row.original.details?.length || 0} item(s)
+      </Badge>
     ),
   },
   {

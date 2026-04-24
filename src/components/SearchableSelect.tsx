@@ -29,7 +29,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import type { Option } from "@/lib/core.interface";
 
 interface SearchableSelectProps {
-  options: Option[];
+  options: readonly Option[];
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;

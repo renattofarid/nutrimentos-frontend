@@ -389,6 +389,12 @@ export const DOCUMENT_TYPES = [
   // { value: "GUIA", label: "Guía de Remisión" },
 ] as const;
 
+export const DOCUMENT_TYPES_SALES = [
+  { value: "FACTURA", label: "Factura" },
+  { value: "BOLETA", label: "Boleta" },
+  { value: "NOTA_VENTA", label: "Nota de Venta" },
+] as const;
+
 export const PAYMENT_TYPES = [
   { value: "CONTADO", label: "Contado" },
   { value: "CREDITO", label: "Crédito" },

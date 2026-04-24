@@ -9,7 +9,15 @@ import {
   saleSchemaUpdate,
   type SaleSchema,
 } from "../lib/sale.schema";
-import { Users2, CreditCard, ListChecks, Users, FileText, Copy, Check } from "lucide-react";
+import {
+  Users2,
+  CreditCard,
+  ListChecks,
+  Users,
+  FileText,
+  Copy,
+  Check,
+} from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
@@ -25,7 +33,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { formatDecimalTrunc, parseFormattedNumber } from "@/lib/utils";
 import { formatNumber } from "@/lib/formatCurrency";
-import { DOCUMENT_TYPES, PAYMENT_TYPES } from "../lib/sale.interface";
+import { DOCUMENT_TYPES_SALES, PAYMENT_TYPES } from "../lib/sale.interface";
 import { errorToast, warningToast } from "@/lib/core.function";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { ClientManagementModal } from "@/pages/client/components/ClientManagementModal";
@@ -1181,7 +1189,7 @@ export const SaleForm = ({
             name="document_type"
             label="TIPO DOCUMENTO"
             placeholder="Seleccione tipo"
-            options={DOCUMENT_TYPES.map((dt) => ({
+            options={DOCUMENT_TYPES_SALES.map((dt) => ({
               value: dt.value,
               label: dt.label,
             }))}
@@ -1258,7 +1266,11 @@ export const SaleForm = ({
                   value: customer.id.toString(),
                   label:
                     customer.business_name ||
-                    [customer.names, customer.father_surname, customer.mother_surname]
+                    [
+                      customer.names,
+                      customer.father_surname,
+                      customer.mother_surname,
+                    ]
                       .filter(Boolean)
                       .join(" "),
                   description:

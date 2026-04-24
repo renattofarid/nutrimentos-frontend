@@ -27,6 +27,10 @@ interface FilterFormValues {
   warehouse_id: string;
   start_date: string;
   end_date: string;
+  zone_id: string;
+  brand_id: string;
+  product_id: string;
+  line: string;
 }
 
 export default function DetailedSalesReportPage() {
@@ -45,6 +49,10 @@ export default function DetailedSalesReportPage() {
       warehouse_id: "",
       start_date: today,
       end_date: today,
+      zone_id: "",
+      brand_id: "",
+      product_id: "",
+      line: "",
     },
   });
 
@@ -63,6 +71,10 @@ export default function DetailedSalesReportPage() {
     warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
     start_date: values.start_date || null,
     end_date: values.end_date || null,
+    zone_id: values.zone_id ? Number(values.zone_id) : null,
+    brand_id: values.brand_id ? Number(values.brand_id) : null,
+    product_id: values.product_id ? Number(values.product_id) : null,
+    line: values.line || null,
   });
 
   const handleExcelExport = async () => {

@@ -180,19 +180,6 @@ export const createPersonSchema = (
       role_id: requiredStringId("Debe seleccionar un rol válido"),
     })
     .superRefine((data, ctx) => {
-      // Validación condicional para number_document
-      // Si NO es Cliente, el número de documento es obligatorio
-      if (!isClient) {
-        if (!data.number_document || data.number_document.trim() === "") {
-          ctx.addIssue({
-            code: "invalid_type",
-            expected: "string",
-            message: "El número de documento es obligatorio",
-            path: ["number_document"],
-          });
-        }
-      }
-
       if (isDriver) {
         if (!data.driver_license || data.driver_license.trim() === "") {
           ctx.addIssue({
@@ -263,25 +250,6 @@ export const createPersonSchema = (
             code: "custom",
             message: "El nombre solo puede contener letras y espacios",
             path: ["names"],
-          });
-        }
-
-        if (!data.father_surname || data.father_surname.trim() === "") {
-          ctx.addIssue({
-            code: "invalid_type",
-            expected: "string",
-            message:
-              "El apellido paterno es obligatorio para personas naturales",
-            path: ["father_surname"],
-          });
-        }
-        if (!data.mother_surname || data.mother_surname.trim() === "") {
-          ctx.addIssue({
-            code: "invalid_type",
-            expected: "string",
-            message:
-              "El apellido materno es obligatorio para personas naturales",
-            path: ["mother_surname"],
           });
         }
 

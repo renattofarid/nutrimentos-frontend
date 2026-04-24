@@ -56,6 +56,7 @@ interface FormSelectAsyncProps {
     data?: { data: any[]; meta?: { last_page?: number } };
     isLoading: boolean;
     isFetching?: boolean;
+    refetch?: () => void;
   };
   mapOptionFn: (item: any) => Option;
   perPage?: number;
@@ -68,6 +69,7 @@ interface FormSelectAsyncProps {
   externalOption?: Option | null;
   horizontalField?: boolean; // Nueva prop para forzar layout horizontal
   descriptionAsBadge?: boolean;
+  refetchOnOpen?: boolean;
 }
 
 function getOptionLabel(opt: Option): string {
@@ -100,6 +102,7 @@ export function FormSelectAsync({
   externalOption,
   horizontalField = false,
   descriptionAsBadge = false,
+  refetchOnOpen = false,
 }: FormSelectAsyncProps) {
   const { horizontal } = useFormLayout();
   const { field: controlField } = useController({ name, control });
@@ -151,7 +154,7 @@ export function FormSelectAsync({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [externalOption?.value]);
 
-  const { data, isLoading, isFetching } = useQueryHook({
+  const { data, isLoading, isFetching, refetch } = useQueryHook({
     search: debouncedSearch,
     page,
     per_page: perPage,
@@ -278,6 +281,7 @@ export function FormSelectAsync({
         }
         setAllOptions(newOptions);
       }
+      if (refetchOnOpen) refetch?.();
     } else {
       setDebouncedSearch("");
       setAllOptions([]);
@@ -412,6 +416,7 @@ export function FormSelectAsync({
                                   }
                                   setAllOptions(newOptions);
                                 }
+                                if (refetchOnOpen) refetch?.();
                               } else {
                                 setDebouncedSearch("");
                                 setAllOptions([]);

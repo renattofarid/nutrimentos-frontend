@@ -60,6 +60,54 @@ export async function getCreditNoteTicket(id: number): Promise<Blob> {
   return response.data;
 }
 
+// Tickets en bulk
+export interface BulkCreditNoteTicketsRequest {
+  document_series: string;
+  numero_inicio: number;
+  numero_fin: number;
+}
+
+export async function exportBulkCreditNoteTickets(
+  params: BulkCreditNoteTicketsRequest
+): Promise<Blob> {
+  const response = await api.post(
+    `/credit-notes/bulk-ticket`,
+    params,
+    { responseType: "blob" }
+  );
+  return response.data;
+}
+
+// Buscar por rango de números
+export interface GetCreditNotesByRangeParams {
+  serie?: string;
+  numero_inicio: string;
+  numero_fin: string;
+}
+
+export interface CreditNotesByRangeResponse {
+  message: string;
+  data: CreditNoteResource[];
+  meta: {
+    total: number;
+    rango_solicitado: {
+      serie: string;
+      numero_inicio: string;
+      numero_fin: string;
+    };
+  };
+}
+
+export async function getCreditNotesByRange(
+  params: GetCreditNotesByRangeParams
+): Promise<CreditNotesByRangeResponse> {
+  const response = await api.post<CreditNotesByRangeResponse>(
+    `${ENDPOINT}/by-range`,
+    params
+  );
+  return response.data;
+}
+
 // Actualizar
 export async function updateCreditNote(
   id: number,

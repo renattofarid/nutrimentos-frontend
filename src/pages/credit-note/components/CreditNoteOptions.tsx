@@ -8,7 +8,9 @@ import { useAllCreditNoteMotives } from "@/pages/credit-note-motive/lib/credit-n
 import { CREDIT_NOTE_STATUSES } from "../lib/credit-note.interface";
 import { SearchableSelectAsync } from "@/components/SearchableSelectAsync";
 import { useClients } from "@/pages/client/lib/client.hook";
+import { useSale } from "@/pages/sale/lib/sale.hook";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
+import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import {
   Select,
   SelectContent,
@@ -16,8 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { FilePlus } from "lucide-react";
 
 type ActiveFilter = "" | "customer" | "motive" | "status";
 
@@ -33,6 +36,10 @@ interface CreditNoteOptionsProps {
   issue_date_from?: Date;
   issue_date_to?: Date;
   onDateChange: (from: Date | undefined, to: Date | undefined) => void;
+  sale_id: string;
+  setSaleId: (value: string) => void;
+  onSaleValueChange?: (value: string, item?: SaleResource) => void;
+  onGenerateCreditNote?: () => void;
 }
 
 export default function CreditNoteOptions({
@@ -47,6 +54,10 @@ export default function CreditNoteOptions({
   issue_date_from,
   issue_date_to,
   onDateChange,
+  sale_id,
+  setSaleId,
+  onSaleValueChange,
+  onGenerateCreditNote,
 }: CreditNoteOptionsProps) {
   const { data: motives = [] } = useAllCreditNoteMotives();
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>("");
@@ -140,6 +151,37 @@ export default function CreditNoteOptions({
           onChange={setStatus}
           placeholder="Estado"
         />
+      )}
+
+      <SearchableSelectAsync
+        useQueryHook={useSale}
+        mapOptionFn={(sale: SaleResource) => ({
+          value: String(sale.id),
+          label: sale.full_document_number,
+          description:
+            sale.customer?.business_name ||
+            `${sale.customer?.names ?? ""} ${sale.customer?.father_surname ?? ""}`.trim(),
+        })}
+        value={sale_id}
+        onChange={(val) => {
+          setSaleId(val);
+          if (!val && onSaleValueChange) onSaleValueChange("", undefined);
+        }}
+        onValueChange={onSaleValueChange}
+        placeholder="N° de Venta"
+        className="w-[200px] bg-accent"
+      />
+
+      {sale_id && onGenerateCreditNote && (
+        <Button
+          size="sm"
+          variant="outline"
+          colorIcon="green"
+          onClick={onGenerateCreditNote}
+        >
+          <FilePlus className="h-4 w-4" />
+          Nueva Nota de Crédito
+        </Button>
       )}
     </div>
   );

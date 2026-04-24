@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useCreditNote } from "../lib/credit-note.hook";
 import type { RowSelectionState } from "@tanstack/react-table";
+import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 
 import CreditNoteActions from "./CreditNoteActions";
 import CreditNoteTable from "./CreditNoteTable";
@@ -24,10 +26,13 @@ import PageWrapper from "@/components/PageWrapper";
 const { MODEL } = CREDIT_NOTE;
 
 export default function CreditNotePage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [motive_id, setMotiveId] = useState("");
   const [customer_id, setCustomerId] = useState("");
+  const [sale_id, setSaleId] = useState("");
+  const [selectedSale, setSelectedSale] = useState<SaleResource | null>(null);
   const [issue_date_from, setIssueDateFrom] = useState<Date | undefined>();
   const [issue_date_to, setIssueDateTo] = useState<Date | undefined>();
   const [page, setPage] = useState(1);
@@ -58,6 +63,11 @@ export default function CreditNotePage() {
   useEffect(() => {
     refetch(buildParams());
   }, [page, per_page, search, status, motive_id, customer_id, issue_date_from, issue_date_to]);
+
+  const handleGenerateCreditNote = () => {
+    if (!selectedSale) return;
+    navigate(CREDIT_NOTE.ROUTE_ADD, { state: { sale: selectedSale } });
+  };
 
   const selectedNoteId = Object.keys(rowSelection).find((key) => rowSelection[key]);
   const toolbarNote = selectedNoteId
@@ -150,6 +160,10 @@ export default function CreditNotePage() {
             setIssueDateFrom(from);
             setIssueDateTo(to);
           }}
+          sale_id={sale_id}
+          setSaleId={setSaleId}
+          onSaleValueChange={(_val, item) => setSelectedSale(item ?? null)}
+          onGenerateCreditNote={handleGenerateCreditNote}
         />
       </CreditNoteTable>
 

@@ -18,12 +18,20 @@ import {
   getSalesByRange,
   exportBulkTickets,
 } from "@/pages/sale/lib/sale.actions";
-import {
-  DOCUMENT_TYPES,
-  type SaleResource,
-} from "@/pages/sale/lib/sale.interface";
+import { DOCUMENT_TYPES } from "@/pages/sale/lib/sale.interface";
 import { errorToast, promiseToast } from "@/lib/core.function";
 import { FormInput } from "@/components/FormInput";
+import { exportBulkCreditNoteTickets } from "@/pages/credit-note/lib/credit-note.actions";
+
+interface DisplayItem {
+  id: number;
+  full_document_number: string;
+  document_type: string;
+  customer_name: string;
+  issue_date: string;
+  currency: string;
+  total_amount: number;
+}
 
 export default function SaleTicketsPrintPage() {
   const [searchParams, setSearchParams] = useState({
@@ -32,10 +40,12 @@ export default function SaleTicketsPrintPage() {
     numero_inicio: "",
     numero_fin: "",
   });
-  const [salesByRange, setSalesByRange] = useState<SaleResource[]>([]);
-  const [selectedSales, setSelectedSales] = useState<number[]>([]);
+  const [items, setItems] = useState<DisplayItem[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
+
+  const isCreditNote = searchParams.document_type === "NOTA_CREDITO";
 
   const handleSearch = async () => {
     if (!searchParams.numero_inicio || !searchParams.numero_fin) {
@@ -54,60 +64,99 @@ export default function SaleTicketsPrintPage() {
       const response = await getSalesByRange(params);
       if (response.data.length === 0) {
         errorToast("No se encontraron ventas en el rango especificado");
-        setSalesByRange([]);
-        setSelectedSales([]);
+        setItems([]);
+        setSelectedIds([]);
         return;
       }
-      setSalesByRange(response.data);
-      setSelectedSales(response.data.map((s) => s.id));
+      const mapped: DisplayItem[] = response.data.map((s) => ({
+        id: s.id,
+        full_document_number: s.full_document_number,
+        document_type: s.document_type,
+        customer_name:
+          s.customer.business_name ||
+          `${s.customer.names} ${s.customer.father_surname}`,
+        issue_date: s.issue_date,
+        currency: s.currency,
+        total_amount: s.total_amount,
+      }));
+      setItems(mapped);
+      setSelectedIds(mapped.map((i) => i.id));
     } catch (error: any) {
       errorToast(error.response?.data?.message || "Error al buscar ventas");
-      setSalesByRange([]);
-      setSelectedSales([]);
+      setItems([]);
+      setSelectedIds([]);
     } finally {
       setIsSearching(false);
     }
   };
 
-  const handleToggleSale = (id: number) => {
-    setSelectedSales((prev) =>
+  const handlePrintCreditNote = () => {
+    if (!searchParams.numero_inicio || !searchParams.numero_fin) {
+      errorToast("Complete los campos de número inicio y fin");
+      return;
+    }
+
+    setIsPrinting(true);
+
+    const printPromise = exportBulkCreditNoteTickets({
+      document_series: searchParams.serie,
+      numero_inicio: Number(searchParams.numero_inicio),
+      numero_fin: Number(searchParams.numero_fin),
+    }).then((blob) => {
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    });
+
+    promiseToast(printPromise, {
+      loading: "Generando ticket...",
+      success: "Ticket generado correctamente",
+      error: (err: any) => err?.message || "Error al generar ticket",
+    });
+
+    printPromise.finally(() => setIsPrinting(false));
+  };
+
+  const handleToggleItem = (id: number) => {
+    setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
 
   const handleToggleAll = () => {
-    if (selectedSales.length === salesByRange.length) {
-      setSelectedSales([]);
+    if (selectedIds.length === items.length) {
+      setSelectedIds([]);
     } else {
-      setSelectedSales(salesByRange.map((s) => s.id));
+      setSelectedIds(items.map((i) => i.id));
     }
   };
 
-  const handlePrint = () => {
-    if (selectedSales.length === 0) {
+  const handlePrintSales = () => {
+    if (selectedIds.length === 0) {
       errorToast("No hay ventas seleccionadas");
       return;
     }
 
     setIsPrinting(true);
-    const downloadPromise = exportBulkTickets(selectedSales).then((blob) => {
+    const downloadPromise = exportBulkTickets(selectedIds).then((blob) => {
       const url = window.URL.createObjectURL(blob);
       window.open(url, "_blank");
     });
 
     promiseToast(downloadPromise, {
       loading: "Generando tickets...",
-      success: `${selectedSales.length} ticket(s) generado(s) correctamente`,
+      success: `${selectedIds.length} ticket(s) generado(s) correctamente`,
       error: "Error al generar tickets",
     });
 
     downloadPromise.finally(() => setIsPrinting(false));
   };
 
-  const allSelected =
-    salesByRange.length > 0 && selectedSales.length === salesByRange.length;
+  const allSelected = items.length > 0 && selectedIds.length === items.length;
   const someSelected =
-    selectedSales.length > 0 && selectedSales.length < salesByRange.length;
+    selectedIds.length > 0 && selectedIds.length < items.length;
+
+  const creditNotePrintDisabled =
+    isPrinting || !searchParams.numero_inicio || !searchParams.numero_fin;
 
   return (
     <PageWrapper>
@@ -121,7 +170,12 @@ export default function SaleTicketsPrintPage() {
           options={DOCUMENT_TYPES}
           value={searchParams.document_type}
           onChange={(val) =>
-            setSearchParams({ ...searchParams, document_type: val })
+            setSearchParams({
+              document_type: val,
+              serie: "",
+              numero_inicio: "",
+              numero_fin: "",
+            })
           }
           placeholder="Tipo de documento"
           className="w-full!"
@@ -144,10 +198,7 @@ export default function SaleTicketsPrintPage() {
           type="number"
           value={searchParams.numero_inicio}
           onChange={(e) =>
-            setSearchParams({
-              ...searchParams,
-              numero_inicio: e.target.value,
-            })
+            setSearchParams({ ...searchParams, numero_inicio: e.target.value })
           }
           placeholder="Ej: 1"
           className="h-8"
@@ -166,22 +217,26 @@ export default function SaleTicketsPrintPage() {
         />
 
         <div className="flex justify-end items-end h-full gap-2">
+          {!isCreditNote && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={handleSearch}
+              disabled={isSearching}
+            >
+              {isSearching ? (
+                <Loader className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+              Buscar
+            </Button>
+          )}
           <Button
-            size="sm"
-            variant="secondary"
-            onClick={handleSearch}
-            disabled={isSearching}
-          >
-            {isSearching ? (
-              <Loader className="h-4 w-4 animate-spin" />
-            ) : (
-              <Search className="h-4 w-4" />
-            )}
-            Buscar
-          </Button>
-          <Button
-            onClick={handlePrint}
-            disabled={isPrinting || selectedSales.length === 0}
+            onClick={isCreditNote ? handlePrintCreditNote : handlePrintSales}
+            disabled={
+              isCreditNote ? creditNotePrintDisabled : isPrinting || selectedIds.length === 0
+            }
           >
             {isPrinting ? (
               <Loader className="h-4 w-4 animate-spin" />
@@ -189,14 +244,14 @@ export default function SaleTicketsPrintPage() {
               <Printer className="h-4 w-4" />
             )}
             Imprimir
-            {selectedSales.length > 0 && ` (${selectedSales.length})`}
+            {!isCreditNote && selectedIds.length > 0 && ` (${selectedIds.length})`}
           </Button>
         </div>
       </GroupFormSection>
 
-      {salesByRange.length > 0 && (
+      {!isCreditNote && items.length > 0 && (
         <GroupFormSection
-          title={`Ventas encontradas (${salesByRange.length})`}
+          title={`Ventas encontradas (${items.length})`}
           icon={Filter}
           cols={{ sm: 1 }}
         >
@@ -224,44 +279,41 @@ export default function SaleTicketsPrintPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {salesByRange.map((sale) => (
+                {items.map((item) => (
                   <TableRow
-                    key={sale.id}
+                    key={item.id}
                     className={`cursor-pointer hover:bg-muted/30 ${
-                      selectedSales.includes(sale.id) ? "bg-muted/50" : ""
+                      selectedIds.includes(item.id) ? "bg-muted/50" : ""
                     }`}
-                    onClick={() => handleToggleSale(sale.id)}
+                    onClick={() => handleToggleItem(item.id)}
                   >
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox
-                        checked={selectedSales.includes(sale.id)}
-                        onCheckedChange={() => handleToggleSale(sale.id)}
+                        checked={selectedIds.includes(item.id)}
+                        onCheckedChange={() => handleToggleItem(item.id)}
                         className="cursor-pointer"
                       />
                     </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium">
-                          {sale.full_document_number}
+                          {item.full_document_number}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {sale.document_type}
+                          {item.document_type}
                         </div>
                       </div>
                     </TableCell>
+                    <TableCell>{item.customer_name}</TableCell>
                     <TableCell>
-                      {sale.customer.business_name ||
-                        `${sale.customer.names} ${sale.customer.father_surname}`}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(sale.issue_date).toLocaleDateString("es-PE", {
+                      {new Date(item.issue_date).toLocaleDateString("es-PE", {
                         year: "numeric",
                         month: "2-digit",
                         day: "2-digit",
                       })}
                     </TableCell>
                     <TableCell className="text-right">
-                      {sale.currency} {sale.total_amount.toFixed(2)}
+                      {item.currency} {item.total_amount.toFixed(2)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -269,10 +321,10 @@ export default function SaleTicketsPrintPage() {
             </Table>
           </div>
 
-          {selectedSales.length > 0 && (
+          {selectedIds.length > 0 && (
             <div className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
               <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                {selectedSales.length} venta(s) seleccionada(s) para imprimir
+                {selectedIds.length} venta(s) seleccionada(s) para imprimir
               </p>
             </div>
           )}

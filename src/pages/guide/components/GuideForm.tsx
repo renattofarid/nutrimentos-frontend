@@ -1148,7 +1148,7 @@ export const GuideForm = ({
         <form
           id="guide-form"
           onSubmit={form.handleSubmit(handleFormSubmit)}
-          className="w-full grid grid-cols-1 lg:grid-cols-3 gap-4"
+          className="w-full grid grid-cols-1 lg:grid-cols-5 gap-4"
         >
           {/* Botones */}
           <div className="flex gap-2 col-span-full border-b pb-2">
@@ -1183,7 +1183,7 @@ export const GuideForm = ({
             </Button>
           </div>
 
-          <div className="lg:col-span-1 space-y-4">
+          <div className="lg:col-span-2 space-y-4">
             {/* Información de la Guía */}
             <GroupFormSection
               title="Información de la Guía"
@@ -1305,6 +1305,13 @@ export const GuideForm = ({
                 </div>
               )}
 
+              <DatePickerFormField
+                control={form.control}
+                name="transfer_date"
+                label="Fecha de Traslado"
+                placeholder="Seleccione fecha"
+              />
+
               <FormSelect
                 control={form.control}
                 name="motive_id"
@@ -1337,15 +1344,6 @@ export const GuideForm = ({
                   control={form.control}
                   name="issue_date"
                   label="Fecha de Emisión"
-                  placeholder="Seleccione fecha"
-                />
-              </div>
-
-              <div className="hidden">
-                <DatePickerFormField
-                  control={form.control}
-                  name="transfer_date"
-                  label="Fecha de Traslado"
                   placeholder="Seleccione fecha"
                 />
               </div>
@@ -1750,7 +1748,7 @@ export const GuideForm = ({
             )}
           </div>
 
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-3 space-y-4">
             <Alert variant="info">
               {selectedSales.length} venta(s) seleccionada(s) para la guía
             </Alert>

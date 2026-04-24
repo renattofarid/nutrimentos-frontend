@@ -144,6 +144,14 @@ export const SaleForm = ({
   );
 
   const [copiedCustomer, setCopiedCustomer] = useState(false);
+  const [selectedCustomerDocument, setSelectedCustomerDocument] = useState<
+    string | null
+  >(() => {
+    if (mode === "update" && sale?.customer) {
+      return sale.customer.number_document ?? null;
+    }
+    return null;
+  });
 
   const { fetchDynamicPrice } = useDynamicPrice();
   const queryClient = useQueryClient();
@@ -372,6 +380,7 @@ export const SaleForm = ({
         resolvedItem.business_name ||
           `${resolvedItem.names ?? ""} ${resolvedItem.father_surname ?? ""} ${resolvedItem.mother_surname ?? ""}`.trim(),
       );
+      setSelectedCustomerDocument(resolvedItem.number_document ?? null);
     }
     const personId = resolvedItem?.id ?? Number(_value);
 
@@ -1040,6 +1049,17 @@ export const SaleForm = ({
     if (selectedPaymentType === "CREDITO" && installments.length === 0) {
       errorToast("Para pagos a crédito, debe agregar al menos una cuota");
       return;
+    }
+
+    // Validar que clientes sin documento no superen S/. 700
+    if (!selectedCustomerDocument) {
+      const total = calculateDetailsTotal();
+      if (total > 700) {
+        warningToast(
+          `No se puede registrar una venta mayor a S/. 700.00 para clientes sin número de documento. Total actual: S/. ${formatNumber(total)}`,
+        );
+        return;
+      }
     }
 
     // Validar que las cuotas coincidan con el total si hay cuotas

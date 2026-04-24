@@ -18,15 +18,12 @@ import {
   getSalesByRange,
   exportBulkTickets,
 } from "@/pages/sale/lib/sale.actions";
-import type { SaleResource } from "@/pages/sale/lib/sale.interface";
+import {
+  DOCUMENT_TYPES,
+  type SaleResource,
+} from "@/pages/sale/lib/sale.interface";
 import { errorToast, promiseToast } from "@/lib/core.function";
 import { FormInput } from "@/components/FormInput";
-
-const DOCUMENT_TYPE_OPTIONS = [
-  { value: "BOLETA", label: "Boleta" },
-  { value: "FACTURA", label: "Factura" },
-  { value: "TICKET", label: "Ticket" },
-];
 
 export default function SaleTicketsPrintPage() {
   const [searchParams, setSearchParams] = useState({
@@ -121,7 +118,7 @@ export default function SaleTicketsPrintPage() {
       >
         <SearchableSelect
           label="Tipo de documento"
-          options={DOCUMENT_TYPE_OPTIONS}
+          options={DOCUMENT_TYPES}
           value={searchParams.document_type}
           onChange={(val) =>
             setSearchParams({ ...searchParams, document_type: val })

@@ -9,7 +9,7 @@ import {
   saleSchemaUpdate,
   type SaleSchema,
 } from "../lib/sale.schema";
-import { Users2, CreditCard, ListChecks, Users, FileText } from "lucide-react";
+import { Users2, CreditCard, ListChecks, Users, FileText, Copy, Check } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
@@ -142,6 +142,8 @@ export const SaleForm = ({
       return "";
     },
   );
+
+  const [copiedCustomer, setCopiedCustomer] = useState(false);
 
   const { fetchDynamicPrice } = useDynamicPrice();
   const queryClient = useQueryClient();
@@ -345,6 +347,14 @@ export const SaleForm = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBranchId, warehouses]);
+
+  const handleCopyCustomerName = useCallback(() => {
+    if (!selectedCustomerName) return;
+    navigator.clipboard.writeText(selectedCustomerName).then(() => {
+      setCopiedCustomer(true);
+      setTimeout(() => setCopiedCustomer(false), 2000);
+    });
+  }, [selectedCustomerName]);
 
   // Actualizar direcciones al seleccionar un cliente en el FormSelectAsync
   const handleCustomerChange = async (
@@ -1228,7 +1238,9 @@ export const SaleForm = ({
                   value: customer.id.toString(),
                   label:
                     customer.business_name ||
-                    `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
+                    [customer.names, customer.father_surname, customer.mother_surname]
+                      .filter(Boolean)
+                      .join(" "),
                   description:
                     getCustomerZoneLabel(customer) +
                     (customer.number_document
@@ -1251,9 +1263,25 @@ export const SaleForm = ({
                 }
                 disabled={mode === "update"}
                 uppercase
+                refetchOnOpen
                 externalOption={externalCustomerOption}
               />
             </div>
+            {selectedCustomerName && (
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                onClick={handleCopyCustomerName}
+                title="Copiar nombre del cliente"
+              >
+                {copiedCustomer ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            )}
             <Button
               type="button"
               size="icon"

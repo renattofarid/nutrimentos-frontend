@@ -608,6 +608,10 @@ export interface DetailedSalesReportParams {
   start_date?: string | null;
   user_id?: number | null;
   warehouse_id?: number | null;
+  zone_id?: number | null;
+  brand_id?: number | null;
+  product_id?: number | null;
+  line?: string | null;
 }
 
 export interface DetailedSaleItem {

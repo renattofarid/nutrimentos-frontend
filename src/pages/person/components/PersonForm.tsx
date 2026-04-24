@@ -59,7 +59,6 @@ interface NumberDocumentContentProps {
   fieldsFromSearch: { names: boolean };
   dirtyFields: any;
   document_type_id: string;
-  isClient: boolean;
   isSearching: boolean;
   handleDocumentSearch: () => void;
 }
@@ -70,18 +69,12 @@ function NumberDocumentContent({
   fieldsFromSearch,
   dirtyFields,
   document_type_id,
-  isClient,
   isSearching,
   handleDocumentSearch,
 }: NumberDocumentContentProps) {
   const { horizontal } = useFormLayout();
 
-  const labelText = (
-    <>
-      Número de Documento {!isClient && errors.number_document && "*"}
-      {isClient && " (Opcional)"}
-    </>
-  );
+  const labelText = <>Número de Documento (Opcional)</>;
 
   const inputEl = (
     <FormControl>
@@ -228,7 +221,7 @@ export const PersonForm = ({
   const form = useForm<FormSchema>({
     resolver: zodResolver(schema),
     defaultValues: {
-      document_type_id: initialData?.document_type_id?.toString() || "",
+      document_type_id: initialData?.document_type_id?.toString() || TYPE_DOCUMENT.DNI.id,
       type_person:
         (initialData?.type_person as "NATURAL" | "JURIDICA") || "NATURAL",
       number_document: initialData?.number_document ?? "",
@@ -495,7 +488,6 @@ export const PersonForm = ({
                 fieldsFromSearch={fieldsFromSearch}
                 dirtyFields={dirtyFields}
                 document_type_id={document_type_id}
-                isClient={isClient}
                 isSearching={isSearching}
                 handleDocumentSearch={handleDocumentSearch}
               />
@@ -526,6 +518,7 @@ export const PersonForm = ({
                 name="names"
                 label="Nombres"
                 placeholder="Ingrese los nombres"
+                uppercase
                 className={
                   fieldsFromSearch.names ? "bg-blue-50 border-blue-200" : ""
                 }
@@ -536,6 +529,7 @@ export const PersonForm = ({
                 name="father_surname"
                 label="Apellido Paterno"
                 placeholder="Ingrese apellido paterno"
+                uppercase
                 className={fieldsFromSearch.father_surname ? "bg-blue-50" : ""}
               />
 
@@ -544,6 +538,7 @@ export const PersonForm = ({
                 name="mother_surname"
                 label="Apellido Materno"
                 placeholder="Ingrese apellido materno"
+                uppercase
                 className={fieldsFromSearch.mother_surname ? "bg-blue-50" : ""}
               />
 

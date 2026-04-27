@@ -381,11 +381,11 @@ export const SaleEditRoute = "/ventas/actualizar/:id";
 // ===== STATUS & TYPE OPTIONS =====
 
 export const DOCUMENT_TYPES = [
-  { value: "FACTURA", label: "Factura" },
-  { value: "BOLETA", label: "Boleta" },
-  { value: "NOTA_VENTA", label: "Nota de Venta" },
-  { value: "NOTA_CREDITO", label: "Nota de Crédito" },
-  { value: "NOTA_DEBITO", label: "Nota de Débito" },
+  { value: "FACTURA", label: "FACTURA ELECTRONICA" },
+  { value: "BOLETA", label: "BOLETA ELECTRONICA" },
+  { value: "NOTA_VENTA", label: "NOTA DE VENTA" },
+  { value: "NOTA_CREDITO", label: "NOTA CREDITO ELECTRONICA Factura" },
+  { value: "NOTA_CREDITO", label: "NOTA CREDITO ELECTRONICA B" },
   // { value: "GUIA", label: "Guía de Remisión" },
 ] as const;
 

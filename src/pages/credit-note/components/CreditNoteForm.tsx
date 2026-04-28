@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Loader, Save, X, ListChecks, FileText, Settings2 } from "lucide-react";
@@ -13,12 +13,17 @@ import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import { format } from "date-fns";
-import { ExcelGrid, type ExcelGridColumn } from "@/components/ExcelGrid";
+import {
+  ExcelGrid,
+  type ExcelGridColumn,
+  type ProductOption,
+} from "@/components/ExcelGrid";
 import { formatNumber } from "@/lib/formatCurrency";
 import { formatDecimalTrunc } from "@/lib/utils";
 import { warningToast } from "@/lib/core.function";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { FormInput } from "@/components/FormInput";
+import type { FieldErrors } from "react-hook-form";
 
 interface CreditNoteFormProps {
   defaultValues: Partial<CreditNoteSchema>;
@@ -39,6 +44,8 @@ interface CreditNoteDetailRow {
   product_code: string;
   product_name: string;
   product_weight: number;
+  original_quantity_sacks: number;
+  original_quantity_kg: number;
   quantity_sacks: string;
   quantity_kg: string;
   unit_price: string;
@@ -48,6 +55,47 @@ interface CreditNoteDetailRow {
 
 const round2 = (v: number) => Math.round(v * 100) / 100;
 const round6 = (v: number) => Math.round(v * 1_000_000) / 1_000_000;
+
+function getFirstErrorMessage(
+  errors: FieldErrors<CreditNoteSchema>,
+): string | null {
+  const visit = (value: unknown): string | null => {
+    if (!value) return null;
+
+    if (typeof value === "string") return value;
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const message = visit(item);
+        if (message) return message;
+      }
+      return null;
+    }
+
+    if (typeof value === "object") {
+      const errorObject = value as Record<string, unknown> & {
+        message?: unknown;
+        root?: unknown;
+      };
+
+      if (typeof errorObject.message === "string") return errorObject.message;
+
+      if (errorObject.root) {
+        const rootMessage = visit(errorObject.root);
+        if (rootMessage) return rootMessage;
+      }
+
+      for (const entry of Object.values(errorObject)) {
+        const message = visit(entry);
+        if (message) return message;
+      }
+    }
+
+    return null;
+  };
+
+  return visit(errors);
+}
 
 function calcRow(row: CreditNoteDetailRow): CreditNoteDetailRow {
   const sacks = parseFloat(row.quantity_sacks) || 0;
@@ -80,6 +128,22 @@ export const CreditNoteForm = ({
   readOnlySale = false,
 }: CreditNoteFormProps) => {
   const [details, setDetails] = useState<CreditNoteDetailRow[]>([]);
+  const saleDetailMap = useMemo(
+    () => new Map((selectedSale?.details ?? []).map((detail) => [detail.id, detail])),
+    [selectedSale],
+  );
+
+  const productOptions = useMemo<ProductOption[]>(
+    () =>
+      (selectedSale?.details ?? []).map((detail) => ({
+        id: detail.id.toString(),
+        codigo: detail.product?.codigo ?? "",
+        name: detail.product?.name ?? "",
+        weight: detail.product?.weight?.toString() ?? "0",
+        price_per_kg: detail.unit_price?.toString() ?? "0",
+      })),
+    [selectedSale],
+  );
 
   const form = useForm<CreditNoteSchema>({
     resolver: zodResolver(creditNoteSchemaCreate),
@@ -117,6 +181,8 @@ export const CreditNoteForm = ({
             product_code: detail.product?.codigo ?? "",
             product_name: detail.product?.name ?? "",
             product_weight: detail.product?.weight ?? 0,
+            original_quantity_sacks: detail.quantity_sacks ?? 0,
+            original_quantity_kg: detail.quantity_kg ?? 0,
             quantity_sacks: (detail.quantity_sacks ?? 0).toString(),
             quantity_kg: (detail.quantity_kg ?? 0).toString(),
             unit_price: parseFloat(
@@ -143,6 +209,11 @@ export const CreditNoteForm = ({
       rows.map((r) => ({
         sale_detail_id: r.sale_detail_id,
         product_id: r.product_id,
+        product_code: r.product_code,
+        product_name: r.product_name,
+        product_weight: r.product_weight,
+        original_quantity_sacks: r.original_quantity_sacks,
+        original_quantity_kg: r.original_quantity_kg,
         quantity_sacks: parseFloat(r.quantity_sacks) || 0,
         quantity_kg: parseFloat(r.quantity_kg) || 0,
         unit_price: parseFloat(r.unit_price) || 0,
@@ -171,7 +242,124 @@ export const CreditNoteForm = ({
   };
 
   const handleAddRow = () => {
-    warningToast("No se pueden agregar nuevos productos a una nota de crédito");
+    if (!selectedSale?.details?.length) {
+      warningToast("Seleccione una venta con productos para agregar otra línea");
+      return;
+    }
+
+    const sourceRow = details[details.length - 1];
+    const sourceDetail =
+      (sourceRow && saleDetailMap.get(sourceRow.sale_detail_id)) ||
+      selectedSale.details[0];
+
+    if (!sourceDetail) {
+      warningToast("No se encontró el detalle de venta para agregar la línea");
+      return;
+    }
+
+    const newRow: CreditNoteDetailRow = calcRow({
+      index: details.length + 1,
+      sale_detail_id: sourceDetail.id,
+      product_id: sourceDetail.product_id,
+      product_code: sourceDetail.product?.codigo ?? "",
+      product_name: sourceDetail.product?.name ?? "",
+      product_weight: sourceDetail.product?.weight ?? 0,
+      original_quantity_sacks: sourceDetail.quantity_sacks ?? 0,
+      original_quantity_kg: sourceDetail.quantity_kg ?? 0,
+      quantity_sacks: "",
+      quantity_kg: "",
+      unit_price: sourceDetail.unit_price?.toString() ?? "",
+      subtotal: 0,
+      total_kg: 0,
+    });
+
+    setDetails((prev) => {
+      const updated = [...prev, newRow].map((row, i) => ({ ...row, index: i + 1 }));
+      syncFormDetails(updated);
+      return updated;
+    });
+  };
+
+  const handleProductSelect = (index: number, product: ProductOption) => {
+    const selectedDetail = saleDetailMap.get(Number(product.id));
+    if (!selectedDetail) return;
+
+    setDetails((prev) => {
+      const updated = [...prev];
+      updated[index] = calcRow({
+        ...updated[index],
+        sale_detail_id: selectedDetail.id,
+        product_id: selectedDetail.product_id,
+        product_code: selectedDetail.product?.codigo ?? product.codigo,
+        product_name: selectedDetail.product?.name ?? product.name,
+        product_weight: selectedDetail.product?.weight ?? 0,
+        original_quantity_sacks: selectedDetail.quantity_sacks ?? 0,
+        original_quantity_kg: selectedDetail.quantity_kg ?? 0,
+        quantity_sacks: "",
+        quantity_kg: "",
+        unit_price:
+          selectedDetail.unit_price?.toString() ?? product.price_per_kg ?? "",
+        subtotal: 0,
+        total_kg: 0,
+      });
+      syncFormDetails(updated);
+      return updated;
+    });
+  };
+
+  const handleProductCodeTab = (
+    rowIndex: number,
+    code: string,
+    advance: () => void,
+    setError: (msg: string) => void,
+  ) => {
+    const searchValue = code.trim().toLowerCase();
+    if (!searchValue) {
+      advance();
+      return;
+    }
+
+    const exactMatch = selectedSale?.details.find(
+      (detail) => detail.product?.codigo?.toLowerCase() === searchValue,
+    );
+    const partialMatches =
+      selectedSale?.details.filter((detail) =>
+        detail.product?.codigo?.toLowerCase().includes(searchValue),
+      ) ?? [];
+
+    if (exactMatch) {
+      handleProductSelect(rowIndex, {
+        id: exactMatch.id.toString(),
+        codigo: exactMatch.product?.codigo ?? "",
+        name: exactMatch.product?.name ?? "",
+        weight: exactMatch.product?.weight?.toString() ?? "0",
+        price_per_kg: exactMatch.unit_price?.toString() ?? "0",
+      });
+      advance();
+      return;
+    }
+
+    if (partialMatches.length === 1) {
+      const detail = partialMatches[0];
+      handleProductSelect(rowIndex, {
+        id: detail.id.toString(),
+        codigo: detail.product?.codigo ?? "",
+        name: detail.product?.name ?? "",
+        weight: detail.product?.weight?.toString() ?? "0",
+        price_per_kg: detail.unit_price?.toString() ?? "0",
+      });
+      advance();
+      return;
+    }
+
+    if (partialMatches.length > 1) {
+      setError(
+        `Se encontraron ${partialMatches.length} productos con ese código. Sea más específico.`,
+      );
+      return;
+    }
+
+    setError("Código de producto no encontrado en la venta seleccionada");
   };
 
   // Totales
@@ -197,24 +385,16 @@ export const CreditNoteForm = ({
     {
       id: "product_code",
       header: "Código",
-      type: "readonly",
+      type: "product-code",
       width: "100px",
-      render: (row) => (
-        <div className="h-full flex items-center px-2 py-1 text-sm font-mono bg-muted/30">
-          {row.product_code || "-"}
-        </div>
-      ),
+      accessor: "product_code",
     },
     {
       id: "product_name",
       header: "Descripción",
-      type: "readonly",
+      type: "product-search",
       width: "320px",
-      render: (row) => (
-        <div className="h-full flex items-center px-2 py-1 text-sm bg-muted/30">
-          {row.product_name || "-"}
-        </div>
-      ),
+      accessor: "product_name",
     },
     {
       id: "quantity_sacks",
@@ -222,6 +402,7 @@ export const CreditNoteForm = ({
       type: "number",
       width: "110px",
       accessor: "quantity_sacks",
+      disabled: (row) => row.original_quantity_sacks <= 0,
     },
     {
       id: "quantity_kg",
@@ -229,6 +410,7 @@ export const CreditNoteForm = ({
       type: "number",
       width: "100px",
       accessor: "quantity_kg",
+      disabled: (row) => row.original_quantity_kg <= 0,
     },
     {
       id: "unit_price",
@@ -253,6 +435,50 @@ export const CreditNoteForm = ({
   ];
 
   const handleSubmit = (data: CreditNoteSchema) => {
+    if (details.length === 0) {
+      warningToast("Debe incluir al menos un detalle de la venta");
+      return;
+    }
+
+    const bySaleDetail = new Map<number, CreditNoteDetailRow[]>();
+    for (const row of details) {
+      const group = bySaleDetail.get(row.sale_detail_id) ?? [];
+      group.push(row);
+      bySaleDetail.set(row.sale_detail_id, group);
+    }
+
+    for (const row of details) {
+      const hasQuantity =
+        (row.original_quantity_sacks > 0 && parseFloat(row.quantity_sacks) > 0) ||
+        (row.original_quantity_kg > 0 && parseFloat(row.quantity_kg) > 0);
+
+      if (!hasQuantity) {
+        warningToast("Complete la cantidad antes de guardar");
+        return;
+      }
+    }
+
+    for (const [saleDetailId, rows] of bySaleDetail.entries()) {
+      const source = saleDetailMap.get(saleDetailId);
+      if (!source) {
+        warningToast("El detalle de venta no existe para una de las líneas");
+        return;
+      }
+
+      const totalSacks = rows.reduce((sum, row) => sum + (parseFloat(row.quantity_sacks) || 0), 0);
+      const totalKg = rows.reduce((sum, row) => sum + (parseFloat(row.quantity_kg) || 0), 0);
+
+      if (source.quantity_sacks > 0 && totalSacks > source.quantity_sacks) {
+        warningToast("La cantidad en sacos no puede ser mayor a la cantidad vendida");
+        return;
+      }
+
+      if (source.quantity_kg > 0 && totalKg > source.quantity_kg) {
+        warningToast("La cantidad en kg no puede ser mayor a la cantidad vendida");
+        return;
+      }
+    }
+
     onSubmit({
       ...data,
       details: details.map((r) => ({
@@ -265,10 +491,17 @@ export const CreditNoteForm = ({
     });
   };
 
+  const handleInvalidSubmit = (errors: FieldErrors<CreditNoteSchema>) => {
+    const message =
+      getFirstErrorMessage(errors) ??
+      "Revisa los campos obligatorios antes de guardar";
+    warningToast(message);
+  };
+
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(handleSubmit)}
+        onSubmit={form.handleSubmit(handleSubmit, handleInvalidSubmit)}
         className="space-y-2 w-full"
       >
         {/* Acciones */}
@@ -377,10 +610,11 @@ export const CreditNoteForm = ({
             onAddRow={handleAddRow}
             onRemoveRow={handleRemoveRow}
             onCellChange={handleCellChange}
+            productOptions={productOptions}
+            onProductSelect={handleProductSelect}
+            onProductCodeTab={handleProductCodeTab}
             emptyMessage={
-              selectedSale
-                ? "Esta venta no tiene productos"
-                : "Seleccione una venta para cargar los productos"
+              "Agregue una fila para comenzar"
             }
             minHeight="180px"
           />

@@ -150,7 +150,7 @@ export const CreditNoteForm = ({
     defaultValues: {
       sale_id: "0",
       issue_date: format(new Date(), "yyyy-MM-dd"),
-      credit_note_motive_id: "7",
+      credit_note_motive_id: "1",
       affects_stock: true,
       observations: "",
       details: [],
@@ -158,6 +158,9 @@ export const CreditNoteForm = ({
     },
     mode: "onChange",
   });
+
+  const watchMotiveId = form.watch("credit_note_motive_id");
+  const isAnulacion = watchMotiveId === "1";
 
   const watchSaleId = form.watch("sale_id");
 
@@ -194,14 +197,20 @@ export const CreditNoteForm = ({
           return calcRow(base);
         },
       );
-      setDetails(rows);
-      syncFormDetails(rows);
+      // Si es Anulación, cargar todas las cantidades; si es Devolución, iniciar vacío
+      if (isAnulacion) {
+        setDetails(rows);
+        syncFormDetails(rows);
+      } else {
+        setDetails([]);
+        form.setValue("details", []);
+      }
     } else {
       setDetails([]);
       form.setValue("details", []);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSale]);
+  }, [selectedSale, isAnulacion]);
 
   const syncFormDetails = (rows: CreditNoteDetailRow[]) => {
     form.setValue(
@@ -232,6 +241,11 @@ export const CreditNoteForm = ({
   };
 
   const handleRemoveRow = (index: number) => {
+    if (isAnulacion) {
+      warningToast("No se pueden quitar filas en Anulación de la operación");
+      return;
+    }
+    
     setDetails((prev) => {
       const updated = prev
         .filter((_, i) => i !== index)
@@ -242,6 +256,11 @@ export const CreditNoteForm = ({
   };
 
   const handleAddRow = () => {
+    if (isAnulacion) {
+      warningToast("No se pueden agregar filas en Anulación de la operación");
+      return;
+    }
+
     if (!selectedSale?.details?.length) {
       warningToast("Seleccione una venta con productos para agregar otra línea");
       return;
@@ -388,6 +407,7 @@ export const CreditNoteForm = ({
       type: "product-code",
       width: "100px",
       accessor: "product_code",
+      disabled: () => isAnulacion,
     },
     {
       id: "product_name",
@@ -395,6 +415,7 @@ export const CreditNoteForm = ({
       type: "product-search",
       width: "320px",
       accessor: "product_name",
+      disabled: () => isAnulacion,
     },
     {
       id: "quantity_sacks",
@@ -402,7 +423,7 @@ export const CreditNoteForm = ({
       type: "number",
       width: "110px",
       accessor: "quantity_sacks",
-      disabled: (row) => row.original_quantity_sacks <= 0,
+      disabled: (row) => row.original_quantity_sacks <= 0 || isAnulacion,
     },
     {
       id: "quantity_kg",
@@ -410,7 +431,7 @@ export const CreditNoteForm = ({
       type: "number",
       width: "100px",
       accessor: "quantity_kg",
-      disabled: (row) => row.original_quantity_kg <= 0,
+      disabled: (row) => row.original_quantity_kg <= 0 || isAnulacion,
     },
     {
       id: "unit_price",
@@ -481,6 +502,7 @@ export const CreditNoteForm = ({
 
     onSubmit({
       ...data,
+      credit_note_motive_id: watchMotiveId,
       details: details.map((r) => ({
         sale_detail_id: r.sale_detail_id,
         product_id: r.product_id,
@@ -556,16 +578,14 @@ export const CreditNoteForm = ({
             placeholder="Seleccione la fecha"
           />
 
-          <div className="hidden">
-            <FormSelect
-              control={form.control}
-              name="credit_note_motive_id"
-              label="MOTIVO"
-              placeholder="Seleccione un motivo"
-              options={motives}
-              uppercase
-            />
-          </div>
+          <FormSelect
+            control={form.control}
+            name="credit_note_motive_id"
+            label="MOTIVO"
+            placeholder="Seleccione un motivo"
+            options={motives}
+            uppercase
+          />
 
           <FormSwitch
             control={form.control}

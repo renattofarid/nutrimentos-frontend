@@ -556,20 +556,22 @@ export const PersonForm = ({
                 />
               )}
 
-              <DatePickerFormField
-                control={form.control}
-                name="birth_date"
-                label="Fecha de Nacimiento"
-                placeholder="Seleccione fecha"
-                captionLayout="dropdown"
-                endMonth={
-                  new Date(
-                    new Date().getFullYear() - 18,
-                    new Date().getMonth(),
-                    new Date().getDate(),
-                  )
-                }
-              />
+              {(!isClient || showExtraFields) && (
+                <DatePickerFormField
+                  control={form.control}
+                  name="birth_date"
+                  label="Fecha de Nacimiento"
+                  placeholder="Seleccione fecha"
+                  captionLayout="dropdown"
+                  endMonth={
+                    new Date(
+                      new Date().getFullYear() - 18,
+                      new Date().getMonth(),
+                      new Date().getDate(),
+                    )
+                  }
+                />
+              )}
             </>
           )}
 

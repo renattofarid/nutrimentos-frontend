@@ -17,7 +17,6 @@ import { useCreditNoteStore } from "../lib/credit-note.store";
 import { getCreditNoteTicket } from "../lib/credit-note.actions";
 import FormSkeleton from "@/components/FormSkeleton";
 import { useAllSales } from "@/pages/sale/lib/sale.hook";
-import { useAllCreditNoteMotives } from "@/pages/credit-note-motive/lib/credit-note-motive.hook";
 import PageWrapper from "@/components/PageWrapper";
 import { ConfirmationDialog } from "@/components/ConfirmationDialog";
 
@@ -37,10 +36,7 @@ export default function CreditNoteAddPage() {
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [pendingCreditNoteId, setPendingCreditNoteId] = useState<number | null>(null);
 
-  // Obtener ventas (solo necesario cuando no hay venta preseleccionada) y motivos
   const { data: sales, isLoading: isLoadingSales } = useAllSales();
-  const { data: motives, isLoading: isLoadingMotives } =
-    useAllCreditNoteMotives();
 
   // Obtener la venta seleccionada
   const selectedSale = useMemo(
@@ -70,17 +66,6 @@ export default function CreditNoteAddPage() {
             };
           }) || [],
     [isReadOnlySale, sales],
-  );
-
-  const motivesOptions = useMemo(
-    () =>
-      motives
-        ?.filter((motive) => motive.id === 1 || motive.id === 7)
-        .map((motive) => ({
-          value: motive.id.toString(),
-          label: `${motive.code} - ${motive.name}`,
-        })) || [],
-    [motives],
   );
 
   const handleSubmit = async (data: CreditNoteSchema) => {
@@ -137,8 +122,7 @@ export default function CreditNoteAddPage() {
     navigate(ROUTE);
   };
 
-  // Mostrar skeleton mientras cargan los datos
-  if ((isReadOnlySale ? false : isLoadingSales) || isLoadingMotives) {
+  if (!isReadOnlySale && isLoadingSales) {
     return (
       <PageWrapper>
         <FormSkeleton />
@@ -156,7 +140,6 @@ export default function CreditNoteAddPage() {
         onCancel={() => navigate(ROUTE)}
         isSubmitting={isSubmitting}
         sales={salesOptions}
-        motives={motivesOptions}
         selectedSale={selectedSale}
         onSaleChange={setSelectedSaleId}
         readOnlySale={isReadOnlySale}

@@ -30,11 +30,11 @@ export const CreditNoteColumns = (): ColumnDef<CreditNoteResource>[] => [
     cell: ({ row }) => {
       const sale = row.original.sale;
       return (
-        <div className="flex flex-col gap-1">
-          <Badge variant="outline" className="font-mono w-fit">
+        <div className="flex flex-col">
+          <span className="font-mono font-bold text-sm text-muted-foreground leading-none">
             {sale.serie}-{sale.numero}
-          </Badge>
-          <span className="text-xs text-muted-foreground">
+          </span>
+          <span className="text-xs text-muted-foreground leading-none">
             {sale.document_type}
           </span>
         </div>
@@ -59,16 +59,11 @@ export const CreditNoteColumns = (): ColumnDef<CreditNoteResource>[] => [
     },
   },
   {
-    accessorKey: "motive",
+    accessorKey: "reason",
     header: "Motivo",
     cell: ({ row }) => {
-      const motive = row.original.motive;
-      return (
-        <div className="flex flex-col gap-1">
-          <span className="font-semibold">{motive?.name}</span>
-          <span className="text-xs text-muted-foreground">{motive?.code}</span>
-        </div>
-      );
+      const motive = row.original.reason;
+      return <Badge variant="outline">{motive}</Badge>;
     },
   },
   {

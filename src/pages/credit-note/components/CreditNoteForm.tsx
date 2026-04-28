@@ -31,7 +31,6 @@ interface CreditNoteFormProps {
   onCancel?: () => void;
   isSubmitting?: boolean;
   sales?: Array<{ value: string; label: string }>;
-  motives?: Array<{ value: string; label: string }>;
   selectedSale?: SaleResource | null;
   onSaleChange?: (saleId: number | null) => void;
   readOnlySale?: boolean;
@@ -122,7 +121,6 @@ export const CreditNoteForm = ({
   onCancel,
   isSubmitting = false,
   sales = [],
-  motives = [],
   selectedSale,
   onSaleChange,
   readOnlySale = false,
@@ -159,9 +157,6 @@ export const CreditNoteForm = ({
     mode: "onChange",
   });
 
-  const watchMotiveId = form.watch("credit_note_motive_id");
-  const isAnulacion = watchMotiveId === "1";
-
   const watchSaleId = form.watch("sale_id");
 
   useEffect(() => {
@@ -197,20 +192,14 @@ export const CreditNoteForm = ({
           return calcRow(base);
         },
       );
-      // Si es Anulación, cargar todas las cantidades; si es Devolución, iniciar vacío
-      if (isAnulacion) {
-        setDetails(rows);
-        syncFormDetails(rows);
-      } else {
-        setDetails([]);
-        form.setValue("details", []);
-      }
+      setDetails(rows);
+      syncFormDetails(rows);
     } else {
       setDetails([]);
       form.setValue("details", []);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSale, isAnulacion]);
+  }, [selectedSale]);
 
   const syncFormDetails = (rows: CreditNoteDetailRow[]) => {
     form.setValue(
@@ -241,11 +230,6 @@ export const CreditNoteForm = ({
   };
 
   const handleRemoveRow = (index: number) => {
-    if (isAnulacion) {
-      warningToast("No se pueden quitar filas en Anulación de la operación");
-      return;
-    }
-    
     setDetails((prev) => {
       const updated = prev
         .filter((_, i) => i !== index)
@@ -256,11 +240,6 @@ export const CreditNoteForm = ({
   };
 
   const handleAddRow = () => {
-    if (isAnulacion) {
-      warningToast("No se pueden agregar filas en Anulación de la operación");
-      return;
-    }
-
     if (!selectedSale?.details?.length) {
       warningToast("Seleccione una venta con productos para agregar otra línea");
       return;
@@ -407,7 +386,6 @@ export const CreditNoteForm = ({
       type: "product-code",
       width: "100px",
       accessor: "product_code",
-      disabled: () => isAnulacion,
     },
     {
       id: "product_name",
@@ -415,7 +393,6 @@ export const CreditNoteForm = ({
       type: "product-search",
       width: "320px",
       accessor: "product_name",
-      disabled: () => isAnulacion,
     },
     {
       id: "quantity_sacks",
@@ -423,7 +400,7 @@ export const CreditNoteForm = ({
       type: "number",
       width: "110px",
       accessor: "quantity_sacks",
-      disabled: (row) => row.original_quantity_sacks <= 0 || isAnulacion,
+      disabled: (row) => row.original_quantity_sacks <= 0,
     },
     {
       id: "quantity_kg",
@@ -431,7 +408,7 @@ export const CreditNoteForm = ({
       type: "number",
       width: "100px",
       accessor: "quantity_kg",
-      disabled: (row) => row.original_quantity_kg <= 0 || isAnulacion,
+      disabled: (row) => row.original_quantity_kg <= 0,
     },
     {
       id: "unit_price",
@@ -502,7 +479,7 @@ export const CreditNoteForm = ({
 
     onSubmit({
       ...data,
-      credit_note_motive_id: watchMotiveId,
+      credit_note_motive_id: "1",
       details: details.map((r) => ({
         sale_detail_id: r.sale_detail_id,
         product_id: r.product_id,
@@ -576,15 +553,6 @@ export const CreditNoteForm = ({
             name="issue_date"
             label="FECHA DE EMISIÓN"
             placeholder="Seleccione la fecha"
-          />
-
-          <FormSelect
-            control={form.control}
-            name="credit_note_motive_id"
-            label="MOTIVO"
-            placeholder="Seleccione un motivo"
-            options={motives}
-            uppercase
           />
 
           <FormSwitch

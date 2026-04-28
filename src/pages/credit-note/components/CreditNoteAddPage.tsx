@@ -74,10 +74,12 @@ export default function CreditNoteAddPage() {
 
   const motivesOptions = useMemo(
     () =>
-      motives?.map((motive) => ({
-        value: motive.id.toString(),
-        label: `${motive.code} - ${motive.name}`,
-      })) || [],
+      motives
+        ?.filter((motive) => motive.id === 1 || motive.id === 7)
+        .map((motive) => ({
+          value: motive.id.toString(),
+          label: `${motive.code} - ${motive.name}`,
+        })) || [],
     [motives],
   );
 

@@ -326,13 +326,28 @@ export const navData: NavItem[] = [
     icon: ReportsIcon,
     items: [
       {
-        title: "Imprimir Tickets",
+        title: "Impresión de comprobantes",
         url: SALE_TICKETS_PRINT_ROUTE,
         icon: ReportsIcon,
       },
       {
         title: RealCustomerAccountStatementTitle,
         url: REAL_CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
+        icon: ReportsIcon,
+      },
+      {
+        title: "Registro de ventas detalladas",
+        url: DETAILED_SALES_REPORT_ROUTE,
+        icon: ReportsIcon,
+      },
+      {
+        title: "Registro de Ventas (IGV)",
+        url: SALES_REGISTER_REPORT_ROUTE,
+        icon: ReportsIcon,
+      },
+      {
+        title: "Registro de Compras (IGV)",
+        url: PURCHASE_REGISTER_REPORT_ROUTE,
         icon: ReportsIcon,
       },
       { title: "Inventario", url: INVENTORY_REPORT_ROUTE, icon: ReportsIcon },
@@ -349,11 +364,6 @@ export const navData: NavItem[] = [
         icon: ReportsIcon,
       },
       {
-        title: "Ventas Detallado",
-        url: DETAILED_SALES_REPORT_ROUTE,
-        icon: ReportsIcon,
-      },
-      {
         title: "Ventas Anuales",
         url: ANNUAL_SALES_REPORT_ROUTE,
         icon: ReportsIcon,
@@ -361,16 +371,6 @@ export const navData: NavItem[] = [
       {
         title: "Ventas por Producto",
         url: SALES_BY_PRODUCT_REPORT_ROUTE,
-        icon: ReportsIcon,
-      },
-      {
-        title: "Registro de Ventas",
-        url: SALES_REGISTER_REPORT_ROUTE,
-        icon: ReportsIcon,
-      },
-      {
-        title: "Registro de Compras",
-        url: PURCHASE_REGISTER_REPORT_ROUTE,
         icon: ReportsIcon,
       },
       {

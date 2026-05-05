@@ -23,7 +23,7 @@ interface FilterFormValues {
   customer_id: string;
   document_type: string;
   payment_type: string;
-  user_id: string;
+  vendedor_id: string;
   warehouse_id: string;
   start_date: string;
   end_date: string;
@@ -45,7 +45,7 @@ export default function DetailedSalesReportPage() {
       customer_id: "",
       document_type: "",
       payment_type: "",
-      user_id: "",
+      vendedor_id: "",
       warehouse_id: "",
       start_date: today,
       end_date: today,
@@ -67,7 +67,7 @@ export default function DetailedSalesReportPage() {
     payment_type:
       (values.payment_type as DetailedSalesReportParams["payment_type"]) ||
       null,
-    user_id: values.user_id ? Number(values.user_id) : null,
+    vendedor_id: values.vendedor_id ? Number(values.vendedor_id) : null,
     warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
     start_date: values.start_date || null,
     end_date: values.end_date || null,
@@ -213,7 +213,7 @@ export default function DetailedSalesReportPage() {
 
               <FormSelectAsync
                 control={form.control}
-                name="user_id"
+                name="vendedor_id"
                 label="Vendedor"
                 placeholder="Buscar vendedor..."
                 useQueryHook={useWorkers}

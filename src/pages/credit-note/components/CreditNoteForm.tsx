@@ -50,6 +50,8 @@ interface CreditNoteDetailRow {
   unit_price: string;
   subtotal: number;
   total_kg: number;
+  sale_unit_price: number;
+  price_per_kg: number;
 }
 
 const round2 = (v: number) => Math.round(v * 100) / 100;
@@ -172,22 +174,27 @@ export const CreditNoteForm = ({
     if (selectedSale?.details) {
       const rows: CreditNoteDetailRow[] = selectedSale.details.map(
         (detail, i) => {
+          const saleUnitPrice = parseFloat(detail.unit_price?.toString() ?? "0");
+          const weight = detail.product?.weight ?? 0;
+          const isSackSale = (detail.quantity_sacks ?? 0) > 0;
+          const pricePerKg = isSackSale && weight > 0 ? round6(saleUnitPrice / weight) : saleUnitPrice;
+
           const base: CreditNoteDetailRow = {
             index: i + 1,
             sale_detail_id: detail.id,
             product_id: detail.product_id,
             product_code: detail.product?.codigo ?? "",
             product_name: detail.product?.name ?? "",
-            product_weight: detail.product?.weight ?? 0,
+            product_weight: weight,
             original_quantity_sacks: detail.quantity_sacks ?? 0,
             original_quantity_kg: detail.quantity_kg ?? 0,
             quantity_sacks: (detail.quantity_sacks ?? 0).toString(),
             quantity_kg: (detail.quantity_kg ?? 0).toString(),
-            unit_price: parseFloat(
-              detail.unit_price?.toString() ?? "0",
-            ).toString(),
+            unit_price: saleUnitPrice.toString(),
             subtotal: 0,
             total_kg: 0,
+            sale_unit_price: saleUnitPrice,
+            price_per_kg: pricePerKg,
           };
           return calcRow(base);
         },
@@ -222,7 +229,24 @@ export const CreditNoteForm = ({
   const handleCellChange = (index: number, field: string, value: string) => {
     setDetails((prev) => {
       const updated = [...prev];
-      const row = calcRow({ ...updated[index], [field]: value });
+      const current = updated[index];
+      const changes: Partial<CreditNoteDetailRow> = { [field]: value };
+
+      if (field === "quantity_kg" && parseFloat(value) > 0) {
+        changes.quantity_sacks = "";
+        // Si la venta original fue por sacos, derivar precio por kg automáticamente
+        if (current.original_quantity_sacks > 0 && current.price_per_kg > 0) {
+          changes.unit_price = current.price_per_kg.toString();
+        }
+      } else if (field === "quantity_sacks" && parseFloat(value) > 0) {
+        changes.quantity_kg = "";
+        // Restaurar precio por saco si venía de una venta por sacos
+        if (current.original_quantity_sacks > 0 && current.sale_unit_price > 0) {
+          changes.unit_price = current.sale_unit_price.toString();
+        }
+      }
+
+      const row = calcRow({ ...current, ...changes });
       updated[index] = row;
       syncFormDetails(updated);
       return updated;
@@ -245,31 +269,23 @@ export const CreditNoteForm = ({
       return;
     }
 
-    const sourceRow = details[details.length - 1];
-    const sourceDetail =
-      (sourceRow && saleDetailMap.get(sourceRow.sale_detail_id)) ||
-      selectedSale.details[0];
-
-    if (!sourceDetail) {
-      warningToast("No se encontró el detalle de venta para agregar la línea");
-      return;
-    }
-
-    const newRow: CreditNoteDetailRow = calcRow({
+    const newRow: CreditNoteDetailRow = {
       index: details.length + 1,
-      sale_detail_id: sourceDetail.id,
-      product_id: sourceDetail.product_id,
-      product_code: sourceDetail.product?.codigo ?? "",
-      product_name: sourceDetail.product?.name ?? "",
-      product_weight: sourceDetail.product?.weight ?? 0,
-      original_quantity_sacks: sourceDetail.quantity_sacks ?? 0,
-      original_quantity_kg: sourceDetail.quantity_kg ?? 0,
+      sale_detail_id: 0,
+      product_id: 0,
+      product_code: "",
+      product_name: "",
+      product_weight: 0,
+      original_quantity_sacks: 0,
+      original_quantity_kg: 0,
       quantity_sacks: "",
       quantity_kg: "",
-      unit_price: sourceDetail.unit_price?.toString() ?? "",
+      unit_price: "",
       subtotal: 0,
       total_kg: 0,
-    });
+      sale_unit_price: 0,
+      price_per_kg: 0,
+    };
 
     setDetails((prev) => {
       const updated = [...prev, newRow].map((row, i) => ({ ...row, index: i + 1 }));
@@ -282,6 +298,11 @@ export const CreditNoteForm = ({
     const selectedDetail = saleDetailMap.get(Number(product.id));
     if (!selectedDetail) return;
 
+    const selUnitPrice = parseFloat(selectedDetail.unit_price?.toString() ?? "0");
+    const selWeight = selectedDetail.product?.weight ?? 0;
+    const selIsSack = (selectedDetail.quantity_sacks ?? 0) > 0;
+    const selPricePerKg = selIsSack && selWeight > 0 ? round6(selUnitPrice / selWeight) : selUnitPrice;
+
     setDetails((prev) => {
       const updated = [...prev];
       updated[index] = calcRow({
@@ -290,15 +311,16 @@ export const CreditNoteForm = ({
         product_id: selectedDetail.product_id,
         product_code: selectedDetail.product?.codigo ?? product.codigo,
         product_name: selectedDetail.product?.name ?? product.name,
-        product_weight: selectedDetail.product?.weight ?? 0,
+        product_weight: selWeight,
         original_quantity_sacks: selectedDetail.quantity_sacks ?? 0,
         original_quantity_kg: selectedDetail.quantity_kg ?? 0,
         quantity_sacks: "",
         quantity_kg: "",
-        unit_price:
-          selectedDetail.unit_price?.toString() ?? product.price_per_kg ?? "",
+        unit_price: selUnitPrice.toString(),
         subtotal: 0,
         total_kg: 0,
+        sale_unit_price: selUnitPrice,
+        price_per_kg: selPricePerKg,
       });
       syncFormDetails(updated);
       return updated;
@@ -408,7 +430,9 @@ export const CreditNoteForm = ({
       type: "number",
       width: "100px",
       accessor: "quantity_kg",
-      disabled: (row) => row.original_quantity_kg <= 0,
+      disabled: (row) =>
+        row.original_quantity_kg <= 0 &&
+        (row.original_quantity_sacks <= 0 || row.product_weight <= 0),
     },
     {
       id: "unit_price",
@@ -446,9 +470,12 @@ export const CreditNoteForm = ({
     }
 
     for (const row of details) {
+      const sacks = parseFloat(row.quantity_sacks) || 0;
+      const kg = parseFloat(row.quantity_kg) || 0;
       const hasQuantity =
-        (row.original_quantity_sacks > 0 && parseFloat(row.quantity_sacks) > 0) ||
-        (row.original_quantity_kg > 0 && parseFloat(row.quantity_kg) > 0);
+        (row.original_quantity_sacks > 0 && sacks > 0) ||
+        (row.original_quantity_kg > 0 && kg > 0) ||
+        (row.original_quantity_sacks > 0 && kg > 0 && row.product_weight > 0);
 
       if (!hasQuantity) {
         warningToast("Complete la cantidad antes de guardar");
@@ -467,13 +494,22 @@ export const CreditNoteForm = ({
       const totalKg = rows.reduce((sum, row) => sum + (parseFloat(row.quantity_kg) || 0), 0);
 
       if (source.quantity_sacks > 0 && totalSacks > source.quantity_sacks) {
-        warningToast("La cantidad en sacos no puede ser mayor a la cantidad vendida");
+        warningToast(`La cantidad en sacos no puede ser mayor a ${source.quantity_sacks} (cantidad vendida)`);
         return;
       }
 
       if (source.quantity_kg > 0 && totalKg > source.quantity_kg) {
-        warningToast("La cantidad en kg no puede ser mayor a la cantidad vendida");
+        warningToast(`La cantidad en kg no puede ser mayor a ${source.quantity_kg} (cantidad vendida)`);
         return;
+      }
+
+      // Venta por sacos pero NC por kg: validar contra peso total de sacos vendidos
+      if (source.quantity_sacks > 0 && totalKg > 0 && rows[0]?.product_weight > 0) {
+        const maxKg = round6(source.quantity_sacks * rows[0].product_weight);
+        if (totalKg > maxKg) {
+          warningToast(`La cantidad en kg (${totalKg} kg) no puede exceder el peso total de los sacos vendidos (${maxKg} kg)`);
+          return;
+        }
       }
     }
 

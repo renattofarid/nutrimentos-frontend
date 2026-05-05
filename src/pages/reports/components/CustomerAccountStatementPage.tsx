@@ -14,7 +14,7 @@ import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import {
-  FileSpreadsheet,
+  Printer,
   Search,
   DollarSign,
   ChevronDown,
@@ -34,7 +34,7 @@ import {
   transformCustomerAccountStatementData,
   calculateAccountStatementMetrics,
 } from "../lib/reports.utils";
-import { errorToast, successToast } from "@/lib/core.function";
+import { errorToast, successToast, loadingToast, dismissToast } from "@/lib/core.function";
 
 export const CustomerAccountStatementTitle = "Estado de Cuenta de Clientes";
 
@@ -293,9 +293,10 @@ export default function CustomerAccountStatementPage() {
     fetch(params);
   };
 
-  const handleExport = async (exportType: "excel") => {
+  const handleExport = async (exportType: "pdf") => {
     const values = form.getValues();
     setIsExporting(true);
+    const toastId = loadingToast("Generando reporte PDF...");
     try {
       const params: CustomerAccountStatementParams = {
         zone_id: values.zone_id ? Number(values.zone_id) : null,
@@ -314,15 +315,7 @@ export default function CustomerAccountStatementPage() {
       const blob = await exportCustomerAccountStatement(params, exportType);
 
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `estado-cuenta-clientes.${
-        exportType === "excel" ? "xlsx" : "pdf"
-      }`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      window.open(url, "_blank");
 
       successToast(
         `Reporte exportado exitosamente en formato ${exportType.toUpperCase()}`,
@@ -331,6 +324,7 @@ export default function CustomerAccountStatementPage() {
       errorToast("Error al exportar el reporte");
       console.error(error);
     } finally {
+      dismissToast(toastId);
       setIsExporting(false);
     }
   };
@@ -365,11 +359,11 @@ export default function CustomerAccountStatementPage() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => handleExport("excel")}
-                disabled={isExporting || !tableData || tableData.length === 0}
+                onClick={() => handleExport("pdf")}
+                disabled={isExporting}
               >
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Excel
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir
               </Button>
               <Button
                 type="button"

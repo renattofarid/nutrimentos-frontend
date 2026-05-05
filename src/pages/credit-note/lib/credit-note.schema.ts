@@ -35,7 +35,7 @@ export const creditNoteDetailSchema = z.object({
 
   if (!hasProduct) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: "custom",
       message: "Debe seleccionar un producto",
       path: ["product_id"],
     });
@@ -43,7 +43,7 @@ export const creditNoteDetailSchema = z.object({
 
   if (!hasQuantity) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: "custom",
       message: "Debe ingresar cantidad en sacos o kg",
       path: ["quantity_sacks"],
     });
@@ -51,7 +51,7 @@ export const creditNoteDetailSchema = z.object({
 
   if (!hasPrice) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: "custom",
       message: "El precio debe ser mayor a cero",
       path: ["unit_price"],
     });
@@ -59,7 +59,7 @@ export const creditNoteDetailSchema = z.object({
 
   if (!usesSacks && !usesKg) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: "custom",
       message: "El detalle original de la venta no está disponible",
       path: ["sale_detail_id"],
     });
@@ -67,16 +67,16 @@ export const creditNoteDetailSchema = z.object({
 
   if (usesSacks && detail.quantity_sacks > detail.original_quantity_sacks) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "La cantidad en sacos no puede ser mayor a la de la venta",
+      code: "custom",
+      message: `La cantidad en sacos no puede ser mayor a ${detail.original_quantity_sacks} (cantidad vendida)`,
       path: ["quantity_sacks"],
     });
   }
 
   if (usesKg && detail.quantity_kg > detail.original_quantity_kg) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "La cantidad en kg no puede ser mayor a la de la venta",
+      code: "custom",
+      message: `La cantidad en kg no puede ser mayor a ${detail.original_quantity_kg} (cantidad vendida)`,
       path: ["quantity_kg"],
     });
   }
@@ -103,7 +103,7 @@ export const creditNoteSchemaCreate = z.object({
 
     if (!hasValidDetail) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Debe incluir al menos un detalle completo",
         path: [],
       });

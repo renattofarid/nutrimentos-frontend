@@ -7,14 +7,21 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import type { User } from "@/pages/auth/lib/auth.interface";
+import { configNavItem, securityNavItem } from "./nav-data";
+import { useWindowManager } from "@/stores/window-manager.store";
 
 export function NavUser({ user }: { user: User }) {
   const { clearAuth } = useAuthStore();
+  const { openTab } = useWindowManager();
 
   const initials = (name: string, max = 2) =>
     name
@@ -55,6 +62,28 @@ export function NavUser({ user }: { user: User }) {
             </div>
           </div>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {[configNavItem, securityNavItem].map((group) => (
+          <DropdownMenuSub key={group.title}>
+            <DropdownMenuSubTrigger className="gap-1.5 uppercase text-zinc-700">
+              {group.icon && <group.icon className="size-3.5 shrink-0" />}
+              <span>{group.title}</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="min-w-48">
+              {group.items?.map((sub) => (
+                <DropdownMenuItem
+                  key={sub.url}
+                  onClick={() => openTab(sub.url, sub.title)}
+                  className="gap-1.5 uppercase text-zinc-700 cursor-pointer"
+                >
+                  {sub.icon && <sub.icon className="size-3.5 shrink-0" />}
+                  <span>{sub.title}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        ))}
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={clearAuth}>
           <LogOut />
           Cerrar sesión

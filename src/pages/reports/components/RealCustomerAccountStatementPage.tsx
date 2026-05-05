@@ -30,7 +30,7 @@ import {
 } from "../lib/reports.utils";
 import { errorToast, successToast } from "@/lib/core.function";
 
-export const RealCustomerAccountStatementTitle = "Reporte Estado Cuenta Real";
+export const RealCustomerAccountStatementTitle = "Rep. créditos de vendedores";
 
 interface FilterFormValues {
   zone_id: string;

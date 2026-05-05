@@ -606,7 +606,7 @@ export interface DetailedSalesReportParams {
   format?: "excel" | "pdf" | null;
   payment_type?: "CONTADO" | "CREDITO" | null;
   start_date?: string | null;
-  user_id?: number | null;
+  vendedor_id?: number | null;
   warehouse_id?: number | null;
   zone_id?: number | null;
   brand_id?: number | null;

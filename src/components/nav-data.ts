@@ -385,47 +385,49 @@ export const navData: NavItem[] = [
       },
     ],
   },
-  {
-    title: "Configuración",
-    url: "#",
-    icon: SettingIcon,
-    items: [
-      { title: CompanyTitle, url: CompanyRoute, icon: CompanyIcon },
-      { title: BranchTitle, url: BranchRoute, icon: BranchIcon },
-      { title: WarehouseTitle, url: WarehouseRoute, icon: WarehouseIcon },
-      { title: BoxTitle, url: BoxRoute, icon: BoxIcon },
-      {
-        title: PaymentConceptTitle,
-        url: PaymentConceptRoute,
-        icon: PaymentConceptIcon,
-      },
-      { title: VehicleTitle, url: VehicleRoute, icon: VehicleIcon },
-      { title: CategoryTitle, url: CategoryRoute, icon: CategoryIcon },
-      { title: ProductTypeTitle, url: ProductTypeRoute, icon: ProductTypeIcon },
-      { title: BrandTitle, url: BrandRoute, icon: BrandIcon },
-      { title: UnitTitle, url: UnitRoute, icon: UnitIcon },
-      { title: SettingTitle, url: SettingRoute, icon: SettingIcon },
-      { title: NationalityTitle, url: NationalityRoute, icon: NationalityIcon },
-      {
-        title: BusinessTypeTitle,
-        url: BusinessTypeRoute,
-        icon: BusinessTypeIcon,
-      },
-      { title: JobPositionTitle, url: JobPositionRoute, icon: JobPositionIcon },
-      {
-        title: DocumentTypeTitle,
-        url: DocumentTypeRoute,
-        icon: DocumentTypeIcon,
-      },
-    ],
-  },
-  {
-    title: "Seguridad",
-    url: "#",
-    icon: ShieldUser,
-    items: [
-      { title: UserTitle, url: UserRoute, icon: UserIcon },
-      { title: TypeUserTitle, url: TypeUserRoute, icon: TypeUserIcon },
-    ],
-  },
 ];
+
+export const configNavItem: NavItem = {
+  title: "Configuración",
+  url: "#",
+  icon: SettingIcon,
+  items: [
+    { title: CompanyTitle, url: CompanyRoute, icon: CompanyIcon },
+    { title: BranchTitle, url: BranchRoute, icon: BranchIcon },
+    { title: WarehouseTitle, url: WarehouseRoute, icon: WarehouseIcon },
+    { title: BoxTitle, url: BoxRoute, icon: BoxIcon },
+    {
+      title: PaymentConceptTitle,
+      url: PaymentConceptRoute,
+      icon: PaymentConceptIcon,
+    },
+    { title: VehicleTitle, url: VehicleRoute, icon: VehicleIcon },
+    { title: CategoryTitle, url: CategoryRoute, icon: CategoryIcon },
+    { title: ProductTypeTitle, url: ProductTypeRoute, icon: ProductTypeIcon },
+    { title: BrandTitle, url: BrandRoute, icon: BrandIcon },
+    { title: UnitTitle, url: UnitRoute, icon: UnitIcon },
+    { title: SettingTitle, url: SettingRoute, icon: SettingIcon },
+    { title: NationalityTitle, url: NationalityRoute, icon: NationalityIcon },
+    {
+      title: BusinessTypeTitle,
+      url: BusinessTypeRoute,
+      icon: BusinessTypeIcon,
+    },
+    { title: JobPositionTitle, url: JobPositionRoute, icon: JobPositionIcon },
+    {
+      title: DocumentTypeTitle,
+      url: DocumentTypeRoute,
+      icon: DocumentTypeIcon,
+    },
+  ],
+};
+
+export const securityNavItem: NavItem = {
+  title: "Seguridad",
+  url: "#",
+  icon: ShieldUser,
+  items: [
+    { title: UserTitle, url: UserRoute, icon: UserIcon },
+    { title: TypeUserTitle, url: TypeUserRoute, icon: TypeUserIcon },
+  ],
+};

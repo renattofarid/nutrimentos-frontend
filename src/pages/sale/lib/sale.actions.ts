@@ -114,6 +114,15 @@ export const getAllSales = async (): Promise<SaleResource[]> => {
   return response.data;
 };
 
+export const getAllSalesFiltered = async (
+  params: Omit<GetSalesParams, "page" | "per_page">,
+): Promise<SaleResource[]> => {
+  const response = await api.get<SaleResource[]>(SALE_ENDPOINT, {
+    params: { ...params, all: true },
+  });
+  return response.data;
+};
+
 export const findSaleById = async (id: number): Promise<SaleResourceById> => {
   const response = await api.get<SaleResourceById>(`${SALE_ENDPOINT}/${id}`);
   return response.data;

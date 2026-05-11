@@ -26,7 +26,6 @@ import { useClients } from "@/pages/client/lib/client.hook";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
-import { exportCustomerAccountStatement } from "../lib/reports.actions";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import type { Option } from "@/lib/core.interface";
@@ -35,6 +34,8 @@ import {
   calculateAccountStatementMetrics,
 } from "../lib/reports.utils";
 import { errorToast, successToast, loadingToast, dismissToast } from "@/lib/core.function";
+import { getAllSalesFiltered } from "@/pages/sale/lib/sale.actions";
+import { previewDeliverySheet } from "@/pages/deliverysheet/lib/deliverysheet.actions";
 
 export const CustomerAccountStatementTitle = "Estado de Cuenta de Clientes";
 
@@ -293,35 +294,36 @@ export default function CustomerAccountStatementPage() {
     fetch(params);
   };
 
-  const handleExport = async (exportType: "pdf") => {
+  const handleExport = async () => {
     const values = form.getValues();
     setIsExporting(true);
-    const toastId = loadingToast("Generando reporte PDF...");
+    const toastId = loadingToast("Generando planilla de reparto...");
     try {
-      const params: CustomerAccountStatementParams = {
-        zone_id: values.zone_id ? Number(values.zone_id) : null,
-        customer_id: values.customer_id ? Number(values.customer_id) : null,
-        vendedor_id: values.vendedor_id ? Number(values.vendedor_id) : null,
-        payment_type:
-          values.payment_type === "ALL"
-            ? null
-            : (values.payment_type as "CONTADO" | "CREDITO"),
-        start_date: values.start_date || null,
-        end_date: values.end_date || null,
-        query_type: values.query_type as "solo_deuda" | "todo",
-        show_old: values.show_old,
-      };
+      const paymentType =
+        values.payment_type === "ALL" ? undefined : (values.payment_type as "CONTADO" | "CREDITO");
 
-      const blob = await exportCustomerAccountStatement(params, exportType);
+      const sales = await getAllSalesFiltered({
+        customer_id: values.customer_id ? Number(values.customer_id) : undefined,
+        vendedor_id: values.vendedor_id ? Number(values.vendedor_id) : undefined,
+        payment_type: paymentType,
+        start_date: values.start_date || undefined,
+        end_date: values.end_date || undefined,
+      });
 
-      const url = window.URL.createObjectURL(blob);
+      const sale_ids = sales.map((s) => s.id);
+
+      const blob = await previewDeliverySheet({
+        type: paymentType ?? "CONTADO",
+        zone_id: values.zone_id ? Number(values.zone_id) : undefined,
+        sale_ids,
+      });
+
+      const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
 
-      successToast(
-        `Reporte exportado exitosamente en formato ${exportType.toUpperCase()}`,
-      );
+      successToast("Planilla generada exitosamente");
     } catch (error) {
-      errorToast("Error al exportar el reporte");
+      errorToast("Error al generar la planilla");
       console.error(error);
     } finally {
       dismissToast(toastId);
@@ -359,7 +361,7 @@ export default function CustomerAccountStatementPage() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => handleExport("pdf")}
+                onClick={() => handleExport()}
                 disabled={isExporting}
               >
                 <Printer className="mr-2 h-4 w-4" />

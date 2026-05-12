@@ -19,7 +19,13 @@ import {
   Tag,
   ChevronsUpDown,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogClose,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +67,7 @@ import { ClientDialog } from "./ClientDialog";
 import { ClientEditDialog } from "./ClientEditDialog";
 import ClientAddressesSheet from "./ClientAddressesSheet";
 import { useZoneSearch } from "@/pages/zone/lib/zone.hook";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 const PER_PAGE = 10;
 
@@ -110,7 +117,9 @@ export function ClientManagementModal({
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchField, setSearchField] = useState<string>("search");
   const [search, setSearch] = useState(selectedClientName ?? "");
-  const [debouncedSearch, setDebouncedSearch] = useState(selectedClientName ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(
+    selectedClientName ?? "",
+  );
   const [page, setPage] = useState(1);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editPersonId, setEditPersonId] = useState<number | null>(null);
@@ -126,7 +135,9 @@ export function ClientManagementModal({
   const [debouncedZoneSearch, setDebouncedZoneSearch] = useState("");
   const [selectedZoneId, setSelectedZoneId] = useState<string>("");
   const [selectedZoneName, setSelectedZoneName] = useState<string>("");
-  const zoneCloseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const zoneCloseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
 
   const { data: zoneData, isLoading: zoneLoading } = useZoneSearch({
     search: debouncedZoneSearch,
@@ -193,7 +204,9 @@ export function ClientManagementModal({
   const handleSetPrimaryZone = useCallback(async (zoneId: number) => {
     setUpdatingZoneId(zoneId);
     promiseToast(
-      setPersonZonePrimary(zoneId).then(() => handleRefresh()).finally(() => setUpdatingZoneId(null)),
+      setPersonZonePrimary(zoneId)
+        .then(() => handleRefresh())
+        .finally(() => setUpdatingZoneId(null)),
       {
         loading: "Actualizando zona primaria...",
         success: "Zona primaria actualizada",
@@ -234,6 +247,7 @@ export function ClientManagementModal({
       >
         <DialogContent
           showCloseButton={false}
+          aria-describedby={undefined}
           className={cn(
             isExpanded
               ? "w-screen! max-w-screen! h-screen! max-h-screen! rounded-none! top-0! left-0! translate-x-0! translate-y-0! m-0!"
@@ -242,6 +256,10 @@ export function ClientManagementModal({
           )}
           onInteractOutside={(e) => e.preventDefault()}
         >
+          <VisuallyHidden>
+            <DialogTitle>Gestión de Clientes</DialogTitle>
+          </VisuallyHidden>
+
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0">
             <div className="flex items-center gap-3">
@@ -249,12 +267,10 @@ export function ClientManagementModal({
                 <Users className="size-5" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold leading-none">
-                  Gestión de Clientes
-                </h2>
-                <p className="text-sm text-muted-foreground mt-0.5">
+                <DialogTitle> Gestión de Clientes</DialogTitle>
+                <DialogDescription className="text-muted-foreground text-sm">
                   {data?.meta?.total ?? 0} clientes registrados
-                </p>
+                </DialogDescription>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -312,7 +328,8 @@ export function ClientManagementModal({
                       value={zoneOpen ? zoneSearch : selectedZoneName}
                       onChange={(e) => setZoneSearch(e.target.value)}
                       onFocus={() => {
-                        if (zoneCloseTimer.current) clearTimeout(zoneCloseTimer.current);
+                        if (zoneCloseTimer.current)
+                          clearTimeout(zoneCloseTimer.current);
                         setZoneSearch("");
                         setZoneOpen(true);
                       }}
@@ -353,17 +370,23 @@ export function ClientManagementModal({
                 <PopoverContent
                   className="p-0 min-w-(--radix-popover-trigger-width)! w-auto"
                   onMouseDown={() => {
-                    if (zoneCloseTimer.current) clearTimeout(zoneCloseTimer.current);
+                    if (zoneCloseTimer.current)
+                      clearTimeout(zoneCloseTimer.current);
                   }}
                   onOpenAutoFocus={(e) => e.preventDefault()}
                   onFocusOutside={(e) => e.preventDefault()}
                 >
-                  <Command className="max-h-72 overflow-hidden" shouldFilter={false}>
+                  <Command
+                    className="max-h-72 overflow-hidden"
+                    shouldFilter={false}
+                  >
                     <CommandList className="max-h-60 overflow-y-auto">
                       {zoneLoading ? (
                         <div className="py-6 text-center text-sm flex flex-col items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                          <span className="text-muted-foreground">Buscando...</span>
+                          <span className="text-muted-foreground">
+                            Buscando...
+                          </span>
                         </div>
                       ) : (
                         <>
@@ -376,10 +399,15 @@ export function ClientManagementModal({
                               className="cursor-pointer"
                               onSelect={() => {
                                 const id = String(zone.id);
-                                setSelectedZoneId(id === selectedZoneId ? "" : id);
-                                setSelectedZoneName(id === selectedZoneId ? "" : zone.name);
+                                setSelectedZoneId(
+                                  id === selectedZoneId ? "" : id,
+                                );
+                                setSelectedZoneName(
+                                  id === selectedZoneId ? "" : zone.name,
+                                );
                                 setPage(1);
-                                if (zoneCloseTimer.current) clearTimeout(zoneCloseTimer.current);
+                                if (zoneCloseTimer.current)
+                                  clearTimeout(zoneCloseTimer.current);
                                 setZoneOpen(false);
                                 setZoneSearch("");
                               }}
@@ -387,7 +415,9 @@ export function ClientManagementModal({
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4 shrink-0",
-                                  String(zone.id) === selectedZoneId ? "opacity-100" : "opacity-0",
+                                  String(zone.id) === selectedZoneId
+                                    ? "opacity-100"
+                                    : "opacity-0",
                                 )}
                               />
                               {zone.name}
@@ -411,7 +441,10 @@ export function ClientManagementModal({
                 {search && (
                   <button
                     type="button"
-                    onClick={() => { setSearch(""); setDebouncedSearch(""); }}
+                    onClick={() => {
+                      setSearch("");
+                      setDebouncedSearch("");
+                    }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     <X className="size-4" />
@@ -471,7 +504,8 @@ export function ClientManagementModal({
                         isSelected
                           ? "bg-primary/5 border-primary/40"
                           : "bg-sidebar",
-                        onSelectClient && "cursor-pointer hover:border-primary/30 hover:bg-accent/40 transition-colors select-none",
+                        onSelectClient &&
+                          "cursor-pointer hover:border-primary/30 hover:bg-accent/40 transition-colors select-none",
                       )}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -531,7 +565,10 @@ export function ClientManagementModal({
                                   </button>
                                 ))
                               : person.zone_name && (
-                                  <Badge variant="outline" className="text-xs gap-1">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs gap-1"
+                                  >
                                     <MapPin className="size-2.5" />
                                     {person.zone_name}
                                   </Badge>

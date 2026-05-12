@@ -52,6 +52,13 @@ import { GroupFormSection } from "@/components/GroupFormSection";
 import PersonAddressesList from "@/pages/client/components/PersonAddressesList";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
+import { createPersonZone } from "@/pages/client/lib/personzone.actions";
+
+interface StagedAddress {
+  zone_id: string;
+  address: string;
+  is_primary: boolean;
+}
 
 interface NumberDocumentContentProps {
   field: any;
@@ -177,7 +184,7 @@ function NumberDocumentContent({
 
 interface PersonFormProps {
   initialData?: PersonResource | null;
-  onSubmit: (data: PersonSchema | PersonSchemaClient) => Promise<void>;
+  onSubmit: (data: PersonSchema | PersonSchemaClient) => Promise<number | void>;
   isSubmitting?: boolean;
   onCancel?: () => void;
   roleId: number; // Role ID to assign automatically
@@ -229,7 +236,7 @@ export const PersonForm = ({
       gender: (initialData?.gender as "M" | "F" | "O") || "M",
       birth_date: initialData?.birth_date || "",
       father_surname: initialData?.father_surname || "",
-      mother_surname: initialData?.mother_surname || "",
+      mother_surname: "",
       business_name: initialData?.business_name || "",
       commercial_name: initialData?.commercial_name || "",
       address: initialData?.address || "",
@@ -239,7 +246,10 @@ export const PersonForm = ({
       job_position_id: initialData?.job_position_id?.toString() || "",
       business_type_id: initialData?.business_type_id?.toString() || "",
       client_category_id: initialData?.client_category?.id.toString() || "",
-      zone_id: initialData?.zone_id?.toString() || "",
+      zone_id:
+        initialData?.zone_id?.toString() ||
+        initialData?.person_zones?.[0]?.zone_id?.toString() ||
+        "",
       driver_license: initialData?.driver_license || "",
     },
     mode: "onChange", // Validate on change for immediate feedback
@@ -252,6 +262,8 @@ export const PersonForm = ({
 
   // Ref to track if document type change triggered person type change
   const documentChangeRef = useRef(false);
+  // Staged addresses to create after person save
+  const stagedAddressesRef = useRef<StagedAddress[]>([]);
 
   // Get all document types from API
   const { data: documentTypes, isLoading: isLoadingDocumentTypes } =
@@ -315,6 +327,13 @@ export const PersonForm = ({
     }
   }, [document_type_id, form]);
 
+  // Auto-select first zone when creating and zones load
+  useEffect(() => {
+    if (!isEditing && zones && zones.length > 0 && !form.getValues("zone_id")) {
+      form.setValue("zone_id", zones[0].id.toString(), { shouldValidate: false });
+    }
+  }, [zones, isEditing, form]);
+
   // Reset document type when person type changes to JURIDICA manually
   // Only trigger if the change came from user changing type_person, not from document type change
   useEffect(() => {
@@ -356,11 +375,12 @@ export const PersonForm = ({
           };
 
           updates.names = result.data.names || "";
-          updates.father_surname = result.data.father_surname || "";
-          updates.mother_surname = result.data.mother_surname || "";
+          updates.father_surname = [result.data.father_surname, result.data.mother_surname]
+            .filter(Boolean)
+            .join(" ");
+          updates.mother_surname = "";
           fieldsSet.names = true;
           fieldsSet.father_surname = true;
-          fieldsSet.mother_surname = true;
 
           Object.keys(updates).forEach((key) => {
             form.setValue(key as keyof PersonSchema, updates[key], {
@@ -406,10 +426,23 @@ export const PersonForm = ({
 
   const handleSubmit = async (data: FormSchema) => {
     try {
-      // Only include role_id when creating (not editing)
       const submitData = isEditing ? { ...data, role_id: "" } : data;
 
-      await onSubmit(submitData);
+      const returnedId = await onSubmit(submitData);
+      const effectivePersonId = returnedId ?? (initialData?.id as number | undefined);
+
+      if (effectivePersonId && stagedAddressesRef.current.length > 0) {
+        for (const addr of stagedAddressesRef.current) {
+          await createPersonZone({
+            person_id: effectivePersonId,
+            zone_id: parseInt(addr.zone_id),
+            address: addr.address,
+            is_primary: addr.is_primary,
+          });
+        }
+        stagedAddressesRef.current = [];
+      }
+
       if (!isEditing) {
         form.reset();
       }
@@ -494,21 +527,7 @@ export const PersonForm = ({
             )}
           />
 
-          <FormSelect
-            control={form.control}
-            name="type_person"
-            label="Tipo de Persona"
-            placeholder="Seleccione tipo"
-            disabled={isWorker} // Workers are always natural persons
-            options={
-              isWorker
-                ? [{ value: "NATURAL", label: "Natural" }] // Workers are always natural
-                : [
-                    { value: "NATURAL", label: "Natural" },
-                    { value: "JURIDICA", label: "Jurídica" },
-                  ]
-            }
-          />
+          {/* type_person is set automatically from document_type_id — not shown */}
 
           {/* Personal Information - Natural Person */}
           {type_person === "NATURAL" && (
@@ -527,19 +546,10 @@ export const PersonForm = ({
               <FormInput
                 control={form.control}
                 name="father_surname"
-                label="Apellido Paterno"
-                placeholder="Ingrese apellido paterno"
+                label="Apellidos"
+                placeholder="Ingrese los apellidos"
                 uppercase
-                className={fieldsFromSearch.father_surname ? "bg-blue-50" : ""}
-              />
-
-              <FormInput
-                control={form.control}
-                name="mother_surname"
-                label="Apellido Materno"
-                placeholder="Ingrese apellido materno"
-                uppercase
-                className={fieldsFromSearch.mother_surname ? "bg-blue-50" : ""}
+                className={fieldsFromSearch.father_surname ? "bg-blue-50 border-blue-200" : ""}
               />
 
               {(!isClient || showExtraFields) && (
@@ -743,9 +753,14 @@ export const PersonForm = ({
           </GroupFormSection>
         )}
 
-        {/* Addresses Section - Only show when editing a client */}
-        {isEditing && isClient && initialData?.id && (
-          <PersonAddressesList personId={initialData.id} />
+        {/* Addresses Section */}
+        {isClient && (
+          <PersonAddressesList
+            personId={isEditing ? initialData?.id : undefined}
+            onStagedChange={(staged) => {
+              stagedAddressesRef.current = staged;
+            }}
+          />
         )}
 
         {/* Form validation summary */}

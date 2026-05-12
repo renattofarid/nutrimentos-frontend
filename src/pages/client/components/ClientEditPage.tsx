@@ -50,7 +50,7 @@ export default function ClientEditPage() {
     loadPersonData();
   }, [id, navigate]);
 
-  const handleSubmit = async (data: PersonSchemaClient) => {
+  const handleSubmit = async (data: PersonSchemaClient): Promise<number | void> => {
     if (!personData) return;
 
     setIsSubmitting(true);
@@ -103,6 +103,7 @@ export default function ClientEditPage() {
         SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "update"),
       );
       navigate("/clientes");
+      return personData.id;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error &&

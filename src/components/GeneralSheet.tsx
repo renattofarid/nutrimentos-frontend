@@ -5,6 +5,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetClose,
+  SheetDescription,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import * as LucideReact from "lucide-react";
@@ -81,11 +82,11 @@ const GeneralSheet: React.FC<GeneralSheetProps> = ({
                   <IconComponent className="size-5" />
                 </div>
               )}
-              <div>
+              <div className="flex flex-col items-start">
                 {title && <SheetTitle>{title}</SheetTitle>}
-                {subtitle && (
-                  <p className="text-sm text-muted-foreground">{subtitle}</p>
-                )}
+                <SheetDescription className="text-sm text-muted-foreground">
+                  {subtitle}
+                </SheetDescription>
               </div>
             </div>
             <SheetClose onClick={onClose} />
@@ -99,7 +100,7 @@ const GeneralSheet: React.FC<GeneralSheetProps> = ({
           className={cn(
             sizes[size],
             className,
-            "px-4 pb-4 flex flex-col max-h-[96vh]"
+            "px-4 pb-4 flex flex-col max-h-[96vh]",
           )}
         >
           <DrawerHeader className="flex-shrink-0 p-2">

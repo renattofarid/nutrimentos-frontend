@@ -349,7 +349,7 @@ export default function PersonAddressesList({
                         Principal
                       </Badge>
                     )}
-                    <Badge variant="secondary" className="text-xs flex-shrink-0">
+                    <Badge variant="ghost" className="text-xs flex-shrink-0">
                       Pendiente
                     </Badge>
                   </div>

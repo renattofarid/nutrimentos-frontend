@@ -84,7 +84,7 @@ export async function createPersonWithRoleAndPriceList(
   data: CreatePersonRequest,
   roleId: number,
   priceListId?: number
-): Promise<{ message: string }> {
+): Promise<{ message: string; personId?: number }> {
   // First create the person
   const createResponse = await createPerson(data);
 
@@ -103,6 +103,8 @@ export async function createPersonWithRoleAndPriceList(
         person_id: personId.toString(),
       });
     }
+
+    return { ...createResponse, personId };
   }
 
   return createResponse;

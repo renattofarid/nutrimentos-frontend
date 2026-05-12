@@ -20,7 +20,7 @@ export default function ClientAddPage() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (data: PersonSchemaClient) => {
+  const handleSubmit = async (data: PersonSchemaClient): Promise<number | void> => {
     setIsSubmitting(true);
     try {
       // For names field: send only the 'names' field as entered by the user
@@ -69,7 +69,7 @@ export default function ClientAddPage() {
       }
 
       // Create person, assign role, and assign price list (3 separate API calls)
-      await createPersonWithRoleAndPriceList(
+      const result = await createPersonWithRoleAndPriceList(
         createPersonData,
         Number(data.role_id),
         data.client_category_id ? Number(data.client_category_id) : undefined,
@@ -78,6 +78,7 @@ export default function ClientAddPage() {
         SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "create"),
       );
       navigate("/clientes");
+      return result.personId;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error &&

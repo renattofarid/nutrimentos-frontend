@@ -22,6 +22,7 @@ import {
   ChevronUp,
   Save,
   X,
+  MapPin,
 } from "lucide-react";
 import {
   personCreateSchema,
@@ -49,6 +50,7 @@ import { usePriceList } from "@/pages/pricelist/lib/pricelist.hook";
 import type { PriceList } from "@/pages/pricelist/lib/pricelist.interface";
 import { TYPE_DOCUMENT } from "../lib/person.constants";
 import { GroupFormSection } from "@/components/GroupFormSection";
+import { Skeleton } from "@/components/ui/skeleton";
 import PersonAddressesList from "@/pages/client/components/PersonAddressesList";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
@@ -431,16 +433,25 @@ export const PersonForm = ({
       const returnedId = await onSubmit(submitData);
       const effectivePersonId = returnedId ?? (initialData?.id as number | undefined);
 
-      if (effectivePersonId && stagedAddressesRef.current.length > 0) {
-        for (const addr of stagedAddressesRef.current) {
+      if (effectivePersonId) {
+        if (!isEditing && isClient && (data as any).zone_id) {
           await createPersonZone({
             person_id: effectivePersonId,
-            zone_id: parseInt(addr.zone_id),
-            address: addr.address,
-            is_primary: addr.is_primary,
+            zone_id: parseInt((data as any).zone_id),
+            address: (data as any).address || "",
+            is_primary: true,
           });
+        } else if (stagedAddressesRef.current.length > 0) {
+          for (const addr of stagedAddressesRef.current) {
+            await createPersonZone({
+              person_id: effectivePersonId,
+              zone_id: parseInt(addr.zone_id),
+              address: addr.address,
+              is_primary: addr.is_primary,
+            });
+          }
+          stagedAddressesRef.current = [];
         }
-        stagedAddressesRef.current = [];
       }
 
       if (!isEditing) {
@@ -453,7 +464,11 @@ export const PersonForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <fieldset
+          disabled={isSearching}
+          className="space-y-6 border-0 p-0 m-0 min-w-0"
+        >
         {/* Form Actions */}
         <div className="flex items-center gap-2">
           <Button size="sm" type="submit" disabled={isSubmitting}>
@@ -532,25 +547,37 @@ export const PersonForm = ({
           {/* Personal Information - Natural Person */}
           {type_person === "NATURAL" && (
             <>
-              <FormInput
-                control={form.control}
-                name="names"
-                label="Nombres"
-                placeholder="Ingrese los nombres"
-                uppercase
-                className={
-                  fieldsFromSearch.names ? "bg-blue-50 border-blue-200" : ""
-                }
-              />
+              {isSearching ? (
+                <div className="flex flex-row items-center gap-3">
+                  <span className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">Nombres</span>
+                  <Skeleton className="h-8 flex-1 min-w-0" />
+                </div>
+              ) : (
+                <FormInput
+                  control={form.control}
+                  name="names"
+                  label="Nombres"
+                  placeholder="Ingrese los nombres"
+                  uppercase
+                  className={fieldsFromSearch.names ? "bg-blue-50 border-blue-200" : ""}
+                />
+              )}
 
-              <FormInput
-                control={form.control}
-                name="father_surname"
-                label="Apellidos"
-                placeholder="Ingrese los apellidos"
-                uppercase
-                className={fieldsFromSearch.father_surname ? "bg-blue-50 border-blue-200" : ""}
-              />
+              {isSearching ? (
+                <div className="flex flex-row items-center gap-3">
+                  <span className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">Apellidos</span>
+                  <Skeleton className="h-8 flex-1 min-w-0" />
+                </div>
+              ) : (
+                <FormInput
+                  control={form.control}
+                  name="father_surname"
+                  label="Apellidos"
+                  placeholder="Ingrese los apellidos"
+                  uppercase
+                  className={fieldsFromSearch.father_surname ? "bg-blue-50 border-blue-200" : ""}
+                />
+              )}
 
               {(!isClient || showExtraFields) && (
                 <FormSelect
@@ -588,17 +615,20 @@ export const PersonForm = ({
           {/* Business Information - Legal Person */}
           {type_person === "JURIDICA" && (
             <>
-              <FormInput
-                control={form.control}
-                name="business_name"
-                label="Razón Social"
-                placeholder="Ingrese la razón social"
-                className={
-                  fieldsFromSearch.business_name
-                    ? "bg-blue-50 border-blue-200"
-                    : ""
-                }
-              />
+              {isSearching ? (
+                <div className="flex flex-row items-center gap-3">
+                  <span className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">Razón Social</span>
+                  <Skeleton className="h-8 flex-1 min-w-0" />
+                </div>
+              ) : (
+                <FormInput
+                  control={form.control}
+                  name="business_name"
+                  label="Razón Social"
+                  placeholder="Ingrese la razón social"
+                  className={fieldsFromSearch.business_name ? "bg-blue-50 border-blue-200" : ""}
+                />
+              )}
 
               <FormInput
                 control={form.control}
@@ -755,12 +785,34 @@ export const PersonForm = ({
 
         {/* Addresses Section */}
         {isClient && (
-          <PersonAddressesList
-            personId={isEditing ? initialData?.id : undefined}
-            onStagedChange={(staged) => {
-              stagedAddressesRef.current = staged;
-            }}
-          />
+          isEditing ? (
+            <PersonAddressesList
+              personId={initialData?.id}
+              onStagedChange={(staged) => {
+                stagedAddressesRef.current = staged;
+              }}
+            />
+          ) : (
+            <GroupFormSection title="Dirección" icon={MapPin} cols={{ sm: 1 }} horizontal>
+              <FormInput
+                control={form.control}
+                name="address"
+                label="Dirección"
+                placeholder="Ingrese la dirección"
+              />
+              <FormSelect
+                control={form.control}
+                name="zone_id"
+                label="Zona"
+                placeholder="Seleccione zona"
+                disabled={isLoadingZones || !zones}
+                options={(zones ?? []).map((z: ZoneResource) => ({
+                  value: z.id.toString(),
+                  label: z.name,
+                }))}
+              />
+            </GroupFormSection>
+          )
         )}
 
         {/* Form validation summary */}
@@ -800,6 +852,7 @@ export const PersonForm = ({
             </div>
           </div>
         )}
+        </fieldset>
       </form>
 
       {/* <pre>

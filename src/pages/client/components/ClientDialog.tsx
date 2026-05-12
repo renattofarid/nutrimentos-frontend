@@ -117,8 +117,9 @@ export function ClientDialog({
         roleId={CLIENT_ROLE_ID}
         isClient={true}
         showBusinessType={true}
-        showZone={true}
+        showZone={false}
         showPriceList={true}
+        showDirection={false}
       />
     </GeneralSheet>
   );

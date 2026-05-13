@@ -22,7 +22,19 @@ import {
   ChevronUp,
   Save,
   X,
+  MapPin,
+  Plus,
+  Check,
+  Trash2,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import {
   personCreateSchema,
   personCreateSchemaClient,
@@ -263,11 +275,18 @@ export const PersonForm = ({
   const document_type_id = form.watch("document_type_id");
   const [isSearching, setIsSearching] = useState(false);
   const [showExtraFields, setShowExtraFields] = useState(false);
+  const [stagedAddresses, setStagedAddresses] = useState<StagedAddress[]>([]);
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
+  const [newAddrZoneId, setNewAddrZoneId] = useState("");
+  const [newAddrAddress, setNewAddrAddress] = useState("");
+  const [newAddrReference, setNewAddrReference] = useState("");
+
+  const nonPrimaryZones = isEditing
+    ? (initialData?.person_zones?.filter((pz) => pz.id !== primaryZone?.id) ?? [])
+    : [];
 
   // Ref to track if document type change triggered person type change
   const documentChangeRef = useRef(false);
-  // Staged addresses to create after person save
-  const stagedAddressesRef = useRef<StagedAddress[]>([]);
 
   // Get all document types from API
   const { data: documentTypes, isLoading: isLoadingDocumentTypes } =
@@ -451,17 +470,19 @@ export const PersonForm = ({
             reference: (data as any).reference || "",
             is_primary: true,
           });
-        } else if (stagedAddressesRef.current.length > 0) {
-          for (const addr of stagedAddressesRef.current) {
+        }
+
+        if (stagedAddresses.length > 0) {
+          for (const addr of stagedAddresses) {
             await createPersonZone({
               person_id: effectivePersonId,
               zone_id: parseInt(addr.zone_id),
               address: addr.address,
               reference: addr.reference || "",
-              is_primary: addr.is_primary,
+              is_primary: false,
             });
           }
-          stagedAddressesRef.current = [];
+          setStagedAddresses([]);
         }
       }
 
@@ -590,14 +611,6 @@ export const PersonForm = ({
               </>
             )}
 
-            <FormInput
-              control={form.control}
-              name="phone"
-              label="Teléfono"
-              placeholder="987654321 (9 dígitos)"
-              maxLength={9}
-            />
-
             <FormSelect
               control={form.control}
               name="zone_id"
@@ -717,6 +730,167 @@ export const PersonForm = ({
                   />
                 )}
               </>
+            )}
+
+            {/* Additional addresses section — only in edit mode */}
+            {isEditing && (
+              <GroupFormSection
+                title="Otras Direcciones"
+                icon={MapPin}
+                cols={{ sm: 1 }}
+                horizontal
+                headerExtra={
+                  !showNewAddressForm ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setNewAddrZoneId(zones?.[0]?.id.toString() ?? "");
+                        setNewAddrAddress("");
+                        setNewAddrReference("");
+                        setShowNewAddressForm(true);
+                      }}
+                    >
+                      <Plus className="size-4 mr-1" />
+                      Nueva
+                    </Button>
+                  ) : undefined
+                }
+              >
+                {/* Existing non-primary addresses */}
+                {nonPrimaryZones.map((pz) => (
+                  <div key={pz.id} className="flex flex-row items-center gap-3">
+                    <span className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">
+                      {pz.zone_name}
+                    </span>
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      <span className="text-sm">{pz.address}</span>
+                      {pz.reference && (
+                        <span className="text-xs text-muted-foreground">{pz.reference}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Staged (pending) addresses */}
+                {stagedAddresses.map((addr, i) => {
+                  const zoneName = zones?.find((z) => z.id.toString() === addr.zone_id)?.name ?? addr.zone_id;
+                  return (
+                    <div key={i} className="flex flex-row items-center gap-3">
+                      <span className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">
+                        {zoneName}
+                      </span>
+                      <div className="flex-1 min-w-0 flex flex-col">
+                        <span className="text-sm flex items-center gap-2">
+                          {addr.address}
+                          <Badge variant="outline" className="text-xs">Pendiente</Badge>
+                        </span>
+                        {addr.reference && (
+                          <span className="text-xs text-muted-foreground">{addr.reference}</span>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 text-destructive hover:text-destructive flex-shrink-0"
+                        onClick={() => setStagedAddresses((prev) => prev.filter((_, idx) => idx !== i))}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </div>
+                  );
+                })}
+
+                {/* Inline new address form */}
+                {showNewAddressForm && (
+                  <>
+                    <div className="flex flex-row items-center gap-3">
+                      <label className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">
+                        Zona
+                      </label>
+                      <div className="flex-1 min-w-0">
+                        <Select value={newAddrZoneId} onValueChange={setNewAddrZoneId}>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Seleccione zona" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(zones ?? []).map((z: ZoneResource) => (
+                              <SelectItem key={z.id} value={z.id.toString()} className="text-xs">
+                                {z.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-row items-center gap-3">
+                      <label className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">
+                        Dirección
+                      </label>
+                      <div className="flex-1 min-w-0">
+                        <Input
+                          value={newAddrAddress}
+                          onChange={(e) => setNewAddrAddress(e.target.value)}
+                          placeholder="Ingrese la dirección"
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-row items-center gap-3">
+                      <label className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">
+                        Referencia
+                      </label>
+                      <div className="flex-1 min-w-0">
+                        <Input
+                          value={newAddrReference}
+                          onChange={(e) => setNewAddrReference(e.target.value)}
+                          placeholder="Referencia (opcional)"
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-row items-center gap-3">
+                      <span className="w-48 shrink-0" />
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={!newAddrAddress.trim() || !newAddrZoneId}
+                          onClick={() => {
+                            setStagedAddresses((prev) => [
+                              ...prev,
+                              {
+                                zone_id: newAddrZoneId,
+                                address: newAddrAddress.trim(),
+                                reference: newAddrReference.trim(),
+                                is_primary: false,
+                              },
+                            ]);
+                            setShowNewAddressForm(false);
+                          }}
+                        >
+                          <Check className="size-3.5 mr-1" />
+                          Agregar
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setShowNewAddressForm(false)}
+                        >
+                          <X className="size-3.5 mr-1" />
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </GroupFormSection>
             )}
           </div>
         ) : (

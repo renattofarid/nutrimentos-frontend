@@ -20,6 +20,7 @@ import {
   deleteDeliverySheet,
   getAvailableSales,
   updateDeliverySheetStatus,
+  cancelDeliverySheet,
   createSettlement,
   createDeliverySheetPayment,
   type GetDeliverySheetsParams,
@@ -70,6 +71,7 @@ interface DeliverySheetStore {
   ) => Promise<void>;
   removeDeliverySheet: (id: number) => Promise<void>;
   updateStatus: (id: number, data: DeliverySheetStatusSchema) => Promise<void>;
+  cancelDeliverySheet: (id: number) => Promise<void>;
   submitSettlement: (id: number, data: SettlementSchema) => Promise<void>;
   submitPayment: (
     id: number,
@@ -240,6 +242,20 @@ export const useDeliverySheetStore = create<DeliverySheetStore>((set) => ({
     } catch (error) {
       set({ error: "Error al actualizar el estado", isSubmitting: false });
       errorToast("Error al actualizar el estado");
+      throw error;
+    }
+  },
+
+  // Cancel delivery sheet
+  cancelDeliverySheet: async (id: number) => {
+    set({ isSubmitting: true, error: null });
+    try {
+      await cancelDeliverySheet(id);
+      set({ isSubmitting: false });
+      successToast("Planilla anulada exitosamente");
+    } catch (error) {
+      set({ error: "Error al anular la planilla", isSubmitting: false });
+      errorToast("Error al anular la planilla");
       throw error;
     }
   },

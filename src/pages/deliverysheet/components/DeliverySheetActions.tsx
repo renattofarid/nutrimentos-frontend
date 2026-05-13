@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
+  Ban,
   Eye,
   FileSpreadsheet,
   Pencil,
@@ -15,9 +16,11 @@ import {
 interface DeliverySheetActionsProps {
   hasSelection: boolean;
   canDelete: boolean;
+  canCancel: boolean;
   onNew: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onCancel: () => void;
   onViewDetails: () => void;
   onUpdateStatus: () => void;
   onExportPdf: () => void;
@@ -27,9 +30,11 @@ interface DeliverySheetActionsProps {
 export default function DeliverySheetActions({
   hasSelection,
   canDelete,
+  canCancel,
   onNew,
   onEdit,
   onDelete,
+  onCancel,
   onViewDetails,
   onUpdateStatus,
   onExportPdf,
@@ -60,6 +65,16 @@ export default function DeliverySheetActions({
       >
         <Trash2 />
         Eliminar
+      </Button>
+      <Button
+        colorIcon="orange"
+        size="sm"
+        variant="outline"
+        onClick={onCancel}
+        disabled={!hasSelection || !canCancel}
+      >
+        <Ban />
+        Anular
       </Button>
       <Button
         colorIcon="blue"

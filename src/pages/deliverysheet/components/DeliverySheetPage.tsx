@@ -42,6 +42,10 @@ export default function DeliverySheetPage() {
   const [deliverySheetToDelete, setDeliverySheetToDelete] = useState<
     number | null
   >(null);
+  const [openCancel, setOpenCancel] = useState(false);
+  const [deliverySheetToCancel, setDeliverySheetToCancel] = useState<
+    number | null
+  >(null);
   const [openDetailSheet, setOpenDetailSheet] = useState(false);
   const [selectedDeliverySheet, setSelectedDeliverySheet] =
     useState<DeliverySheetById | null>(null);
@@ -66,7 +70,7 @@ export default function DeliverySheetPage() {
   const [isExporting, setIsExporting] = useState(false);
   const { activeTabId, closeTab } = useWindowManager();
 
-  const { removeDeliverySheet, updateStatus } = useDeliverySheetStore();
+  const { removeDeliverySheet, updateStatus, cancelDeliverySheet } = useDeliverySheetStore();
 
   const { data, refetch, isLoading } = useDeliverySheets({
     page,
@@ -147,6 +151,24 @@ export default function DeliverySheetPage() {
     setOpenDelete(true);
   };
 
+  const handleCancel = (id: number) => {
+    setDeliverySheetToCancel(id);
+    setOpenCancel(true);
+  };
+
+  const confirmCancel = async () => {
+    if (deliverySheetToCancel) {
+      try {
+        await cancelDeliverySheet(deliverySheetToCancel);
+        refetch();
+        setOpenCancel(false);
+        setDeliverySheetToCancel(null);
+      } catch (error) {
+        console.error("Error al anular planilla", error);
+      }
+    }
+  };
+
   const handleViewDetails = async (deliverySheet: DeliverySheetResource) => {
     try {
       const response = await findDeliverySheetById(deliverySheet.id);
@@ -206,6 +228,7 @@ export default function DeliverySheetPage() {
     : null;
   const hasSelection = !!toolbarDeliverySheet;
   const canDelete = toolbarDeliverySheet?.status === "PENDIENTE";
+  const canCancel = toolbarDeliverySheet?.status !== "CANCELADO";
 
   const handleEdit = (deliverySheet: DeliverySheetResource) => {
     navigate(`/planillas/actualizar/${deliverySheet.id}`);
@@ -223,9 +246,11 @@ export default function DeliverySheetPage() {
         <DeliverySheetActions
           hasSelection={hasSelection}
           canDelete={!!canDelete}
+          canCancel={!!canCancel}
           onNew={() => navigate(ROUTE_ADD)}
           onEdit={() => toolbarDeliverySheet && handleEdit(toolbarDeliverySheet)}
           onDelete={() => toolbarDeliverySheet && handleDelete(toolbarDeliverySheet.id)}
+          onCancel={() => toolbarDeliverySheet && handleCancel(toolbarDeliverySheet.id)}
           onViewDetails={() =>
             toolbarDeliverySheet && handleViewDetails(toolbarDeliverySheet)
           }
@@ -304,6 +329,15 @@ export default function DeliverySheetPage() {
         open={openDelete}
         onOpenChange={() => setOpenDelete(false)}
         onConfirm={confirmDelete}
+      />
+
+      <SimpleDeleteDialog
+        open={openCancel}
+        onOpenChange={() => setOpenCancel(false)}
+        onConfirm={confirmCancel}
+        title="Anular planilla"
+        description="Esta acción no se puede deshacer. ¿Estás seguro de que deseas anular esta planilla?"
+        confirmLabel="Anular"
       />
 
       <DeliverySheetDetailSheet

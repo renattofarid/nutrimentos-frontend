@@ -206,6 +206,19 @@ export const createSettlement = async (
 };
 
 // ============================================
+// CANCEL
+// ============================================
+
+export const cancelDeliverySheet = async (
+  id: number,
+): Promise<{ message: string }> => {
+  const response = await api.post<{ message: string }>(
+    `${DELIVERY_SHEET_ENDPOINT}/${id}/cancel`,
+  );
+  return response.data;
+};
+
+// ============================================
 // PAYMENT
 // ============================================
 

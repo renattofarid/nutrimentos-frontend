@@ -36,7 +36,7 @@ const getStatusLabel = (status: string) => {
   return labels[status] ?? status;
 };
 
-const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "green" | "muted" => {
+const getStatusColor = (status: string): "default" | "secondary" | "destructive" | "green" | "muted" => {
   if (status === "PENDIENTE") return "secondary";
   if (status === "EN_REPARTO") return "default";
   if (status === "COMPLETADO") return "green";
@@ -74,7 +74,7 @@ const salesColumns: ColumnDef<SheetSale>[] = [
     header: "Estado entrega",
     cell: ({ row }) => {
       const s = row.original.delivery_status;
-      const variants: Record<string, "default" | "secondary" | "destructive" | "orange" | "muted"> = {
+      const colors: Record<string, "default" | "secondary" | "destructive" | "orange" | "muted"> = {
         ENTREGADO: "default",
         PENDIENTE: "secondary",
         NO_ENTREGADO: "destructive",
@@ -86,7 +86,7 @@ const salesColumns: ColumnDef<SheetSale>[] = [
         NO_ENTREGADO: "No Entregado",
         DEVUELTO: "Devuelto",
       };
-      return <Badge variant={variants[s] ?? "muted"}>{labels[s] ?? s}</Badge>;
+      return <Badge color={colors[s] ?? "muted"}>{labels[s] ?? s}</Badge>;
     },
   },
 ];
@@ -177,7 +177,7 @@ export default function DeliverySheetCancelPage() {
         )}
 
         {sheet && alreadyCancelled && (
-          <Badge variant="destructive" className="text-xs">Ya anulada</Badge>
+          <Badge color="destructive" className="text-xs">Ya anulada</Badge>
         )}
 
         <div className="ml-auto">
@@ -206,7 +206,7 @@ export default function DeliverySheetCancelPage() {
                 <p className="font-semibold text-lg leading-tight">{sheet.sheet_number}</p>
                 <p className="text-xs text-muted-foreground">Planilla encontrada</p>
               </div>
-              <Badge variant={getStatusVariant(sheet.status)}>{getStatusLabel(sheet.status)}</Badge>
+              <Badge color={getStatusColor(sheet.status)}>{getStatusLabel(sheet.status)}</Badge>
             </div>
 
             <Separator />

@@ -60,6 +60,7 @@ import {
 import WarehouseDocumentDetailPage from "@/pages/warehouse-document/components/WarehouseDocumentDetailPage";
 import DeliverySheetPage from "@/pages/deliverysheet/components/DeliverySheetPage";
 import SettlementPage from "@/pages/deliverysheet/components/SettlementPage";
+import DeliverySheetCancelPage from "@/pages/deliverysheet/components/DeliverySheetCancelPage";
 import { DeliverySheetAddPage, DeliverySheetEditPage } from "@/pages/deliverysheet";
 import DriverPage from "@/pages/driver/components/DriverPage";
 import DriverAddPage from "@/pages/driver/components/DriverAddPage";
@@ -120,6 +121,7 @@ import { WAREHOUSE_DOCUMENT } from "@/pages/warehouse-document/lib/warehouse-doc
 import {
   DELIVERY_SHEET,
   DeliverySheetSettlementRoute,
+  DeliverySheetCancelRoute,
 } from "@/pages/deliverysheet/lib/deliverysheet.interface";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import {
@@ -304,6 +306,7 @@ export function AppRoutes() {
       <Route path={DeliverySheetRouteAdd} element={<DeliverySheetAddPage />} />
       <Route path={DeliverySheetRouteUpdate} element={<DeliverySheetEditPage />} />
       <Route path={DeliverySheetSettlementRoute} element={<SettlementPage />} />
+      <Route path={DeliverySheetCancelRoute} element={<DeliverySheetCancelPage />} />
 
       {/* Reportes */}
       <Route path={SALE_TICKETS_PRINT_ROUTE} element={<SaleTicketsPrintPage />} />

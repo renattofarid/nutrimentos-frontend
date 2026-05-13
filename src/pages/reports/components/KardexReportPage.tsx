@@ -134,11 +134,11 @@ const columns: ColumnDef<KardexItem>[] = [
         },
       },
       {
-        accessorKey: "quantity_in_sacos",
+        accessorKey: "quantity_sacks_in",
         header: "Sacos",
         size: 100,
         cell: ({ row }) => {
-          const sacos = row.original.quantity_in_sacos;
+          const sacos = row.original.quantity_sacks_in;
           if (!sacos || sacos === 0)
             return <span className="text-muted-foreground text-sm">—</span>;
           return (
@@ -147,11 +147,11 @@ const columns: ColumnDef<KardexItem>[] = [
         },
       },
       {
-        accessorKey: "quantity_in_kg",
+        accessorKey: "quantity_kg_in",
         header: "Kilos",
         size: 100,
         cell: ({ row }) => {
-          const kg = row.original.quantity_in_kg;
+          const kg = row.original.quantity_kg_in;
           if (!kg || kg === 0)
             return <span className="text-muted-foreground text-sm">—</span>;
           return <span className="font-semibold text-green-600">+{kg} kg</span>;
@@ -180,11 +180,11 @@ const columns: ColumnDef<KardexItem>[] = [
         },
       },
       {
-        accessorKey: "quantity_out_sacos",
+        accessorKey: "quantity_sacks_out",
         header: "Sacos",
         size: 100,
         cell: ({ row }) => {
-          const sacos = row.original.quantity_out_sacos;
+          const sacos = row.original.quantity_sacks_out;
           if (!sacos || sacos === 0)
             return <span className="text-muted-foreground text-sm">—</span>;
           return (
@@ -193,11 +193,11 @@ const columns: ColumnDef<KardexItem>[] = [
         },
       },
       {
-        accessorKey: "quantity_out_kg",
+        accessorKey: "quantity_kg_out",
         header: "Kilos",
         size: 100,
         cell: ({ row }) => {
-          const kg = row.original.quantity_out_kg;
+          const kg = row.original.quantity_kg_out;
           if (!kg || kg === 0)
             return <span className="text-muted-foreground text-sm">—</span>;
           return <span className="font-semibold text-red-600">-{kg} kg</span>;
@@ -221,22 +221,22 @@ const columns: ColumnDef<KardexItem>[] = [
         ),
       },
       {
-        accessorKey: "balance_quantity_kg",
+        accessorKey: "balance_kg",
         header: "Kilos",
         size: 110,
         cell: ({ row }) => (
           <span className="font-bold text-base">
-            {row.original.balance_quantity_kg} kg
+            {row.original.balance_kg} kg
           </span>
         ),
       },
       {
-        accessorKey: "balance_quantity_sacos",
+        accessorKey: "balance_sacks",
         header: "Sacos",
         size: 110,
         cell: ({ row }) => (
           <span className="font-bold text-base">
-            {row.original.balance_quantity_sacos} sac
+            {row.original.balance_sacks} sac
           </span>
         ),
       },

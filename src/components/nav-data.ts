@@ -5,6 +5,7 @@ import {
   ShoppingBag,
   DollarSign,
   ClipboardCheck,
+  Ban,
 } from "lucide-react";
 import { TYPE_USER } from "@/pages/type-users/lib/typeUser.interface";
 import { USER } from "@/pages/users/lib/User.interface";
@@ -44,6 +45,7 @@ import { WAREHOUSE_PRODUCT } from "@/pages/warehouse-product/lib/warehouse-produ
 import {
   DELIVERY_SHEET,
   DeliverySheetSettlementRoute,
+  DeliverySheetCancelRoute,
 } from "@/pages/deliverysheet/lib/deliverysheet.interface";
 import { DRIVER } from "@/pages/driver/lib/driver.interface";
 import {
@@ -306,6 +308,11 @@ export const navData: NavItem[] = [
         title: SettlementTitle!,
         url: DeliverySheetSettlementRoute,
         icon: ClipboardCheck,
+      },
+      {
+        title: "Anulación de Planillas",
+        url: DeliverySheetCancelRoute,
+        icon: Ban,
       },
       {
         title: CustomerAccountStatementTitle!,

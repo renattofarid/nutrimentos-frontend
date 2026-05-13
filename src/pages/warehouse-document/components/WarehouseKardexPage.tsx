@@ -24,25 +24,22 @@ const kardexColumns: ColumnDef<WarehouseKardexResource>[] = [
   {
     accessorKey: "movement_date",
     header: "Fecha",
-    cell: ({ getValue }) => {
-      const date = new Date(getValue() as string);
-      return date.toLocaleDateString("es-ES", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    },
+    cell: ({ row }) => (
+      <span>{row.original.movement_date_formatted}</span>
+    ),
   },
   {
-    accessorKey: "warehouse_name",
+    id: "warehouse_name",
     header: "Almacén",
+    accessorFn: (row) => row.warehouse.name,
     cell: ({ getValue }) => (
       <Badge variant="outline">{getValue() as string}</Badge>
     ),
   },
   {
-    accessorKey: "product_name",
+    id: "product_name",
     header: "Producto",
+    accessorFn: (row) => row.product.name,
     cell: ({ getValue }) => (
       <span className="font-medium">{getValue() as string}</span>
     ),
@@ -72,7 +69,7 @@ const kardexColumns: ColumnDef<WarehouseKardexResource>[] = [
     cell: ({ row }) => {
       const type = row.original.movement_type;
       return (
-        <Badge color={type === "ENTRADA" ? "default" : "destructive"}>
+        <Badge color={type === "INGRESO" ? "default" : "destructive"}>
           {type}
         </Badge>
       );
@@ -80,7 +77,7 @@ const kardexColumns: ColumnDef<WarehouseKardexResource>[] = [
   },
   {
     accessorKey: "quantity_in",
-    header: "Entrada",
+    header: "Entrada (kg)",
     cell: ({ getValue }) => {
       const value = getValue() as number;
       return value > 0 ? (
@@ -92,7 +89,7 @@ const kardexColumns: ColumnDef<WarehouseKardexResource>[] = [
   },
   {
     accessorKey: "quantity_out",
-    header: "Salida",
+    header: "Salida (kg)",
     cell: ({ getValue }) => {
       const value = getValue() as number;
       return value > 0 ? (
@@ -103,26 +100,20 @@ const kardexColumns: ColumnDef<WarehouseKardexResource>[] = [
     },
   },
   {
-    accessorKey: "quantity_balance",
-    header: "Saldo",
+    accessorKey: "balance_quantity",
+    header: "Saldo (kg)",
     cell: ({ getValue }) => (
       <span className="font-bold">{getValue() as number}</span>
     ),
   },
   {
-    accessorKey: "unit_cost",
+    accessorKey: "unit_cost_in",
     header: "Costo Unit.",
     cell: ({ getValue }) => {
       const value = getValue() as number;
-      return `S/ ${Number(value).toFixed(2)}`;
-    },
-  },
-  {
-    accessorKey: "average_cost",
-    header: "Costo Promedio",
-    cell: ({ getValue }) => {
-      const value = getValue() as number;
-      return `S/ ${Number(value).toFixed(2)}`;
+      return value > 0
+        ? `S/ ${Number(value).toFixed(2)}`
+        : <span className="text-muted-foreground">-</span>;
     },
   },
   {
@@ -154,7 +145,7 @@ const kardexColumns: ColumnDef<WarehouseKardexResource>[] = [
     },
   },
   {
-    accessorKey: "total_cost_balance",
+    accessorKey: "balance_total_cost",
     header: "Saldo Total",
     cell: ({ getValue }) => {
       const value = getValue() as number;
@@ -166,8 +157,9 @@ const kardexColumns: ColumnDef<WarehouseKardexResource>[] = [
     },
   },
   {
-    accessorKey: "user_name",
+    id: "user_name",
     header: "Usuario",
+    accessorFn: (row) => row.user.name,
     cell: ({ getValue }) => (
       <span className="text-sm">{getValue() as string}</span>
     ),

@@ -95,6 +95,7 @@ interface Personzone {
   zone_id: number;
   zone_name: string;
   address: string;
+  reference?: string;
   is_primary: boolean;
   created_at: string;
 }

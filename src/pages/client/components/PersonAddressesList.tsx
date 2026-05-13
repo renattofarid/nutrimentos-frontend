@@ -41,6 +41,7 @@ import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
 interface StagedAddress {
   zone_id: string;
   address: string;
+  reference?: string;
   is_primary: boolean;
 }
 
@@ -69,6 +70,7 @@ function InlineAddressForm({
     defaultValues: initialValues ?? {
       zone_id: zones[0]?.id.toString() ?? "",
       address: "",
+      reference: "",
       is_primary: false,
     },
     mode: "onChange",
@@ -100,15 +102,8 @@ function InlineAddressForm({
           </SelectContent>
         </Select>
 
-        {/* Address input */}
-        <Input
-          {...form.register("address")}
-          placeholder="Ingrese la dirección"
-          className="h-8 text-xs flex-1 min-w-0"
-        />
-
         {/* Actions */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
           <Button
             type="button"
             size="icon"
@@ -134,6 +129,20 @@ function InlineAddressForm({
           </Button>
         </div>
       </div>
+
+      {/* Address input */}
+      <Input
+        {...form.register("address")}
+        placeholder="Dirección"
+        className="h-8 text-xs w-full"
+      />
+
+      {/* Reference input */}
+      <Input
+        {...form.register("reference")}
+        placeholder="Referencia (opcional)"
+        className="h-8 text-xs w-full"
+      />
 
       {/* is_primary */}
       <div className="flex items-center gap-2">
@@ -182,7 +191,7 @@ export default function PersonAddressesList({
 
   // New addresses are always staged (saved when main form submits)
   const handleAddStaged = (data: PersonZoneSchema) => {
-    const next = [...staged, { zone_id: data.zone_id, address: data.address, is_primary: data.is_primary ?? false }];
+    const next = [...staged, { zone_id: data.zone_id, address: data.address, reference: data.reference ?? "", is_primary: data.is_primary ?? false }];
     updateStaged(next);
     setShowNew(false);
   };
@@ -197,6 +206,7 @@ export default function PersonAddressesList({
       await update(id, {
         zone_id: parseInt(data.zone_id),
         address: data.address,
+        reference: data.reference,
         is_primary: data.is_primary,
       });
       successToast(SUCCESS_MESSAGE({ name: "Dirección", gender: false }, "update"));
@@ -233,6 +243,7 @@ export default function PersonAddressesList({
   const getInitialValues = (address: PersonZoneResource): PersonZoneSchema => ({
     zone_id: address.zone_id.toString(),
     address: address.address,
+    reference: address.reference ?? "",
     is_primary: address.is_primary,
   });
 
@@ -283,7 +294,12 @@ export default function PersonAddressesList({
                     <Badge variant="outline" className="text-xs flex-shrink-0">
                       {address.zone.name}
                     </Badge>
-                    <span className="text-sm truncate">{address.address}</span>
+                    <div className="min-w-0 flex flex-col">
+                      <span className="text-sm truncate">{address.address}</span>
+                      {address.reference && (
+                        <span className="text-xs text-muted-foreground truncate">{address.reference}</span>
+                      )}
+                    </div>
                     {address.is_primary && (
                       <Badge variant="default" className="text-xs flex-shrink-0 gap-1">
                         <Star className="size-2.5" />
@@ -342,7 +358,12 @@ export default function PersonAddressesList({
                     <Badge variant="outline" className="text-xs flex-shrink-0">
                       {zoneName}
                     </Badge>
-                    <span className="text-sm truncate">{addr.address}</span>
+                    <div className="min-w-0 flex flex-col">
+                      <span className="text-sm truncate">{addr.address}</span>
+                      {addr.reference && (
+                        <span className="text-xs text-muted-foreground truncate">{addr.reference}</span>
+                      )}
+                    </div>
                     {addr.is_primary && (
                       <Badge variant="default" className="text-xs flex-shrink-0 gap-1">
                         <Star className="size-2.5" />

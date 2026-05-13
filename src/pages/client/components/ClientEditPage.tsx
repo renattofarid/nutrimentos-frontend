@@ -87,15 +87,8 @@ export default function ClientEditPage() {
         updatePersonData.commercial_name = data.commercial_name || "";
       }
 
-      // Add optional fields if provided
       if (data.business_type_id) {
         updatePersonData.business_type_id = Number(data.business_type_id);
-      }
-      if (data.zone_id) {
-        updatePersonData.zone_id = Number(data.zone_id);
-      }
-      if (data.client_category_id) {
-        updatePersonData.client_category_id = Number(data.client_category_id);
       }
 
       await updatePerson(personData.id, updatePersonData);

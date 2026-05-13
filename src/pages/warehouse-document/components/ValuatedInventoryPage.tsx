@@ -13,8 +13,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const inventoryColumns: ColumnDef<ValuatedInventoryItem>[] = [
   {
-    accessorKey: "warehouse_name",
+    id: "warehouse_name",
     header: "Almacén",
+    accessorFn: (row) => row.warehouse.name,
     cell: ({ getValue }) => (
       <Badge variant="outline" className="font-medium">
         {getValue() as string}
@@ -22,15 +23,16 @@ const inventoryColumns: ColumnDef<ValuatedInventoryItem>[] = [
     ),
   },
   {
-    accessorKey: "product_name",
+    id: "product_name",
     header: "Producto",
+    accessorFn: (row) => row.product.name,
     cell: ({ getValue }) => (
       <span className="font-semibold">{getValue() as string}</span>
     ),
   },
   {
-    accessorKey: "quantity_balance",
-    header: "Stock Actual",
+    accessorKey: "balance_quantity",
+    header: "Stock Actual (kg)",
     cell: ({ getValue }) => {
       const stock = getValue() as number;
       const variant =
@@ -43,7 +45,7 @@ const inventoryColumns: ColumnDef<ValuatedInventoryItem>[] = [
     },
   },
   {
-    accessorKey: "unit_cost",
+    accessorKey: "unit_cost_in",
     header: "Costo Unitario",
     cell: ({ getValue }) => {
       const value = getValue() as number;
@@ -51,19 +53,7 @@ const inventoryColumns: ColumnDef<ValuatedInventoryItem>[] = [
     },
   },
   {
-    accessorKey: "average_cost",
-    header: "Costo Promedio",
-    cell: ({ getValue }) => {
-      const value = getValue() as number;
-      return (
-        <span className="font-medium text-blue-600">
-          S/ {Number(value).toFixed(2)}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "total_cost_balance",
+    accessorKey: "balance_total_cost",
     header: "Valor Total",
     cell: ({ getValue }) => {
       const value = getValue() as number;
@@ -75,20 +65,13 @@ const inventoryColumns: ColumnDef<ValuatedInventoryItem>[] = [
     },
   },
   {
-    accessorKey: "movement_date",
+    accessorKey: "movement_date_formatted",
     header: "Última Actualización",
-    cell: ({ getValue }) => {
-      const date = new Date(getValue() as string);
-      return (
-        <span className="text-sm text-muted-foreground">
-          {date.toLocaleDateString("es-ES", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })}
-        </span>
-      );
-    },
+    cell: ({ getValue }) => (
+      <span className="text-sm text-muted-foreground">
+        {getValue() as string}
+      </span>
+    ),
   },
 ];
 
@@ -113,9 +96,9 @@ export default function ValuatedInventoryPage() {
 
   // Calculate totals
   const totalValue =
-    data?.reduce((sum, item) => sum + item.total_cost_balance, 0) || 0;
+    data?.reduce((sum, item) => sum + item.balance_total_cost, 0) || 0;
   const totalStock =
-    data?.reduce((sum, item) => sum + item.quantity_balance, 0) || 0;
+    data?.reduce((sum, item) => sum + item.balance_quantity, 0) || 0;
   const totalItems = data?.length || 0;
 
   return (

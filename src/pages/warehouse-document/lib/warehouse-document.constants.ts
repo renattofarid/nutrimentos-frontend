@@ -30,8 +30,8 @@ export const DOCUMENT_STATUS: {
 ];
 
 export const MOVEMENT_TYPES = [
-  { value: "ENTRADA", label: "Entrada" },
-  { value: "SALIDA", label: "Salida" },
+  { value: "INGRESO", label: "Ingreso" },
+  { value: "EGRESO", label: "Egreso" },
 ];
 
 export const getDocumentTypeLabel = (type: DocumentType): string => {

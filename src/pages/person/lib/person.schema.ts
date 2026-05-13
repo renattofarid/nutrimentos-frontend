@@ -94,6 +94,7 @@ const basePersonSchema = z.object({
   zone_id: z.string().optional().or(z.literal("")),
   client_category_id: z.string().optional().or(z.literal("")),
   driver_license: z.string().optional().or(z.literal("")),
+  reference: z.string().optional().or(z.literal("")),
 
   // ocupation: z
   //   .string()

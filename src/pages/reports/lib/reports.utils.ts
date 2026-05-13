@@ -1,4 +1,5 @@
 import type {
+  AccountStatementFlatRow,
   CustomerAccountStatementResponse,
   CustomerAccountStatementTableItem,
 } from "./reports.interface";
@@ -94,6 +95,40 @@ export function transformCustomerAccountStatementData(
   });
 
   return flatData;
+}
+
+/**
+ * Transforma la respuesta jerárquica a un array plano — una fila por venta.
+ */
+export function flattenCustomerAccountStatementData(
+  response: CustomerAccountStatementResponse
+): AccountStatementFlatRow[] {
+  return response.data.flatMap((zone) =>
+    zone.vendors.flatMap((vendor) =>
+      vendor.customers.flatMap((customer) =>
+        customer.sales.map((sale) => ({
+          id: `sale-${zone.zone_id}-${vendor.vendedor_id}-${customer.customer_id}-${sale.id}`,
+          zone_id: zone.zone_id,
+          zone_name: zone.zone_name,
+          vendedor_id: vendor.vendedor_id,
+          vendedor_name: vendor.vendedor_name,
+          customer_id: customer.customer_id,
+          customer_name: customer.customer_name,
+          customer_zone: customer.customer_zone,
+          sale_id: sale.id,
+          date: sale.date,
+          document_number: sale.document_number,
+          document_type: sale.document_type,
+          payment_type: sale.payment_type,
+          total_amount: sale.total_amount,
+          paid_amount: sale.paid_amount,
+          debt_amount: sale.debt_amount,
+          days_overdue: sale.days_overdue,
+          reference: sale.reference,
+        }))
+      )
+    )
+  );
 }
 
 /**

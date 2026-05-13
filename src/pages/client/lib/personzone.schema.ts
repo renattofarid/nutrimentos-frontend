@@ -3,6 +3,7 @@ import { z } from "zod";
 export const personZoneSchema = z.object({
   zone_id: z.string().min(1, "La zona es requerida"),
   address: z.string().min(1, "La dirección es requerida"),
+  reference: z.string().optional(),
   is_primary: z.boolean().optional(),
 });
 

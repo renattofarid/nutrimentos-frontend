@@ -11,6 +11,7 @@ export interface PersonZoneResource {
   person_id: number;
   zone_id: number;
   address: string;
+  reference?: string;
   is_primary: boolean;
   person: PersonZonePerson;
   zone: ZoneResource;
@@ -21,12 +22,14 @@ export interface PersonZoneCreateRequest {
   person_id: number;
   zone_id: number;
   address: string;
+  reference?: string;
   is_primary?: boolean;
 }
 
 export interface PersonZoneUpdateRequest {
   zone_id: number;
   address: string;
+  reference?: string;
   is_primary?: boolean;
 }
 

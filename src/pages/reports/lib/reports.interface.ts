@@ -197,18 +197,18 @@ export interface KardexItem {
   warehouse_id: number;
   warehouse: Warehouse;
   quantity_in: number;
-  quantity_in_kg: number;
-  quantity_in_sacos: number;
+  quantity_kg_in: number;
+  quantity_sacks_in: number;
   unit_cost_in: number;
   total_cost_in: number;
   quantity_out: number;
-  quantity_out_kg: number;
-  quantity_out_sacos: number;
+  quantity_kg_out: number;
+  quantity_sacks_out: number;
   unit_cost_out: number;
   total_cost_out: number;
   balance_quantity: number;
-  balance_quantity_kg: number;
-  balance_quantity_sacos: number;
+  balance_kg: number;
+  balance_sacks: number;
   balance_unit_cost: number;
   balance_total_cost: number;
   warehouse_document_id: null | number;
@@ -275,7 +275,7 @@ export interface KardexReportParams {
   export?: "excel" | null;
 }
 
-// Item plano para la tabla con información de jerarquía
+// Item plano para la tabla con información de jerarquía (legacy)
 export interface CustomerAccountStatementTableItem {
   id: string;
   type: "zone" | "vendor" | "customer" | "sale";
@@ -300,6 +300,28 @@ export interface CustomerAccountStatementTableItem {
   total_debt: number;
   parentId?: string;
   hasChildren: boolean;
+}
+
+// Fila plana — una fila por venta
+export interface AccountStatementFlatRow {
+  id: string;
+  zone_id: number;
+  zone_name: string;
+  vendedor_id: number;
+  vendedor_name: string;
+  customer_id: number;
+  customer_name: string;
+  customer_zone: string;
+  sale_id: number;
+  date: string;
+  document_number: string;
+  document_type: string;
+  payment_type: string;
+  total_amount: number;
+  paid_amount: number;
+  debt_amount: number;
+  days_overdue: number;
+  reference: string;
 }
 
 /**

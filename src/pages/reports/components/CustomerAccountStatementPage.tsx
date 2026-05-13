@@ -3,23 +3,18 @@ import { useForm } from "react-hook-form";
 import { useCustomerAccountStatement } from "../lib/reports.hook";
 
 import { DataTable } from "@/components/DataTable";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import type {
-  CustomerAccountStatementTableItem,
+  AccountStatementFlatRow,
   CustomerAccountStatementParams,
 } from "../lib/reports.interface";
 import { Badge } from "@/components/ui/badge";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import {
-  Printer,
-  Search,
-  DollarSign,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Printer, Search, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useClients } from "@/pages/client/lib/client.hook";
@@ -30,7 +25,7 @@ import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import type { Option } from "@/lib/core.interface";
 import {
-  transformCustomerAccountStatementData,
+  flattenCustomerAccountStatementData,
   calculateAccountStatementMetrics,
 } from "../lib/reports.utils";
 import { errorToast, successToast, loadingToast, dismissToast } from "@/lib/core.function";
@@ -50,83 +45,89 @@ interface FilterFormValues {
   show_old: boolean;
 }
 
-const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
+function sortFlatRows(
+  rows: AccountStatementFlatRow[],
+  sorting: SortingState
+): AccountStatementFlatRow[] {
+  if (sorting.length === 0) return rows;
+  const [{ id, desc }] = sorting;
+  return [...rows].sort((a, b) => {
+    const aVal = (a as unknown as Record<string, unknown>)[id];
+    const bVal = (b as unknown as Record<string, unknown>)[id];
+    if (aVal === bVal) return 0;
+    if (aVal == null) return desc ? -1 : 1;
+    if (bVal == null) return desc ? 1 : -1;
+    const result = aVal < bVal ? -1 : 1;
+    return desc ? -result : result;
+  });
+}
+
+const columns: ColumnDef<AccountStatementFlatRow>[] = [
   {
-    accessorKey: "name",
-    header: "Descripción",
-    size: 300,
-    cell: ({ row }) => {
-      const item = row.original;
-      const indent = item.level * 24;
-
-      let content: React.ReactNode = null;
-      let className = "";
-
-      switch (item.type) {
-        case "zone":
-          content = (
-            <div className="flex items-center gap-2">
-              <Badge color="blue">ZONA</Badge>
-              <span className="font-bold text-base">{item.zone_name}</span>
-            </div>
-          );
-          break;
-
-        case "vendor":
-          content = (
-            <div className="flex items-center gap-2">
-              <Badge color="purple">VENDEDOR</Badge>
-              <span className="font-semibold">{item.vendedor_name}</span>
-            </div>
-          );
-          break;
-
-        case "customer":
-          content = (
-            <div className="flex items-center gap-2">
-              <Badge color="green">CLIENTE</Badge>
-              <span className="font-medium">{item.customer_name}</span>
-            </div>
-          );
-          break;
-
-        case "sale":
-          content = (
-            <div className="flex items-center gap-3 text-sm">
-              <Badge variant="outline">{item.document_type}</Badge>
-              <span className="font-mono font-medium">
-                {item.document_number}
-              </span>
-              <span className="text-muted-foreground">{item.date}</span>
-            </div>
-          );
-          break;
-      }
-
-      return (
-        <div
-          style={{ paddingLeft: `${indent}px` }}
-          className={`py-1 ${className}`}
-        >
-          {content}
-        </div>
-      );
-    },
+    accessorKey: "zone_name",
+    header: "Zona",
+    size: 120,
+    enableSorting: true,
+    cell: ({ getValue }) => (
+      <Badge color="blue" size="sm">
+        {getValue<string>()}
+      </Badge>
+    ),
+  },
+  {
+    accessorKey: "vendedor_name",
+    header: "Vendedor",
+    size: 160,
+    enableSorting: true,
+    cell: ({ getValue }) => (
+      <span className="font-medium text-sm">{getValue<string>()}</span>
+    ),
+  },
+  {
+    accessorKey: "date",
+    header: "Fecha Emisión",
+    size: 120,
+    enableSorting: true,
+    cell: ({ getValue }) => (
+      <span className="font-mono text-sm">{getValue<string>()}</span>
+    ),
+  },
+  {
+    accessorKey: "customer_name",
+    header: "Cliente",
+    size: 200,
+    enableSorting: true,
+    cell: ({ getValue }) => (
+      <span className="font-medium">{getValue<string>()}</span>
+    ),
+  },
+  {
+    accessorKey: "document_number",
+    header: "Documento",
+    size: 140,
+    cell: ({ getValue }) => (
+      <span className="font-mono text-sm">{getValue<string>()}</span>
+    ),
+  },
+  {
+    accessorKey: "document_type",
+    header: "Tipo Doc.",
+    size: 100,
+    cell: ({ getValue }) => (
+      <Badge variant="outline" size="sm">
+        {getValue<string>()}
+      </Badge>
+    ),
   },
   {
     accessorKey: "payment_type",
-    header: "Tipo Pago",
-    size: 120,
-    cell: ({ row }) => {
-      const item = row.original;
-      if (item.type !== "sale") return null;
-
-      const variant =
-        item.payment_type === "CREDITO" ? "destructive" : "default";
-
+    header: "Forma Pago",
+    size: 110,
+    cell: ({ getValue }) => {
+      const val = getValue<string>();
       return (
-        <Badge color={variant} className="text-xs">
-          {item.payment_type}
+        <Badge color={val === "CREDITO" ? "orange" : "green"} size="sm">
+          {val}
         </Badge>
       );
     },
@@ -135,62 +136,36 @@ const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
     accessorKey: "total_amount",
     header: "Monto Total",
     size: 120,
-    cell: ({ row }) => {
-      const item = row.original;
-      if (item.type !== "sale") return null;
-
-      return (
-        <span className="font-medium">
-          S/ {Number(item.total_amount).toFixed(2)}
-        </span>
-      );
-    },
+    enableSorting: true,
+    cell: ({ getValue }) => (
+      <span className="font-medium tabular-nums">
+        S/ {Number(getValue<number>()).toFixed(2)}
+      </span>
+    ),
   },
   {
     accessorKey: "paid_amount",
     header: "Pagado",
-    size: 120,
-    cell: ({ row }) => {
-      const item = row.original;
-      if (item.type !== "sale") return null;
-
-      return (
-        <span className="font-medium text-green-600">
-          S/ {Number(item.paid_amount).toFixed(2)}
-        </span>
-      );
-    },
+    size: 110,
+    enableSorting: true,
+    cell: ({ getValue }) => (
+      <span className="font-medium text-green-600 tabular-nums">
+        S/ {Number(getValue<number>()).toFixed(2)}
+      </span>
+    ),
   },
   {
     accessorKey: "debt_amount",
     header: "Deuda",
-    size: 120,
-    cell: ({ row }) => {
-      const item = row.original;
-      if (item.type !== "sale") return null;
-
-      const hasDebt = (item.debt_amount ?? 0) > 0;
-
+    size: 110,
+    enableSorting: true,
+    cell: ({ getValue }) => {
+      const val = Number(getValue<number>());
       return (
         <span
-          className={`font-bold ${hasDebt ? "text-red-600" : "text-gray-500"}`}
+          className={`font-bold tabular-nums ${val > 0 ? "text-red-600" : "text-muted-foreground"}`}
         >
-          S/ {Number(item.debt_amount).toFixed(2)}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "total_debt",
-    header: "Total Deuda",
-    size: 140,
-    cell: ({ row }) => {
-      const item = row.original;
-      if (item.type === "sale") return null;
-
-      return (
-        <span className="font-bold text-lg text-red-700">
-          S/ {Number(item.total_debt).toFixed(2)}
+          S/ {val.toFixed(2)}
         </span>
       );
     },
@@ -199,21 +174,15 @@ const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
     accessorKey: "days_overdue",
     header: "Días Atraso",
     size: 110,
-    cell: ({ row }) => {
-      const item = row.original;
-      if (item.type !== "sale") return null;
-
-      const days = item.days_overdue ?? 0;
-
+    enableSorting: true,
+    cell: ({ getValue }) => {
+      const days = (getValue<number>() ?? 0);
       if (days === 0) {
-        return <span className="text-muted-foreground text-sm">Al día</span>;
+        return <span className="text-muted-foreground text-xs">Al día</span>;
       }
-
-      const variant =
-        days > 30 ? "destructive" : days > 15 ? "default" : "secondary";
-
+      const color = days > 30 ? "red" : days > 15 ? "orange" : "purple";
       return (
-        <Badge color={variant}>
+        <Badge color={color} size="sm">
           {days} {days === 1 ? "día" : "días"}
         </Badge>
       );
@@ -224,23 +193,24 @@ const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
 export default function CustomerAccountStatementPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   const { data: zones } = useAllZones();
   const { data: workers } = useAllWorkers();
-
   const { data: rawData, isLoading, fetch } = useCustomerAccountStatement();
 
-  // Transformar datos y calcular métricas
-  const { tableData, meta } = useMemo(() => {
-    if (!rawData) {
-      return { tableData: [], meta: null };
-    }
-
-    const tableData = transformCustomerAccountStatementData(rawData);
-    const meta = calculateAccountStatementMetrics(rawData);
-
-    return { tableData, meta };
+  const { flatRows, meta } = useMemo(() => {
+    if (!rawData) return { flatRows: [] as AccountStatementFlatRow[], meta: null };
+    return {
+      flatRows: flattenCustomerAccountStatementData(rawData),
+      meta: calculateAccountStatementMetrics(rawData),
+    };
   }, [rawData]);
+
+  const tableData = useMemo(
+    () => sortFlatRows(flatRows, sorting),
+    [flatRows, sorting]
+  );
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
@@ -256,8 +226,7 @@ export default function CustomerAccountStatementPage() {
   });
 
   const zoneOptions: Option[] =
-    zones?.map((zone) => ({ value: zone.id.toString(), label: zone.name })) ||
-    [];
+    zones?.map((zone) => ({ value: zone.id.toString(), label: zone.name })) || [];
 
   const workerOptions: Option[] =
     workers?.map((worker) => ({
@@ -290,7 +259,6 @@ export default function CustomerAccountStatementPage() {
       query_type: values.query_type as "solo_deuda" | "todo",
       show_old: values.show_old,
     };
-
     fetch(params);
   };
 
@@ -300,7 +268,9 @@ export default function CustomerAccountStatementPage() {
     const toastId = loadingToast("Generando planilla de reparto...");
     try {
       const paymentType =
-        values.payment_type === "ALL" ? undefined : (values.payment_type as "CONTADO" | "CREDITO");
+        values.payment_type === "ALL"
+          ? undefined
+          : (values.payment_type as "CONTADO" | "CREDITO");
 
       const sales = await getAllSalesFiltered({
         customer_id: values.customer_id ? Number(values.customer_id) : undefined,
@@ -320,7 +290,6 @@ export default function CustomerAccountStatementPage() {
 
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
-
       successToast("Planilla generada exitosamente");
     } catch (error) {
       errorToast("Error al generar la planilla");
@@ -331,13 +300,33 @@ export default function CustomerAccountStatementPage() {
     }
   };
 
+  const tableFooter =
+    meta && flatRows.length > 0 ? (
+      <TableRow className="font-bold text-sm bg-muted/80 hover:bg-muted/80">
+        <TableCell colSpan={7} className="text-right pr-4 text-muted-foreground">
+          TOTALES — {flatRows.length} registros
+        </TableCell>
+        <TableCell className="tabular-nums">
+          S/ {meta.total_debt.toFixed(2)}
+        </TableCell>
+        <TableCell className="text-green-700 tabular-nums">
+          S/ {meta.total_paid.toFixed(2)}
+        </TableCell>
+        <TableCell className="text-red-700 tabular-nums">
+          S/ {meta.total_pending.toFixed(2)}
+        </TableCell>
+        <TableCell />
+      </TableRow>
+    ) : undefined;
+
   return (
     <PageWrapper size="3xl">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">
+          {/* Filtros */}
           <div className="space-y-3">
-            <div className="flex items-end gap-2">
-              <div className="flex-1 max-w-sm">
+            <div className="flex items-end gap-2 flex-wrap">
+              <div className="flex-1 min-w-[200px] max-w-sm">
                 <FormSelectAsync
                   control={form.control}
                   name="customer_id"
@@ -361,7 +350,7 @@ export default function CustomerAccountStatementPage() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => handleExport()}
+                onClick={handleExport}
                 disabled={isExporting}
               >
                 <Printer className="mr-2 h-4 w-4" />
@@ -431,6 +420,7 @@ export default function CustomerAccountStatementPage() {
             )}
           </div>
 
+          {/* Cards resumen */}
           {meta && (
             <GroupFormSection
               title="Resumen de Cuentas"
@@ -442,14 +432,14 @@ export default function CustomerAccountStatementPage() {
                 <p className="text-2xl font-bold">{meta.total}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Deuda Total</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-sm text-muted-foreground">Monto Facturado</p>
+                <p className="text-2xl font-bold">
                   S/ {meta.total_debt?.toFixed(2) || "0.00"}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Pendiente</p>
-                <p className="text-2xl font-bold text-orange-600">
+                <p className="text-sm text-muted-foreground">Total Deuda</p>
+                <p className="text-2xl font-bold text-red-600">
                   S/ {meta.total_pending?.toFixed(2) || "0.00"}
                 </p>
               </div>
@@ -462,7 +452,15 @@ export default function CustomerAccountStatementPage() {
             </GroupFormSection>
           )}
 
-          <DataTable columns={columns} data={tableData} isLoading={isLoading} />
+          {/* Tabla plana */}
+          <DataTable
+            columns={columns}
+            data={tableData}
+            isLoading={isLoading}
+            sorting={sorting}
+            onSortingChange={setSorting}
+            footer={tableFooter}
+          />
         </form>
       </Form>
     </PageWrapper>

@@ -14,6 +14,9 @@ interface SimpleDeleteDialogProps {
   onConfirm: () => Promise<void>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  title?: string;
+  description?: string;
+  confirmLabel?: string;
 }
 
 export const DeleteButton = ({
@@ -41,6 +44,9 @@ export function SimpleDeleteDialog({
   onConfirm,
   open,
   onOpenChange,
+  title = "Eliminar registro",
+  description = "Esta acción no se puede deshacer. ¿Estás seguro de que deseas eliminar este registro?",
+  confirmLabel = "Confirmar",
 }: SimpleDeleteDialogProps) {
   const [loading, setLoading] = useState(false);
 
@@ -58,11 +64,8 @@ export function SimpleDeleteDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Eliminar registro</DialogTitle>
-          <DialogDescription>
-            Esta acción no se puede deshacer. ¿Estás seguro de que deseas
-            eliminar este registro?
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="flex justify-end gap-2 mt-4">
           <Button
@@ -77,7 +80,7 @@ export function SimpleDeleteDialog({
             onClick={handleConfirm}
             disabled={loading}
           >
-            {loading ? "Eliminando..." : "Confirmar"}
+            {loading ? "Procesando..." : confirmLabel}
           </Button>
         </div>
       </DialogContent>

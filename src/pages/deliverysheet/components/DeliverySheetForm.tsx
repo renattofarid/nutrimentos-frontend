@@ -10,7 +10,6 @@ import {
 } from "../lib/deliverysheet.schema";
 import {
   Loader,
-  Search,
   SearchX,
   Info,
   X,
@@ -23,7 +22,7 @@ import {
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { DatePickerFilter } from "@/components/DatePickerFilter";
 import { FormSelect } from "@/components/FormSelect";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { format, parse } from "date-fns";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import { Badge } from "@/components/ui/badge";
@@ -139,29 +138,7 @@ export const DeliverySheetForm = ({
   const customerValue = form.watch("customer_id");
   const forSingleCustomer = form.watch("for_single_customer");
 
-  const handleSearchSales = () => {
-    if (!searchParams.payment_type) {
-      return;
-    }
-
-    setHasSearched(true);
-    onSearchSales({
-      payment_type: searchParams.payment_type,
-      zone_id: searchParams.zone_id ? Number(searchParams.zone_id) : undefined,
-      customer_id: searchParams.customer_id
-        ? Number(searchParams.customer_id)
-        : undefined,
-      person_zone_id: searchParams.person_zone_id
-        ? Number(searchParams.person_zone_id)
-        : undefined,
-      date_from: searchParams.date_from
-        ? format(searchParams.date_from, "yyyy-MM-dd")
-        : undefined,
-      date_to: searchParams.date_to
-        ? format(searchParams.date_to, "yyyy-MM-dd")
-        : undefined,
-    });
-  };
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleToggleSale = (saleId: number) => {
     setSelectedSaleIds((prev) => {
@@ -222,23 +199,25 @@ export const DeliverySheetForm = ({
     }
   }, [forSingleCustomer, zoneValue, customerValue, form]);
 
-  // Auto-buscar ventas del día al seleccionar zona o cliente
   useEffect(() => {
-    const targetId = forSingleCustomer ? customerValue : zoneValue;
-    if (!typeValue || !targetId) return;
-
-    const today = format(new Date(), "yyyy-MM-dd");
-    setHasSearched(true);
-    onSearchSales({
-      payment_type: typeValue,
-      zone_id: !forSingleCustomer && zoneValue ? Number(zoneValue) : undefined,
-      customer_id:
-        forSingleCustomer && customerValue ? Number(customerValue) : undefined,
-      date_from: today,
-      date_to: today,
-    });
+    if (!searchParams.payment_type) return;
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => {
+      setHasSearched(true);
+      onSearchSales({
+        payment_type: searchParams.payment_type,
+        zone_id: searchParams.zone_id ? Number(searchParams.zone_id) : undefined,
+        customer_id: searchParams.customer_id ? Number(searchParams.customer_id) : undefined,
+        person_zone_id: searchParams.person_zone_id ? Number(searchParams.person_zone_id) : undefined,
+        date_from: searchParams.date_from ? format(searchParams.date_from, "yyyy-MM-dd") : undefined,
+        date_to: searchParams.date_to ? format(searchParams.date_to, "yyyy-MM-dd") : undefined,
+      });
+    }, 300);
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zoneValue, customerValue, forSingleCustomer, typeValue]);
+  }, [searchParams]);
 
   const selectedSales = useMemo(
     () => availableSales.filter((sale) => selectedSaleIds.includes(sale.id)),
@@ -525,20 +504,6 @@ export const DeliverySheetForm = ({
               placeholder="Fecha hasta"
               vertical
             />
-            {/* )} */}
-            {/* {showDateFilter && ( */}
-            <Button
-              type="button"
-              onClick={handleSearchSales}
-              disabled={!searchParams.payment_type || isLoadingAvailableSales}
-            >
-              {isLoadingAvailableSales ? (
-                <Loader className="animate-spin" />
-              ) : (
-                <Search />
-              )}
-              {isLoadingAvailableSales ? "Buscando..." : "Buscar ventas"}
-            </Button>
             {/* )} */}
           </div>
 

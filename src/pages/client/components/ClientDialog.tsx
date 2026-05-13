@@ -80,6 +80,7 @@ export function ClientDialog({
       successToast("Cliente creado exitosamente");
       onOpenChange(false);
       onClientCreated?.(response.data?.id, personName);
+      return response.data?.id;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error &&

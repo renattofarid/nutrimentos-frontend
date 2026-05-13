@@ -436,6 +436,7 @@ export const DeliverySheetRoute = "/planillas";
 export const DeliverySheetAddRoute = "/planillas/agregar";
 export const DeliverySheetEditRoute = "/planillas/actualizar/:id";
 export const DeliverySheetSettlementRoute = "/planillas/rendicion";
+export const DeliverySheetCancelRoute = "/planillas/anulacion";
 
 // ===== STATUS & TYPE OPTIONS =====
 

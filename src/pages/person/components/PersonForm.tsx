@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Form,
   FormControl,
@@ -70,6 +71,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
 import { createPersonZone, updatePersonZone } from "@/pages/client/lib/personzone.actions";
+import { CLIENT } from "@/pages/client/lib/client.interface";
 
 interface StagedAddress {
   zone_id: string;
@@ -235,6 +237,7 @@ export const PersonForm = ({
 }: PersonFormProps) => {
   const isEditing = !!initialData;
   const primaryZone = initialData?.person_zones?.find((pz) => pz.is_primary) ?? initialData?.person_zones?.[0];
+  const queryClient = useQueryClient();
 
   // Use client schema if isClient is true
   const schema = isClient
@@ -516,6 +519,7 @@ export const PersonForm = ({
           await assignClientToPriceList(parseInt(selectedPriceListId), {
             person_id: effectivePersonId.toString(),
           });
+          queryClient.invalidateQueries({ queryKey: [CLIENT.QUERY_KEY] });
         }
       }
 

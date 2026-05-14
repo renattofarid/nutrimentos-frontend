@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Form,
   FormControl,
@@ -59,6 +60,10 @@ import { useAllBusinessTypes } from "@/pages/businesstype/lib/businesstype.hook"
 import type { BusinessTypeResource } from "@/pages/businesstype/lib/businesstype.interface";
 import { usePriceList } from "@/pages/pricelist/lib/pricelist.hook";
 import type { PriceList } from "@/pages/pricelist/lib/pricelist.interface";
+import {
+  assignClientToPriceList,
+  getPersonAssignedPriceList,
+} from "@/pages/pricelist/lib/pricelist.actions";
 import { TYPE_DOCUMENT } from "../lib/person.constants";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -66,6 +71,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
 import { createPersonZone, updatePersonZone } from "@/pages/client/lib/personzone.actions";
+import { CLIENT } from "@/pages/client/lib/client.interface";
 
 interface StagedAddress {
   zone_id: string;
@@ -199,6 +205,7 @@ function NumberDocumentContent({
 interface PersonFormProps {
   initialData?: PersonResource | null;
   onSubmit: (data: PersonSchema | PersonSchemaClient) => Promise<number | void>;
+  onAfterSubmit?: () => void;
   isSubmitting?: boolean;
   onCancel?: () => void;
   roleId: number; // Role ID to assign automatically
@@ -215,6 +222,7 @@ interface PersonFormProps {
 export const PersonForm = ({
   initialData,
   onSubmit,
+  onAfterSubmit,
   isSubmitting = false,
   onCancel,
   roleId,
@@ -229,6 +237,7 @@ export const PersonForm = ({
 }: PersonFormProps) => {
   const isEditing = !!initialData;
   const primaryZone = initialData?.person_zones?.find((pz) => pz.is_primary) ?? initialData?.person_zones?.[0];
+  const queryClient = useQueryClient();
 
   // Use client schema if isClient is true
   const schema = isClient
@@ -356,6 +365,21 @@ export const PersonForm = ({
       form.setValue("zone_id", zones[0].id.toString(), { shouldValidate: false });
     }
   }, [zones, isEditing, form]);
+
+  // Load existing price list assignment when editing
+  useEffect(() => {
+    if (isEditing && showPriceList && initialData?.id) {
+      getPersonAssignedPriceList(initialData.id).then((response) => {
+        if (response?.data?.client_category_id) {
+          form.setValue(
+            "client_category_id",
+            response.data.client_category_id.toString(),
+            { shouldValidate: false },
+          );
+        }
+      });
+    }
+  }, [isEditing, showPriceList, initialData?.id]);
 
   // Reset document type when person type changes to JURIDICA manually
   // Only trigger if the change came from user changing type_person, not from document type change
@@ -489,11 +513,21 @@ export const PersonForm = ({
           }
           setStagedAddresses([]);
         }
+
+        const selectedPriceListId = (data as any).client_category_id;
+        if (showPriceList && selectedPriceListId) {
+          await assignClientToPriceList(parseInt(selectedPriceListId), {
+            person_id: effectivePersonId.toString(),
+          });
+          queryClient.invalidateQueries({ queryKey: [CLIENT.QUERY_KEY] });
+        }
       }
 
       if (!isEditing) {
         form.reset();
       }
+
+      onAfterSubmit?.();
     } catch (error) {
       console.error("Error submitting form:", error);
     }

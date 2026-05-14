@@ -431,6 +431,11 @@ export const PersonForm = ({
           fieldsSet.business_name = true;
           fieldsSet.address = true;
 
+          const currentCommercialName = form.getValues("commercial_name");
+          if (!currentCommercialName) {
+            updates.commercial_name = updates.business_name;
+          }
+
           Object.keys(updates).forEach((key) => {
             form.setValue(key as keyof PersonSchema, updates[key], {
               shouldValidate: true,

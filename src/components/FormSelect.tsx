@@ -86,7 +86,7 @@ export function FormSelect({
 
   const handleFocus = () => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    setSearch(displayLabelRef.current);
+    setSearch("");
     setOpen(true);
   };
 
@@ -273,7 +273,7 @@ export function FormSelect({
                           ) {
                             if (closeTimerRef.current)
                               clearTimeout(closeTimerRef.current);
-                            setSearch(displayLabelRef.current);
+                            setSearch("");
                             setOpen(true);
                           }
                         }}

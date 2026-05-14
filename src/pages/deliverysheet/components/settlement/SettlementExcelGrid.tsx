@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AlertCircle } from "lucide-react";
 import {
   Tooltip,
@@ -24,6 +25,73 @@ import type { SettlementFormSchema } from "./types";
 import type { SaleWithIndex } from "./types";
 
 // ── Cell components (use useWatch to avoid re-rendering the whole grid) ──────
+
+function PayAllHeader({
+  sales,
+  form,
+}: {
+  sales: SaleWithIndex[];
+  form: UseFormReturn<SettlementFormSchema, any, undefined>;
+}) {
+  const allValues = useWatch({ control: form.control, name: "sales" }) as SettlementFormSchema["sales"];
+
+  const allPaid = useMemo(() => {
+    if (!allValues?.length) return false;
+    const allFilled = allValues.every((sale, i) => {
+      const saleData = sales[i];
+      if (!saleData) return false;
+      const creditNotesTotal = saleData.sale.credit_notes_total_raw || 0;
+      const saldo = parseFormattedNumber(saleData.current_amount) - creditNotesTotal;
+      return Math.abs(parseFloat(sale.payment_amount || "0") - saldo) < 0.01;
+    });
+    if (allFilled) return true;
+    const anyFilled = allValues.some((s) => parseFloat(s.payment_amount || "0") > 0);
+    return anyFilled ? ("indeterminate" as const) : false;
+  }, [allValues, sales]);
+
+  const handlePayAll = (checked: boolean) => {
+    sales.forEach((saleData) => {
+      const creditNotesTotal = saleData.sale.credit_notes_total_raw || 0;
+      const saldo = parseFormattedNumber(saleData.current_amount) - creditNotesTotal;
+      form.setValue(
+        `sales.${saleData.index}.payment_amount`,
+        checked ? saldo.toFixed(2) : "0",
+        { shouldValidate: true },
+      );
+    });
+  };
+
+  return <Checkbox checked={allPaid} onCheckedChange={handlePayAll} />;
+}
+
+function CheckboxCell({
+  index,
+  saldo,
+  form,
+}: {
+  index: number;
+  saldo: number;
+  form: UseFormReturn<SettlementFormSchema, any, undefined>;
+}) {
+  const value =
+    (useWatch({ control: form.control, name: `sales.${index}.payment_amount` }) as string) || "0";
+  const isAutoFilled = Math.abs(parseFloat(value) - saldo) < 0.01;
+
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      <Checkbox
+        checked={isAutoFilled}
+        onCheckedChange={(checked) =>
+          form.setValue(
+            `sales.${index}.payment_amount`,
+            checked ? saldo.toFixed(2) : "0",
+            { shouldValidate: true },
+          )
+        }
+      />
+    </div>
+  );
+}
 
 function StatusCell({
   index,
@@ -215,6 +283,13 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
   const columns = useMemo<ExcelGridColumn<SettlementGridRow>[]>(
     () => [
       {
+        id: "checkbox",
+        header: <PayAllHeader sales={sales} form={form} />,
+        type: "readonly",
+        width: "40px",
+        render: (row) => <CheckboxCell index={row.index} saldo={row.saldo} form={form} />,
+      },
+      {
         id: "fecha",
         header: "FECHA",
         type: "readonly",
@@ -354,7 +429,7 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
         render: (row) => <ObservationsCell index={row.index} form={form} />,
       },
     ],
-    [form],
+    [form, sales],
   );
 
   return (

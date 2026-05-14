@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 export interface ExcelGridColumn<T> {
   id: string;
-  header: string;
+  header: React.ReactNode;
   type:
     | "product-search"
     | "product-code"

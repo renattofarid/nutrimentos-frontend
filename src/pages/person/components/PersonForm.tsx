@@ -637,6 +637,34 @@ export const PersonForm = ({
               placeholder="Referencia o indicaciones (opcional)"
             />
 
+            <FormInput
+              control={form.control}
+              name="phone"
+              label="Teléfono"
+              placeholder="987654321 (9 dígitos)"
+              maxLength={9}
+            />
+
+            {showPriceList && (
+              <FormSelect
+                control={form.control}
+                name="client_category_id"
+                label="Lista de Precio"
+                placeholder="Seleccione lista de precio"
+                disabled={isLoadingPriceLists}
+                options={
+                  isLoadingPriceLists
+                    ? []
+                    : (priceLists || [])
+                        .filter((pl: PriceList) => pl.is_active)
+                        .map((pl: PriceList) => ({
+                          value: pl.id.toString(),
+                          label: `${pl.name} (${pl.code})`,
+                        }))
+                }
+              />
+            )}
+
             {/* Extra fields toggle */}
             <div>
               <Button
@@ -707,25 +735,6 @@ export const PersonForm = ({
                             value: bt.id.toString(),
                             label: bt.name,
                           }))
-                    }
-                  />
-                )}
-                {showPriceList && (
-                  <FormSelect
-                    control={form.control}
-                    name="client_category_id"
-                    label="Lista de Precio"
-                    placeholder="Seleccione lista de precio"
-                    disabled={isLoadingPriceLists}
-                    options={
-                      isLoadingPriceLists
-                        ? []
-                        : (priceLists || [])
-                            .filter((pl: PriceList) => pl.is_active)
-                            .map((pl: PriceList) => ({
-                              value: pl.id.toString(),
-                              label: `${pl.name} (${pl.code})`,
-                            }))
                     }
                   />
                 )}

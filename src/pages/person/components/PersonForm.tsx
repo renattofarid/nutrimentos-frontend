@@ -431,6 +431,11 @@ export const PersonForm = ({
           fieldsSet.business_name = true;
           fieldsSet.address = true;
 
+          const currentCommercialName = form.getValues("commercial_name");
+          if (!currentCommercialName) {
+            updates.commercial_name = updates.business_name;
+          }
+
           Object.keys(updates).forEach((key) => {
             form.setValue(key as keyof PersonSchema, updates[key], {
               shouldValidate: true,
@@ -637,6 +642,34 @@ export const PersonForm = ({
               placeholder="Referencia o indicaciones (opcional)"
             />
 
+            <FormInput
+              control={form.control}
+              name="phone"
+              label="Teléfono"
+              placeholder="987654321 (9 dígitos)"
+              maxLength={9}
+            />
+
+            {showPriceList && (
+              <FormSelect
+                control={form.control}
+                name="client_category_id"
+                label="Lista de Precio"
+                placeholder="Seleccione lista de precio"
+                disabled={isLoadingPriceLists}
+                options={
+                  isLoadingPriceLists
+                    ? []
+                    : (priceLists || [])
+                        .filter((pl: PriceList) => pl.is_active)
+                        .map((pl: PriceList) => ({
+                          value: pl.id.toString(),
+                          label: `${pl.name} (${pl.code})`,
+                        }))
+                }
+              />
+            )}
+
             {/* Extra fields toggle */}
             <div>
               <Button
@@ -707,25 +740,6 @@ export const PersonForm = ({
                             value: bt.id.toString(),
                             label: bt.name,
                           }))
-                    }
-                  />
-                )}
-                {showPriceList && (
-                  <FormSelect
-                    control={form.control}
-                    name="client_category_id"
-                    label="Lista de Precio"
-                    placeholder="Seleccione lista de precio"
-                    disabled={isLoadingPriceLists}
-                    options={
-                      isLoadingPriceLists
-                        ? []
-                        : (priceLists || [])
-                            .filter((pl: PriceList) => pl.is_active)
-                            .map((pl: PriceList) => ({
-                              value: pl.id.toString(),
-                              label: `${pl.name} (${pl.code})`,
-                            }))
                     }
                   />
                 )}

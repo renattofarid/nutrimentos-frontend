@@ -103,9 +103,7 @@ const columns: ColumnDef<KardexItem>[] = [
         header: "Código",
         size: 100,
         cell: ({ row }) => (
-          <p className="font-bold">
-            {row.original.product.codigo}
-          </p>
+          <p className="font-bold">{row.original.product.codigo}</p>
         ),
       },
       {
@@ -253,6 +251,43 @@ const columns: ColumnDef<KardexItem>[] = [
           if (!kg || kg === 0)
             return <span className="text-muted-foreground text-sm">0</span>;
           return <span className="font-semibold text-slate-600">{kg} kg</span>;
+        },
+      },
+    ],
+  },
+  {
+    id: "costs",
+    header: "Costos",
+    columns: [
+      {
+        accessorKey: "unit_cost",
+        header: "Costo Unit.",
+        size: 120,
+        meta: { isGroupStart: true },
+        cell: ({ row }) => {
+          const cost = row.original.balance_unit_cost;
+          if (!cost || cost === 0)
+            return <span className="text-muted-foreground text-sm">0</span>;
+          return (
+            <span className="font-semibold text-slate-600">
+              S/. {cost.toFixed(2)}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "balance_total_cost",
+        header: "Costo Total",
+        size: 120,
+        cell: ({ row }) => {
+          const cost = row.original.balance_total_cost;
+          if (!cost || cost === 0)
+            return <span className="text-muted-foreground text-sm">0</span>;
+          return (
+            <span className="font-semibold text-slate-600">
+              S/. {cost.toFixed(2)}
+            </span>
+          );
         },
       },
     ],

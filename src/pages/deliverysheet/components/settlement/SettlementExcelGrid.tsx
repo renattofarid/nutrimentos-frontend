@@ -44,7 +44,7 @@ function StatusCell({
       }
     >
       <SelectTrigger
-        className={`w-full h-full rounded-none border-0 border-r-0 text-xs px-2 focus:ring-1 focus:ring-inset focus:ring-primary bg-transparent ${error ? "ring-1 ring-red-500" : ""}`}
+        className={`w-full h-fit rounded-none border-0 border-r-0 text-xs px-2 focus:ring-1 focus:ring-inset focus:ring-primary bg-transparent ${error ? "ring-1 ring-red-500" : ""}`}
       >
         <SelectValue placeholder="Seleccionar..." />
       </SelectTrigger>

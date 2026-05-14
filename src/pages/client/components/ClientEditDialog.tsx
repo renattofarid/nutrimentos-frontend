@@ -97,7 +97,6 @@ export function ClientEditDialog({
         SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "update"),
       );
       onOpenChange(false);
-      onClientUpdated?.();
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error &&
@@ -138,6 +137,7 @@ export function ClientEditDialog({
         <PersonForm
           initialData={personData}
           onSubmit={handleSubmit}
+          onAfterSubmit={onClientUpdated}
           isSubmitting={isSubmitting}
           onCancel={() => onOpenChange(false)}
           roleId={CLIENT_ROLE_ID}

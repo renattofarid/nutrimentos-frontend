@@ -203,6 +203,7 @@ function NumberDocumentContent({
 interface PersonFormProps {
   initialData?: PersonResource | null;
   onSubmit: (data: PersonSchema | PersonSchemaClient) => Promise<number | void>;
+  onAfterSubmit?: () => void;
   isSubmitting?: boolean;
   onCancel?: () => void;
   roleId: number; // Role ID to assign automatically
@@ -219,6 +220,7 @@ interface PersonFormProps {
 export const PersonForm = ({
   initialData,
   onSubmit,
+  onAfterSubmit,
   isSubmitting = false,
   onCancel,
   roleId,
@@ -520,6 +522,8 @@ export const PersonForm = ({
       if (!isEditing) {
         form.reset();
       }
+
+      onAfterSubmit?.();
     } catch (error) {
       console.error("Error submitting form:", error);
     }

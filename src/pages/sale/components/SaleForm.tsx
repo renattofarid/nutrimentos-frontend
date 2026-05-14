@@ -1059,8 +1059,8 @@ export const SaleForm = ({
       return;
     }
 
-    // Validar que clientes sin documento no superen S/. 700
-    if (!selectedCustomerDocument) {
+    // Validar que clientes sin documento no superen S/. 700 (excepto Nota de Venta)
+    if (!selectedCustomerDocument && selectedDocumentType !== "NOTA_VENTA") {
       const total = calculateDetailsTotal();
       if (total > 700) {
         warningToast(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,10 +28,7 @@ import {
 } from "../lib/deliverysheet.actions";
 import { useDeliverySheetStore } from "../lib/deliverysheet.store";
 import { useAllDeliverySheets } from "../lib/deliverysheet.hook";
-import type {
-  DeliverySheetById,
-  SheetSale,
-} from "../lib/deliverysheet.interface";
+import type { DeliverySheetById } from "../lib/deliverysheet.interface";
 import { DELIVERY_SHEET } from "../lib/deliverysheet.interface";
 import {
   settlementFormSchema,
@@ -492,13 +489,22 @@ export default function SettlementPage() {
 
               <div className="flex gap-6 text-xs font-mono border-t pt-2">
                 <span className="text-muted-foreground">
-                  Total: <span className="font-semibold text-foreground">S/. {totalOriginal.toFixed(2)}</span>
+                  Total:{" "}
+                  <span className="font-semibold text-foreground">
+                    S/. {totalOriginal.toFixed(2)}
+                  </span>
                 </span>
                 <span className="text-muted-foreground">
-                  Saldo pend.: <span className="font-semibold text-foreground">S/. {totalPendiente.toFixed(2)}</span>
+                  Saldo pend.:{" "}
+                  <span className="font-semibold text-foreground">
+                    S/. {totalPendiente.toFixed(2)}
+                  </span>
                 </span>
                 <span className="text-muted-foreground">
-                  Monto cobrado: <span className="font-bold text-primary">S/. {totalPagando.toFixed(2)}</span>
+                  Monto cobrado:{" "}
+                  <span className="font-bold text-primary">
+                    S/. {totalPagando.toFixed(2)}
+                  </span>
                 </span>
               </div>
             </form>

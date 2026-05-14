@@ -64,6 +64,7 @@ interface ExcelGridProps<T> {
   disabled?: boolean;
   skipColumnsOnEnter?: string[];
   minHeight?: string;
+  hideActionButtons?: boolean;
 }
 
 export function ExcelGrid<T extends Record<string, any>>({
@@ -81,6 +82,7 @@ export function ExcelGrid<T extends Record<string, any>>({
   disabled = false,
   skipColumnsOnEnter = [],
   minHeight = "250px",
+  hideActionButtons = false,
 }: ExcelGridProps<T>) {
   const [focusedCell, setFocusedCell] = React.useState<{
     row: number;
@@ -597,36 +599,38 @@ export function ExcelGrid<T extends Record<string, any>>({
       }}
     >
       {/* Botones de acción */}
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          onClick={onAddRow}
-          size="sm"
-          variant="outline"
-          className="gap-2 uppercase"
-          colorIcon="emerald"
-          disabled={disabled}
-        >
-          <Plus className="h-4 w-4" />
-          Agregar
-        </Button>
-        <Button
-          type="button"
-          onClick={() => {
-            if (focusedCell !== null && data.length > 0) {
-              onRemoveRow(focusedCell.row);
-              setFocusedCell(null);
-            }
-          }}
-          size="sm"
-          colorIcon="red"
-          variant="outline"
-          disabled={focusedCell === null || data.length === 0}
-        >
-          <X className="h-4 w-4" />
-          Quitar
-        </Button>
-      </div>
+      {!hideActionButtons && (
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            onClick={onAddRow}
+            size="sm"
+            variant="outline"
+            className="gap-2 uppercase"
+            colorIcon="emerald"
+            disabled={disabled}
+          >
+            <Plus className="h-4 w-4" />
+            Agregar
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              if (focusedCell !== null && data.length > 0) {
+                onRemoveRow(focusedCell.row);
+                setFocusedCell(null);
+              }
+            }}
+            size="sm"
+            colorIcon="red"
+            variant="outline"
+            disabled={focusedCell === null || data.length === 0}
+          >
+            <X className="h-4 w-4" />
+            Quitar
+          </Button>
+        </div>
+      )}
 
       {/* Tabla */}
       <div className="border rounded-md overflow-hidden w-fit" style={{ minHeight }}>

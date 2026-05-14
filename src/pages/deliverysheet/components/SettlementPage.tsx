@@ -18,11 +18,8 @@ import {
   Clock,
   XCircle,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { TableCell, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import PageWrapper from "@/components/PageWrapper";
-import { DataTable } from "@/components/DataTable";
 import { cn, parseFormattedNumber } from "@/lib/utils";
 import {
   findDeliverySheetById,
@@ -40,9 +37,7 @@ import {
   settlementFormSchema,
   type SettlementFormSchema,
   DeliverySheetInfo,
-  getSaleTableColumns,
-  SaleMobileCard,
-  SaleTableWithNotes,
+  SettlementExcelGrid,
 } from "./settlement";
 import { errorToast, successToast } from "@/lib/core.function";
 import { Separator } from "@/components/ui/separator";
@@ -148,8 +143,6 @@ export default function SettlementPage() {
     setDeliverySheet(null);
     setErrors([]);
   };
-  const [expandedNotes, setExpandedNotes] = useState<Set<number>>(new Set());
-
   const form = useForm<SettlementFormSchema>({
     resolver: zodResolver(settlementFormSchema) as any,
     defaultValues: {
@@ -303,18 +296,6 @@ export default function SettlementPage() {
     }
   };
 
-  const toggleNote = (index: number) => {
-    setExpandedNotes((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
-      return newSet;
-    });
-  };
-
   const salesWithIndex = useMemo(() => {
     if (!deliverySheet?.sheet_sales) return [];
     return deliverySheet.sheet_sales.map((sheetSale, index) => ({
@@ -356,73 +337,6 @@ export default function SettlementPage() {
       0,
     );
   }, [salesValues]);
-
-  const [allPaid, setAllPaid] = useState<boolean | "indeterminate">(false);
-
-  useEffect(() => {
-    if (!salesWithIndex.length || !salesValues?.length) {
-      setAllPaid(false);
-      return;
-    }
-    const isPaid = (sale: (typeof salesWithIndex)[number]) => {
-      const creditNotesTotal = sale.sale.credit_notes_total_raw || 0;
-      const pendingAmount = parseFormattedNumber(sale.current_amount) - creditNotesTotal;
-      return Math.abs(parseFloat(salesValues[sale.index]?.payment_amount || "0") - pendingAmount) < 0.01;
-    };
-    const every = salesWithIndex.every(isPaid);
-    const some = salesWithIndex.some(isPaid);
-    setAllPaid(every ? true : some ? "indeterminate" : false);
-  }, [salesValues, salesWithIndex]);
-
-  const handlePayAll = useCallback(
-    (checked: boolean) => {
-      setAllPaid(!!checked);
-      salesWithIndex.forEach((sale) => {
-        const creditNotesTotal = sale.sale.credit_notes_total_raw || 0;
-        const pendingAmount = parseFormattedNumber(sale.current_amount) - creditNotesTotal;
-        form.setValue(
-          `sales.${sale.index}.payment_amount`,
-          checked ? pendingAmount.toFixed(2) : "0",
-          { shouldValidate: true },
-        );
-      });
-    },
-    [salesWithIndex, form],
-  );
-
-  const columns = useMemo(
-    () => getSaleTableColumns(form as any, expandedNotes, toggleNote, allPaid, handlePayAll),
-    [form, expandedNotes, allPaid, handlePayAll],
-  );
-
-  const mobileCardRender = (sale: SheetSale & { index: number }) => (
-    <SaleMobileCard sale={sale} form={form as any} />
-  );
-
-  const totalsFooter = deliverySheet ? (
-    <TableRow className="font-semibold text-xs">
-      <TableCell colSpan={3} className="text-right text-muted-foreground">
-        TOTALES
-      </TableCell>
-      <TableCell>
-        <Badge variant="outline" className="font-mono">
-          S/. {totalOriginal.toFixed(2)}
-        </Badge>
-      </TableCell>
-      <TableCell>
-        <Badge className="font-mono text-xs font-semibold">
-          S/. {totalPendiente.toFixed(2)}
-        </Badge>
-      </TableCell>
-      <TableCell colSpan={4} />
-      <TableCell>
-        <span className="font-mono text-primary font-bold">
-          S/. {totalPagando.toFixed(2)}
-        </span>
-      </TableCell>
-      <TableCell />
-    </TableRow>
-  ) : null;
 
   return (
     <PageWrapper>
@@ -570,21 +484,23 @@ export default function SettlementPage() {
                 deliverySheet={deliverySheet}
               />
 
-              <SaleTableWithNotes
+              <SettlementExcelGrid
                 sales={salesWithIndex}
                 form={form as any}
-                expandedNotes={expandedNotes}
-              >
-                <DataTable
-                  columns={columns}
-                  data={salesWithIndex}
-                  isLoading={isLoading}
-                  mobileCardRender={mobileCardRender}
-                  variant="outline"
-                  isVisibleColumnFilter={false}
-                  footer={totalsFooter}
-                />
-              </SaleTableWithNotes>
+                isDisabled={isAlreadyPaid}
+              />
+
+              <div className="flex gap-6 text-xs font-mono border-t pt-2">
+                <span className="text-muted-foreground">
+                  Total: <span className="font-semibold text-foreground">S/. {totalOriginal.toFixed(2)}</span>
+                </span>
+                <span className="text-muted-foreground">
+                  Saldo pend.: <span className="font-semibold text-foreground">S/. {totalPendiente.toFixed(2)}</span>
+                </span>
+                <span className="text-muted-foreground">
+                  Monto cobrado: <span className="font-bold text-primary">S/. {totalPagando.toFixed(2)}</span>
+                </span>
+              </div>
             </form>
           </Form>
         )}

@@ -50,7 +50,7 @@ const columns: ColumnDef<KardexItem>[] = [
         header: "Fecha",
         size: 110,
         cell: ({ row }) => (
-          <span className="text-sm font-mono">
+          <span className="text-sm">
             {row.original.movement_date_formatted}
           </span>
         ),
@@ -68,7 +68,7 @@ const columns: ColumnDef<KardexItem>[] = [
         header: "Nro. Documento",
         size: 150,
         cell: ({ row }) => (
-          <span className="font-mono text-sm font-medium">
+          <span className="text-sm font-semibold">
             {row.original.document_number}
           </span>
         ),
@@ -99,16 +99,21 @@ const columns: ColumnDef<KardexItem>[] = [
         },
       },
       {
+        accessorKey: "product_codigo",
+        header: "Código",
+        size: 100,
+        cell: ({ row }) => (
+          <p className="font-bold">
+            {row.original.product.codigo}
+          </p>
+        ),
+      },
+      {
         accessorKey: "product_name",
         header: "Producto",
         size: 220,
         cell: ({ row }) => (
-          <div>
-            <p className="font-medium text-sm">{row.original.product.name}</p>
-            <p className="text-xs text-muted-foreground font-mono">
-              CÓDIGO: {row.original.product.codigo}
-            </p>
-          </div>
+          <p className="font-medium text-sm">{row.original.product.name}</p>
         ),
       },
     ],
@@ -121,11 +126,10 @@ const columns: ColumnDef<KardexItem>[] = [
         accessorKey: "quantity_in",
         header: "Und.",
         size: 100,
-        meta: { isGroupStart: true },
         cell: ({ row }) => {
           const qty = row.original.quantity_in;
           if (!qty || qty === 0)
-            return <span className="text-muted-foreground text-sm">—</span>;
+            return <span className="text-muted-foreground text-sm">0</span>;
           return (
             <span className="font-semibold text-green-600">
               +{qty} {row.original.product.unit.name}
@@ -137,10 +141,11 @@ const columns: ColumnDef<KardexItem>[] = [
         accessorKey: "quantity_sacks_in",
         header: "Sacos",
         size: 100,
+        meta: { isGroupStart: true },
         cell: ({ row }) => {
           const sacos = row.original.quantity_sacks_in;
           if (!sacos || sacos === 0)
-            return <span className="text-muted-foreground text-sm">—</span>;
+            return <span className="text-muted-foreground text-sm">0</span>;
           return (
             <span className="font-semibold text-green-600">+{sacos} sac</span>
           );
@@ -153,7 +158,7 @@ const columns: ColumnDef<KardexItem>[] = [
         cell: ({ row }) => {
           const kg = row.original.quantity_kg_in;
           if (!kg || kg === 0)
-            return <span className="text-muted-foreground text-sm">—</span>;
+            return <span className="text-muted-foreground text-sm">0</span>;
           return <span className="font-semibold text-green-600">+{kg} kg</span>;
         },
       },
@@ -167,11 +172,10 @@ const columns: ColumnDef<KardexItem>[] = [
         accessorKey: "quantity_out",
         header: "Und.",
         size: 100,
-        meta: { isGroupStart: true },
         cell: ({ row }) => {
           const qty = row.original.quantity_out;
           if (!qty || qty === 0)
-            return <span className="text-muted-foreground text-sm">—</span>;
+            return <span className="text-muted-foreground text-sm">0</span>;
           return (
             <span className="font-semibold text-red-600">
               -{qty} {row.original.product.unit.name}
@@ -183,10 +187,11 @@ const columns: ColumnDef<KardexItem>[] = [
         accessorKey: "quantity_sacks_out",
         header: "Sacos",
         size: 100,
+        meta: { isGroupStart: true },
         cell: ({ row }) => {
           const sacos = row.original.quantity_sacks_out;
           if (!sacos || sacos === 0)
-            return <span className="text-muted-foreground text-sm">—</span>;
+            return <span className="text-muted-foreground text-sm">0</span>;
           return (
             <span className="font-semibold text-red-600">-{sacos} sac</span>
           );
@@ -199,7 +204,7 @@ const columns: ColumnDef<KardexItem>[] = [
         cell: ({ row }) => {
           const kg = row.original.quantity_kg_out;
           if (!kg || kg === 0)
-            return <span className="text-muted-foreground text-sm">—</span>;
+            return <span className="text-muted-foreground text-sm">0</span>;
           return <span className="font-semibold text-red-600">-{kg} kg</span>;
         },
       },
@@ -213,32 +218,42 @@ const columns: ColumnDef<KardexItem>[] = [
         accessorKey: "balance_quantity",
         header: "Und.",
         size: 100,
-        meta: { isGroupStart: true },
-        cell: ({ row }) => (
-          <span className="font-bold text-base">
-            {row.original.balance_quantity} {row.original.product.unit.name}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "balance_kg",
-        header: "Kilos",
-        size: 110,
-        cell: ({ row }) => (
-          <span className="font-bold text-base">
-            {row.original.balance_kg} kg
-          </span>
-        ),
+        cell: ({ row }) => {
+          const qty = row.original.quantity_out;
+          if (!qty || qty === 0)
+            return <span className="text-muted-foreground text-sm">0</span>;
+          return (
+            <span className="font-semibold text-slate-600">
+              {qty} {row.original.product.unit.name}{" "}
+              {row.original.product.unit.name}
+            </span>
+          );
+        },
       },
       {
         accessorKey: "balance_sacks",
         header: "Sacos",
-        size: 110,
-        cell: ({ row }) => (
-          <span className="font-bold text-base">
-            {row.original.balance_sacks} sac
-          </span>
-        ),
+        size: 100,
+        meta: { isGroupStart: true },
+        cell: ({ row }) => {
+          const sacos = row.original.balance_sacks;
+          if (!sacos || sacos === 0)
+            return <span className="text-muted-foreground text-sm">0</span>;
+          return (
+            <span className="font-semibold text-slate-600">{sacos} sac</span>
+          );
+        },
+      },
+      {
+        accessorKey: "balance_kg",
+        header: "Kilos",
+        size: 100,
+        cell: ({ row }) => {
+          const kg = row.original.balance_kg;
+          if (!kg || kg === 0)
+            return <span className="text-muted-foreground text-sm">0</span>;
+          return <span className="font-semibold text-slate-600">{kg} kg</span>;
+        },
       },
     ],
   },
@@ -344,7 +359,6 @@ export default function KardexReportPage() {
 
   return (
     <PageWrapper size="3xl">
-
       <Form {...form}>
         <form className="space-y-6">
           <GroupFormSection
@@ -366,7 +380,9 @@ export default function KardexReportPage() {
             }
           >
             <div className="flex flex-col gap-0.5">
-              <Label className="text-sm font-bold uppercase leading-none">Código</Label>
+              <Label className="text-sm font-bold uppercase leading-none">
+                Código
+              </Label>
               <div className="relative">
                 <Input
                   value={productCodeInput}
@@ -461,6 +477,9 @@ export default function KardexReportPage() {
             isLoading={isLoading}
             initialColumnVisibility={{
               document_type: false,
+              quantity_in: false,
+              quantity_out: false,
+              balance_quantity: false,
             }}
           />
         </form>

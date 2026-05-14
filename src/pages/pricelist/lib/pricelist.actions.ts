@@ -88,3 +88,15 @@ export async function getPrice(
 ): Promise<GetPriceResponse> {
   return (await api.post<GetPriceResponse>(`${ENDPOINT}/get-price`, data)).data;
 }
+
+// Obtener la lista de precio asignada a un cliente (devuelve null si no tiene)
+export async function getPersonAssignedPriceList(
+  person_id: number
+): Promise<GetPriceResponse | null> {
+  try {
+    const response = await api.post<GetPriceResponse>(`${ENDPOINT}/get-price`, { person_id });
+    return response.data;
+  } catch {
+    return null;
+  }
+}

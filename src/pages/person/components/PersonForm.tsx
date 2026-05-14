@@ -59,6 +59,10 @@ import { useAllBusinessTypes } from "@/pages/businesstype/lib/businesstype.hook"
 import type { BusinessTypeResource } from "@/pages/businesstype/lib/businesstype.interface";
 import { usePriceList } from "@/pages/pricelist/lib/pricelist.hook";
 import type { PriceList } from "@/pages/pricelist/lib/pricelist.interface";
+import {
+  assignClientToPriceList,
+  getPersonAssignedPriceList,
+} from "@/pages/pricelist/lib/pricelist.actions";
 import { TYPE_DOCUMENT } from "../lib/person.constants";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -357,6 +361,21 @@ export const PersonForm = ({
     }
   }, [zones, isEditing, form]);
 
+  // Load existing price list assignment when editing
+  useEffect(() => {
+    if (isEditing && showPriceList && initialData?.id) {
+      getPersonAssignedPriceList(initialData.id).then((response) => {
+        if (response?.data?.client_category_id) {
+          form.setValue(
+            "client_category_id",
+            response.data.client_category_id.toString(),
+            { shouldValidate: false },
+          );
+        }
+      });
+    }
+  }, [isEditing, showPriceList, initialData?.id]);
+
   // Reset document type when person type changes to JURIDICA manually
   // Only trigger if the change came from user changing type_person, not from document type change
   useEffect(() => {
@@ -488,6 +507,13 @@ export const PersonForm = ({
             });
           }
           setStagedAddresses([]);
+        }
+
+        const selectedPriceListId = (data as any).client_category_id;
+        if (showPriceList && selectedPriceListId) {
+          await assignClientToPriceList(parseInt(selectedPriceListId), {
+            person_id: effectivePersonId.toString(),
+          });
         }
       }
 

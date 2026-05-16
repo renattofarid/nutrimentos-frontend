@@ -76,7 +76,8 @@ export default function DeliverySheetAddPage() {
     promiseToast(preview, {
       loading: "Generando vista previa...",
       success: "Vista previa generada",
-      error: "Error al generar la vista previa",
+      error: (error: any) =>
+        error?.response?.data?.message ?? error?.message ?? "Error al generar la vista previa",
     });
   };
 

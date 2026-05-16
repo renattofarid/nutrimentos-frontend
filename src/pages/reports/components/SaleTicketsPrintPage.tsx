@@ -145,7 +145,8 @@ export default function SaleTicketsPrintPage() {
     promiseToast(downloadPromise, {
       loading: "Generando tickets...",
       success: `${selectedIds.length} ticket(s) generado(s) correctamente`,
-      error: "Error al generar tickets",
+      error: (error: any) =>
+        error?.response?.data?.message ?? error?.message ?? "Error al generar tickets",
     });
 
     downloadPromise.finally(() => setIsPrinting(false));

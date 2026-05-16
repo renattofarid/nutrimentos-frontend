@@ -243,7 +243,8 @@ export default function PurchasePage() {
     promiseToast(downloadPromise, {
       loading: "Generando PDF...",
       success: "PDF generado correctamente",
-      error: "Error al generar el PDF",
+      error: (error: any) =>
+        error?.response?.data?.message ?? error?.message ?? "Error al generar el PDF",
     });
   };
 

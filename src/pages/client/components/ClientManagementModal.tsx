@@ -210,7 +210,8 @@ export function ClientManagementModal({
       {
         loading: "Actualizando zona primaria...",
         success: "Zona primaria actualizada",
-        error: "No se pudo actualizar la zona primaria",
+        error: (error: any) =>
+          error?.response?.data?.message ?? error?.message ?? "No se pudo actualizar la zona primaria",
       },
     );
   }, []);

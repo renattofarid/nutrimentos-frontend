@@ -206,11 +206,21 @@ export const DeliverySheetForm = ({
       setHasSearched(true);
       onSearchSales({
         payment_type: searchParams.payment_type,
-        zone_id: searchParams.zone_id ? Number(searchParams.zone_id) : undefined,
-        customer_id: searchParams.customer_id ? Number(searchParams.customer_id) : undefined,
-        person_zone_id: searchParams.person_zone_id ? Number(searchParams.person_zone_id) : undefined,
-        date_from: searchParams.date_from ? format(searchParams.date_from, "yyyy-MM-dd") : undefined,
-        date_to: searchParams.date_to ? format(searchParams.date_to, "yyyy-MM-dd") : undefined,
+        zone_id: searchParams.zone_id
+          ? Number(searchParams.zone_id)
+          : undefined,
+        customer_id: searchParams.customer_id
+          ? Number(searchParams.customer_id)
+          : undefined,
+        person_zone_id: searchParams.person_zone_id
+          ? Number(searchParams.person_zone_id)
+          : undefined,
+        date_from: searchParams.date_from
+          ? format(searchParams.date_from, "yyyy-MM-dd")
+          : undefined,
+        date_to: searchParams.date_to
+          ? format(searchParams.date_to, "yyyy-MM-dd")
+          : undefined,
       });
     }, 300);
     return () => {
@@ -333,15 +343,6 @@ export const DeliverySheetForm = ({
         },
       },
       {
-        id: "monto_pendiente",
-        header: "Monto Pendiente",
-        cell: ({ row }) => (
-          <span className="font-bold">
-            S/. {parseFormattedNumber(row.original.current_amount).toFixed(2)}
-          </span>
-        ),
-      },
-      {
         id: "documento",
         header: "Documento",
         cell: ({ row }) => (
@@ -353,6 +354,15 @@ export const DeliverySheetForm = ({
               {row.original.serie}-{row.original.numero}
             </span>
           </div>
+        ),
+      },
+      {
+        id: "monto_pendiente",
+        header: "Monto Pendiente",
+        cell: ({ row }) => (
+          <span className="font-bold">
+            S/. {parseFormattedNumber(row.original.current_amount).toFixed(2)}
+          </span>
         ),
       },
     ],
@@ -577,6 +587,9 @@ export const DeliverySheetForm = ({
               columns={saleColumns}
               data={availableSales}
               isVisibleColumnFilter={false}
+              initialColumnVisibility={{
+                nota_credito: false,
+              }}
               onRowClick={(sale) => handleToggleSale(sale.id)}
               mobileCardRender={(sale) => {
                 const hasCreditNotes = !!sale.credit_notes?.length;

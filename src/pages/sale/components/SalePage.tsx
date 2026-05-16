@@ -255,7 +255,8 @@ export default function SalePage() {
       {
         loading: "Anulando venta...",
         success: "Venta anulada correctamente",
-        error: "Error al anular la venta",
+        error: (error: any) =>
+          error?.response?.data?.message ?? error?.message ?? "Error al anular la venta",
       },
     );
   };

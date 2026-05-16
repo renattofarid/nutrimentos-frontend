@@ -111,7 +111,8 @@ export default function CreditNotePage() {
     promiseToast(download, {
       loading: "Generando PDF...",
       success: "PDF generado exitosamente",
-      error: "Error al generar el PDF",
+      error: (error: any) =>
+        error?.response?.data?.message ?? error?.message ?? "Error al generar el PDF",
     });
   };
 

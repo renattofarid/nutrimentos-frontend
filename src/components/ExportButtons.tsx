@@ -52,7 +52,8 @@ export default function ExportButtons({
       promiseToast(Promise.resolve(onExcelDownload()), {
         loading: "Descargando Excel...",
         success: "Excel descargado exitosamente",
-        error: "Error al descargar el archivo Excel",
+        error: (error: any) =>
+          error?.response?.data?.message ?? error?.message ?? "Error al descargar el archivo Excel",
       });
       return;
     }
@@ -75,7 +76,8 @@ export default function ExportButtons({
     promiseToast(download, {
       loading: "Descargando Excel...",
       success: "Excel descargado exitosamente",
-      error: "Error al descargar el archivo Excel",
+      error: (error: any) =>
+        error?.response?.data?.message ?? error?.message ?? "Error al descargar el archivo Excel",
     });
   };
 
@@ -84,7 +86,8 @@ export default function ExportButtons({
       promiseToast(Promise.resolve(onPdfDownload()), {
         loading: "Descargando PDF...",
         success: "PDF descargado exitosamente",
-        error: "Error al descargar el archivo PDF",
+        error: (error: any) =>
+          error?.response?.data?.message ?? error?.message ?? "Error al descargar el archivo PDF",
       });
       return;
     }
@@ -107,7 +110,8 @@ export default function ExportButtons({
     promiseToast(download, {
       loading: "Descargando PDF...",
       success: "PDF descargado exitosamente",
-      error: "Error al descargar el archivo PDF",
+      error: (error: any) =>
+        error?.response?.data?.message ?? error?.message ?? "Error al descargar el archivo PDF",
     });
   };
 

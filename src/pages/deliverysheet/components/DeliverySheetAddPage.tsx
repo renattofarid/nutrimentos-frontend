@@ -42,18 +42,16 @@ export default function DeliverySheetAddPage() {
   };
 
   const handleSubmit = (data: DeliverySheetSchema) => {
-    const promise = createDeliverySheet(data)
-      .then((response: DeliverySheetCreateResponse) => {
+    const promise = createDeliverySheet(data).then(
+      (response: DeliverySheetCreateResponse) => {
         handleExportById(response.data.id);
-      })
-      .catch((error) => {
-        console.error("Error creating delivery sheet:", error);
-        throw error;
-      });
+      },
+    );
     promiseToast(promise, {
       loading: "Guardando planilla...",
       success: "Planilla creada. PDF abierto correctamente",
-      error: "Error al crear la planilla",
+      error: (error: any) =>
+        error?.response?.data?.message ?? error?.message ?? "Error al crear la planilla",
     });
   };
 

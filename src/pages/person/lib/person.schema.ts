@@ -225,15 +225,6 @@ export const createPersonSchema = (
             path: ["business_name"],
           });
         }
-        if (!data.commercial_name || data.commercial_name.trim() === "") {
-          ctx.addIssue({
-            code: "invalid_type",
-            expected: "string",
-            message:
-              "El nombre comercial es obligatorio para personas jurídicas",
-            path: ["commercial_name"],
-          });
-        }
       }
       if (data.type_person === "NATURAL") {
         if (!data.names || data.names.trim() === "") {

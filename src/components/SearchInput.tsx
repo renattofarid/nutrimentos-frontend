@@ -21,10 +21,6 @@ export default function SearchInput({
     return () => clearTimeout(timer);
   }, [inputValue]);
 
-  useEffect(() => {
-    setInputValue(value);
-  }, [value]);
-
   return (
     <Input
       className="w-full md:w-64 h-8"

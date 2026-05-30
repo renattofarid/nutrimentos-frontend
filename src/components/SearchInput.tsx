@@ -11,21 +11,15 @@ export default function SearchInput({
   placeholder?: string;
 }) {
   const [inputValue, setInputValue] = useState(value);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      onChange(inputValue);
-    }, 10);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [inputValue, onChange]);
-
-  useEffect(() => {
-    setInputValue(value);
-  }, [value]);
+    const timer = setTimeout(() => {
+      onChangeRef.current(inputValue);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [inputValue]);
 
   return (
     <Input

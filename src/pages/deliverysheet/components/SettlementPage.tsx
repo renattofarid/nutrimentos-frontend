@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,7 +27,7 @@ import {
   exportDeliverySheetById,
 } from "../lib/deliverysheet.actions";
 import { useDeliverySheetStore } from "../lib/deliverysheet.store";
-import { useAllDeliverySheets } from "../lib/deliverysheet.hook";
+import { getDeliverySheets } from "../lib/deliverysheet.actions";
 import type { DeliverySheetById } from "../lib/deliverysheet.interface";
 import { DELIVERY_SHEET } from "../lib/deliverysheet.interface";
 import {
@@ -79,7 +79,6 @@ function resolvePaymentStatus(sheet: DeliverySheetById): PaymentStatus {
 
 export default function SettlementPage() {
   const navigate = useNavigate();
-  const [selectedId, setSelectedId] = useState<string>("");
   const [sheetNumberInput, setSheetNumberInput] = useState<string>("");
   const [searchError, setSearchError] = useState<string>("");
   const [deliverySheet, setDeliverySheet] = useState<DeliverySheetById | null>(
@@ -118,27 +117,67 @@ export default function SettlementPage() {
     return responseData?.message || responseData?.error || fallback;
   };
 
-  const { data: sheetsData } = useAllDeliverySheets();
-
-  const handleSearchSheet = () => {
+  const handleSearchSheet = async () => {
     setSearchError("");
     const trimmed = sheetNumberInput.trim();
     if (!trimmed) {
       setSearchError("Ingrese un número de planilla");
       return;
     }
-    const match = (sheetsData ?? []).find(
-      (item) => item.sheet_number.toLowerCase() === trimmed.toLowerCase(),
-    );
-    if (!match) {
-      setSearchError("No se encontró una planilla con ese número");
-      setSelectedId("");
-      setDeliverySheet(null);
-      return;
-    }
-    setSelectedId(match.id.toString());
+
+    setIsLoading(true);
     setDeliverySheet(null);
     setErrors([]);
+
+    try {
+      const list = await getDeliverySheets({ search: trimmed, per_page: 5 });
+      const match = list.data.find(
+        (item) => item.sheet_number.toLowerCase() === trimmed.toLowerCase(),
+      );
+      if (!match) {
+        setSearchError("No se encontró una planilla con ese número");
+        return;
+      }
+
+      const response = await findDeliverySheetById(match.id);
+      if (!response.data) {
+        setErrors(["No se encontró la planilla de reparto"]);
+        return;
+      }
+
+      setDeliverySheet(response.data);
+
+      if (response.data.sheet_sales && response.data.sheet_sales.length > 0) {
+        form.reset({
+          sales: response.data.sheet_sales.map((sheetSale) => ({
+            sale_id: sheetSale.sale_id,
+            delivery_status:
+              sheetSale.delivery_status === "PENDIENTE"
+                ? "ENTREGADO"
+                : sheetSale.delivery_status,
+            delivery_notes: sheetSale.delivery_notes || "",
+            payment_amount: Math.max(
+              0,
+              parseFormattedNumber(sheetSale.current_amount) -
+                parseFormattedNumber(sheetSale.collected_amount),
+            ).toFixed(2),
+          })),
+          payment_date: new Date().toISOString().split("T")[0],
+          observations: "",
+        });
+      } else {
+        setErrors(["La planilla no tiene ventas asociadas"]);
+      }
+    } catch (error: any) {
+      console.error("Error al cargar la planilla:", error);
+      setErrors([
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Error al cargar la planilla de reparto",
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
   const form = useForm<SettlementFormSchema>({
     resolver: zodResolver(settlementFormSchema) as any,
@@ -148,62 +187,6 @@ export default function SettlementPage() {
       observations: "",
     },
   });
-
-  useEffect(() => {
-    if (!selectedId) {
-      setDeliverySheet(null);
-      setErrors([]);
-      return;
-    }
-
-    const loadDeliverySheet = async () => {
-      try {
-        setIsLoading(true);
-        setErrors([]);
-        const response = await findDeliverySheetById(Number(selectedId));
-
-        if (!response.data) {
-          setErrors(["No se encontró la planilla de reparto"]);
-          return;
-        }
-
-        setDeliverySheet(response.data);
-
-        if (response.data.sheet_sales && response.data.sheet_sales.length > 0) {
-          form.reset({
-            sales: response.data.sheet_sales.map((sheetSale) => ({
-              sale_id: sheetSale.sale_id,
-              delivery_status:
-                sheetSale.delivery_status === "PENDIENTE"
-                  ? "ENTREGADO"
-                  : sheetSale.delivery_status,
-              delivery_notes: sheetSale.delivery_notes || "",
-              payment_amount: (
-                parseFormattedNumber(sheetSale.current_amount) -
-                (sheetSale.sale.credit_notes_total_raw || 0)
-              ).toFixed(2),
-            })),
-            payment_date: new Date().toISOString().split("T")[0],
-            observations: "",
-          });
-        } else {
-          setErrors(["La planilla no tiene ventas asociadas"]);
-        }
-      } catch (error: any) {
-        console.error("Error al cargar la planilla:", error);
-        setErrors([
-          error.response?.data?.message ||
-            error.response?.data?.error ||
-            "Error al cargar la planilla de reparto",
-        ]);
-        errorToast("Error al cargar la planilla");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadDeliverySheet();
-  }, [selectedId]);
 
   const handleSubmit = async (data: SettlementFormSchema) => {
     if (!deliverySheet) {
@@ -450,13 +433,13 @@ export default function SettlementPage() {
             })()}
         </div>
 
-        {selectedId && isLoading && (
+        {isLoading && (
           <div className="flex items-center justify-center h-48">
             <Loader className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
 
-        {selectedId && !isLoading && errors.length > 0 && (
+        {!isLoading && errors.length > 0 && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -469,7 +452,7 @@ export default function SettlementPage() {
           </Alert>
         )}
 
-        {selectedId && !isLoading && deliverySheet && errors.length === 0 && (
+        {!isLoading && deliverySheet && errors.length === 0 && (
           <Form {...form}>
             <form
               id="settlement-form"

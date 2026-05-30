@@ -129,6 +129,7 @@ export const usePersonStore = create<PersonStore>((set) => ({
     set({ isSubmitting: true, error: null });
     try {
       await createPerson(data);
+      set({ allPersons: null });
     } catch (err) {
       set({ error: "Error al crear la persona" });
       throw err;
@@ -141,6 +142,7 @@ export const usePersonStore = create<PersonStore>((set) => ({
     set({ isSubmitting: true, error: null });
     try {
       await updatePerson(id, data);
+      set({ allPersons: null });
     } catch (err) {
       set({ error: "Error al actualizar la persona" });
       throw err;
@@ -153,6 +155,7 @@ export const usePersonStore = create<PersonStore>((set) => ({
     set({ error: null });
     try {
       await deletePerson(id, role_id);
+      set({ allPersons: null });
     } catch (err) {
       set({ error: "Error al eliminar la persona" });
       throw err;

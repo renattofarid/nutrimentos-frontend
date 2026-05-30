@@ -40,8 +40,7 @@ function PayAllHeader({
     const allFilled = allValues.every((sale, i) => {
       const saleData = sales[i];
       if (!saleData) return false;
-      const creditNotesTotal = saleData.sale.credit_notes_total_raw || 0;
-      const saldo = parseFormattedNumber(saleData.current_amount) - creditNotesTotal;
+      const saldo = Math.max(0, parseFormattedNumber(saleData.current_amount) - parseFormattedNumber(saleData.collected_amount));
       return Math.abs(parseFloat(sale.payment_amount || "0") - saldo) < 0.01;
     });
     if (allFilled) return true;
@@ -51,8 +50,7 @@ function PayAllHeader({
 
   const handlePayAll = (checked: boolean) => {
     sales.forEach((saleData) => {
-      const creditNotesTotal = saleData.sale.credit_notes_total_raw || 0;
-      const saldo = parseFormattedNumber(saleData.current_amount) - creditNotesTotal;
+      const saldo = Math.max(0, parseFormattedNumber(saleData.current_amount) - parseFormattedNumber(saleData.collected_amount));
       form.setValue(
         `sales.${saleData.index}.payment_amount`,
         checked ? saldo.toFixed(2) : "0",
@@ -245,9 +243,9 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
   const gridData = useMemo<SettlementGridRow[]>(
     () =>
       sales.map((sheetSale) => {
-        const creditNotesTotal = sheetSale.sale.credit_notes_total_raw || 0;
         const currentAmount = parseFormattedNumber(sheetSale.current_amount);
-        const saldo = currentAmount - creditNotesTotal;
+        const collectedAmount = parseFormattedNumber(sheetSale.collected_amount);
+        const saldo = Math.max(0, currentAmount - collectedAmount);
 
         const issueDate = sheetSale.sale.issue_date || "";
         const fecha = issueDate
@@ -270,7 +268,7 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
           documento: sheetSale.sale.full_document_number,
           total: parseFormattedNumber(sheetSale.original_amount),
           saldo,
-          nota_credito_raw: creditNotesTotal,
+          nota_credito_raw: sheetSale.sale.credit_notes_total_raw || 0,
           has_credit_notes: sheetSale.sale.credit_notes.length > 0,
           credit_notes: sheetSale.sale.credit_notes,
           obs_nc: obsNc,

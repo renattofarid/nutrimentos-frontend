@@ -15,7 +15,6 @@ import { PRODUCT, type ProductResource } from "../lib/product.interface";
 import { useProductStore } from "../lib/product.store";
 import { useAllUnits } from "@/pages/unit/lib/unit.hook";
 import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
-import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import PageWrapper from "@/components/PageWrapper";
@@ -31,7 +30,6 @@ export default function ProductEditPage() {
   const { data: companies } = useAllCompanies();
   const { data: units } = useAllUnits();
   const { data: productTypes } = useAllProductTypes();
-  const { data: suppliers } = useAllPersons();
 
   useEffect(() => {
     const loadProductData = async () => {
@@ -101,7 +99,6 @@ export default function ProductEditPage() {
     isLoadingProduct ||
     !units ||
     !productTypes ||
-    !suppliers ||
     !companies ||
     !product;
 
@@ -118,7 +115,6 @@ export default function ProductEditPage() {
           companies={companies}
           units={units}
           productTypes={productTypes}
-          suppliers={suppliers}
           onCancel={() => navigate(ROUTE)}
         />
       )}

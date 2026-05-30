@@ -455,11 +455,6 @@ export const PersonForm = ({
           fieldsSet.business_name = true;
           fieldsSet.address = true;
 
-          const currentCommercialName = form.getValues("commercial_name");
-          if (!currentCommercialName) {
-            updates.commercial_name = updates.business_name;
-          }
-
           Object.keys(updates).forEach((key) => {
             form.setValue(key as keyof PersonSchema, updates[key], {
               shouldValidate: true,
@@ -479,6 +474,7 @@ export const PersonForm = ({
   const handleSubmit = async (data: FormSchema) => {
     try {
       const submitData = isEditing ? { ...data, role_id: "" } : data;
+      (submitData as any).commercial_name = (submitData as any).business_name || "";
 
       const returnedId = await onSubmit(submitData);
       const effectivePersonId = returnedId ?? (initialData?.id as number | undefined);
@@ -641,12 +637,6 @@ export const PersonForm = ({
                     className={fieldsFromSearch.business_name ? "bg-blue-50 border-blue-200" : ""}
                   />
                 )}
-                <FormInput
-                  control={form.control}
-                  name="commercial_name"
-                  label="Nombre Comercial"
-                  placeholder="Ingrese el nombre comercial"
-                />
               </>
             )}
 
@@ -1076,13 +1066,6 @@ export const PersonForm = ({
                       className={fieldsFromSearch.business_name ? "bg-blue-50 border-blue-200" : ""}
                     />
                   )}
-
-                  <FormInput
-                    control={form.control}
-                    name="commercial_name"
-                    label="Nombre Comercial"
-                    placeholder="Ingrese el nombre comercial"
-                  />
                 </>
               )}
             </GroupFormSection>

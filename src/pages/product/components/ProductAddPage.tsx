@@ -15,10 +15,8 @@ import { PRODUCT } from "../lib/product.interface";
 import { useProductStore } from "../lib/product.store";
 import { useAllUnits } from "@/pages/unit/lib/unit.hook";
 import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
-import { useAllPersons } from "@/pages/person/lib/person.hook";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import FormSkeleton from "@/components/FormSkeleton";
-import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
 import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL, ROUTE } = PRODUCT;
@@ -30,9 +28,6 @@ export default function ProductAddPage() {
   const { data: companies } = useAllCompanies();
   const { data: units } = useAllUnits();
   const { data: productTypes } = useAllProductTypes();
-  const { data: suppliers } = useAllPersons({
-    role_names: [SUPPLIER_ROLE_CODE],
-  });
   const getDefaultValues = (): Partial<ProductSchema> => ({
     codigo: "",
     name: "",
@@ -71,7 +66,7 @@ export default function ProductAddPage() {
     }
   };
 
-  const isLoading = !units || !productTypes || !suppliers || !companies;
+  const isLoading = !units || !productTypes || !companies;
 
   return (
     <PageWrapper size="3xl">
@@ -86,7 +81,6 @@ export default function ProductAddPage() {
           companies={companies}
           units={units}
           productTypes={productTypes}
-          suppliers={suppliers}
           onCancel={() => navigate(ROUTE)}
         />
       )}

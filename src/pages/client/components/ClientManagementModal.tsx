@@ -656,7 +656,12 @@ export function ClientManagementModal({
           open={editPersonId !== null}
           onOpenChange={(v) => !v && setEditPersonId(null)}
           personId={editPersonId}
-          onClientUpdated={handleRefresh}
+          onClientUpdated={(newName) => {
+            const name = newName ?? "";
+            setSearch(name);
+            setDebouncedSearch(name);
+            handleRefresh();
+          }}
         />
       )}
 

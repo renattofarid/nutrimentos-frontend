@@ -16,9 +16,9 @@ export function SettlementSummary({ deliverySheet }: SettlementSummaryProps) {
     .toFixed(2);
   const totalPendiente = deliverySheet.sheet_sales
     .reduce((sum, sheetSale) => {
-      const creditNotesTotal = sheetSale.sale.credit_notes_total_raw || 0;
       const currentAmount = parseFormattedNumber(sheetSale.current_amount);
-      return sum + (currentAmount - creditNotesTotal);
+      const collectedAmount = parseFormattedNumber(sheetSale.collected_amount);
+      return sum + Math.max(0, currentAmount - collectedAmount);
     }, 0)
     .toFixed(2);
 

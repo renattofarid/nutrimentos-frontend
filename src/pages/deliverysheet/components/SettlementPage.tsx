@@ -178,9 +178,10 @@ export default function SettlementPage() {
                   ? "ENTREGADO"
                   : sheetSale.delivery_status,
               delivery_notes: sheetSale.delivery_notes || "",
-              payment_amount: (
+              payment_amount: Math.max(
+                0,
                 parseFormattedNumber(sheetSale.current_amount) -
-                (sheetSale.sale.credit_notes_total_raw || 0)
+                  parseFormattedNumber(sheetSale.collected_amount),
               ).toFixed(2),
             })),
             payment_date: new Date().toISOString().split("T")[0],

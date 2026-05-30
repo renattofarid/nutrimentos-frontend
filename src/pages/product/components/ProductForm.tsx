@@ -13,13 +13,14 @@ import {
 } from "../lib/product.schema";
 import { Loader, Info, Weight, Save, X } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
+import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { FormSwitch } from "@/components/FormSwitch";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import type { UnitResource } from "@/pages/unit/lib/unit.interface";
-import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { ProductTypeResource } from "@/pages/product-type/lib/product-type.interface";
 import type { CompanyResource } from "@/pages/company/lib/company.interface";
 import type { ProductResource } from "../lib/product.interface";
+import { useSuppliers } from "@/pages/supplier/lib/supplier.hook";
 
 interface ProductFormProps {
   defaultValues: Partial<ProductSchema>;
@@ -30,7 +31,6 @@ interface ProductFormProps {
   companies: CompanyResource[];
   units: UnitResource[];
   productTypes: ProductTypeResource[];
-  suppliers: PersonResource[];
   product?: ProductResource;
 }
 
@@ -43,7 +43,6 @@ export const ProductForm = ({
   companies,
   units,
   productTypes,
-  suppliers,
 }: ProductFormProps) => {
   const form = useForm({
     resolver: zodResolver(
@@ -147,17 +146,22 @@ export const ProductForm = ({
             }))}
           />
 
-          <FormSelect
+          <FormSelectAsync
             control={form.control}
             name="supplier_id"
             label="Proveedor"
             placeholder="Seleccione un proveedor"
-            options={suppliers.map((supplier) => ({
+            useQueryHook={useSuppliers}
+            mapOptionFn={(supplier) => ({
               value: supplier.id.toString(),
-              label:
-                supplier.business_name ??
-                `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`.trim(),
-            }))}
+              label: supplier.business_name
+                ? supplier.business_name
+                : [supplier.names, supplier.father_surname, supplier.mother_surname]
+                    .filter(Boolean)
+                    .join(" "),
+            })}
+            preloadItemId={defaultValues.supplier_id?.toString()}
+            refetchOnOpen
           />
 
           <FormSwitch

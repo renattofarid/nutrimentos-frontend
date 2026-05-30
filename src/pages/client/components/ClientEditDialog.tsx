@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PersonForm } from "@/pages/person/components/PersonForm";
 import { type PersonSchemaClient } from "@/pages/person/lib/person.schema";
 import {
@@ -23,7 +23,7 @@ interface ClientEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   personId: number;
-  onClientUpdated?: () => void;
+  onClientUpdated?: (newName?: string) => void;
 }
 
 export function ClientEditDialog({
@@ -35,6 +35,7 @@ export function ClientEditDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [personData, setPersonData] = useState<PersonResource | null>(null);
+  const pendingNameRef = useRef<string>("");
 
   useEffect(() => {
     if (!open || !personId) return;
@@ -93,6 +94,10 @@ export function ClientEditDialog({
       }
 
       await updatePerson(personData.id, updatePersonData);
+      pendingNameRef.current =
+        data.type_person === "JURIDICA"
+          ? data.business_name || ""
+          : `${data.names || ""} ${data.father_surname || ""}`.trim();
       successToast(
         SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "update"),
       );
@@ -137,7 +142,7 @@ export function ClientEditDialog({
         <PersonForm
           initialData={personData}
           onSubmit={handleSubmit}
-          onAfterSubmit={onClientUpdated}
+          onAfterSubmit={() => onClientUpdated?.(pendingNameRef.current)}
           isSubmitting={isSubmitting}
           onCancel={() => onOpenChange(false)}
           roleId={CLIENT_ROLE_ID}

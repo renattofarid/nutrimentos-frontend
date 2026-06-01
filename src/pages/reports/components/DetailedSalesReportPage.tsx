@@ -204,6 +204,7 @@ export default function DetailedSalesReportPage() {
                 label="Producto"
                 placeholder="Buscar producto..."
                 useQueryHook={useProduct}
+                
                 mapOptionFn={(item) => ({
                   label: item.name,
                   value: String(item.id),

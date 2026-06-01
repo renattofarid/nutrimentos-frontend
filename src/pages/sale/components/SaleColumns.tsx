@@ -35,7 +35,10 @@ export const getSaleColumns = (): ColumnDef<SaleResource>[] => [
     cell: ({ row }) => (
       <div className="max-w-[200px] text-nowrap!">
         {row.original.customer.business_name ||
-          `${row.original.customer.names} ${row.original.customer.father_surname}`}
+          [row.original.customer.names, row.original.customer.father_surname]
+            .filter(Boolean)
+            .join(" ") ||
+          "-"}
       </div>
     ),
   },

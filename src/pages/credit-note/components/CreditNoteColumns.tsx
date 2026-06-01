@@ -2,15 +2,29 @@ import type { CreditNoteResource } from "../lib/credit-note.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 
-export const CreditNoteColumns = (): ColumnDef<CreditNoteResource>[] => [
+export const CreditNoteColumns = (
+  onManage?: (id: number, title: string) => void,
+): ColumnDef<CreditNoteResource>[] => [
   {
     accessorKey: "full_document_number",
     header: "N° Documento",
-    cell: ({ getValue }) => (
-      <Badge variant="default" className="font-mono">
-        {getValue() as string}
-      </Badge>
-    ),
+    cell: ({ row }) => {
+      const note = row.original;
+      return (
+        <button
+          type="button"
+          onClick={() => onManage?.(note.id, note.full_document_number)}
+          className={onManage ? "cursor-pointer" : "cursor-default"}
+        >
+          <Badge
+            variant="default"
+            className={`font-mono ${onManage ? "underline underline-offset-2 hover:opacity-80" : ""}`}
+          >
+            {note.full_document_number}
+          </Badge>
+        </button>
+      );
+    },
   },
   {
     accessorKey: "issue_date",

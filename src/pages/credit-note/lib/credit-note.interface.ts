@@ -141,6 +141,7 @@ const ROUTE = "/notas-credito";
 export const CreditNoteRoute = ROUTE;
 export const CreditNoteAddRoute = `${ROUTE}/agregar`;
 export const CreditNoteEditRoute = `${ROUTE}/actualizar/:id`;
+export const CreditNoteManageRoute = `${ROUTE}/gestionar/:id`;
 
 // ===== STATUS & TYPE OPTIONS =====
 

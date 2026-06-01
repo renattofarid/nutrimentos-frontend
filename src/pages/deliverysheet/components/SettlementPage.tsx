@@ -477,7 +477,7 @@ export default function SettlementPage() {
                     S/. {totalOriginal.toFixed(2)}
                   </span>
                 </span>
-                <span className="text-muted-foreground">
+                <span className="text-muted-foreground">  
                   Saldo pend.:{" "}
                   <span className="font-semibold text-foreground">
                     S/. {totalPendiente.toFixed(2)}

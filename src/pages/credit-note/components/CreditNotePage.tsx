@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useWindowManager } from "@/stores/window-manager.store";
 import { useCreditNote } from "../lib/credit-note.hook";
 import type { RowSelectionState } from "@tanstack/react-table";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
@@ -27,6 +28,7 @@ const { MODEL } = CREDIT_NOTE;
 
 export default function CreditNotePage() {
   const navigate = useNavigate();
+  const { openTab } = useWindowManager();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [motive_id, setMotiveId] = useState("");
@@ -135,12 +137,21 @@ export default function CreditNotePage() {
         hasSelection={hasSelection}
         onDelete={() => toolbarNote && setDeleteId(toolbarNote.id)}
         onPrint={handlePrint}
+        onManage={() =>
+          toolbarNote &&
+          openTab(
+            `/notas-credito/gestionar/${toolbarNote.id}`,
+            toolbarNote.full_document_number,
+          )
+        }
         filters={exportFilters}
       />
 
       <CreditNoteTable
         isLoading={isLoading}
-        columns={CreditNoteColumns()}
+        columns={CreditNoteColumns((id, title) =>
+          openTab(`/notas-credito/gestionar/${id}`, title),
+        )}
         data={data || []}
         enableRowSelection={true}
         rowSelection={rowSelection}

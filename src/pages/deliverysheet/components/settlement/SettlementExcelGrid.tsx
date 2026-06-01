@@ -20,9 +20,32 @@ import {
 } from "@/components/ui/tooltip";
 import { ExcelGrid, type ExcelGridColumn } from "@/components/ExcelGrid";
 import { parseFormattedNumber } from "@/lib/utils";
+import { useWindowManager } from "@/stores/window-manager.store";
 import { DELIVERY_STATUS_OPTIONS } from "./constants";
 import type { SettlementFormSchema } from "./types";
 import type { SaleWithIndex } from "./types";
+
+// ── Row type (only static/display data) ──────────────────────────────────────
+
+interface SettlementGridRow {
+  index: number;
+  fecha: string;
+  cliente: string;
+  documento: string;
+  sale_id: number;
+  total: number;
+  saldo: number;
+  nota_credito_raw: number;
+  has_credit_notes: boolean;
+  credit_notes: Array<{
+    id: number;
+    full_document_number: string;
+    total_amount: string;
+    observations: string | null;
+  }>;
+  obs_nc: string;
+  almacen: string;
+}
 
 // ── Cell components (use useWatch to avoid re-rendering the whole grid) ──────
 
@@ -210,25 +233,64 @@ function ObservationsCell({
   );
 }
 
-// ── Row type (only static/display data) ──────────────────────────────────────
+function NotaCreditoCell({ row }: { row: SettlementGridRow }) {
+  const { openTab } = useWindowManager();
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={() => openTab("/notas-credito", "Notas de Crédito")}
+            className="px-2 py-1 flex items-center gap-1 cursor-pointer"
+          >
+            <span className="text-xs font-mono text-orange-700 underline underline-offset-2 hover:text-orange-600">
+              S/. {row.nota_credito_raw.toFixed(2)}
+            </span>
+            <AlertCircle className="h-3 w-3 text-orange-500 shrink-0" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">
+          <div className="space-y-1 text-xs">
+            <p className="font-semibold">Notas de Crédito</p>
+            {row.credit_notes.map((cn) => (
+              <button
+                key={cn.id}
+                type="button"
+                onClick={() =>
+                  openTab(`/notas-credito/gestionar/${cn.id}`, cn.full_document_number)
+                }
+                className="block w-full text-left underline underline-offset-2 hover:text-foreground/70 cursor-pointer"
+              >
+                {cn.full_document_number} — S/. {parseFloat(cn.total_amount || "0").toFixed(2)}
+              </button>
+            ))}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
 
-interface SettlementGridRow {
-  index: number;
-  fecha: string;
-  cliente: string;
+function DocumentoCell({
+  saleId,
+  documento,
+}: {
+  saleId: number;
   documento: string;
-  total: number;
-  saldo: number;
-  nota_credito_raw: number;
-  has_credit_notes: boolean;
-  credit_notes: Array<{
-    id: number;
-    full_document_number: string;
-    total_amount: string;
-    observations: string | null;
-  }>;
-  obs_nc: string;
-  almacen: string;
+}) {
+  const { openTab } = useWindowManager();
+  return (
+    <div className="px-2 py-1 text-xs font-mono">
+      <button
+        type="button"
+        onClick={() => openTab(`/ventas/gestionar/${saleId}`, documento)}
+        className="text-foreground underline underline-offset-2 hover:text-foreground/70 cursor-pointer"
+      >
+        {documento}
+      </button>
+    </div>
+  );
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -266,6 +328,7 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
           fecha,
           cliente: sheetSale.sale.customer?.full_name || "-",
           documento: sheetSale.sale.full_document_number,
+          sale_id: sheetSale.sale.id,
           total: parseFormattedNumber(sheetSale.original_amount),
           saldo,
           nota_credito_raw: sheetSale.sale.credit_notes_total_raw || 0,
@@ -312,9 +375,7 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
         header: "DOCUMENTO",
         type: "readonly",
         width: "110px",
-        render: (row) => (
-          <div className="px-2 py-1 text-xs font-mono">{row.documento}</div>
-        ),
+        render: (row) => <DocumentoCell saleId={row.sale_id} documento={row.documento} />,
       },
       {
         id: "total",
@@ -347,28 +408,7 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
           if (!row.has_credit_notes) {
             return <div className="px-2 py-1 text-xs text-muted-foreground text-center">-</div>;
           }
-          return (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="px-2 py-1 flex items-center gap-1 cursor-help">
-                    <span className="text-xs font-mono text-orange-700">
-                      S/. {row.nota_credito_raw.toFixed(2)}
-                    </span>
-                    <AlertCircle className="h-3 w-3 text-orange-500 shrink-0" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  <div className="space-y-1 text-xs">
-                    <p className="font-semibold">Notas de Crédito</p>
-                    {row.credit_notes.map((cn) => (
-                      <p key={cn.id}>{cn.full_document_number} — S/. {parseFloat(cn.total_amount || "0").toFixed(2)}</p>
-                    ))}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          );
+          return <NotaCreditoCell row={row} />;
         },
       },
       {

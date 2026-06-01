@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, X, Download, Sheet, FileText, Loader2, Printer } from "lucide-react";
+import { Plus, Trash2, X, Download, Sheet, FileText, Loader2, Printer, Eye } from "lucide-react";
 import { CREDIT_NOTE } from "../lib/credit-note.interface";
 import { useNavigate } from "react-router-dom";
 import { useWindowManager } from "@/stores/window-manager.store";
@@ -19,6 +19,7 @@ interface CreditNoteActionsProps {
   hasSelection: boolean;
   onDelete: () => void;
   onPrint: () => void;
+  onManage?: () => void;
   filters?: Record<string, any>;
 }
 
@@ -26,6 +27,7 @@ export default function CreditNoteActions({
   hasSelection,
   onDelete,
   onPrint,
+  onManage,
   filters,
 }: CreditNoteActionsProps) {
   const navigate = useNavigate();
@@ -72,6 +74,16 @@ export default function CreditNoteActions({
         <Button colorIcon="green" size="sm" variant="outline" onClick={() => navigate(CREDIT_NOTE.ROUTE_ADD)}>
           <Plus />
           Nuevo
+        </Button>
+        <Button
+          colorIcon="blue"
+          size="sm"
+          variant="outline"
+          onClick={onManage}
+          disabled={!hasSelection}
+        >
+          <Eye />
+          Gestionar
         </Button>
         <Button
           colorIcon="red"

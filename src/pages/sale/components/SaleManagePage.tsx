@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useWindowManager } from "@/stores/window-manager.store";
 import { useSaleStore } from "../lib/sales.store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ import PageWrapper from "@/components/PageWrapper";
 
 export default function SaleManagePage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const { activeTabId, closeTab } = useWindowManager();
   const { fetchSale, sale, isFinding } = useSaleStore();
 
   useEffect(() => {
@@ -103,7 +104,7 @@ export default function SaleManagePage() {
   return (
     <PageWrapper>
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="outline" onClick={() => navigate("/ventas/listado")}>
+        <Button size="sm" variant="outline" onClick={() => activeTabId && closeTab(activeTabId)}>
           <X /> Cerrar
         </Button>
       </div>

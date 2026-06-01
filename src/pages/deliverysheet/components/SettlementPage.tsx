@@ -38,6 +38,7 @@ import {
 } from "./settlement";
 import { errorToast, successToast } from "@/lib/core.function";
 import { Separator } from "@/components/ui/separator";
+import FormSkeleton from "@/components/FormSkeleton";
 
 // ============================================================
 // Payment status helpers
@@ -433,11 +434,7 @@ export default function SettlementPage() {
             })()}
         </div>
 
-        {isLoading && (
-          <div className="flex items-center justify-center h-48">
-            <Loader className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
+        {isLoading && <FormSkeleton />}
 
         {!isLoading && errors.length > 0 && (
           <Alert variant="destructive">
@@ -477,7 +474,7 @@ export default function SettlementPage() {
                     S/. {totalOriginal.toFixed(2)}
                   </span>
                 </span>
-                <span className="text-muted-foreground">  
+                <span className="text-muted-foreground">
                   Saldo pend.:{" "}
                   <span className="font-semibold text-foreground">
                     S/. {totalPendiente.toFixed(2)}

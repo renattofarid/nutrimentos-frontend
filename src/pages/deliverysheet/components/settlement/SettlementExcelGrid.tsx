@@ -235,13 +235,19 @@ function ObservationsCell({
 
 function NotaCreditoCell({ row }: { row: SettlementGridRow }) {
   const { openTab } = useWindowManager();
+  const handleTriggerClick = () => {
+    if (row.credit_notes.length === 1) {
+      const cn = row.credit_notes[0];
+      openTab(`/notas-credito/gestionar/${cn.id}`, cn.full_document_number);
+    }
+  };
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
           <button
             type="button"
-            onClick={() => openTab("/notas-credito", "Notas de Crédito")}
+            onClick={handleTriggerClick}
             className="px-2 py-1 flex items-center gap-1 cursor-pointer"
           >
             <span className="text-xs font-mono text-orange-700 underline underline-offset-2 hover:text-orange-600">

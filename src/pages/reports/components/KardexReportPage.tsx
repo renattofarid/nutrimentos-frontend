@@ -100,6 +100,25 @@ const columns: ColumnDef<KardexItem>[] = [
         },
       },
       {
+        accessorKey: "customer_name",
+        header: "Cliente",
+        size: 180,
+        cell: ({ row }) => {
+          const sale = row.original.sale;
+          if (sale?.customer) {
+            const c = sale.customer;
+            const name =
+              c.type_person === "JURIDICA"
+                ? (c.business_name ?? c.commercial_name ?? "—")
+                : [c.names, c.father_surname, c.mother_surname]
+                    .filter(Boolean)
+                    .join(" ") || "—";
+            return <span className="text-sm">{name}</span>;
+          }
+          return <span className="text-sm text-muted-foreground">-</span>;
+        },
+      },
+      {
         accessorKey: "product_codigo",
         header: "Código",
         size: 100,

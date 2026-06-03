@@ -225,12 +225,25 @@ export interface KardexItem {
   sale?: Sale;
 }
 
+interface KardexSaleCustomer {
+  id: number;
+  type_person: string;
+  number_document: null | string;
+  names: null | string;
+  father_surname: null | string;
+  mother_surname: null | string;
+  business_name: null | string;
+  commercial_name: null | string;
+  document_type_name: string;
+}
+
 interface Sale {
   id: number;
   serie: string;
   numero: string;
   document_type: string;
   total_amount: number;
+  customer?: KardexSaleCustomer | null;
 }
 
 interface User {

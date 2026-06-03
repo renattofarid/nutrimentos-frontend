@@ -5,11 +5,7 @@ import type { WarehouseDocumentSchema } from "../lib/warehouse-document.schema";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/FormSelect";
-import { DatePickerFormField } from "@/components/DatePickerFormField";
-import {
-  DOCUMENT_TYPES,
-  DOCUMENT_MOTIVES,
-} from "../lib/warehouse-document.constants";
+import { DateTimePickerForm } from "@/components/DateTimePickerForm";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import { Package, FileText, AlertCircle, Loader, Save, X } from "lucide-react";
@@ -79,10 +75,10 @@ export default function WarehouseDocumentForm({
     defaultValues: defaultValues || {
       warehouse_origin_id: "",
       document_type: "TRASLADO",
-      motive: "",
+      motive: "TRASLADO_INTERNO",
       warehouse_dest_id: "",
       responsible_origin_id: "",
-      responsible_dest_id: "",
+      responsible_dest_id: "37",
       movement_date: "",
       observations: "",
       details: [],
@@ -356,7 +352,7 @@ export default function WarehouseDocumentForm({
         <GroupFormSection
           title="Información General"
           icon={FileText}
-          cols={{ sm: 1, md: 2, lg: 4 }}
+          cols={{ sm: 1, md: 2, lg: 3 }}
         >
           <FormSelect
             control={form.control}
@@ -382,7 +378,7 @@ export default function WarehouseDocumentForm({
             }))}
           />
 
-          <DatePickerFormField
+          <DateTimePickerForm
             control={form.control}
             name="movement_date"
             label="Fecha del Movimiento"
@@ -415,27 +411,6 @@ export default function WarehouseDocumentForm({
             </>
           )}
 
-          <FormSelect
-            control={form.control}
-            name="motive"
-            label="Motivo"
-            placeholder="Seleccione el motivo"
-            options={DOCUMENT_MOTIVES.map((motive) => ({
-              value: motive.value,
-              label: motive.label,
-            }))}
-          />
-
-          <FormSelect
-            control={form.control}
-            name="document_type"
-            label="Tipo de Documento"
-            placeholder="Seleccione el tipo"
-            options={DOCUMENT_TYPES.map((type) => ({
-              value: type.value,
-              label: type.label,
-            }))}
-          />
         </GroupFormSection>
 
         <GroupFormSection

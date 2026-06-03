@@ -3,7 +3,7 @@
 import { useState } from "react";
 import SearchInput from "@/components/SearchInput";
 import { SearchableSelect } from "@/components/SearchableSelect";
-import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
+import { DatePickerFilter } from "@/components/DatePickerFilter";
 import { useAllCreditNoteMotives } from "@/pages/credit-note-motive/lib/credit-note-motive.hook";
 import { CREDIT_NOTE_STATUSES } from "../lib/credit-note.interface";
 import { SearchableSelectAsync } from "@/components/SearchableSelectAsync";
@@ -35,7 +35,8 @@ interface CreditNoteOptionsProps {
   setCustomerId: (value: string) => void;
   issue_date_from?: Date;
   issue_date_to?: Date;
-  onDateChange: (from: Date | undefined, to: Date | undefined) => void;
+  setIssueDateFrom: (d: Date | undefined) => void;
+  setIssueDateTo: (d: Date | undefined) => void;
   sale_id: string;
   setSaleId: (value: string) => void;
   onSaleValueChange?: (value: string, item?: SaleResource) => void;
@@ -53,7 +54,8 @@ export default function CreditNoteOptions({
   setCustomerId,
   issue_date_from,
   issue_date_to,
-  onDateChange,
+  setIssueDateFrom,
+  setIssueDateTo,
   sale_id,
   setSaleId,
   onSaleValueChange,
@@ -91,12 +93,17 @@ export default function CreditNoteOptions({
         placeholder="N° Nota de Crédito"
       />
 
-      <DateRangePickerFilter
-        dateFrom={issue_date_from}
-        dateTo={issue_date_to}
-        onDateChange={onDateChange}
-        placeholder="Fecha de emisión"
-        className="w-[240px]"
+      <DatePickerFilter
+        label="Del"
+        value={issue_date_from}
+        onChange={setIssueDateFrom}
+        placeholder="DD-MM-YYYY"
+      />
+      <DatePickerFilter
+        label="Al"
+        value={issue_date_to}
+        onChange={setIssueDateTo}
+        placeholder="DD-MM-YYYY"
       />
 
       <Select

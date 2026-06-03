@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import PageWrapper from "@/components/PageWrapper";
 import { exportWarehouseDocumentByNumber } from "../lib/warehouse-document.actions";
+import { format } from "date-fns";
 
 const { MODEL, ROUTE } = WAREHOUSE_DOCUMENT;
 
@@ -48,7 +49,10 @@ export default function WarehouseDocumentPage() {
   const [selectedWarehouseDest, setSelectedWarehouseDest] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth() - 3, 1);
+  });
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
@@ -63,8 +67,8 @@ export default function WarehouseDocumentPage() {
     warehouse_dest_id: selectedWarehouseDest,
     type: selectedType,
     status: selectedStatus,
-    start_date: startDate ? startDate.toISOString().split("T")[0] : undefined,
-    end_date: endDate ? endDate.toISOString().split("T")[0] : undefined,
+    start_date: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+    end_date: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
   });
   const { data: warehouses } = useAllWarehouses();
 
@@ -77,8 +81,8 @@ export default function WarehouseDocumentPage() {
       warehouse_dest_id: selectedWarehouseDest,
       type: selectedType,
       status: selectedStatus,
-      start_date: startDate ? startDate.toISOString().split("T")[0] : undefined,
-      end_date: endDate ? endDate.toISOString().split("T")[0] : undefined,
+      start_date: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+      end_date: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
     });
   }, [
     page,
@@ -190,10 +194,10 @@ export default function WarehouseDocumentPage() {
       params.append("status", selectedStatus);
     }
     if (startDate) {
-      params.append("start_date", startDate.toISOString().split("T")[0]);
+      params.append("start_date", format(startDate, "yyyy-MM-dd"));
     }
     if (endDate) {
-      params.append("end_date", endDate.toISOString().split("T")[0]);
+      params.append("end_date", format(endDate, "yyyy-MM-dd"));
     }
 
     params.append("export", "excel");

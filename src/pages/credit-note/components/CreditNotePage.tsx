@@ -22,6 +22,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { CREDIT_NOTE } from "../lib/credit-note.interface";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import { api } from "@/lib/config";
+import { format } from "date-fns";
 import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = CREDIT_NOTE;
@@ -35,8 +36,11 @@ export default function CreditNotePage() {
   const [customer_id, setCustomerId] = useState("");
   const [sale_id, setSaleId] = useState("");
   const [selectedSale, setSelectedSale] = useState<SaleResource | null>(null);
-  const [issue_date_from, setIssueDateFrom] = useState<Date | undefined>();
-  const [issue_date_to, setIssueDateTo] = useState<Date | undefined>();
+  const [issue_date_from, setIssueDateFrom] = useState<Date | undefined>(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth() - 3, 1);
+  });
+  const [issue_date_to, setIssueDateTo] = useState<Date | undefined>(() => new Date());
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -51,10 +55,10 @@ export default function CreditNotePage() {
     credit_note_motive_id: motive_id ? Number(motive_id) : undefined,
     customer_id: customer_id ? Number(customer_id) : undefined,
     "issue_date[0]": issue_date_from
-      ? issue_date_from.toISOString().split("T")[0]
+      ? format(issue_date_from, "yyyy-MM-dd")
       : undefined,
     "issue_date[1]": issue_date_to
-      ? issue_date_to.toISOString().split("T")[0]
+      ? format(issue_date_to, "yyyy-MM-dd")
       : undefined,
   });
 
@@ -124,10 +128,10 @@ export default function CreditNotePage() {
     credit_note_motive_id: motive_id ? Number(motive_id) : undefined,
     customer_id: customer_id ? Number(customer_id) : undefined,
     "issue_date[0]": issue_date_from
-      ? issue_date_from.toISOString().split("T")[0]
+      ? format(issue_date_from, "yyyy-MM-dd")
       : undefined,
     "issue_date[1]": issue_date_to
-      ? issue_date_to.toISOString().split("T")[0]
+      ? format(issue_date_to, "yyyy-MM-dd")
       : undefined,
   };
 
@@ -168,10 +172,8 @@ export default function CreditNotePage() {
           setCustomerId={setCustomerId}
           issue_date_from={issue_date_from}
           issue_date_to={issue_date_to}
-          onDateChange={(from, to) => {
-            setIssueDateFrom(from);
-            setIssueDateTo(to);
-          }}
+          setIssueDateFrom={setIssueDateFrom}
+          setIssueDateTo={setIssueDateTo}
           sale_id={sale_id}
           setSaleId={setSaleId}
           onSaleValueChange={(_val, item) => setSelectedSale(item ?? null)}

@@ -26,6 +26,7 @@ import { promiseToast } from "@/lib/core.function";
 import { PurchaseTable } from "./PurchaseTable";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
+import { format } from "date-fns";
 import { useWindowManager } from "@/stores/window-manager.store";
 
 export default function PurchasePage() {
@@ -42,8 +43,7 @@ export default function PurchasePage() {
   const [warehouse_id, setWarehouseId] = useState("");
   const [start_date, setStartDate] = useState<Date | undefined>(() => {
     const d = new Date();
-    d.setMonth(d.getMonth() - 1);
-    return d;
+    return new Date(d.getFullYear(), d.getMonth() - 3, 1);
   });
   const [end_date, setEndDate] = useState<Date | undefined>(() => new Date());
 
@@ -68,8 +68,8 @@ export default function PurchasePage() {
     payment_type: payment_type || undefined,
     status: status || undefined,
     warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
-    start_date: start_date?.toISOString().split("T")[0],
-    end_date: end_date?.toISOString().split("T")[0],
+    start_date: start_date ? format(start_date, "yyyy-MM-dd") : undefined,
+    end_date: end_date ? format(end_date, "yyyy-MM-dd") : undefined,
   });
   const { removePurchase } = usePurchaseStore();
 
@@ -102,8 +102,8 @@ export default function PurchasePage() {
       payment_type: payment_type || undefined,
       status: status || undefined,
       warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
-      start_date: start_date?.toISOString().split("T")[0],
-      end_date: end_date?.toISOString().split("T")[0],
+      start_date: start_date ? format(start_date, "yyyy-MM-dd") : undefined,
+      end_date: end_date ? format(end_date, "yyyy-MM-dd") : undefined,
     });
   }, [
     page,
@@ -133,8 +133,8 @@ export default function PurchasePage() {
         payment_type: payment_type || undefined,
         status: status || undefined,
         warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
-        start_date: start_date?.toISOString().split("T")[0],
-        end_date: end_date?.toISOString().split("T")[0],
+        start_date: start_date ? format(start_date, "yyyy-MM-dd") : undefined,
+        end_date: end_date ? format(end_date, "yyyy-MM-dd") : undefined,
       });
       successToast(
         SUCCESS_MESSAGE({ name: "Compra", gender: false }, "delete")
@@ -208,8 +208,8 @@ export default function PurchasePage() {
       payment_type: payment_type || undefined,
       status: status || undefined,
       warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
-      start_date: start_date?.toISOString().split("T")[0],
-      end_date: end_date?.toISOString().split("T")[0],
+      start_date: start_date ? format(start_date, "yyyy-MM-dd") : undefined,
+      end_date: end_date ? format(end_date, "yyyy-MM-dd") : undefined,
     });
   };
 
@@ -226,8 +226,8 @@ export default function PurchasePage() {
       payment_type: payment_type || undefined,
       status: status || undefined,
       warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
-      start_date: start_date?.toISOString().split("T")[0],
-      end_date: end_date?.toISOString().split("T")[0],
+      start_date: start_date ? format(start_date, "yyyy-MM-dd") : undefined,
+      end_date: end_date ? format(end_date, "yyyy-MM-dd") : undefined,
     });
   };
 
@@ -259,8 +259,8 @@ export default function PurchasePage() {
       payment_type: payment_type || undefined,
       status: status || undefined,
       warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
-      start_date: start_date?.toISOString().split("T")[0],
-      end_date: end_date?.toISOString().split("T")[0],
+      start_date: start_date ? format(start_date, "yyyy-MM-dd") : undefined,
+      end_date: end_date ? format(end_date, "yyyy-MM-dd") : undefined,
     });
   };
 
@@ -290,10 +290,10 @@ export default function PurchasePage() {
       params.append("warehouse_id", warehouse_id);
     }
     if (start_date) {
-      params.append("start_date", start_date.toISOString().split("T")[0]);
+      params.append("start_date", format(start_date, "yyyy-MM-dd"));
     }
     if (end_date) {
-      params.append("end_date", end_date.toISOString().split("T")[0]);
+      params.append("end_date", format(end_date, "yyyy-MM-dd"));
     }
 
     const queryString = params.toString();
@@ -452,8 +452,8 @@ export default function PurchasePage() {
             payment_type: payment_type || undefined,
             status: status || undefined,
             warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
-            start_date: start_date?.toISOString().split("T")[0],
-            end_date: end_date?.toISOString().split("T")[0],
+            start_date: start_date ? format(start_date, "yyyy-MM-dd") : undefined,
+            end_date: end_date ? format(end_date, "yyyy-MM-dd") : undefined,
           });
           // Actualizar el selectedPurchase con los datos más recientes del store
           if (selectedPurchase && data) {

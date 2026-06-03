@@ -39,7 +39,8 @@ import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportDeliverySheetReport } from "../lib/reports.actions";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
-import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
+import { DatePickerFormField } from "@/components/DatePickerFormField";
+import { format } from "date-fns";
 import { errorToast, successToast } from "@/lib/core.function";
 import { useClients } from "@/pages/client/lib/client.hook";
 
@@ -276,13 +277,17 @@ export default function DeliverySheetReportPage() {
 
   const { data: rawData, isLoading, fetch } = useDeliverySheetReport();
 
+  const _today = new Date();
+  const _todayStr = format(_today, "yyyy-MM-dd");
+  const _threeMonthsAgoStr = format(new Date(_today.getFullYear(), _today.getMonth() - 3, 1), "yyyy-MM-dd");
+
   const form = useForm<FilterFormValues>({
     defaultValues: {
       customer_id: "",
       vehicle_id: "",
       warehouse_id: "",
-      start_date: "",
-      end_date: "",
+      start_date: _threeMonthsAgoStr,
+      end_date: _todayStr,
       modality: "",
       status: "",
     },
@@ -405,12 +410,15 @@ export default function DeliverySheetReportPage() {
               })}
             />
 
-            <DateRangePickerFormField
+            <DatePickerFormField
               control={form.control}
-              nameFrom="start_date"
-              nameTo="end_date"
-              label="Rango de Fechas"
-              placeholder="Seleccionar rango"
+              name="start_date"
+              label="Del"
+            />
+            <DatePickerFormField
+              control={form.control}
+              name="end_date"
+              label="Al"
             />
 
             <FormSelect

@@ -37,7 +37,8 @@ import PageWrapper from "@/components/PageWrapper";
 import { exportSaleBySellerReport } from "../lib/reports.actions";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { FormSelect } from "@/components/FormSelect";
-import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
+import { DatePickerFormField } from "@/components/DatePickerFormField";
+import { format } from "date-fns";
 import { errorToast, successToast } from "@/lib/core.function";
 
 interface FilterFormValues {
@@ -267,14 +268,21 @@ export default function SaleBySellerReportPage() {
 
   const { data: rawData, isLoading, fetch } = useSaleBySellerReport();
 
+  const _today = new Date();
+  const _todayStr = format(_today, "yyyy-MM-dd");
+  const _threeMonthsAgoStr = format(
+    new Date(_today.getFullYear(), _today.getMonth() - 3, 1),
+    "yyyy-MM-dd",
+  );
+
   const form = useForm<FilterFormValues>({
     defaultValues: {
       document_type: "",
       status: "",
       user_id: "",
       warehouse_id: "",
-      start_date: "",
-      end_date: "",
+      start_date: _threeMonthsAgoStr,
+      end_date: _todayStr,
     },
   });
 
@@ -322,32 +330,17 @@ export default function SaleBySellerReportPage() {
 
   return (
     <PageWrapper size="3xl">
-
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(handleSearch)}
+          className="space-y-6 grid lg:grid-cols-3 gap-4"
+        >
           <GroupFormSection
             title="Filtros de Búsqueda"
             icon={Filter}
             gap="gap-2"
-            cols={{ sm: 1, md: 2, lg: 5 }}
-            headerExtra={
-              <div className="flex gap-2">
-                <Button type="submit" disabled={isLoading} size="xs">
-                  <Search className="mr-2 h-4 w-4" />
-                  Buscar
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  onClick={handleExport}
-                  disabled={isExporting || tableData.length === 0}
-                >
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Excel
-                </Button>
-              </div>
-            }
+            className="lg:col-span-2"
+            cols={{ sm: 1, md: 2, lg: 3 }}
           >
             <FormSelect
               control={form.control}
@@ -398,49 +391,86 @@ export default function SaleBySellerReportPage() {
               })}
             />
 
-            <DateRangePickerFormField
+            <DatePickerFormField
               control={form.control}
-              nameFrom="start_date"
-              nameTo="end_date"
-              label="Rango de Fechas"
-              placeholder="Seleccionar rango"
+              name="start_date"
+              label="Del"
             />
+            <DatePickerFormField
+              control={form.control}
+              name="end_date"
+              label="Al"
+            />
+            <div className="lg:col-span-full flex items-end justify-end  h-full w-full gap-2">
+              <Button
+                type="submit"
+                variant="outline"
+                color="primary"
+                disabled={isLoading}
+              >
+                <Search className="mr-2 h-4 w-4" />
+                Buscar
+              </Button>
+              <Button
+                type="button"
+                color="green"
+                onClick={handleExport}
+                disabled={isExporting || tableData.length === 0}
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Excel
+              </Button>
+            </div>
           </GroupFormSection>
 
           {rawData && (
             <GroupFormSection
               title="Resumen de Ventas"
               icon={ArrowUpDown}
-              cols={{ sm: 1, md: 4 }}
+              cols={{ sm: 1, md: 4, lg: 2 }}
             >
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Ventas</p>
-                <p className="text-2xl font-bold">
+                <p className="text-sm text-muted-foreground text-center">
+                  Total Ventas
+                </p>
+                <p className="text-2xl font-bold text-center">
                   {rawData.summary.total_sales}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Costo Total</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-sm text-muted-foreground text-center">
+                  Costo Total
+                </p>
+                <p className="text-2xl font-bold text-amber-600 text-center">
                   {rawData.summary.total_cost}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Ganancia Total</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-sm text-muted-foreground text-center">
+                  Ganancia Total
+                </p>
+                <p className="text-2xl font-bold text-green-600 text-center">
                   {rawData.summary.total_profit}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Monto Total</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-sm text-muted-foreground text-center">
+                  Monto Total
+                </p>
+                <p className="text-2xl font-bold text-blue-600 text-center">
                   {rawData.summary.total_amount}
                 </p>
               </div>
             </GroupFormSection>
           )}
 
-          <DataTable columns={columns} data={tableData} isLoading={isLoading} />
+          <div className="col-span-full">
+            <DataTable
+              columns={columns}
+              data={tableData}
+              isLoading={isLoading}
+            />
+          </div>
         </form>
       </Form>
     </PageWrapper>

@@ -1,16 +1,21 @@
-import { useMemo, useState } from "react";
-
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { Form } from "@/components/ui/form";
+import { Filter } from "lucide-react";
 import PageWrapper from "@/components/PageWrapper";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import ExportButtons from "@/components/ExportButtons";
-import { SearchableSelect } from "@/components/SearchableSelect";
-import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
-import { Input } from "@/components/ui/input";
-import { Filter, Info } from "lucide-react";
-import { useAllBranches } from "@/pages/branch/lib/branch.hook";
-import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
-import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
+import { FormInput } from "@/components/FormInput";
+import { FormSelect } from "@/components/FormSelect";
+import { FormSelectAsync } from "@/components/FormSelectAsync";
+import { DatePickerFormField } from "@/components/DatePickerFormField";
+import {
+  useBranchAsyncSearch,
+  useWarehouseAsyncSearch,
+} from "@/pages/reports/lib/reports.hook";
+import { useWorkers } from "@/pages/worker/lib/worker.hook";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
 
 const DOCUMENT_TYPE_OPTIONS = [
   { value: "FACTURA", label: "Factura" },
@@ -25,30 +30,53 @@ const STATUS_OPTIONS = [
   { value: "ANULADA", label: "Anulada" },
 ];
 
+interface FilterFormValues {
+  serie: string;
+  numero: string;
+  branch_id: string;
+  warehouse_id: string;
+  vendedor_id: string;
+  document_type: string;
+  status: string;
+  start_date: string;
+  end_date: string;
+}
+
 export default function SalesRegisterReportPage() {
   const { user } = useAuthStore();
   const company_id = user?.company_id;
 
-  const [serie, setSerie] = useState("");
-  const [numero, setNumero] = useState("");
-  const [branch_id, setBranchId] = useState("");
-  const [warehouse_id, setWarehouseId] = useState("");
-  const [vendedor_id, setVendedorId] = useState("");
-  const [document_type, setDocumentType] = useState("");
-  const [status, setStatus] = useState("");
-  const [start_date, setStartDate] = useState<Date | undefined>();
-  const [end_date, setEndDate] = useState<Date | undefined>();
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  const threeMonthsAgoStr = new Date(today.getFullYear(), today.getMonth() - 3, 1)
+    .toISOString()
+    .split("T")[0];
 
-  const { data: branches } = useAllBranches({ company_id });
-  const { data: warehouses } = useAllWarehouses();
-  const { data: workers } = useAllWorkers();
+  const form = useForm<FilterFormValues>({
+    defaultValues: {
+      serie: "",
+      numero: "",
+      branch_id: "",
+      warehouse_id: "",
+      vendedor_id: "",
+      document_type: "",
+      status: "",
+      start_date: threeMonthsAgoStr,
+      end_date: todayStr,
+    },
+  });
 
-  const branchOptions = branches?.map((b) => ({ value: String(b.id), label: b.name })) ?? [];
-  const warehouseOptions = warehouses?.map((w) => ({ value: String(w.id), label: w.name })) ?? [];
-  const workerOptions = (workers ?? []).map((w) => ({
-    value: String(w.id),
-    label: `${w.names} ${w.father_surname}`,
-  }));
+  const {
+    serie,
+    numero,
+    branch_id,
+    warehouse_id,
+    vendedor_id,
+    document_type,
+    status,
+    start_date,
+    end_date,
+  } = form.watch();
 
   const exportEndpoint = useMemo(() => {
     const params = new URLSearchParams();
@@ -58,125 +86,131 @@ export default function SalesRegisterReportPage() {
     if (status) params.append("status", status);
     if (warehouse_id) params.append("warehouse_id", warehouse_id);
     if (vendedor_id) params.append("vendedor_id", vendedor_id);
-    if (start_date) params.append("start_date", start_date.toISOString().split("T")[0]);
-    if (end_date) params.append("end_date", end_date.toISOString().split("T")[0]);
+    if (start_date) params.append("start_date", start_date);
+    if (end_date) params.append("end_date", end_date);
     if (numero) params.append("numero", numero);
     if (serie) params.append("serie", serie);
     const qs = params.toString();
     return qs ? `/sales/export?${qs}` : "/sales/export";
-  }, [company_id, branch_id, document_type, status, warehouse_id, vendedor_id, start_date, end_date, numero, serie]);
+  }, [
+    company_id,
+    branch_id,
+    document_type,
+    status,
+    warehouse_id,
+    vendedor_id,
+    start_date,
+    end_date,
+    numero,
+    serie,
+  ]);
 
   return (
     <PageWrapper>
+      <Form {...form}>
+        <div className="flex gap-4 items-start">
+          <div className="shrink-0">
+            <GroupFormSection
+              title="Filtros"
+              icon={Filter}
+              gap="gap-2"
+              cols={{ sm: 1 }}
+              horizontal
+            >
+              <FormInput
+                control={form.control}
+                name="serie"
+                label="Serie"
+                placeholder="Serie"
+              />
 
-      <GroupFormSection title="Descripción" icon={Info} cols={{ sm: 1 }}>
-        <p className="text-sm text-muted-foreground">
-          Este reporte genera un archivo Excel con el listado completo de ventas registradas en el
-          sistema. Puedes aplicar los filtros a continuación para acotar el período, tienda, almacén,
-          vendedor, tipo de documento o estado antes de descargar.
-        </p>
-      </GroupFormSection>
+              <FormInput
+                control={form.control}
+                name="numero"
+                label="Número"
+                placeholder="Número"
+              />
 
-      <GroupFormSection
-        title="Filtros"
-        icon={Filter}
-        cols={{ sm: 1, md: 2, lg: 4 }}
-        headerExtra={
-          <ExportButtons
-            excelEndpoint={exportEndpoint}
-            excelFileName="registro-ventas.xlsx"
-          />
-        }
-      >
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Serie</label>
-          <Input
-            value={serie}
-            onChange={(e) => setSerie(e.target.value)}
-            placeholder="Serie"
-            className="h-8"
-          />
+              <FormSelectAsync
+                control={form.control}
+                name="branch_id"
+                label="Tienda"
+                placeholder="Todas las tiendas"
+                useQueryHook={useBranchAsyncSearch}
+                mapOptionFn={(item) => ({
+                  label: item.name,
+                  value: String(item.id),
+                })}
+              />
+
+              <FormSelectAsync
+                control={form.control}
+                name="warehouse_id"
+                label="Almacén"
+                placeholder="Todos los almacenes"
+                useQueryHook={useWarehouseAsyncSearch}
+                mapOptionFn={(item) => ({
+                  label: item.name,
+                  value: String(item.id),
+                })}
+              />
+
+              <FormSelectAsync
+                control={form.control}
+                name="vendedor_id"
+                label="Vendedor"
+                placeholder="Buscar vendedor..."
+                useQueryHook={useWorkers}
+                mapOptionFn={(item: PersonResource) => ({
+                  label: `${item.names} ${item.father_surname} ${item.mother_surname}`.trim(),
+                  description: item.number_document ?? undefined,
+                  value: String(item.id),
+                })}
+                withValue={false}
+              />
+
+              <FormSelect
+                control={form.control}
+                name="document_type"
+                label="Tipo de documento"
+                placeholder="Todos los tipos"
+                options={DOCUMENT_TYPE_OPTIONS}
+              />
+
+              <FormSelect
+                control={form.control}
+                name="status"
+                label="Estado"
+                placeholder="Todos los estados"
+                options={STATUS_OPTIONS}
+              />
+
+              <div className="flex justify-start gap-2">
+                <DatePickerFormField
+                  control={form.control}
+                  name="start_date"
+                  label="Del"
+                  placeholder="Seleccionar fecha"
+                />
+                <DatePickerFormField
+                  control={form.control}
+                  name="end_date"
+                  label="Al"
+                  placeholder="Seleccionar fecha"
+                  autoLabelWidth
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-1">
+                <ExportButtons
+                  excelEndpoint={exportEndpoint}
+                  excelFileName="registro-ventas.xlsx"
+                />
+              </div>
+            </GroupFormSection>
+          </div>
         </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Número</label>
-          <Input
-            value={numero}
-            onChange={(e) => setNumero(e.target.value)}
-            placeholder="Número"
-            className="h-8"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Tienda</label>
-          <SearchableSelect
-            options={branchOptions}
-            value={branch_id}
-            onChange={setBranchId}
-            placeholder="Todas las tiendas"
-            className="w-full md:w-full"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Almacén</label>
-          <SearchableSelect
-            options={warehouseOptions}
-            value={warehouse_id}
-            onChange={setWarehouseId}
-            placeholder="Todos los almacenes"
-            className="w-full md:w-full"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Vendedor</label>
-          <SearchableSelect
-            options={workerOptions}
-            value={vendedor_id}
-            onChange={setVendedorId}
-            placeholder="Todos los vendedores"
-            className="w-full md:w-full"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Tipo de documento</label>
-          <SearchableSelect
-            options={DOCUMENT_TYPE_OPTIONS}
-            value={document_type}
-            onChange={setDocumentType}
-            placeholder="Todos los tipos"
-            className="w-full md:w-full"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Estado</label>
-          <SearchableSelect
-            options={STATUS_OPTIONS}
-            value={status}
-            onChange={setStatus}
-            placeholder="Todos los estados"
-            className="w-full md:w-full"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Rango de fechas</label>
-          <DateRangePickerFilter
-            dateFrom={start_date}
-            dateTo={end_date}
-            onDateChange={(from, to) => {
-              setStartDate(from);
-              setEndDate(to);
-            }}
-            placeholder="Seleccionar rango"
-            className="w-full"
-          />
-        </div>
-      </GroupFormSection>
+      </Form>
     </PageWrapper>
   );
 }

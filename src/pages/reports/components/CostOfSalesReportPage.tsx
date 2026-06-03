@@ -4,7 +4,8 @@ import PageWrapper from "@/components/PageWrapper";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import ExportButtons from "@/components/ExportButtons";
 import { SearchableSelect } from "@/components/SearchableSelect";
-import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
+import { DatePickerFilter } from "@/components/DatePickerFilter";
+import { format } from "date-fns";
 import { Filter } from "lucide-react";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
@@ -20,8 +21,11 @@ export default function CostOfSalesReportPage() {
   const [brand_id, setBrandId] = useState("");
   const [warehouse_id, setWarehouseId] = useState("");
   const [product_id, setProductId] = useState("");
-  const [start_date, setStartDate] = useState<Date | undefined>();
-  const [end_date, setEndDate] = useState<Date | undefined>();
+  const [start_date, setStartDate] = useState<Date | undefined>(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth() - 3, 1);
+  });
+  const [end_date, setEndDate] = useState<Date | undefined>(() => new Date());
 
   const { data: branches } = useAllBranches({ company_id });
   const { data: warehouses } = useAllWarehouses();
@@ -41,17 +45,16 @@ export default function CostOfSalesReportPage() {
   const brandOptions =
     brands?.map((b: any) => ({ value: String(b.id), label: b.name })) ?? [];
 
-  const buildQs = (format: "excel" | "pdf") => {
+  const buildQs = (formato: "excel" | "pdf") => {
     const params = new URLSearchParams();
-    params.append("format", format);
+    params.append("format", formato);
     if (branch_id) params.append("branch_id", branch_id);
     if (brand_id) params.append("brand_id", brand_id);
     if (warehouse_id) params.append("warehouse_id", warehouse_id);
     if (product_id) params.append("product_id", product_id);
     if (start_date)
-      params.append("start_date", start_date.toISOString().split("T")[0]);
-    if (end_date)
-      params.append("end_date", end_date.toISOString().split("T")[0]);
+      params.append("start_date", format(start_date, "yyyy-MM-dd"));
+    if (end_date) params.append("end_date", format(end_date, "yyyy-MM-dd"));
     return params.toString();
   };
 
@@ -110,15 +113,20 @@ export default function CostOfSalesReportPage() {
             className="w-full!"
           />
 
-          <DateRangePickerFilter
-            label="Rango de fechas"
-            dateFrom={start_date}
-            dateTo={end_date}
-            onDateChange={(from, to) => {
-              setStartDate(from);
-              setEndDate(to);
-            }}
-            placeholder="Seleccionar rango"
+          <DatePickerFilter
+            label="Del"
+            value={start_date}
+            onChange={setStartDate}
+            placeholder="DD-MM-YYYY"
+            vertical
+            className="w-full"
+          />
+          <DatePickerFilter
+            label="Al"
+            value={end_date}
+            onChange={setEndDate}
+            placeholder="DD-MM-YYYY"
+            vertical
             className="w-full"
           />
 

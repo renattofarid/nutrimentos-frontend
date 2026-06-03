@@ -17,7 +17,8 @@ import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportKardexReport } from "../lib/reports.actions";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
-import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
+import { DatePickerFormField } from "@/components/DatePickerFormField";
+import { format } from "date-fns";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import { errorToast, successToast } from "@/lib/core.function";
 import { useProduct } from "@/pages/product/lib/product.hook";
@@ -96,6 +97,25 @@ const columns: ColumnDef<KardexItem>[] = [
               {type}
             </Badge>
           );
+        },
+      },
+      {
+        accessorKey: "customer_name",
+        header: "Cliente",
+        size: 180,
+        cell: ({ row }) => {
+          const sale = row.original.sale;
+          if (sale?.customer) {
+            const c = sale.customer;
+            const name =
+              c.type_person === "JURIDICA"
+                ? (c.business_name ?? c.commercial_name ?? "—")
+                : [c.names, c.father_surname, c.mother_surname]
+                    .filter(Boolean)
+                    .join(" ") || "—";
+            return <span className="text-sm">{name}</span>;
+          }
+          return <span className="text-sm text-muted-foreground">-</span>;
         },
       },
       {
@@ -323,12 +343,19 @@ export default function KardexReportPage() {
     setCodeToSearch(null);
   }, [productByCode, isSearchingByCode, codeToSearch]);
 
+  const _today = new Date();
+  const _todayStr = format(_today, "yyyy-MM-dd");
+  const _threeMonthsAgoStr = format(
+    new Date(_today.getFullYear(), _today.getMonth() - 3, 1),
+    "yyyy-MM-dd",
+  );
+
   const form = useForm<FilterFormValues>({
     defaultValues: {
       product_id: "",
       warehouse_id: "",
-      start_date: "",
-      end_date: "",
+      start_date: _threeMonthsAgoStr,
+      end_date: _todayStr,
     },
   });
 
@@ -395,24 +422,13 @@ export default function KardexReportPage() {
   return (
     <PageWrapper size="3xl">
       <Form {...form}>
-        <form className="space-y-6">
+        <form className="space-y-6 grid lg:grid-cols-3 gap-x-4">
           <GroupFormSection
             title="Filtros de Búsqueda"
             icon={Filter}
             gap="gap-2"
-            cols={{ sm: 1, md: 2, lg: 4 }}
-            headerExtra={
-              <Button
-                type="button"
-                variant="outline"
-                size="xs"
-                onClick={handleExport}
-                disabled={isExporting || tableData.length === 0}
-              >
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Excel
-              </Button>
-            }
+            className="lg:col-span-2"
+            cols={{ sm: 1, md: 2, lg: 3 }}
           >
             <div className="flex flex-col gap-0.5">
               <Label className="text-sm font-bold uppercase leading-none">
@@ -472,13 +488,28 @@ export default function KardexReportPage() {
               })}
             />
 
-            <DateRangePickerFormField
+            <DatePickerFormField
               control={form.control}
-              nameFrom="start_date"
-              nameTo="end_date"
-              label="Rango de Fechas"
-              placeholder="Seleccionar rango"
+              name="start_date"
+              label="Del"
             />
+            <DatePickerFormField
+              control={form.control}
+              name="end_date"
+              label="Al"
+            />
+            <div className="flex h-full items-end">
+              <Button
+                type="button"
+                variant="default"
+                onClick={handleExport}
+                color="green"
+                disabled={isExporting || tableData.length === 0}
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Excel
+              </Button>
+            </div>
           </GroupFormSection>
 
           {rawData && (
@@ -488,35 +519,48 @@ export default function KardexReportPage() {
               cols={{ sm: 1, md: 3 }}
             >
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-center text-muted-foreground">
                   Total Movimientos
                 </p>
-                <p className="text-2xl font-bold">{totalMovements}</p>
+                <p className="text-xl text-center font-bold">
+                  {totalMovements}
+                </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Entradas</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-xs text-center text-muted-foreground">
+                  Entradas
+                </p>
+                <p className="text-xl text-center font-bold text-green-600">
                   {totalEntries}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Salidas</p>
-                <p className="text-2xl font-bold text-red-600">{totalExits}</p>
+                <p className="text-xs text-center text-muted-foreground">
+                  Salidas
+                </p>
+                <p className="text-xl text-center font-bold text-red-600">
+                  {totalExits}
+                </p>
               </div>
             </GroupFormSection>
           )}
 
-          <DataTable
-            columns={columns}
-            data={tableData}
-            isLoading={isLoading}
-            initialColumnVisibility={{
-              document_type: false,
-              quantity_in: false,
-              quantity_out: false,
-              balance_quantity: false,
-            }}
-          />
+          <div className="col-span-full">
+            <DataTable
+              key={watchedValues.product_id ? "filtered" : "all"}
+              columns={columns}
+              data={tableData}
+              isLoading={isLoading}
+              initialColumnVisibility={{
+                product_codigo: !watchedValues.product_id,
+                product_name: !watchedValues.product_id,
+                document_type: false,
+                quantity_in: false,
+                quantity_out: false,
+                balance_quantity: false,
+              }}
+            />
+          </div>
         </form>
       </Form>
     </PageWrapper>

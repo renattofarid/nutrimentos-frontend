@@ -28,6 +28,7 @@ import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import type { RowSelectionState } from "@tanstack/react-table";
 import ExportButtons from "@/components/ExportButtons";
+import { format } from "date-fns";
 import SaleDetailSheet from "./SaleDetailSheet";
 
 function parseDocumento(documento: string) {
@@ -55,8 +56,7 @@ export default function SalePage() {
   const [vendedor_id, setVendedorId] = useState("");
   const [start_date, setStartDate] = useState<Date | undefined>(() => {
     const d = new Date();
-    d.setMonth(d.getMonth() - 1);
-    return d;
+    return new Date(d.getFullYear(), d.getMonth() - 3, 1);
   });
   const [end_date, setEndDate] = useState<Date | undefined>(() => new Date());
   const [documento, setDocumento] = useState("");
@@ -93,8 +93,8 @@ export default function SalePage() {
     status: status || undefined,
     warehouse_id: warehouse_id ? Number(warehouse_id) : undefined,
     vendedor_id: vendedor_id ? Number(vendedor_id) : undefined,
-    start_date: start_date?.toISOString().split("T")[0],
-    end_date: end_date?.toISOString().split("T")[0],
+    start_date: start_date ? format(start_date, "yyyy-MM-dd") : undefined,
+    end_date: end_date ? format(end_date, "yyyy-MM-dd") : undefined,
     numero: parsedNumero,
     serie: parsedSerie,
   });
@@ -207,8 +207,8 @@ export default function SalePage() {
     if (document_type) params.append("document_type", document_type);
     if (status) params.append("status", status);
     if (warehouse_id) params.append("warehouse_id", warehouse_id);
-    if (start_date) params.append("start_date", start_date.toISOString().split("T")[0]);
-    if (end_date) params.append("end_date", end_date.toISOString().split("T")[0]);
+    if (start_date) params.append("start_date", format(start_date, "yyyy-MM-dd"));
+    if (end_date) params.append("end_date", format(end_date, "yyyy-MM-dd"));
     if (numero) params.append("numero", numero);
     if (serie) params.append("serie", serie);
 

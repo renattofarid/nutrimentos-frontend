@@ -14,7 +14,8 @@ import {
   DOCUMENT_TYPES,
   MOVEMENT_TYPES,
 } from "../lib/warehouse-document.constants";
-import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
+import { DatePickerFilter } from "@/components/DatePickerFilter";
+import { format } from "date-fns";
 import { SearchableSelectAsync } from "@/components/SearchableSelectAsync";
 import { useProduct } from "@/pages/product/lib/product.hook";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
@@ -173,7 +174,10 @@ export default function WarehouseKardexPage() {
   const [selectedProduct, setSelectedProduct] = useState("");
   const [selectedDocumentType, setSelectedDocumentType] = useState("");
   const [selectedMovementType, setSelectedMovementType] = useState("");
-  const [fromDate, setFromDate] = useState(new Date());
+  const [fromDate, setFromDate] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth() - 3, 1);
+  });
   const [toDate, setToDate] = useState(
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   );
@@ -187,8 +191,8 @@ export default function WarehouseKardexPage() {
     product_id: selectedProduct ? Number(selectedProduct) : undefined,
     document_type: selectedDocumentType || undefined,
     movement_type: selectedMovementType || undefined,
-    from: fromDate || undefined,
-    to: toDate || undefined,
+    from: fromDate ? format(fromDate, "yyyy-MM-dd") : undefined,
+    to: toDate ? format(toDate, "yyyy-MM-dd") : undefined,
   };
 
   const { data, meta, isLoading, refetch } = useWarehouseKardex(params);
@@ -262,17 +266,17 @@ export default function WarehouseKardexPage() {
                 placeholder="Todos los movimientos"
               />
 
-              <DateRangePickerFilter
-                placeholder="Rango de fechas"
-                className="md:min-w-64 w-full md:w-auto"
-                dateFrom={fromDate ? new Date(fromDate) : undefined}
-                dateTo={toDate ? new Date(toDate) : undefined}
-                onDateChange={(from, to) => {
-                  setFromDate(from ? from : new Date());
-                  setToDate(
-                    to ? to : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-                  );
-                }}
+              <DatePickerFilter
+                label="Del"
+                value={fromDate}
+                onChange={(d) => setFromDate(d ?? new Date())}
+                placeholder="DD-MM-YYYY"
+              />
+              <DatePickerFilter
+                label="Al"
+                value={toDate}
+                onChange={(d) => setToDate(d ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))}
+                placeholder="DD-MM-YYYY"
               />
             </div>
           </div>

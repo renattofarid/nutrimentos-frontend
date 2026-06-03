@@ -36,7 +36,8 @@ import PageWrapper from "@/components/PageWrapper";
 import { exportCommissionsReport } from "../lib/reports.actions";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { FormSelect } from "@/components/FormSelect";
-import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
+import { DatePickerFormField } from "@/components/DatePickerFormField";
+import { format as dateFnsFormat } from "date-fns";
 import { errorToast, successToast } from "@/lib/core.function";
 
 interface FilterFormValues {
@@ -200,14 +201,18 @@ export default function CommissionsReportPage() {
 
   const { data: rawData, isLoading, fetch } = useCommissionsReport();
 
+  const _today = new Date();
+  const _todayStr = dateFnsFormat(_today, "yyyy-MM-dd");
+  const _threeMonthsAgoStr = dateFnsFormat(new Date(_today.getFullYear(), _today.getMonth() - 3, 1), "yyyy-MM-dd");
+
   const form = useForm<FilterFormValues>({
     defaultValues: {
       document_type: "",
       payment_type: "",
       user_id: "",
       warehouse_id: "",
-      start_date: "",
-      end_date: "",
+      start_date: _threeMonthsAgoStr,
+      end_date: _todayStr,
     },
   });
 
@@ -337,12 +342,15 @@ export default function CommissionsReportPage() {
               })}
             />
 
-            <DateRangePickerFormField
+            <DatePickerFormField
               control={form.control}
-              nameFrom="start_date"
-              nameTo="end_date"
-              label="Rango de Fechas"
-              placeholder="Seleccionar rango"
+              name="start_date"
+              label="Del"
+            />
+            <DatePickerFormField
+              control={form.control}
+              name="end_date"
+              label="Al"
             />
           </GroupFormSection>
 

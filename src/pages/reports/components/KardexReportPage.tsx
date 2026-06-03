@@ -17,7 +17,8 @@ import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportKardexReport } from "../lib/reports.actions";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
-import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
+import { DatePickerFormField } from "@/components/DatePickerFormField";
+import { format } from "date-fns";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import { errorToast, successToast } from "@/lib/core.function";
 import { useProduct } from "@/pages/product/lib/product.hook";
@@ -323,12 +324,16 @@ export default function KardexReportPage() {
     setCodeToSearch(null);
   }, [productByCode, isSearchingByCode, codeToSearch]);
 
+  const _today = new Date();
+  const _todayStr = format(_today, "yyyy-MM-dd");
+  const _threeMonthsAgoStr = format(new Date(_today.getFullYear(), _today.getMonth() - 3, 1), "yyyy-MM-dd");
+
   const form = useForm<FilterFormValues>({
     defaultValues: {
       product_id: "",
       warehouse_id: "",
-      start_date: "",
-      end_date: "",
+      start_date: _threeMonthsAgoStr,
+      end_date: _todayStr,
     },
   });
 
@@ -472,12 +477,15 @@ export default function KardexReportPage() {
               })}
             />
 
-            <DateRangePickerFormField
+            <DatePickerFormField
               control={form.control}
-              nameFrom="start_date"
-              nameTo="end_date"
-              label="Rango de Fechas"
-              placeholder="Seleccionar rango"
+              name="start_date"
+              label="Del"
+            />
+            <DatePickerFormField
+              control={form.control}
+              name="end_date"
+              label="Al"
             />
           </GroupFormSection>
 
@@ -511,6 +519,8 @@ export default function KardexReportPage() {
             data={tableData}
             isLoading={isLoading}
             initialColumnVisibility={{
+              product_codigo: false,
+              product_name: false,
               document_type: false,
               quantity_in: false,
               quantity_out: false,

@@ -29,6 +29,7 @@ import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import DeliverySheetOptions from "./DeliverySheetOptions";
 import { useDeliverySheets } from "../lib/deliverysheet.hook";
 import { errorToast, successToast } from "@/lib/core.function";
+import { format } from "date-fns";
 import DeliverySheetActions from "./DeliverySheetActions";
 import { useWindowManager } from "@/stores/window-manager.store";
 import type { RowSelectionState } from "@tanstack/react-table";
@@ -61,8 +62,11 @@ export default function DeliverySheetPage() {
   const [zone_id, setZoneId] = useState("");
   const [branch_id, setBranchId] = useState("");
   const [company_id, setCompanyId] = useState("");
-  const [issue_date_from, setIssueDateFrom] = useState<Date | undefined>();
-  const [issue_date_to, setIssueDateTo] = useState<Date | undefined>();
+  const [issue_date_from, setIssueDateFrom] = useState<Date | undefined>(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth() - 3, 1);
+  });
+  const [issue_date_to, setIssueDateTo] = useState<Date | undefined>(() => new Date());
   const [delivery_date_from, setDeliveryDateFrom] = useState<
     Date | undefined
   >();
@@ -82,10 +86,10 @@ export default function DeliverySheetPage() {
     driver_id: driver_id ? Number(driver_id) : undefined,
     zone_id: zone_id ? Number(zone_id) : undefined,
     date_from: issue_date_from
-      ? issue_date_from.toISOString().split("T")[0]
+      ? format(issue_date_from, "yyyy-MM-dd")
       : undefined,
     date_to: issue_date_to
-      ? issue_date_to.toISOString().split("T")[0]
+      ? format(issue_date_to, "yyyy-MM-dd")
       : undefined,
   });
 
@@ -121,10 +125,10 @@ export default function DeliverySheetPage() {
           : null,
         driver_id: driver_id ? Number(driver_id) : null,
         issue_date_from: issue_date_from
-          ? issue_date_from.toISOString().split("T")[0]
+          ? format(issue_date_from, "yyyy-MM-dd")
           : null,
         issue_date_to: issue_date_to
-          ? issue_date_to.toISOString().split("T")[0]
+          ? format(issue_date_to, "yyyy-MM-dd")
           : null,
         status: (status as any) || null,
         type: (type as any) || null,
@@ -303,10 +307,8 @@ export default function DeliverySheetPage() {
           setCompanyId={setCompanyId}
           issue_date_from={issue_date_from}
           issue_date_to={issue_date_to}
-          onIssueDateChange={(from, to) => {
-            setIssueDateFrom(from);
-            setIssueDateTo(to);
-          }}
+          setIssueDateFrom={setIssueDateFrom}
+          setIssueDateTo={setIssueDateTo}
           delivery_date_from={delivery_date_from}
           delivery_date_to={delivery_date_to}
           onDeliveryDateChange={(from, to) => {

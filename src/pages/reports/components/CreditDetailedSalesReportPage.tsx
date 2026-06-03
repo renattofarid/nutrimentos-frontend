@@ -36,7 +36,9 @@ export default function CreditDetailedSalesReportPage() {
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  const threeMonthsAgoStr = new Date(today.getFullYear(), today.getMonth() - 3, 1).toISOString().split("T")[0];
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
@@ -45,8 +47,8 @@ export default function CreditDetailedSalesReportPage() {
       document_type: "",
       vendedor_id: "",
       warehouse_id: "",
-      start_date: today,
-      end_date: today,
+      start_date: threeMonthsAgoStr,
+      end_date: todayStr,
       zone_id: "",
       brand_id: "",
       product_id: "",

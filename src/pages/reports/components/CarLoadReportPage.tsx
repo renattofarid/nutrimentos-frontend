@@ -34,6 +34,7 @@ interface ZoneOption {
 }
 
 const today = new Date();
+const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 3, 1);
 
 function formatDateParam(v: Date | string | undefined | null): string | null {
   if (!v) return null;
@@ -50,7 +51,7 @@ export default function CarLoadReportPage() {
   const form = useForm<FilterFormValues>({
     defaultValues: {
       branch_id: "1",
-      date_from: today,
+      date_from: threeMonthsAgo,
       date_to: today,
     },
   });

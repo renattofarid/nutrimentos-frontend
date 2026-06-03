@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
+import { DatePickerFilter } from "@/components/DatePickerFilter";
 import SearchInput from "@/components/SearchInput";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import {
@@ -37,7 +37,8 @@ interface DeliverySheetOptionsProps {
   setSearch: (value: string) => void;
   issue_date_from?: Date;
   issue_date_to?: Date;
-  onIssueDateChange: (from: Date | undefined, to: Date | undefined) => void;
+  setIssueDateFrom: (d: Date | undefined) => void;
+  setIssueDateTo: (d: Date | undefined) => void;
   delivery_date_from?: Date;
   delivery_date_to?: Date;
   onDeliveryDateChange: (from: Date | undefined, to: Date | undefined) => void;
@@ -62,7 +63,8 @@ export default function DeliverySheetOptions({
   setSearch,
   issue_date_from,
   issue_date_to,
-  onIssueDateChange,
+  setIssueDateFrom,
+  setIssueDateTo,
   // delivery_date_from,
   // delivery_date_to,
   // onDeliveryDateChange,
@@ -128,12 +130,17 @@ export default function DeliverySheetOptions({
         placeholder="Buscar por número, cliente o conductor"
       />
 
-      <DateRangePickerFilter
-        dateFrom={issue_date_from}
-        dateTo={issue_date_to}
-        onDateChange={onIssueDateChange}
-        placeholder="F. Emisión"
-        className="w-[220px]"
+      <DatePickerFilter
+        label="Del"
+        value={issue_date_from}
+        onChange={setIssueDateFrom}
+        placeholder="DD-MM-YYYY"
+      />
+      <DatePickerFilter
+        label="Al"
+        value={issue_date_to}
+        onChange={setIssueDateTo}
+        placeholder="DD-MM-YYYY"
       />
 
       <Select

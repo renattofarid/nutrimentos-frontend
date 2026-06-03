@@ -4,7 +4,8 @@ import PageWrapper from "@/components/PageWrapper";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import ExportButtons from "@/components/ExportButtons";
 import { SearchableSelect } from "@/components/SearchableSelect";
-import { DateRangePickerFilter } from "@/components/DateRangePickerFilter";
+import { DatePickerFilter } from "@/components/DatePickerFilter";
+import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Filter, Info } from "lucide-react";
 import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
@@ -36,8 +37,11 @@ export default function PurchaseRegisterReportPage() {
   const [document_type, setDocumentType] = useState("");
   const [payment_type, setPaymentType] = useState("");
   const [status, setStatus] = useState("");
-  const [start_date, setStartDate] = useState<Date | undefined>();
-  const [end_date, setEndDate] = useState<Date | undefined>();
+  const [start_date, setStartDate] = useState<Date | undefined>(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth() - 3, 1);
+  });
+  const [end_date, setEndDate] = useState<Date | undefined>(() => new Date());
 
   const { data: warehouses } = useAllWarehouses();
   const warehouseOptions =
@@ -54,9 +58,9 @@ export default function PurchaseRegisterReportPage() {
     if (status) params.append("status", status);
     if (warehouse_id) params.append("warehouse_id", warehouse_id);
     if (start_date)
-      params.append("start_date", start_date.toISOString().split("T")[0]);
+      params.append("start_date", format(start_date, "yyyy-MM-dd"));
     if (end_date)
-      params.append("end_date", end_date.toISOString().split("T")[0]);
+      params.append("end_date", format(end_date, "yyyy-MM-dd"));
     const qs = params.toString();
     return qs ? `/purchase/export?${qs}` : "/purchase/export";
   }, [
@@ -170,17 +174,20 @@ export default function PurchaseRegisterReportPage() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">
-            Rango de fechas
-          </label>
-          <DateRangePickerFilter
-            dateFrom={start_date}
-            dateTo={end_date}
-            onDateChange={(from, to) => {
-              setStartDate(from);
-              setEndDate(to);
-            }}
-            placeholder="Seleccionar rango"
+          <label className="text-xs font-medium text-muted-foreground">Del</label>
+          <DatePickerFilter
+            value={start_date}
+            onChange={setStartDate}
+            placeholder="DD-MM-YYYY"
+            className="w-full"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-muted-foreground">Al</label>
+          <DatePickerFilter
+            value={end_date}
+            onChange={setEndDate}
+            placeholder="DD-MM-YYYY"
             className="w-full"
           />
         </div>

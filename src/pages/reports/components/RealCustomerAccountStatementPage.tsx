@@ -18,7 +18,8 @@ import { FormSelect } from "@/components/FormSelect";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useClients } from "@/pages/client/lib/client.hook";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
-import { DateRangePickerFormField } from "@/components/DateRangePickerFormField";
+import { DatePickerFormField } from "@/components/DatePickerFormField";
+import { format } from "date-fns";
 import { FormSwitch } from "@/components/FormSwitch";
 import { exportCustomerAccountStatement } from "../lib/reports.actions";
 import { GroupFormSection } from "@/components/GroupFormSection";
@@ -233,14 +234,18 @@ export default function RealCustomerAccountStatementPage() {
     return { tableData, meta };
   }, [rawData]);
 
+  const _today = new Date();
+  const _todayStr = format(_today, "yyyy-MM-dd");
+  const _threeMonthsAgoStr = format(new Date(_today.getFullYear(), _today.getMonth() - 3, 1), "yyyy-MM-dd");
+
   const form = useForm<FilterFormValues>({
     defaultValues: {
       zone_id: "",
       customer_id: "",
       vendedor_id: "",
       payment_type: "ALL",
-      start_date: "",
-      end_date: "",
+      start_date: _threeMonthsAgoStr,
+      end_date: _todayStr,
       query_type: "todo",
       show_old: false,
     },
@@ -368,12 +373,15 @@ export default function RealCustomerAccountStatementPage() {
                   placeholder="Seleccionar vendedor"
                   options={workerOptions}
                 />
-                <DateRangePickerFormField
+                <DatePickerFormField
                   control={form.control}
-                  nameFrom="start_date"
-                  nameTo="end_date"
-                  label="Rango de Fechas"
-                  placeholder="Seleccionar rango"
+                  name="start_date"
+                  label="Del"
+                />
+                <DatePickerFormField
+                  control={form.control}
+                  name="end_date"
+                  label="Al"
                 />
                 <FormSelect
                   control={form.control}

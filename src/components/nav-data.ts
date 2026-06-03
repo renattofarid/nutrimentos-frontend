@@ -56,6 +56,7 @@ import {
   COST_OF_SALES_REPORT_ROUTE,
   CUSTOMER_ACCOUNT_STATEMENT_ROUTE,
   DETAILED_SALES_REPORT_ROUTE,
+  CREDIT_DETAILED_SALES_REPORT_ROUTE,
   INVENTORY_REPORT_ROUTE,
   KARDEX_REPORT_ROUTE,
   PURCHASE_REGISTER_REPORT_ROUTE,
@@ -345,6 +346,11 @@ export const navData: NavItem[] = [
       {
         title: "Registro de ventas detalladas",
         url: DETAILED_SALES_REPORT_ROUTE,
+        icon: ReportsIcon,
+      },
+      {
+        title: "Registro de ventas detallado de crédito",
+        url: CREDIT_DETAILED_SALES_REPORT_ROUTE,
         icon: ReportsIcon,
       },
       {

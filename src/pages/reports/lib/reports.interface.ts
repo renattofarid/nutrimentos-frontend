@@ -63,6 +63,9 @@ export const CAR_LOAD_REPORT_ROUTE = `${ROUTE}/llenado-carros`;
 // Detailed Sales Report
 export const DETAILED_SALES_REPORT_ROUTE = `${ROUTE}/ventas-detallado`;
 
+// Credit Detailed Sales Report
+export const CREDIT_DETAILED_SALES_REPORT_ROUTE = `${ROUTE}/ventas-detallado-credito`;
+
 // Sales By Product Report
 export const SALES_BY_PRODUCT_REPORT_ROUTE = `${ROUTE}/ventas-por-producto`;
 

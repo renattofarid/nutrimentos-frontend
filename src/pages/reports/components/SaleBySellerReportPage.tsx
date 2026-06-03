@@ -401,7 +401,7 @@ export default function SaleBySellerReportPage() {
               name="end_date"
               label="Al"
             />
-            <div className="flex items-end h-full gap-2">
+            <div className="lg:col-span-full flex items-end justify-end  h-full w-full gap-2">
               <Button
                 type="submit"
                 variant="outline"
@@ -441,7 +441,7 @@ export default function SaleBySellerReportPage() {
                 <p className="text-sm text-muted-foreground text-center">
                   Costo Total
                 </p>
-                <p className="text-2xl font-bold text-green-600 text-center">
+                <p className="text-2xl font-bold text-amber-600 text-center">
                   {rawData.summary.total_cost}
                 </p>
               </div>
@@ -449,7 +449,7 @@ export default function SaleBySellerReportPage() {
                 <p className="text-sm text-muted-foreground text-center">
                   Ganancia Total
                 </p>
-                <p className="text-2xl font-bold text-red-600 text-center">
+                <p className="text-2xl font-bold text-green-600 text-center">
                   {rawData.summary.total_profit}
                 </p>
               </div>
@@ -457,7 +457,7 @@ export default function SaleBySellerReportPage() {
                 <p className="text-sm text-muted-foreground text-center">
                   Monto Total
                 </p>
-                <p className="text-2xl font-bold text-red-600 text-center">
+                <p className="text-2xl font-bold text-blue-600 text-center">
                   {rawData.summary.total_amount}
                 </p>
               </div>

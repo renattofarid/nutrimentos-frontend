@@ -203,7 +203,10 @@ export default function CommissionsReportPage() {
 
   const _today = new Date();
   const _todayStr = dateFnsFormat(_today, "yyyy-MM-dd");
-  const _threeMonthsAgoStr = dateFnsFormat(new Date(_today.getFullYear(), _today.getMonth() - 3, 1), "yyyy-MM-dd");
+  const _threeMonthsAgoStr = dateFnsFormat(
+    new Date(_today.getFullYear(), _today.getMonth() - 3, 1),
+    "yyyy-MM-dd",
+  );
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
@@ -265,35 +268,7 @@ export default function CommissionsReportPage() {
             title="Filtros de Búsqueda"
             icon={Filter}
             gap="gap-2"
-            cols={{ sm: 1, md: 2, lg: 5 }}
-            headerExtra={
-              <div className="flex gap-2">
-                <Button type="submit" disabled={isLoading} size="xs">
-                  <Search className="mr-2 h-4 w-4" />
-                  Buscar
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  onClick={() => handleExport("excel")}
-                  disabled={isExportingExcel || tableData.length === 0}
-                >
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Excel
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  onClick={() => handleExport("pdf")}
-                  disabled={isExportingPdf || tableData.length === 0}
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  PDF
-                </Button>
-              </div>
-            }
+            cols={{ sm: 1, md: 2, lg: 4 }}
           >
             <FormSelect
               control={form.control}
@@ -352,6 +327,35 @@ export default function CommissionsReportPage() {
               name="end_date"
               label="Al"
             />
+            <div className="flex gap-2 items-end h-full">
+              <Button
+                variant="outline"
+                color="primary"
+                type="submit"
+                disabled={isLoading}
+              >
+                <Search className="mr-2 h-4 w-4" />
+                Buscar
+              </Button>
+              <Button
+                type="button"
+                color="green"
+                onClick={() => handleExport("excel")}
+                disabled={isExportingExcel || tableData.length === 0}
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Excel
+              </Button>
+              <Button
+                type="button"
+                color="red"
+                onClick={() => handleExport("pdf")}
+                disabled={isExportingPdf || tableData.length === 0}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                PDF
+              </Button>
+            </div>
           </GroupFormSection>
 
           {rawData && (

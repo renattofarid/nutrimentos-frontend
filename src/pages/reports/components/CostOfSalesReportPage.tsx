@@ -45,17 +45,16 @@ export default function CostOfSalesReportPage() {
   const brandOptions =
     brands?.map((b: any) => ({ value: String(b.id), label: b.name })) ?? [];
 
-  const buildQs = (format: "excel" | "pdf") => {
+  const buildQs = (formato: "excel" | "pdf") => {
     const params = new URLSearchParams();
-    params.append("format", format);
+    params.append("format", formato);
     if (branch_id) params.append("branch_id", branch_id);
     if (brand_id) params.append("brand_id", brand_id);
     if (warehouse_id) params.append("warehouse_id", warehouse_id);
     if (product_id) params.append("product_id", product_id);
     if (start_date)
       params.append("start_date", format(start_date, "yyyy-MM-dd"));
-    if (end_date)
-      params.append("end_date", format(end_date, "yyyy-MM-dd"));
+    if (end_date) params.append("end_date", format(end_date, "yyyy-MM-dd"));
     return params.toString();
   };
 

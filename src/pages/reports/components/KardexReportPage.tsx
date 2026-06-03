@@ -547,12 +547,13 @@ export default function KardexReportPage() {
 
           <div className="col-span-full">
             <DataTable
+              key={watchedValues.product_id ? "filtered" : "all"}
               columns={columns}
               data={tableData}
               isLoading={isLoading}
               initialColumnVisibility={{
-                product_codigo: false,
-                product_name: false,
+                product_codigo: !watchedValues.product_id,
+                product_name: !watchedValues.product_id,
                 document_type: false,
                 quantity_in: false,
                 quantity_out: false,

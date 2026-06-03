@@ -24,8 +24,18 @@ import { FormInput } from "@/components/FormInput";
 import { errorToast, successToast } from "@/lib/core.function";
 
 const MONTH_NAMES = [
-  "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-  "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
+  "Ene",
+  "Feb",
+  "Mar",
+  "Abr",
+  "May",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dic",
 ];
 
 interface FilterFormValues {
@@ -67,7 +77,8 @@ const columns: ColumnDef<AnnualSalesItem>[] = [
     header: MONTH_NAMES[m - 1],
     size: 70,
     cell: ({ row }: { row: { original: AnnualSalesItem } }) => {
-      const val = row.original.months[String(m) as keyof typeof row.original.months];
+      const val =
+        row.original.months[String(m) as keyof typeof row.original.months];
       return (
         <span className="font-mono text-sm text-right block">
           {val !== 0 ? val.toFixed(2) : "-"}
@@ -147,34 +158,6 @@ export default function AnnualSalesReportPage() {
             icon={Filter}
             gap="gap-2"
             cols={{ sm: 1, md: 2, lg: 4 }}
-            headerExtra={
-              <div className="flex gap-2">
-                <Button type="submit" disabled={isLoading} size="xs">
-                  <Search className="mr-2 h-4 w-4" />
-                  Buscar
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  onClick={() => handleExport("excel")}
-                  disabled={isExportingExcel}
-                >
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Excel
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  onClick={() => handleExport("pdf")}
-                  disabled={isExportingPdf}
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  PDF
-                </Button>
-              </div>
-            }
           >
             <FormInput
               control={form.control}
@@ -219,13 +202,39 @@ export default function AnnualSalesReportPage() {
                 value: String(item.id),
               })}
             />
+
+            <div className="flex gap-2 justify-end lg:col-span-full">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                variant="outline"
+                color="primary"
+              >
+                <Search className="mr-2 h-4 w-4" />
+                Buscar
+              </Button>
+              <Button
+                type="button"
+                color="green"
+                onClick={() => handleExport("excel")}
+                disabled={isExportingExcel}
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Excel
+              </Button>
+              <Button
+                type="button"
+                color="red"
+                onClick={() => handleExport("pdf")}
+                disabled={isExportingPdf}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                PDF
+              </Button>
+            </div>
           </GroupFormSection>
 
-          <DataTable
-            columns={columns}
-            data={tableData}
-            isLoading={isLoading}
-          />
+          <DataTable columns={columns} data={tableData} isLoading={isLoading} />
         </form>
       </Form>
     </PageWrapper>

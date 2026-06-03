@@ -326,7 +326,10 @@ export default function KardexReportPage() {
 
   const _today = new Date();
   const _todayStr = format(_today, "yyyy-MM-dd");
-  const _threeMonthsAgoStr = format(new Date(_today.getFullYear(), _today.getMonth() - 3, 1), "yyyy-MM-dd");
+  const _threeMonthsAgoStr = format(
+    new Date(_today.getFullYear(), _today.getMonth() - 3, 1),
+    "yyyy-MM-dd",
+  );
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
@@ -400,24 +403,13 @@ export default function KardexReportPage() {
   return (
     <PageWrapper size="3xl">
       <Form {...form}>
-        <form className="space-y-6">
+        <form className="space-y-6 grid lg:grid-cols-3 gap-x-4">
           <GroupFormSection
             title="Filtros de Búsqueda"
             icon={Filter}
             gap="gap-2"
-            cols={{ sm: 1, md: 2, lg: 4 }}
-            headerExtra={
-              <Button
-                type="button"
-                variant="outline"
-                size="xs"
-                onClick={handleExport}
-                disabled={isExporting || tableData.length === 0}
-              >
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Excel
-              </Button>
-            }
+            className="lg:col-span-2"
+            cols={{ sm: 1, md: 2, lg: 3 }}
           >
             <div className="flex flex-col gap-0.5">
               <Label className="text-sm font-bold uppercase leading-none">
@@ -487,6 +479,18 @@ export default function KardexReportPage() {
               name="end_date"
               label="Al"
             />
+            <div className="flex h-full items-end">
+              <Button
+                type="button"
+                variant="default"
+                onClick={handleExport}
+                color="green"
+                disabled={isExporting || tableData.length === 0}
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Excel
+              </Button>
+            </div>
           </GroupFormSection>
 
           {rawData && (
@@ -496,37 +500,47 @@ export default function KardexReportPage() {
               cols={{ sm: 1, md: 3 }}
             >
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-center text-muted-foreground">
                   Total Movimientos
                 </p>
-                <p className="text-2xl font-bold">{totalMovements}</p>
+                <p className="text-xl text-center font-bold">
+                  {totalMovements}
+                </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Entradas</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-xs text-center text-muted-foreground">
+                  Entradas
+                </p>
+                <p className="text-xl text-center font-bold text-green-600">
                   {totalEntries}
                 </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Salidas</p>
-                <p className="text-2xl font-bold text-red-600">{totalExits}</p>
+                <p className="text-xs text-center text-muted-foreground">
+                  Salidas
+                </p>
+                <p className="text-xl text-center font-bold text-red-600">
+                  {totalExits}
+                </p>
               </div>
             </GroupFormSection>
           )}
 
-          <DataTable
-            columns={columns}
-            data={tableData}
-            isLoading={isLoading}
-            initialColumnVisibility={{
-              product_codigo: false,
-              product_name: false,
-              document_type: false,
-              quantity_in: false,
-              quantity_out: false,
-              balance_quantity: false,
-            }}
-          />
+          <div className="col-span-full">
+            <DataTable
+              columns={columns}
+              data={tableData}
+              isLoading={isLoading}
+              initialColumnVisibility={{
+                product_codigo: false,
+                product_name: false,
+                document_type: false,
+                quantity_in: false,
+                quantity_out: false,
+                balance_quantity: false,
+              }}
+            />
+          </div>
         </form>
       </Form>
     </PageWrapper>

@@ -10,6 +10,7 @@ import {
   deleteWarehouseDocument,
   confirmWarehouseDocument,
   cancelWarehouseDocument,
+  getWarehouseDocumentPdf,
 } from "../lib/warehouse-document.actions";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import {
@@ -35,7 +36,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import PageWrapper from "@/components/PageWrapper";
-import { exportWarehouseDocumentByNumber } from "../lib/warehouse-document.actions";
 import { format } from "date-fns";
 
 const { MODEL, ROUTE } = WAREHOUSE_DOCUMENT;
@@ -157,21 +157,23 @@ export default function WarehouseDocumentPage() {
   };
 
   const handlePrint = () => {
-    if (!toolbarDoc?.document_number) return;
+    if (!toolbarDoc?.id) return;
 
-    const downloadPromise = exportWarehouseDocumentByNumber(
-      toolbarDoc.document_number,
-    ).then((blob) => {
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, "_blank");
-      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
-    });
+    const downloadPromise = getWarehouseDocumentPdf(toolbarDoc.id).then(
+      (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, "_blank");
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+      },
+    );
 
     promiseToast(downloadPromise, {
       loading: "Generando PDF...",
       success: "PDF generado correctamente",
       error: (error: any) =>
-        error?.response?.data?.message ?? error?.message ?? "Error al generar el PDF",
+        error?.response?.data?.message ??
+        error?.message ??
+        "Error al generar el PDF",
     });
   };
 

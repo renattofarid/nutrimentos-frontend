@@ -100,3 +100,11 @@ export async function exportWarehouseDocumentByNumber(
   });
   return response.data;
 }
+
+// Get warehouse document PDF by ID
+export async function getWarehouseDocumentPdf(id: number): Promise<Blob> {
+  const response = await api.get<Blob>(`${ENDPOINT}/${id}/pdf`, {
+    responseType: "blob",
+  });
+  return response.data;
+}

@@ -75,7 +75,6 @@ export default function WarehouseDocumentForm({
     defaultValues: {
       warehouse_origin_id: "",
       document_type: "TRASLADO",
-      motive: "TRASLADO_INTERNO",
       warehouse_dest_id: "",
       responsible_origin_id: "",
       responsible_dest_id: "37",

@@ -72,16 +72,17 @@ export default function WarehouseDocumentForm({
 
   const form = useForm({
     resolver: zodResolver(warehouseDocumentSchemaCreate) as any,
-    defaultValues: defaultValues || {
+    defaultValues: {
       warehouse_origin_id: "",
       document_type: "TRASLADO",
-      motive: "TRASLADO_INTERNO",
       warehouse_dest_id: "",
       responsible_origin_id: "",
       responsible_dest_id: "37",
       movement_date: "",
       observations: "",
       details: [],
+      ...defaultValues,
+      motive: "TRASLADO_INTERNO",
     },
   });
 

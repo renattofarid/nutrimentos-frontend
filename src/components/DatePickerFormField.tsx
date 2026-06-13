@@ -75,7 +75,7 @@ export function DatePickerFormField<T extends FieldValues>({
 }: DatePickerFormFieldProps<T>) {
   const isMobile = useIsMobile();
   const { field, fieldState } = useController({ control, name });
-  const { horizontal } = useFormLayout();
+  const { horizontal, labelWidth } = useFormLayout();
 
   const parsedDate = useMemo(() => {
     if ((field.value as unknown) instanceof Date) return field.value;
@@ -193,7 +193,7 @@ export function DatePickerFormField<T extends FieldValues>({
             className={cn(
               horizontal &&
                 !autoLabelWidth &&
-                "w-48 shrink-0 justify-end text-right font-bold uppercase",
+                `${labelWidth} shrink-0 justify-end text-right font-bold uppercase`,
               (autoLabelWidth || horizontalField) &&
                 "shrink-0 justify-end text-right font-bold uppercase",
             )}

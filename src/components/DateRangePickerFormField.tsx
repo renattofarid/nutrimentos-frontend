@@ -62,7 +62,7 @@ export function DateRangePickerFormField<T extends FieldValues>({
 }: DateRangePickerFormFieldProps<T>) {
   const [open, setOpen] = React.useState(false);
   const isMobile = useIsMobile();
-  const { horizontal } = useFormLayout();
+  const { horizontal, labelWidth } = useFormLayout();
 
   return (
     <FormField
@@ -99,7 +99,7 @@ export function DateRangePickerFormField<T extends FieldValues>({
                     className={cn(
                       "flex items-center font-bold uppercase",
                       horizontal
-                        ? "w-48 shrink-0 justify-end text-right"
+                        ? `${labelWidth} shrink-0 justify-end text-right`
                         : "justify-start",
                     )}
                   >

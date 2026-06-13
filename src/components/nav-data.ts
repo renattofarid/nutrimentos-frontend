@@ -255,6 +255,7 @@ export const navData: NavItem[] = [
     url: "#",
     icon: ShoppingBag,
     items: [
+      { title: CompanyTitle, url: CompanyRoute, icon: CompanyIcon },
       { title: ClientTitle, url: ClientRoute, icon: ClientIcon },
       { title: SupplierTitle, url: SupplierRoute, icon: SupplierIcon },
       { title: ProductTitle, url: ProductRoute, icon: ProductIcon },

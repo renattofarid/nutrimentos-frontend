@@ -104,7 +104,7 @@ export function FormSelectAsync({
   descriptionAsBadge = false,
   refetchOnOpen = false,
 }: FormSelectAsyncProps) {
-  const { horizontal } = useFormLayout();
+  const { horizontal, labelWidth } = useFormLayout();
   const { field: controlField } = useController({ name, control });
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -353,7 +353,7 @@ export function FormSelectAsync({
                     className={cn(
                       "flex items-center font-bold uppercase",
                       horizontal
-                        ? "w-48 shrink-0 justify-end text-right"
+                        ? `${labelWidth} shrink-0 justify-end text-right`
                         : horizontalField
                           ? "shrink-0 justify-end text-right"
                           : "justify-start",

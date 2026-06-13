@@ -67,7 +67,7 @@ export function DateTimePickerForm<T extends FieldValues>({
     control,
   });
 
-  const { horizontal } = useFormLayout();
+  const { horizontal, labelWidth } = useFormLayout();
   const [isOpen, setIsOpen] = React.useState(false);
 
   const hours = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -269,7 +269,7 @@ export function DateTimePickerForm<T extends FieldValues>({
             className={cn(
               horizontal &&
                 !autoLabelWidth &&
-                "w-48 shrink-0 justify-end text-right font-bold uppercase",
+                `${labelWidth} shrink-0 justify-end text-right font-bold uppercase`,
               (autoLabelWidth || horizontalField) &&
                 "shrink-0 justify-end text-right font-bold uppercase",
             )}

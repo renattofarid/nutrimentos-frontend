@@ -74,7 +74,7 @@ export function FormSelect({
   tabIndex,
   horizontalField = false,
 }: FormSelectProps) {
-  const { horizontal } = useFormLayout();
+  const { horizontal, labelWidth } = useFormLayout();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [searchTab, setSearchTab] = useState<"name" | "code">("name");
@@ -210,7 +210,7 @@ export function FormSelect({
               className={cn(
                 "flex items-center font-bold uppercase",
                 horizontal
-                  ? "w-48 shrink-0 justify-end text-right"
+                  ? `${labelWidth} shrink-0 justify-end text-right`
                   : horizontalField
                     ? "shrink-0 justify-end text-right"
                     : "justify-start",

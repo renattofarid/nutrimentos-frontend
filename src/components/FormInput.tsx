@@ -56,7 +56,7 @@ export function FormInput({
   ...inputProps
 }: FormInputProps) {
   const isNumberType = inputProps.type === "number";
-  const { horizontal } = useFormLayout();
+  const { horizontal, labelWidth } = useFormLayout();
 
   // Si no hay control, funcionar como input controlado estándar
   if (!control) {
@@ -92,7 +92,7 @@ export function FormInput({
         className={cn(
           "flex items-center text-xs md:text-sm leading-none font-bold uppercase text-muted-foreground",
           horizontal
-            ? "w-48 shrink-0 justify-end text-right"
+            ? `${labelWidth} shrink-0 justify-end text-right`
             : horizontalField
               ? "shrink-0 justify-end text-right"
               : "justify-start h-fit mb-0.5",
@@ -188,7 +188,7 @@ export function FormInput({
             className={cn(
               "flex items-center text-xs md:text-sm leading-none font-bold uppercase dark:text-muted-foreground",
               horizontal
-                ? "w-48 shrink-0 justify-end text-right"
+                ? `${labelWidth} shrink-0 justify-end text-right`
                 : horizontalField
                   ? "shrink-0 justify-end text-right"
                   : "justify-start h-fit",

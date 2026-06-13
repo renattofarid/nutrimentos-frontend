@@ -4,10 +4,12 @@ import { createContext, useContext, type ReactNode } from "react";
 
 interface FormLayoutContextValue {
   horizontal: boolean;
+  labelWidth: string;
 }
 
 export const FormLayoutContext = createContext<FormLayoutContextValue>({
   horizontal: false,
+  labelWidth: "w-48",
 });
 
 export const useFormLayout = () => useContext(FormLayoutContext);
@@ -30,6 +32,7 @@ interface FormSectionProps {
   gap?: string;
   headerExtra?: ReactNode;
   bordered?: boolean;
+  labelWidth?: string;
 }
 
 const colsMap = {
@@ -87,6 +90,7 @@ export const GroupFormSection = ({
   headerExtra,
   horizontal = false,
   bordered = true,
+  labelWidth = "w-48",
 }: FormSectionProps) => {
   const gridClasses = [
     "grid",
@@ -143,7 +147,7 @@ export const GroupFormSection = ({
         </div>
       )}
       <div className={bordered ? "p-2 pt-6" : "p-2"}>
-        <FormLayoutContext.Provider value={{ horizontal }}>
+        <FormLayoutContext.Provider value={{ horizontal, labelWidth }}>
           <div className={cn(gridClasses)}>{children}</div>
         </FormLayoutContext.Provider>
       </div>

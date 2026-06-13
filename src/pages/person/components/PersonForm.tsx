@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
-import { useFormLayout } from "@/components/GroupFormSection";
+import { useFormLayout, FormLayoutContext } from "@/components/GroupFormSection";
 import {
   Loader,
   Search,
@@ -70,7 +70,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import type { ZoneResource } from "@/pages/zone/lib/zone.interface";
-import { createPersonZone, updatePersonZone } from "@/pages/client/lib/personzone.actions";
+import {
+  createPersonZone,
+  updatePersonZone,
+} from "@/pages/client/lib/personzone.actions";
 import { CLIENT } from "@/pages/client/lib/client.interface";
 
 interface StagedAddress {
@@ -99,9 +102,9 @@ function NumberDocumentContent({
   isSearching,
   handleDocumentSearch,
 }: NumberDocumentContentProps) {
-  const { horizontal } = useFormLayout();
+  const { horizontal, labelWidth } = useFormLayout();
 
-  const labelText = <>Número de Documento (Opcional)</>;
+  const labelText = <p className="leading-none">Número de Documento</p>;
 
   const inputEl = (
     <FormControl>
@@ -180,7 +183,7 @@ function NumberDocumentContent({
   if (horizontal) {
     return (
       <FormItem className="flex flex-row items-center gap-3">
-        <FormLabel className="w-48 shrink-0 justify-end text-right text-sm font-bold uppercase dark:text-muted-foreground">
+        <FormLabel className={`${labelWidth} shrink-0 justify-end text-right text-sm font-bold uppercase dark:text-muted-foreground`}>
           {labelText}
         </FormLabel>
         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
@@ -217,6 +220,7 @@ interface PersonFormProps {
   showZone?: boolean; // Show zone field
   showDirection?: boolean; // Show address field
   showPriceList?: boolean; // Show price list field for clients
+  labelWidth?: string; // Tailwind width class for horizontal labels, e.g. "w-32", "w-48", "w-56"
 }
 
 export const PersonForm = ({
@@ -234,9 +238,12 @@ export const PersonForm = ({
   showZone = false,
   showDirection = true,
   showPriceList = false,
+  labelWidth = "w-32",
 }: PersonFormProps) => {
   const isEditing = !!initialData;
-  const primaryZone = initialData?.person_zones?.find((pz) => pz.is_primary) ?? initialData?.person_zones?.[0];
+  const primaryZone =
+    initialData?.person_zones?.find((pz) => pz.is_primary) ??
+    initialData?.person_zones?.[0];
   const queryClient = useQueryClient();
 
   // Use client schema if isClient is true
@@ -252,7 +259,8 @@ export const PersonForm = ({
   const form = useForm<FormSchema>({
     resolver: zodResolver(schema),
     defaultValues: {
-      document_type_id: initialData?.document_type_id?.toString() || TYPE_DOCUMENT.DNI.id,
+      document_type_id:
+        initialData?.document_type_id?.toString() || TYPE_DOCUMENT.DNI.id,
       type_person:
         (initialData?.type_person as "NATURAL" | "JURIDICA") || "NATURAL",
       number_document: initialData?.number_document ?? "",
@@ -291,7 +299,8 @@ export const PersonForm = ({
   const [newAddrReference, setNewAddrReference] = useState("");
 
   const nonPrimaryZones = isEditing
-    ? (initialData?.person_zones?.filter((pz) => pz.id !== primaryZone?.id) ?? [])
+    ? (initialData?.person_zones?.filter((pz) => pz.id !== primaryZone?.id) ??
+      [])
     : [];
 
   // Ref to track if document type change triggered person type change
@@ -362,7 +371,9 @@ export const PersonForm = ({
   // Auto-select first zone when creating and zones load
   useEffect(() => {
     if (!isEditing && zones && zones.length > 0 && !form.getValues("zone_id")) {
-      form.setValue("zone_id", zones[0].id.toString(), { shouldValidate: false });
+      form.setValue("zone_id", zones[0].id.toString(), {
+        shouldValidate: false,
+      });
     }
   }, [zones, isEditing, form]);
 
@@ -422,7 +433,10 @@ export const PersonForm = ({
           };
 
           updates.names = result.data.names || "";
-          updates.father_surname = [result.data.father_surname, result.data.mother_surname]
+          updates.father_surname = [
+            result.data.father_surname,
+            result.data.mother_surname,
+          ]
             .filter(Boolean)
             .join(" ");
           updates.mother_surname = "";
@@ -474,10 +488,12 @@ export const PersonForm = ({
   const handleSubmit = async (data: FormSchema) => {
     try {
       const submitData = isEditing ? { ...data, role_id: "" } : data;
-      (submitData as any).commercial_name = (submitData as any).business_name || "";
+      (submitData as any).commercial_name =
+        (submitData as any).business_name || "";
 
       const returnedId = await onSubmit(submitData);
-      const effectivePersonId = returnedId ?? (initialData?.id as number | undefined);
+      const effectivePersonId =
+        returnedId ?? (initialData?.id as number | undefined);
 
       if (effectivePersonId) {
         if (!isEditing && isClient && (data as any).zone_id) {
@@ -536,411 +552,70 @@ export const PersonForm = ({
           disabled={isSearching}
           className="space-y-6 border-0 p-0 m-0 min-w-0"
         >
-        {/* Form Actions */}
-        <div className="flex items-center gap-2">
-          <Button size="sm" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
-            {isSubmitting
-              ? isEditing
-                ? "Actualizando..."
-                : "Creando..."
-              : isEditing
-                ? "Actualizar"
-                : "Guardar"}
-          </Button>
-          {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onCancel}
-            >
-              <X /> Cancelar
+          {/* Form Actions */}
+          <div className="flex items-center gap-2">
+            <Button size="sm" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? <Loader className="animate-spin" /> : <Save />}
+              {isSubmitting
+                ? isEditing
+                  ? "Actualizando..."
+                  : "Creando..."
+                : isEditing
+                  ? "Actualizar"
+                  : "Guardar"}
             </Button>
-          )}
-        </div>
-
-        {isClient ? (
-          /* Flat form for client create and edit */
-          <div className="space-y-3">
-            <FormSelect
-              control={form.control}
-              name="document_type_id"
-              label="Tipo de Documento"
-              placeholder="Seleccione tipo"
-              disabled={isLoadingDocumentTypes}
-              options={
-                isLoadingDocumentTypes
-                  ? []
-                  : (documentTypes || []).map((dt: DocumentTypeResource) => ({
-                      value: dt.id.toString(),
-                      label: dt.name,
-                    }))
-              }
-            />
-
-            <FormField
-              control={form.control}
-              name="number_document"
-              render={({ field }) => (
-                <NumberDocumentContent
-                  field={field}
-                  errors={errors}
-                  fieldsFromSearch={fieldsFromSearch}
-                  dirtyFields={dirtyFields}
-                  document_type_id={document_type_id}
-                  isSearching={isSearching}
-                  handleDocumentSearch={handleDocumentSearch}
-                />
-              )}
-            />
-
-            {type_person === "NATURAL" && (
-              <>
-                {isSearching ? (
-                  <Skeleton className="h-8 w-full" />
-                ) : (
-                  <FormInput
-                    control={form.control}
-                    name="names"
-                    label="Nombres"
-                    placeholder="Ingrese los nombres"
-                    uppercase
-                    className={fieldsFromSearch.names ? "bg-blue-50 border-blue-200" : ""}
-                  />
-                )}
-                {isSearching ? (
-                  <Skeleton className="h-8 w-full" />
-                ) : (
-                  <FormInput
-                    control={form.control}
-                    name="father_surname"
-                    label="Apellidos"
-                    placeholder="Ingrese los apellidos"
-                    uppercase
-                    className={fieldsFromSearch.father_surname ? "bg-blue-50 border-blue-200" : ""}
-                  />
-                )}
-              </>
-            )}
-
-            {type_person === "JURIDICA" && (
-              <>
-                {isSearching ? (
-                  <Skeleton className="h-8 w-full" />
-                ) : (
-                  <FormInput
-                    control={form.control}
-                    name="business_name"
-                    label="Razón Social"
-                    placeholder="Ingrese la razón social"
-                    className={fieldsFromSearch.business_name ? "bg-blue-50 border-blue-200" : ""}
-                  />
-                )}
-              </>
-            )}
-
-            <FormSelect
-              control={form.control}
-              name="zone_id"
-              label="Zona"
-              placeholder="Seleccione zona"
-              disabled={isLoadingZones || !zones}
-              options={(zones ?? []).map((z: ZoneResource) => ({
-                value: z.id.toString(),
-                label: z.name,
-              }))}
-            />
-
-            <FormInput
-              control={form.control}
-              name="address"
-              label="Dirección"
-              placeholder="Ingrese la dirección"
-            />
-
-            <FormInput
-              control={form.control}
-              name="reference"
-              label="Referencia"
-              placeholder="Referencia o indicaciones (opcional)"
-            />
-
-            <FormInput
-              control={form.control}
-              name="phone"
-              label="Teléfono"
-              placeholder="987654321 (9 dígitos)"
-              maxLength={9}
-            />
-
-            {showPriceList && (
-              <FormSelect
-                control={form.control}
-                name="client_category_id"
-                label="Lista de Precio"
-                placeholder="Seleccione lista de precio"
-                disabled={isLoadingPriceLists}
-                options={
-                  isLoadingPriceLists
-                    ? []
-                    : (priceLists || [])
-                        .filter((pl: PriceList) => pl.is_active)
-                        .map((pl: PriceList) => ({
-                          value: pl.id.toString(),
-                          label: `${pl.name} (${pl.code})`,
-                        }))
-                }
-              />
-            )}
-
-            {/* Extra fields toggle */}
-            <div>
+            {onCancel && (
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                onClick={() => setShowExtraFields(!showExtraFields)}
-                className="text-xs gap-1 text-muted-foreground hover:text-foreground h-7 px-2 -ml-2"
+                onClick={onCancel}
               >
-                {showExtraFields ? (
-                  <ChevronUp className="h-3 w-3" />
-                ) : (
-                  <ChevronDown className="h-3 w-3" />
-                )}
-                {showExtraFields ? "Ocultar campos adicionales" : "Mostrar más campos"}
+                <X /> Cancelar
               </Button>
-            </div>
-
-            {showExtraFields && (
-              <>
-                <FormInput
-                  control={form.control}
-                  name="email"
-                  label="Correo Electrónico"
-                  type="email"
-                  placeholder="ejemplo@correo.com"
-                />
-                {type_person === "NATURAL" && (
-                  <>
-                    <FormSelect
-                      control={form.control}
-                      name="gender"
-                      label="Género"
-                      placeholder="Seleccione género"
-                      options={[
-                        { value: "M", label: "Masculino" },
-                        { value: "F", label: "Femenino" },
-                        { value: "O", label: "Otro" },
-                      ]}
-                    />
-                    <DatePickerFormField
-                      control={form.control}
-                      name="birth_date"
-                      label="Fecha de Nacimiento"
-                      placeholder="Seleccione fecha"
-                      captionLayout="dropdown"
-                      endMonth={
-                        new Date(
-                          new Date().getFullYear() - 18,
-                          new Date().getMonth(),
-                          new Date().getDate(),
-                        )
-                      }
-                    />
-                  </>
-                )}
-                {showBusinessType && (
-                  <FormSelect
-                    control={form.control}
-                    name="business_type_id"
-                    label="Tipo de Negocio"
-                    placeholder="Seleccione tipo de negocio"
-                    disabled={isLoadingBusinessTypes}
-                    options={
-                      isLoadingBusinessTypes
-                        ? []
-                        : (businessTypes || []).map((bt: BusinessTypeResource) => ({
-                            value: bt.id.toString(),
-                            label: bt.name,
-                          }))
-                    }
-                  />
-                )}
-              </>
-            )}
-
-            {/* Additional addresses section — only in edit mode */}
-            {isEditing && (
-              <GroupFormSection
-                title="Otras Direcciones"
-                icon={MapPin}
-                cols={{ sm: 1 }}
-                horizontal
-                headerExtra={
-                  !showNewAddressForm ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setNewAddrZoneId(zones?.[0]?.id.toString() ?? "");
-                        setNewAddrAddress("");
-                        setNewAddrReference("");
-                        setShowNewAddressForm(true);
-                      }}
-                    >
-                      <Plus className="size-4 mr-1" />
-                      Nueva
-                    </Button>
-                  ) : undefined
-                }
-              >
-                {/* Existing non-primary addresses */}
-                {nonPrimaryZones.map((pz) => (
-                  <div key={pz.id} className="flex flex-row items-center gap-3">
-                    <span className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">
-                      {pz.zone_name}
-                    </span>
-                    <div className="flex-1 min-w-0 flex flex-col">
-                      <span className="text-sm">{pz.address}</span>
-                      {pz.reference && (
-                        <span className="text-xs text-muted-foreground">{pz.reference}</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {/* Staged (pending) addresses */}
-                {stagedAddresses.map((addr, i) => {
-                  const zoneName = zones?.find((z) => z.id.toString() === addr.zone_id)?.name ?? addr.zone_id;
-                  return (
-                    <div key={i} className="flex flex-row items-center gap-3">
-                      <span className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">
-                        {zoneName}
-                      </span>
-                      <div className="flex-1 min-w-0 flex flex-col">
-                        <span className="text-sm flex items-center gap-2">
-                          {addr.address}
-                          <Badge variant="outline" className="text-xs">Pendiente</Badge>
-                        </span>
-                        {addr.reference && (
-                          <span className="text-xs text-muted-foreground">{addr.reference}</span>
-                        )}
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-7 text-destructive hover:text-destructive flex-shrink-0"
-                        onClick={() => setStagedAddresses((prev) => prev.filter((_, idx) => idx !== i))}
-                      >
-                        <Trash2 className="size-3.5" />
-                      </Button>
-                    </div>
-                  );
-                })}
-
-                {/* Inline new address form */}
-                {showNewAddressForm && (
-                  <>
-                    <div className="flex flex-row items-center gap-3">
-                      <label className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">
-                        Zona
-                      </label>
-                      <div className="flex-1 min-w-0">
-                        <Select value={newAddrZoneId} onValueChange={setNewAddrZoneId}>
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder="Seleccione zona" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(zones ?? []).map((z: ZoneResource) => (
-                              <SelectItem key={z.id} value={z.id.toString()} className="text-xs">
-                                {z.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-row items-center gap-3">
-                      <label className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">
-                        Dirección
-                      </label>
-                      <div className="flex-1 min-w-0">
-                        <Input
-                          value={newAddrAddress}
-                          onChange={(e) => setNewAddrAddress(e.target.value)}
-                          placeholder="Ingrese la dirección"
-                          className="h-8 text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex flex-row items-center gap-3">
-                      <label className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">
-                        Referencia
-                      </label>
-                      <div className="flex-1 min-w-0">
-                        <Input
-                          value={newAddrReference}
-                          onChange={(e) => setNewAddrReference(e.target.value)}
-                          placeholder="Referencia (opcional)"
-                          className="h-8 text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex flex-row items-center gap-3">
-                      <span className="w-48 shrink-0" />
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          disabled={!newAddrAddress.trim() || !newAddrZoneId}
-                          onClick={() => {
-                            setStagedAddresses((prev) => [
-                              ...prev,
-                              {
-                                zone_id: newAddrZoneId,
-                                address: newAddrAddress.trim(),
-                                reference: newAddrReference.trim(),
-                                is_primary: false,
-                              },
-                            ]);
-                            setShowNewAddressForm(false);
-                          }}
-                        >
-                          <Check className="size-3.5 mr-1" />
-                          Agregar
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setShowNewAddressForm(false)}
-                        >
-                          <X className="size-3.5 mr-1" />
-                          Cancelar
-                        </Button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </GroupFormSection>
             )}
           </div>
-        ) : (
-          /* Section-based layout for editing or non-client */
-          <>
-            {/* Document Information */}
-            <GroupFormSection
-              title="Información de Documento"
-              icon={IdCard}
-              cols={{ sm: 1 }}
-              horizontal
-            >
+
+          {isClient ? (
+            /* Flat form for client create and edit */
+            <FormLayoutContext.Provider value={{ horizontal: true, labelWidth }}>
+            <div className="space-y-3">
+              {type_person === "NATURAL" && (
+                <>
+                  {isSearching ? (
+                    <Skeleton className="h-8 w-full" />
+                  ) : (
+                    <FormInput
+                      control={form.control}
+                      name="names"
+                      label="Nombres"
+                      placeholder="Ingrese los nombres"
+                      uppercase
+                      className={
+                        fieldsFromSearch.names
+                          ? "bg-blue-50 border-blue-200"
+                          : ""
+                      }
+                    />
+                  )}
+                  {isSearching ? (
+                    <Skeleton className="h-8 w-full" />
+                  ) : (
+                    <FormInput
+                      control={form.control}
+                      name="father_surname"
+                      label="Apellidos"
+                      placeholder="Ingrese los apellidos"
+                      uppercase
+                      className={
+                        fieldsFromSearch.father_surname
+                          ? "bg-blue-50 border-blue-200"
+                          : ""
+                      }
+                    />
+                  )}
+                </>
+              )}
               <FormSelect
                 control={form.control}
                 name="document_type_id"
@@ -950,20 +625,10 @@ export const PersonForm = ({
                 options={
                   isLoadingDocumentTypes
                     ? []
-                    : isWorker
-                      ? (documentTypes || [])
-                          .filter(
-                            (dt: DocumentTypeResource) =>
-                              dt.name === TYPE_DOCUMENT.DNI.name,
-                          )
-                          .map((dt: DocumentTypeResource) => ({
-                            value: dt.id.toString(),
-                            label: dt.name,
-                          }))
-                      : (documentTypes || []).map((dt: DocumentTypeResource) => ({
-                          value: dt.id.toString(),
-                          label: dt.name,
-                        }))
+                    : (documentTypes || []).map((dt: DocumentTypeResource) => ({
+                        value: dt.id.toString(),
+                        label: dt.name,
+                      }))
                 }
               />
 
@@ -983,124 +648,102 @@ export const PersonForm = ({
                 )}
               />
 
-              {type_person === "NATURAL" && (
-                <>
-                  {isSearching ? (
-                    <div className="flex flex-row items-center gap-3">
-                      <span className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">Nombres</span>
-                      <Skeleton className="h-8 flex-1 min-w-0" />
-                    </div>
-                  ) : (
-                    <FormInput
-                      control={form.control}
-                      name="names"
-                      label="Nombres"
-                      placeholder="Ingrese los nombres"
-                      uppercase
-                      className={fieldsFromSearch.names ? "bg-blue-50 border-blue-200" : ""}
-                    />
-                  )}
-
-                  {isSearching ? (
-                    <div className="flex flex-row items-center gap-3">
-                      <span className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">Apellidos</span>
-                      <Skeleton className="h-8 flex-1 min-w-0" />
-                    </div>
-                  ) : (
-                    <FormInput
-                      control={form.control}
-                      name="father_surname"
-                      label="Apellidos"
-                      placeholder="Ingrese los apellidos"
-                      uppercase
-                      className={fieldsFromSearch.father_surname ? "bg-blue-50 border-blue-200" : ""}
-                    />
-                  )}
-
-                  {(!isClient || showExtraFields) && (
-                    <FormSelect
-                      control={form.control}
-                      name="gender"
-                      label="Género"
-                      placeholder="Seleccione género"
-                      options={[
-                        { value: "M", label: "Masculino" },
-                        { value: "F", label: "Femenino" },
-                        { value: "O", label: "Otro" },
-                      ]}
-                    />
-                  )}
-
-                  {(!isClient || showExtraFields) && (
-                    <DatePickerFormField
-                      control={form.control}
-                      name="birth_date"
-                      label="Fecha de Nacimiento"
-                      placeholder="Seleccione fecha"
-                      captionLayout="dropdown"
-                      endMonth={
-                        new Date(
-                          new Date().getFullYear() - 18,
-                          new Date().getMonth(),
-                          new Date().getDate(),
-                        )
-                      }
-                    />
-                  )}
-                </>
-              )}
-
               {type_person === "JURIDICA" && (
                 <>
                   {isSearching ? (
-                    <div className="flex flex-row items-center gap-3">
-                      <span className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground">Razón Social</span>
-                      <Skeleton className="h-8 flex-1 min-w-0" />
-                    </div>
+                    <Skeleton className="h-8 w-full" />
                   ) : (
                     <FormInput
                       control={form.control}
                       name="business_name"
                       label="Razón Social"
                       placeholder="Ingrese la razón social"
-                      className={fieldsFromSearch.business_name ? "bg-blue-50 border-blue-200" : ""}
+                      className={
+                        fieldsFromSearch.business_name
+                          ? "bg-blue-50 border-blue-200"
+                          : ""
+                      }
                     />
                   )}
                 </>
               )}
-            </GroupFormSection>
 
-            {/* Optional Fields - Context specific */}
-            {(showJobPosition ||
-              showBusinessType ||
-              showZone ||
-              showPriceList ||
-              isDriver) && (
-              <GroupFormSection
-                title="Información Adicional"
-                icon={Paperclip}
-                cols={{ sm: 1 }}
-                horizontal
-                headerExtra={
-                  isClient ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowExtraFields(!showExtraFields)}
-                      className="text-xs gap-1 text-muted-foreground hover:text-foreground h-7 px-2"
-                    >
-                      {showExtraFields ? (
-                        <ChevronUp className="h-3 w-3" />
-                      ) : (
-                        <ChevronDown className="h-3 w-3" />
-                      )}
-                      {showExtraFields ? "Ocultar" : "Mostrar más campos"}
-                    </Button>
-                  ) : undefined
-                }
-              >
-                {(!isClient || showExtraFields) && (
+              <FormInput
+                control={form.control}
+                name="address"
+                label="Dirección"
+                placeholder="Ingrese la dirección"
+              />
+
+              <FormInput
+                control={form.control}
+                name="reference"
+                label="Referencia"
+                placeholder="Referencia o indicaciones (opcional)"
+              />
+
+              <FormSelect
+                control={form.control}
+                name="zone_id"
+                label="Zona"
+                placeholder="Seleccione zona"
+                disabled={isLoadingZones || !zones}
+                options={(zones ?? []).map((z: ZoneResource) => ({
+                  value: z.id.toString(),
+                  label: z.name,
+                }))}
+              />
+
+              <FormInput
+                control={form.control}
+                name="phone"
+                label="Teléfono"
+                placeholder="987654321 (9 dígitos)"
+                maxLength={9}
+              />
+
+              {showPriceList && (
+                <FormSelect
+                  control={form.control}
+                  name="client_category_id"
+                  label="Lista de Precio"
+                  placeholder="Seleccione lista de precio"
+                  disabled={isLoadingPriceLists}
+                  options={
+                    isLoadingPriceLists
+                      ? []
+                      : (priceLists || [])
+                          .filter((pl: PriceList) => pl.is_active)
+                          .map((pl: PriceList) => ({
+                            value: pl.id.toString(),
+                            label: `${pl.name} (${pl.code})`,
+                          }))
+                  }
+                />
+              )}
+
+              {/* Extra fields toggle */}
+              <div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowExtraFields(!showExtraFields)}
+                  className="text-xs gap-1 text-muted-foreground hover:text-foreground h-7 px-2 -ml-2"
+                >
+                  {showExtraFields ? (
+                    <ChevronUp className="h-3 w-3" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3" />
+                  )}
+                  {showExtraFields
+                    ? "Ocultar campos adicionales"
+                    : "Mostrar más campos"}
+                </Button>
+              </div>
+
+              {showExtraFields && (
+                <>
                   <FormInput
                     control={form.control}
                     name="email"
@@ -1108,151 +751,591 @@ export const PersonForm = ({
                     type="email"
                     placeholder="ejemplo@correo.com"
                   />
-                )}
+                  {type_person === "NATURAL" && (
+                    <>
+                      <FormSelect
+                        control={form.control}
+                        name="gender"
+                        label="Género"
+                        placeholder="Seleccione género"
+                        options={[
+                          { value: "M", label: "Masculino" },
+                          { value: "F", label: "Femenino" },
+                          { value: "O", label: "Otro" },
+                        ]}
+                      />
+                      <DatePickerFormField
+                        control={form.control}
+                        name="birth_date"
+                        label="Fecha de Nacimiento"
+                        placeholder="Seleccione fecha"
+                        captionLayout="dropdown"
+                        endMonth={
+                          new Date(
+                            new Date().getFullYear() - 18,
+                            new Date().getMonth(),
+                            new Date().getDate(),
+                          )
+                        }
+                      />
+                    </>
+                  )}
+                  {showBusinessType && (
+                    <FormSelect
+                      control={form.control}
+                      name="business_type_id"
+                      label="Tipo de Negocio"
+                      placeholder="Seleccione tipo de negocio"
+                      disabled={isLoadingBusinessTypes}
+                      options={
+                        isLoadingBusinessTypes
+                          ? []
+                          : (businessTypes || []).map(
+                              (bt: BusinessTypeResource) => ({
+                                value: bt.id.toString(),
+                                label: bt.name,
+                              }),
+                            )
+                      }
+                    />
+                  )}
+                </>
+              )}
 
-                <FormInput
+              {/* Additional addresses section — only in edit mode */}
+              {isEditing && (
+                <GroupFormSection
+                  title="Otras Direcciones"
+                  icon={MapPin}
+                  cols={{ sm: 1 }}
+                  horizontal
+                  labelWidth={labelWidth}
+                  headerExtra={
+                    !showNewAddressForm ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setNewAddrZoneId(zones?.[0]?.id.toString() ?? "");
+                          setNewAddrAddress("");
+                          setNewAddrReference("");
+                          setShowNewAddressForm(true);
+                        }}
+                      >
+                        <Plus className="size-4 mr-1" />
+                        Nueva
+                      </Button>
+                    ) : undefined
+                  }
+                >
+                  {/* Existing non-primary addresses */}
+                  {nonPrimaryZones.map((pz) => (
+                    <div
+                      key={pz.id}
+                      className="flex flex-row items-center gap-3"
+                    >
+                      <span className={`${labelWidth} shrink-0 text-right text-xs font-bold uppercase text-muted-foreground`}>
+                        {pz.zone_name}
+                      </span>
+                      <div className="flex-1 min-w-0 flex flex-col">
+                        <span className="text-sm">{pz.address}</span>
+                        {pz.reference && (
+                          <span className="text-xs text-muted-foreground">
+                            {pz.reference}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Staged (pending) addresses */}
+                  {stagedAddresses.map((addr, i) => {
+                    const zoneName =
+                      zones?.find((z) => z.id.toString() === addr.zone_id)
+                        ?.name ?? addr.zone_id;
+                    return (
+                      <div key={i} className="flex flex-row items-center gap-3">
+                        <span className={`${labelWidth} shrink-0 text-right text-xs font-bold uppercase text-muted-foreground`}>
+                          {zoneName}
+                        </span>
+                        <div className="flex-1 min-w-0 flex flex-col">
+                          <span className="text-sm flex items-center gap-2">
+                            {addr.address}
+                            <Badge variant="outline" className="text-xs">
+                              Pendiente
+                            </Badge>
+                          </span>
+                          {addr.reference && (
+                            <span className="text-xs text-muted-foreground">
+                              {addr.reference}
+                            </span>
+                          )}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-7 text-destructive hover:text-destructive flex-shrink-0"
+                          onClick={() =>
+                            setStagedAddresses((prev) =>
+                              prev.filter((_, idx) => idx !== i),
+                            )
+                          }
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+
+                  {/* Inline new address form */}
+                  {showNewAddressForm && (
+                    <>
+                      <div className="flex flex-row items-center gap-3">
+                        <label className={`${labelWidth} shrink-0 text-right text-xs font-bold uppercase text-muted-foreground`}>
+                          Zona
+                        </label>
+                        <div className="flex-1 min-w-0">
+                          <Select
+                            value={newAddrZoneId}
+                            onValueChange={setNewAddrZoneId}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Seleccione zona" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(zones ?? []).map((z: ZoneResource) => (
+                                <SelectItem
+                                  key={z.id}
+                                  value={z.id.toString()}
+                                  className="text-xs"
+                                >
+                                  {z.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-row items-center gap-3">
+                        <label className={`${labelWidth} shrink-0 text-right text-xs font-bold uppercase text-muted-foreground`}>
+                          Dirección
+                        </label>
+                        <div className="flex-1 min-w-0">
+                          <Input
+                            value={newAddrAddress}
+                            onChange={(e) => setNewAddrAddress(e.target.value)}
+                            placeholder="Ingrese la dirección"
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-row items-center gap-3">
+                        <label className={`${labelWidth} shrink-0 text-right text-xs font-bold uppercase text-muted-foreground`}>
+                          Referencia
+                        </label>
+                        <div className="flex-1 min-w-0">
+                          <Input
+                            value={newAddrReference}
+                            onChange={(e) =>
+                              setNewAddrReference(e.target.value)
+                            }
+                            placeholder="Referencia (opcional)"
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-row items-center gap-3">
+                        <span className={`${labelWidth} shrink-0`} />
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={!newAddrAddress.trim() || !newAddrZoneId}
+                            onClick={() => {
+                              setStagedAddresses((prev) => [
+                                ...prev,
+                                {
+                                  zone_id: newAddrZoneId,
+                                  address: newAddrAddress.trim(),
+                                  reference: newAddrReference.trim(),
+                                  is_primary: false,
+                                },
+                              ]);
+                              setShowNewAddressForm(false);
+                            }}
+                          >
+                            <Check className="size-3.5 mr-1" />
+                            Agregar
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShowNewAddressForm(false)}
+                          >
+                            <X className="size-3.5 mr-1" />
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </GroupFormSection>
+              )}
+            </div>
+            </FormLayoutContext.Provider>
+          ) : (
+            /* Section-based layout for editing or non-client */
+            <>
+              {/* Document Information */}
+              <GroupFormSection
+                title="Información de Documento"
+                icon={IdCard}
+                cols={{ sm: 1 }}
+                horizontal
+                labelWidth={labelWidth}
+              >
+                <FormSelect
                   control={form.control}
-                  name="phone"
-                  label="Teléfono"
-                  placeholder="987654321 (9 dígitos)"
-                  maxLength={9}
+                  name="document_type_id"
+                  label="Tipo de Documento"
+                  placeholder="Seleccione tipo"
+                  disabled={isLoadingDocumentTypes}
+                  options={
+                    isLoadingDocumentTypes
+                      ? []
+                      : isWorker
+                        ? (documentTypes || [])
+                            .filter(
+                              (dt: DocumentTypeResource) =>
+                                dt.name === TYPE_DOCUMENT.DNI.name,
+                            )
+                            .map((dt: DocumentTypeResource) => ({
+                              value: dt.id.toString(),
+                              label: dt.name,
+                            }))
+                        : (documentTypes || []).map(
+                            (dt: DocumentTypeResource) => ({
+                              value: dt.id.toString(),
+                              label: dt.name,
+                            }),
+                          )
+                  }
                 />
 
-                {showDirection && !(isClient && isEditing) && (
-                  <FormInput
-                    control={form.control}
-                    name="address"
-                    label="Dirección"
-                    placeholder="Ingrese la dirección"
-                    className={fieldsFromSearch.address ? "bg-blue-50" : ""}
-                  />
+                <FormField
+                  control={form.control}
+                  name="number_document"
+                  render={({ field }) => (
+                    <NumberDocumentContent
+                      field={field}
+                      errors={errors}
+                      fieldsFromSearch={fieldsFromSearch}
+                      dirtyFields={dirtyFields}
+                      document_type_id={document_type_id}
+                      isSearching={isSearching}
+                      handleDocumentSearch={handleDocumentSearch}
+                    />
+                  )}
+                />
+
+                {type_person === "NATURAL" && (
+                  <>
+                    {isSearching ? (
+                      <div className="flex flex-row items-center gap-3">
+                        <span className={`${labelWidth} shrink-0 text-right text-xs font-bold uppercase text-muted-foreground`}>
+                          Nombres
+                        </span>
+                        <Skeleton className="h-8 flex-1 min-w-0" />
+                      </div>
+                    ) : (
+                      <FormInput
+                        control={form.control}
+                        name="names"
+                        label="Nombres"
+                        placeholder="Ingrese los nombres"
+                        uppercase
+                        className={
+                          fieldsFromSearch.names
+                            ? "bg-blue-50 border-blue-200"
+                            : ""
+                        }
+                      />
+                    )}
+
+                    {isSearching ? (
+                      <div className="flex flex-row items-center gap-3">
+                        <span className={`${labelWidth} shrink-0 text-right text-xs font-bold uppercase text-muted-foreground`}>
+                          Apellidos
+                        </span>
+                        <Skeleton className="h-8 flex-1 min-w-0" />
+                      </div>
+                    ) : (
+                      <FormInput
+                        control={form.control}
+                        name="father_surname"
+                        label="Apellidos"
+                        placeholder="Ingrese los apellidos"
+                        uppercase
+                        className={
+                          fieldsFromSearch.father_surname
+                            ? "bg-blue-50 border-blue-200"
+                            : ""
+                        }
+                      />
+                    )}
+
+                    {(!isClient || showExtraFields) && (
+                      <FormSelect
+                        control={form.control}
+                        name="gender"
+                        label="Género"
+                        placeholder="Seleccione género"
+                        options={[
+                          { value: "M", label: "Masculino" },
+                          { value: "F", label: "Femenino" },
+                          { value: "O", label: "Otro" },
+                        ]}
+                      />
+                    )}
+
+                    {(!isClient || showExtraFields) && (
+                      <DatePickerFormField
+                        control={form.control}
+                        name="birth_date"
+                        label="Fecha de Nacimiento"
+                        placeholder="Seleccione fecha"
+                        captionLayout="dropdown"
+                        endMonth={
+                          new Date(
+                            new Date().getFullYear() - 18,
+                            new Date().getMonth(),
+                            new Date().getDate(),
+                          )
+                        }
+                      />
+                    )}
+                  </>
                 )}
 
-                {showJobPosition && (
-                  <FormSelect
-                    control={form.control}
-                    name="job_position_id"
-                    label="Cargo / Puesto de Trabajo"
-                    placeholder="Seleccione cargo"
-                    disabled={isLoadingJobPositions}
-                    options={
-                      isLoadingJobPositions
-                        ? []
-                        : (jobPositions || []).map((jp: JobPositionResource) => ({
-                            value: jp.id.toString(),
-                            label: jp.name,
-                          }))
-                    }
-                  />
-                )}
-
-                {showBusinessType && (!isClient || showExtraFields) && (
-                  <FormSelect
-                    control={form.control}
-                    name="business_type_id"
-                    label="Tipo de Negocio"
-                    placeholder="Seleccione tipo de negocio"
-                    disabled={isLoadingBusinessTypes}
-                    options={
-                      isLoadingBusinessTypes
-                        ? []
-                        : (businessTypes || []).map((bt: BusinessTypeResource) => ({
-                            value: bt.id.toString(),
-                            label: bt.name,
-                          }))
-                    }
-                  />
-                )}
-
-                {showPriceList && (
-                  <FormSelect
-                    control={form.control}
-                    name="client_category_id"
-                    label="Lista de Precio"
-                    placeholder="Seleccione lista de precio"
-                    disabled={isLoadingPriceLists}
-                    options={
-                      isLoadingPriceLists
-                        ? []
-                        : (priceLists || [])
-                            .filter((pl: PriceList) => pl.is_active)
-                            .map((pl: PriceList) => ({
-                              value: pl.id.toString(),
-                              label: `${pl.name} (${pl.code})`,
-                            }))
-                    }
-                  />
-                )}
-
-                {showZone && (
-                  <FormSelect
-                    control={form.control}
-                    name="zone_id"
-                    label="Zona"
-                    placeholder="Seleccione zona"
-                    disabled={isLoadingZones}
-                    options={
-                      isLoadingZones
-                        ? []
-                        : (zones || []).map((z: ZoneResource) => ({
-                            value: z.id.toString(),
-                            label: z.name,
-                          }))
-                    }
-                  />
-                )}
-
-                {isDriver && (
-                  <FormInput
-                    control={form.control}
-                    name="driver_license"
-                    label="Licencia de Conducir"
-                    placeholder="Ingrese el número de licencia"
-                  />
+                {type_person === "JURIDICA" && (
+                  <>
+                    {isSearching ? (
+                      <div className="flex flex-row items-center gap-3">
+                        <span className={`${labelWidth} shrink-0 text-right text-xs font-bold uppercase text-muted-foreground`}>
+                          Razón Social
+                        </span>
+                        <Skeleton className="h-8 flex-1 min-w-0" />
+                      </div>
+                    ) : (
+                      <FormInput
+                        control={form.control}
+                        name="business_name"
+                        label="Razón Social"
+                        placeholder="Ingrese la razón social"
+                        className={
+                          fieldsFromSearch.business_name
+                            ? "bg-blue-50 border-blue-200"
+                            : ""
+                        }
+                      />
+                    )}
+                  </>
                 )}
               </GroupFormSection>
-            )}
 
-          </>
-        )}
-
-        {/* Form validation summary */}
-        {Object.keys(errors).length > 0 && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-5 w-5 text-red-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+              {/* Optional Fields - Context specific */}
+              {(showJobPosition ||
+                showBusinessType ||
+                showZone ||
+                showPriceList ||
+                isDriver) && (
+                <GroupFormSection
+                  title="Información Adicional"
+                  icon={Paperclip}
+                  cols={{ sm: 1 }}
+                  horizontal
+                  labelWidth={labelWidth}
+                  headerExtra={
+                    isClient ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowExtraFields(!showExtraFields)}
+                        className="text-xs gap-1 text-muted-foreground hover:text-foreground h-7 px-2"
+                      >
+                        {showExtraFields ? (
+                          <ChevronUp className="h-3 w-3" />
+                        ) : (
+                          <ChevronDown className="h-3 w-3" />
+                        )}
+                        {showExtraFields ? "Ocultar" : "Mostrar más campos"}
+                      </Button>
+                    ) : undefined
+                  }
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
+                  {(!isClient || showExtraFields) && (
+                    <FormInput
+                      control={form.control}
+                      name="email"
+                      label="Correo Electrónico"
+                      type="email"
+                      placeholder="ejemplo@correo.com"
+                    />
+                  )}
+
+                  <FormInput
+                    control={form.control}
+                    name="phone"
+                    label="Teléfono"
+                    placeholder="987654321 (9 dígitos)"
+                    maxLength={9}
                   />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  Hay {Object.keys(errors).length} error
-                  {Object.keys(errors).length > 1 ? "es" : ""} que necesita
-                  {Object.keys(errors).length > 1 ? "n" : ""} corrección
-                </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <ul className="space-y-1">
-                    {Object.entries(errors).map(([field, error]) => (
-                      <li key={field} className="flex items-start">
-                        <span className="inline-block w-1 h-1 bg-red-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
-                        {error?.message || `Error en ${field}`}
-                      </li>
-                    ))}
-                  </ul>
+
+                  {showDirection && !(isClient && isEditing) && (
+                    <FormInput
+                      control={form.control}
+                      name="address"
+                      label="Dirección"
+                      placeholder="Ingrese la dirección"
+                      className={fieldsFromSearch.address ? "bg-blue-50" : ""}
+                    />
+                  )}
+
+                  {showJobPosition && (
+                    <FormSelect
+                      control={form.control}
+                      name="job_position_id"
+                      label="Cargo / Puesto de Trabajo"
+                      placeholder="Seleccione cargo"
+                      disabled={isLoadingJobPositions}
+                      options={
+                        isLoadingJobPositions
+                          ? []
+                          : (jobPositions || []).map(
+                              (jp: JobPositionResource) => ({
+                                value: jp.id.toString(),
+                                label: jp.name,
+                              }),
+                            )
+                      }
+                    />
+                  )}
+
+                  {showBusinessType && (!isClient || showExtraFields) && (
+                    <FormSelect
+                      control={form.control}
+                      name="business_type_id"
+                      label="Tipo de Negocio"
+                      placeholder="Seleccione tipo de negocio"
+                      disabled={isLoadingBusinessTypes}
+                      options={
+                        isLoadingBusinessTypes
+                          ? []
+                          : (businessTypes || []).map(
+                              (bt: BusinessTypeResource) => ({
+                                value: bt.id.toString(),
+                                label: bt.name,
+                              }),
+                            )
+                      }
+                    />
+                  )}
+
+                  {showPriceList && (
+                    <FormSelect
+                      control={form.control}
+                      name="client_category_id"
+                      label="Lista de Precio"
+                      placeholder="Seleccione lista de precio"
+                      disabled={isLoadingPriceLists}
+                      options={
+                        isLoadingPriceLists
+                          ? []
+                          : (priceLists || [])
+                              .filter((pl: PriceList) => pl.is_active)
+                              .map((pl: PriceList) => ({
+                                value: pl.id.toString(),
+                                label: `${pl.name} (${pl.code})`,
+                              }))
+                      }
+                    />
+                  )}
+
+                  {showZone && (
+                    <FormSelect
+                      control={form.control}
+                      name="zone_id"
+                      label="Zona"
+                      placeholder="Seleccione zona"
+                      disabled={isLoadingZones}
+                      options={
+                        isLoadingZones
+                          ? []
+                          : (zones || []).map((z: ZoneResource) => ({
+                              value: z.id.toString(),
+                              label: z.name,
+                            }))
+                      }
+                    />
+                  )}
+
+                  {isDriver && (
+                    <FormInput
+                      control={form.control}
+                      name="driver_license"
+                      label="Licencia de Conducir"
+                      placeholder="Ingrese el número de licencia"
+                    />
+                  )}
+                </GroupFormSection>
+              )}
+            </>
+          )}
+
+          {/* Form validation summary */}
+          {Object.keys(errors).length > 0 && (
+            <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="h-5 w-5 text-red-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Hay {Object.keys(errors).length} error
+                    {Object.keys(errors).length > 1 ? "es" : ""} que necesita
+                    {Object.keys(errors).length > 1 ? "n" : ""} corrección
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <ul className="space-y-1">
+                      {Object.entries(errors).map(([field, error]) => (
+                        <li key={field} className="flex items-start">
+                          <span className="inline-block w-1 h-1 bg-red-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                          {error?.message || `Error en ${field}`}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
         </fieldset>
       </form>
     </Form>

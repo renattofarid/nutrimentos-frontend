@@ -37,7 +37,7 @@ export function FormSwitch<T extends FieldValues>({
   autoHeight = false,
   tabIndex,
 }: FormSwitchProps<T>) {
-  const { horizontal } = useFormLayout();
+  const { horizontal, labelWidth } = useFormLayout();
 
   const sizeClasses = {
     sm: "h-7 md:h-8 min-h-7 md:min-h-8 p-2 gap-2",
@@ -86,7 +86,7 @@ export function FormSwitch<T extends FieldValues>({
         horizontal ? (
           <FormItem className="flex flex-row items-center gap-3">
             {label && (
-              <span className="w-48 shrink-0 text-right text-xs font-bold uppercase text-muted-foreground leading-none">
+              <span className={`${labelWidth} shrink-0 text-right text-xs font-bold uppercase text-muted-foreground leading-none`}>
                 {label}
               </span>
             )}

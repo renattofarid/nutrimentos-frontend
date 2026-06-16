@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import {
   useSaleBySellerReport,
   useWarehouseAsyncSearch,
-  useUserAsyncSearch,
 } from "../lib/reports.hook";
 
 import { DataTable } from "@/components/DataTable";
@@ -40,6 +39,8 @@ import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { format } from "date-fns";
 import { errorToast, successToast } from "@/lib/core.function";
+import { useWorkers } from "@/pages/worker/lib/worker.hook";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
 
 interface FilterFormValues {
   document_type: string;
@@ -372,11 +373,13 @@ export default function SaleBySellerReportPage() {
               name="user_id"
               label="Vendedor"
               placeholder="Buscar vendedor..."
-              useQueryHook={useUserAsyncSearch}
-              mapOptionFn={(item) => ({
-                label: item.name,
-                value: String(item.id),
-              })}
+              useQueryHook={useWorkers}
+              mapOptionFn={(item: PersonResource) => ({
+                  label:
+                    `${item.names} ${item.father_surname} ${item.mother_surname}`.trim(),
+                  description: item.number_document ?? undefined,
+                  value: String(item.id),
+                })}
             />
 
             <FormSelectAsync

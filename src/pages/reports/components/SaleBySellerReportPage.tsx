@@ -45,7 +45,7 @@ import type { PersonResource } from "@/pages/person/lib/person.interface";
 interface FilterFormValues {
   document_type: string;
   status: string;
-  user_id: string;
+  person_id: string;
   warehouse_id: string;
   start_date: string;
   end_date: string;
@@ -280,7 +280,7 @@ export default function SaleBySellerReportPage() {
     defaultValues: {
       document_type: "",
       status: "",
-      user_id: "",
+      person_id: "",
       warehouse_id: "",
       start_date: _threeMonthsAgoStr,
       end_date: _todayStr,
@@ -290,7 +290,7 @@ export default function SaleBySellerReportPage() {
   const buildParams = (values: FilterFormValues): SaleBySellerReportParams => ({
     document_type: values.document_type || undefined,
     status: values.status || null,
-    user_id: values.user_id ? Number(values.user_id) : null,
+    person_id: values.person_id ? Number(values.person_id) : null,
     warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
     start_date: values.start_date || null,
     end_date: values.end_date || null,
@@ -370,7 +370,7 @@ export default function SaleBySellerReportPage() {
 
             <FormSelectAsync
               control={form.control}
-              name="user_id"
+              name="person_id"
               label="Vendedor"
               placeholder="Buscar vendedor..."
               useQueryHook={useWorkers}

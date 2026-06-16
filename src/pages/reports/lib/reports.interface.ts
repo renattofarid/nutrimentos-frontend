@@ -350,7 +350,7 @@ export interface SaleBySellerReportParams {
   end_date?: string | null;
   format?: "excel" | "pdf" | null;
   status?: string | null;
-  user_id?: number | null;
+  person_id?: number | null;
   warehouse_id?: number | null;
 }
 

@@ -54,8 +54,12 @@ export default function CreditNoteSearchResults({
         cell: ({ row }) => {
           const s = row.original.sale;
           return s ? (
-            <span className="font-mono">{s.serie}-{s.numero}</span>
-          ) : "—";
+            <span className="font-mono">
+              {s.serie}-{s.numero}
+            </span>
+          ) : (
+            "—"
+          );
         },
       },
       {
@@ -72,7 +76,7 @@ export default function CreditNoteSearchResults({
         header: "Estado",
         cell: ({ row }) => (
           <Badge
-            variant={row.original.status === "REGISTRADO" ? "default" : "destructive"}
+            color={row.original.status === "REGISTRADO" ? "default" : "destructive"}
             className="text-[10px]"
           >
             {row.original.status}

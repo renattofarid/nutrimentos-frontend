@@ -19,6 +19,7 @@ import {
 import { errorToast, successToast } from "@/lib/core.function";
 import { VEHICLE } from "@/pages/vehicle/lib/vehicle.interface";
 import { BRANCH } from "@/pages/branch/lib/branch.interface";
+import { ZONE } from "@/pages/zone/lib/zone.interface";
 
 export function useCustomerAccountStatement(
   params?: CustomerAccountStatementParams,
@@ -291,6 +292,20 @@ export const useBranchAsyncSearch = (params: {
   return useQuery({
     queryKey: ["branches-async-search", params],
     queryFn: () => fetchSearchEndpoint(BRANCH.ENDPOINT, params),
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useZoneAsyncSearch = (params: {
+  search?: string;
+  page?: number;
+  per_page?: number;
+  [key: string]: any;
+}) => {
+  return useQuery({
+    queryKey: ["zones-async-search", params],
+    queryFn: () => fetchSearchEndpoint(ZONE.ENDPOINT, params),
     staleTime: 30 * 1000,
     refetchOnWindowFocus: false,
   });

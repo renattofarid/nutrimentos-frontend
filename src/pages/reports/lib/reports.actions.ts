@@ -21,6 +21,8 @@ import type {
   SaleBySellerReportResponse,
   SalesByProductReportParams,
   SalesByProductReportResponse,
+  SalesBySellerMonthlyReportParams,
+  SalesBySellerMonthlyReportResponse,
 } from "./reports.interface";
 
 const REPORTS_ENDPOINT = "/reports";
@@ -313,6 +315,26 @@ export async function exportAccountingSalesReport(
 ): Promise<Blob> {
   const { data } = await api.get<Blob>("/reports/accounting-sales", {
     params,
+    responseType: "blob",
+  });
+  return data;
+}
+
+export async function getSalesBySellerMonthlyReport(
+  params: SalesBySellerMonthlyReportParams,
+): Promise<SalesBySellerMonthlyReportResponse> {
+  const { data } = await api.get<SalesBySellerMonthlyReportResponse>(
+    "/reports/sales-by-seller-monthly",
+    { params },
+  );
+  return data;
+}
+
+export async function exportSalesBySellerMonthlyReport(
+  params: SalesBySellerMonthlyReportParams,
+): Promise<Blob> {
+  const { data } = await api.get<Blob>("/reports/sales-by-seller-monthly", {
+    params: { ...params, format: "excel" },
     responseType: "blob",
   });
   return data;

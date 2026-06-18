@@ -43,6 +43,7 @@ import { SaleAddPage, SaleEditPage, SalePage } from "@/pages/sale/components";
 import SaleManagePage from "@/pages/sale/components/SaleManagePage";
 import CreditNotePage from "@/pages/credit-note/components/CreditNotePage";
 import CreditNoteAddPage from "@/pages/credit-note/components/CreditNoteAddPage";
+import CreditNoteEditPage from "@/pages/credit-note/components/CreditNoteEditPage";
 import CreditNoteManagePage from "@/pages/credit-note/components/CreditNoteManagePage";
 import GuidePage from "@/pages/guide/components/GuidePage";
 import GuideAddPage from "@/pages/guide/components/GuideAddPage";
@@ -187,7 +188,11 @@ const {
   ROUTE_ADD: DeliverySheetRouteAdd,
   ROUTE_UPDATE: DeliverySheetRouteUpdate,
 } = DELIVERY_SHEET;
-const { ROUTE: CreditNoteRoute, ROUTE_ADD: CreditNoteRouteAdd } = CREDIT_NOTE;
+const {
+  ROUTE: CreditNoteRoute,
+  ROUTE_ADD: CreditNoteRouteAdd,
+  ROUTE_UPDATE: CreditNoteRouteUpdate,
+} = CREDIT_NOTE;
 const CreditNoteManageRoutePattern = "/notas-credito/gestionar/:id";
 const {
   ROUTE: PurchaseCreditNoteRoute,
@@ -280,6 +285,7 @@ export function AppRoutes() {
       {/* Notas de crédito venta */}
       <Route path={CreditNoteRoute} element={<CreditNotePage />} />
       <Route path={CreditNoteRouteAdd} element={<CreditNoteAddPage />} />
+      <Route path={CreditNoteRouteUpdate} element={<CreditNoteEditPage />} />
       <Route path={CreditNoteManageRoutePattern} element={<CreditNoteManagePage />} />
 
       {/* Guías */}

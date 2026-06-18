@@ -34,6 +34,7 @@ const STATUS_OPTIONS = [
 type ActiveFilter =
   | ""
   | "documento"
+  | "nc_numero"
   | "warehouse"
   | "vendedor"
   | "document_type"
@@ -56,6 +57,8 @@ interface SaleOptionsProps {
   setEndDate: (date: Date | undefined) => void;
   documento: string;
   setDocumento: (value: string) => void;
+  nc_numero: string;
+  setNcNumero: (value: string) => void;
 }
 
 export default function SaleOptions({
@@ -75,6 +78,8 @@ export default function SaleOptions({
   setEndDate,
   documento,
   setDocumento,
+  nc_numero,
+  setNcNumero,
 }: SaleOptionsProps) {
   const { user } = useAuthStore();
   const company_id = user?.company_id;
@@ -105,6 +110,7 @@ export default function SaleOptions({
 
   const resetAllFilters = () => {
     setDocumento("");
+    setNcNumero("");
     setWarehouseId("");
     setVendedorId("");
     setDocumentType("");
@@ -150,6 +156,7 @@ export default function SaleOptions({
         <SelectContent>
           <SelectItem value="none">— Buscar por —</SelectItem>
           <SelectItem value="documento">Número de documento</SelectItem>
+          <SelectItem value="nc_numero">N° de Nota de Crédito</SelectItem>
           <SelectItem value="warehouse">Almacén</SelectItem>
           <SelectItem value="vendedor">Vendedor</SelectItem>
           <SelectItem value="document_type">Tipo de documento</SelectItem>
@@ -164,6 +171,16 @@ export default function SaleOptions({
           value={documento}
           onChange={(e) => setDocumento(e.target.value)}
           placeholder="Ej: F001-00123"
+          className="w-[160px] h-8"
+        />
+      )}
+
+      {activeFilter === "nc_numero" && (
+        <Input
+          type="text"
+          value={nc_numero}
+          onChange={(e) => setNcNumero(e.target.value)}
+          placeholder="Ej: BC01-00001"
           className="w-[160px] h-8"
         />
       )}

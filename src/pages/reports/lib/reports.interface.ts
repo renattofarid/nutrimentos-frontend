@@ -87,6 +87,9 @@ export const SALE_TICKETS_PRINT_ROUTE = `${ROUTE}/imprimir-tickets`;
 // Cost of Sales Report
 export const COST_OF_SALES_REPORT_ROUTE = `${ROUTE}/costo-de-ventas`;
 
+// Sales By Seller Monthly Report
+export const SALES_BY_SELLER_MONTHLY_REPORT_ROUTE = `${ROUTE}/ventas-detalladas-por-vendedor`;
+
 export interface CustomerAccountStatementParams {
   zone_id?: number | null;
   customer_id?: number | null;
@@ -350,7 +353,7 @@ export interface SaleBySellerReportParams {
   end_date?: string | null;
   format?: "excel" | "pdf" | null;
   status?: string | null;
-  user_id?: number | null;
+  person_id?: number | null;
   warehouse_id?: number | null;
 }
 
@@ -775,4 +778,35 @@ export interface CostOfSalesReportParams {
   product_id?: number | null;
   start_date?: string | null;
   warehouse_id?: number | null;
+}
+
+/**
+ * SALES BY SELLER MONTHLY REPORT
+ */
+export interface SalesBySellerMonthlyReportParams {
+  month: string;
+  branch_id?: number | null;
+  vendedor_id?: number | null;
+  warehouse_id?: number | null;
+  zone_id?: number | null;
+  format?: "excel";
+}
+
+export interface SalesBySellerMonthlyItem {
+  vendedor: string;
+  mes: string;
+  contado_sin_igv: number;
+  contado_monto: number;
+  contado_docs: number;
+  credito_sin_igv: number;
+  credito_monto: number;
+  credito_docs: number;
+  total_sin_igv: number;
+  total_monto: number;
+  total_docs: number;
+}
+
+export interface SalesBySellerMonthlyReportResponse {
+  data: SalesBySellerMonthlyItem[];
+  total: number;
 }

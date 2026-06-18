@@ -66,6 +66,7 @@ import {
   SALE_TICKETS_PRINT_ROUTE,
   SALES_BY_PRODUCT_REPORT_ROUTE,
   SALES_REGISTER_REPORT_ROUTE,
+  SALES_BY_SELLER_MONTHLY_REPORT_ROUTE,
 } from "@/pages/reports/lib/reports.interface";
 import { PURCHASE_CREDIT_NOTE } from "@/pages/purchase-credit-note/lib/purchase-credit-note.interface";
 import { SettlementTitle } from "@/pages/deliverysheet/components/settlement/SettlementHeader";
@@ -395,6 +396,11 @@ export const navData: NavItem[] = [
       {
         title: "Costo de Ventas",
         url: COST_OF_SALES_REPORT_ROUTE,
+        icon: ReportsIcon,
+      },
+      {
+        title: "Ventas Detalladas por Vendedor",
+        url: SALES_BY_SELLER_MONTHLY_REPORT_ROUTE,
         icon: ReportsIcon,
       },
     ],

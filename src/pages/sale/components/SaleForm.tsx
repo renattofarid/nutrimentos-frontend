@@ -436,6 +436,29 @@ export const SaleForm = ({
     onVendedorChange(selectedVendedorId || "");
   }, [selectedVendedorId, onVendedorChange]);
 
+  // Re-fetch zones when client management modal closes and no zones are loaded yet
+  const prevClientManagementOpenRef = useRef(false);
+  useEffect(() => {
+    const wasOpen = prevClientManagementOpenRef.current;
+    prevClientManagementOpenRef.current = isClientManagementOpen;
+    if (wasOpen && !isClientManagementOpen) {
+      const customerId = form.getValues("customer_id");
+      if (customerId && customerAddresses.length === 0) {
+        getPersonZones(Number(customerId))
+          .then((zones) => {
+            if (zones && zones.length > 0) {
+              const mapped = mapCustomerZones(zones);
+              setCustomerAddresses(mapped);
+              const primary = mapped.find((pz) => pz.is_primary) ?? mapped[0];
+              form.setValue("person_zone_id", primary.id.toString());
+              currentZoneIdRef.current = primary.zone_id;
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, [isClientManagementOpen]);
+
   // Efecto para obtener serie y número automático
   useEffect(() => {
     const fetchNextSeries = async () => {

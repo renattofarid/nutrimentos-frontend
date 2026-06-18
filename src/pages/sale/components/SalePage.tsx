@@ -13,6 +13,9 @@ import {
   type SaleInstallmentResource,
 } from "../lib/sale.interface";
 import { CreditNoteAddRoute } from "@/pages/credit-note/lib/credit-note.interface";
+import { getCreditNote } from "@/pages/credit-note/lib/credit-note.actions";
+import type { CreditNoteResource } from "@/pages/credit-note/lib/credit-note.interface";
+import CreditNoteSearchResults from "@/pages/credit-note/components/CreditNoteSearchResults";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import {
   findSaleById,
@@ -78,6 +81,17 @@ export default function SalePage() {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const company_id = user?.company_id;
 
+  // Filtro y búsqueda de NCs por número
+  const [nc_numero, setNcNumero] = useState("");
+  const [debouncedNcNumero, setDebouncedNcNumero] = useState("");
+  const [creditNoteResults, setCreditNoteResults] = useState<CreditNoteResource[]>([]);
+  const [isLoadingCN, setIsLoadingCN] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedNcNumero(nc_numero), 400);
+    return () => clearTimeout(timer);
+  }, [nc_numero]);
+
   const { serie: parsedSerie, numero: parsedNumero } = parseDocumento(debouncedDocumento);
 
   const {
@@ -120,8 +134,20 @@ export default function SalePage() {
     per_page,
   ]);
 
+  useEffect(() => {
+    if (!debouncedNcNumero) {
+      setCreditNoteResults([]);
+      return;
+    }
+    setIsLoadingCN(true);
+    getCreditNote({ params: { full_document_number: debouncedNcNumero, per_page: 10 } })
+      .then((res) => setCreditNoteResults(res.data))
+      .catch(() => setCreditNoteResults([]))
+      .finally(() => setIsLoadingCN(false));
+  }, [debouncedNcNumero]);
+
   const { removeSale } = useSaleStore();
-  const { activeTabId, closeTab } = useWindowManager();
+  const { activeTabId, closeTab, openTab } = useWindowManager();
 
   const handleEdit = (sale: SaleResource) => {
     navigate(`/ventas/actualizar/${sale.id}`);
@@ -289,43 +315,59 @@ export default function SalePage() {
         </div>
       </div>
 
-      <SaleTable
-        columns={columns}
-        data={sales || []}
-        isLoading={isLoading}
-        enableRowSelection={true}
-        rowSelection={rowSelection}
-        onRowSelectionChange={setRowSelection}
-        onRowDoubleClick={handleEdit}
-      >
-        <SaleOptions
-          branch_id={branch_id}
-          setBranchId={setBranchId}
-          document_type={document_type}
-          setDocumentType={setDocumentType}
-          status={status}
-          setStatus={setStatus}
-          warehouse_id={warehouse_id}
-          setWarehouseId={setWarehouseId}
-          vendedor_id={vendedor_id}
-          setVendedorId={setVendedorId}
-          start_date={start_date}
-          end_date={end_date}
-          setStartDate={setStartDate}
-          setEndDate={setEndDate}
-          documento={documento}
-          setDocumento={setDocumento}
-        />
-      </SaleTable>
-
-      <DataTablePagination
-        page={page}
-        totalPages={meta?.last_page || 1}
-        onPageChange={setPage}
-        per_page={per_page}
-        setPerPage={setPerPage}
-        totalData={meta?.total || 0}
+      <SaleOptions
+        branch_id={branch_id}
+        setBranchId={setBranchId}
+        document_type={document_type}
+        setDocumentType={setDocumentType}
+        status={status}
+        setStatus={setStatus}
+        warehouse_id={warehouse_id}
+        setWarehouseId={setWarehouseId}
+        vendedor_id={vendedor_id}
+        setVendedorId={setVendedorId}
+        start_date={start_date}
+        end_date={end_date}
+        setStartDate={setStartDate}
+        setEndDate={setEndDate}
+        documento={documento}
+        setDocumento={setDocumento}
+        nc_numero={nc_numero}
+        setNcNumero={setNcNumero}
       />
+
+      {debouncedNcNumero ? (
+        <CreditNoteSearchResults
+          results={creditNoteResults}
+          isLoading={isLoadingCN}
+          onManage={(note) =>
+            openTab(`/notas-credito/gestionar/${note.id}`, note.full_document_number)
+          }
+          onEdit={(note) =>
+            openTab(`/notas-credito/actualizar/${note.id}`, note.full_document_number)
+          }
+        />
+      ) : (
+        <>
+          <SaleTable
+            columns={columns}
+            data={sales || []}
+            isLoading={isLoading}
+            enableRowSelection={true}
+            rowSelection={rowSelection}
+            onRowSelectionChange={setRowSelection}
+            onRowDoubleClick={handleEdit}
+          />
+          <DataTablePagination
+            page={page}
+            totalPages={meta?.last_page || 1}
+            onPageChange={setPage}
+            per_page={per_page}
+            setPerPage={setPerPage}
+            totalData={meta?.total || 0}
+          />
+        </>
+      )}
 
       <SimpleDeleteDialog
         open={openDelete}

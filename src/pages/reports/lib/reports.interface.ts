@@ -784,12 +784,13 @@ export interface CostOfSalesReportParams {
  * SALES BY SELLER MONTHLY REPORT
  */
 export interface SalesBySellerMonthlyReportParams {
-  month: string;
-  branch_id?: number | null;
-  vendedor_id?: number | null;
+  document_type?: "FACTURA" | "BOLETA" | "TICKET" | null;
+  end_date?: string | null;
+  format?: "excel" | "pdf" | null;
+  person_id?: number | null;
+  start_date?: string | null;
+  status?: "REGISTRADA" | "PARCIAL" | "PAGADA" | "ANULADA" | null;
   warehouse_id?: number | null;
-  zone_id?: number | null;
-  format?: "excel";
 }
 
 export interface SalesBySellerMonthlyItem {

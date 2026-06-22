@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { Filter, FileSpreadsheet, Search, ArrowUpDown } from "lucide-react";
@@ -9,26 +9,27 @@ import {
   exportSalesBySellerMonthlyReport,
 } from "../lib/reports.actions";
 import { FormInput } from "@/components/FormInput";
+import { FormSelect } from "@/components/FormSelect";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
+import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { Button } from "@/components/ui/button";
 import { errorToast, successToast } from "@/lib/core.function";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, parse } from "date-fns";
 import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { SalesBySellerMonthlyItem, SalesBySellerMonthlyReportParams } from "../lib/reports.interface";
-import {
-  useBranchAsyncSearch,
-  useUserAsyncSearch,
-  useWarehouseAsyncSearch,
-  useZoneAsyncSearch,
-} from "../lib/reports.hook";
+import { useWarehouseAsyncSearch } from "../lib/reports.hook";
+import { useWorkers } from "@/pages/worker/lib/worker.hook";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
 
 interface FilterFormValues {
   month: string;
-  branch_id: string;
-  vendedor_id: string;
+  start_date: string;
+  end_date: string;
+  document_type: string;
+  status: string;
+  person_id: string;
   warehouse_id: string;
-  zone_id: string;
 }
 
 const fmt = (n: number) =>
@@ -149,23 +150,41 @@ export default function SalesBySellerMonthlyReportPage() {
   const [reportData, setReportData] = useState<SalesBySellerMonthlyItem[] | null>(null);
 
   const currentMonth = format(new Date(), "yyyy-MM");
+  const currentMonthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
+  const currentMonthEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
       month: currentMonth,
-      branch_id: "",
-      vendedor_id: "",
+      start_date: currentMonthStart,
+      end_date: currentMonthEnd,
+      document_type: "",
+      status: "",
+      person_id: "",
       warehouse_id: "",
-      zone_id: "",
     },
   });
 
+  const watchedMonth = form.watch("month");
+
+  useEffect(() => {
+    if (!watchedMonth) return;
+    try {
+      const parsed = parse(watchedMonth, "yyyy-MM", new Date());
+      form.setValue("start_date", format(startOfMonth(parsed), "yyyy-MM-dd"));
+      form.setValue("end_date", format(endOfMonth(parsed), "yyyy-MM-dd"));
+    } catch {
+      // invalid month value, ignore
+    }
+  }, [watchedMonth, form]);
+
   const buildParams = (values: FilterFormValues): SalesBySellerMonthlyReportParams => ({
-    month: values.month,
-    branch_id: values.branch_id ? Number(values.branch_id) : null,
-    vendedor_id: values.vendedor_id ? Number(values.vendedor_id) : null,
+    document_type: (values.document_type as SalesBySellerMonthlyReportParams["document_type"]) || null,
+    status: (values.status as SalesBySellerMonthlyReportParams["status"]) || null,
+    person_id: values.person_id ? Number(values.person_id) : null,
     warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
-    zone_id: values.zone_id ? Number(values.zone_id) : null,
+    start_date: values.start_date || null,
+    end_date: values.end_date || null,
   });
 
   const handleSearch = async (values: FilterFormValues) => {
@@ -236,43 +255,66 @@ export default function SalesBySellerMonthlyReportPage() {
               required
             />
 
-            <FormSelectAsync
+            <FormSelect
               control={form.control}
-              name="branch_id"
-              label="Sucursal"
-              placeholder="Todas"
-              useQueryHook={useBranchAsyncSearch}
-              mapOptionFn={(item) => ({ label: item.name, value: String(item.id) })}
+              name="document_type"
+              label="Tipo Documento"
+              placeholder="Todos"
+              options={[
+                { label: "Factura", value: "FACTURA" },
+                { label: "Boleta", value: "BOLETA" },
+                { label: "Ticket", value: "TICKET" },
+              ]}
+            />
+
+            <FormSelect
+              control={form.control}
+              name="status"
+              label="Estado"
+              placeholder="Todos"
+              options={[
+                { label: "Registrada", value: "REGISTRADA" },
+                { label: "Parcial", value: "PARCIAL" },
+                { label: "Pagada", value: "PAGADA" },
+                { label: "Anulada", value: "ANULADA" },
+              ]}
             />
 
             <FormSelectAsync
               control={form.control}
-              name="vendedor_id"
+              name="person_id"
               label="Vendedor"
-              placeholder="Todos"
-              useQueryHook={useUserAsyncSearch}
-              mapOptionFn={(item) => ({ label: item.name, value: String(item.id) })}
+              placeholder="Buscar vendedor..."
+              useQueryHook={useWorkers}
+              mapOptionFn={(item: PersonResource) => ({
+                label: `${item.names} ${item.father_surname} ${item.mother_surname}`.trim(),
+                description: item.number_document ?? undefined,
+                value: String(item.id),
+              })}
             />
 
             <FormSelectAsync
               control={form.control}
               name="warehouse_id"
               label="Almacén"
-              placeholder="Todos"
+              placeholder="Buscar almacén..."
               useQueryHook={useWarehouseAsyncSearch}
               mapOptionFn={(item) => ({ label: item.name, value: String(item.id) })}
             />
 
-            <FormSelectAsync
+            <DatePickerFormField
               control={form.control}
-              name="zone_id"
-              label="Zona"
-              placeholder="Todas"
-              useQueryHook={useZoneAsyncSearch}
-              mapOptionFn={(item) => ({ label: item.name, value: String(item.id) })}
+              name="start_date"
+              label="Del"
             />
 
-            <div className="flex items-end gap-2 h-full">
+            <DatePickerFormField
+              control={form.control}
+              name="end_date"
+              label="Al"
+            />
+
+            <div className="lg:col-span-full flex items-end justify-end h-full w-full gap-2">
               <Button type="submit" variant="outline" color="primary" disabled={isLoading}>
                 <Search className="mr-2 h-4 w-4" />
                 Buscar

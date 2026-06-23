@@ -1,21 +1,19 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import {
-  useCommissionsReport,
-  useUserAsyncSearch,
-  useWarehouseAsyncSearch,
-} from "../lib/reports.hook";
-
-import { DataTable } from "@/components/DataTable";
-import type { ColumnDef } from "@tanstack/react-table";
-import type {
-  CommissionsReportParams,
-  CommissionDatum,
-} from "../lib/reports.interface";
-import { Badge } from "@/components/ui/badge";
-import type { BadgeColor } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
+import { Filter, FileSpreadsheet, Search, Percent, TrendingUp, Package, DollarSign, CheckCircle2, Circle } from "lucide-react";
+import { GroupFormSection } from "@/components/GroupFormSection";
+import PageWrapper from "@/components/PageWrapper";
+import {
+  getCommissionsReport,
+  exportCommissionsReport,
+} from "../lib/reports.actions";
+import { FormInput } from "@/components/FormInput";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { errorToast, successToast } from "@/lib/core.function";
+import { format as dateFnsFormat } from "date-fns";
+import type { CommissionDatum, CommissionsReportResponse } from "../lib/reports.interface";
 import {
   Table,
   TableBody,
@@ -24,427 +22,293 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  FileSpreadsheet,
-  FileText,
-  Search,
-  Filter,
-  ArrowUpDown,
-} from "lucide-react";
-import { GroupFormSection } from "@/components/GroupFormSection";
-import PageWrapper from "@/components/PageWrapper";
-import { exportCommissionsReport } from "../lib/reports.actions";
-import { FormSelectAsync } from "@/components/FormSelectAsync";
-import { FormSelect } from "@/components/FormSelect";
-import { DatePickerFormField } from "@/components/DatePickerFormField";
-import { format as dateFnsFormat } from "date-fns";
-import { errorToast, successToast } from "@/lib/core.function";
 
 interface FilterFormValues {
-  document_type: string;
-  payment_type: string;
-  user_id: string;
-  warehouse_id: string;
-  start_date: string;
-  end_date: string;
+  selected_month: string;
 }
 
-const statusColor = (status: string): BadgeColor => {
-  const s = status?.toUpperCase();
-  if (s === "PAGADO" || s === "COMPLETADO") return "green";
-  if (s === "PENDIENTE") return "yellow";
-  if (s === "ANULADO") return "destructive";
-  return "muted";
-};
+const fmt = (n: number) =>
+  n.toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const columns: ColumnDef<CommissionDatum>[] = [
-  {
-    accessorKey: "issue_date",
-    header: "Fecha",
-    size: 110,
-    cell: ({ row }) => (
-      <span className="text-sm font-mono">{row.original.issue_date}</span>
-    ),
-  },
-  {
-    accessorKey: "document_type",
-    header: "Tipo Doc.",
-    size: 100,
-    cell: ({ row }) => (
-      <Badge variant="outline">{row.original.document_type}</Badge>
-    ),
-  },
-  {
-    accessorKey: "document_number",
-    header: "Nro. Documento",
-    size: 140,
-    cell: ({ row }) => (
-      <span className="font-mono text-sm font-medium">
-        {row.original.document_number}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "seller",
-    header: "Vendedor",
-    size: 150,
-    cell: ({ row }) => (
-      <span className="text-sm">{row.original.seller.name}</span>
-    ),
-  },
-  {
-    accessorKey: "customer",
-    header: "Cliente",
-    size: 160,
-    cell: ({ row }) => (
-      <span className="text-sm">{row.original.customer.name}</span>
-    ),
-  },
-  {
-    accessorKey: "warehouse",
-    header: "Almacén",
-    size: 130,
-    cell: ({ row }) => (
-      <span className="text-sm">{row.original.warehouse.name}</span>
-    ),
-  },
-  {
-    accessorKey: "payment_type",
-    header: "Forma Pago",
-    size: 110,
-    cell: ({ row }) => (
-      <Badge color="secondary">{row.original.payment_type}</Badge>
-    ),
-  },
-  {
-    accessorKey: "subtotal",
-    header: "Subtotal",
-    size: 100,
-    cell: ({ row }) => (
-      <span className="font-mono text-sm">{row.original.subtotal}</span>
-    ),
-  },
-  {
-    accessorKey: "tax_amount",
-    header: "IGV",
-    size: 90,
-    cell: ({ row }) => (
-      <span className="font-mono text-sm">{row.original.tax_amount}</span>
-    ),
-  },
-  {
-    accessorKey: "total_amount",
-    header: "Total",
-    size: 100,
-    cell: ({ row }) => (
-      <span className="font-mono text-sm font-semibold">
-        {row.original.total_amount}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "cost_total",
-    header: "Costo",
-    size: 100,
-    cell: ({ row }) => (
-      <span className="font-mono text-sm">
-        {row.original.cost_total ?? "—"}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "gross_profit",
-    header: "Utilidad",
-    size: 100,
-    cell: ({ row }) => {
-      const val = row.original.gross_profit;
-      if (!val || val === 0)
-        return <span className="text-muted-foreground text-sm">—</span>;
-      return (
-        <span className="font-semibold text-green-600 font-mono">{val}</span>
-      );
-    },
-  },
-  {
-    accessorKey: "commission_rate",
-    header: "% Comisión",
-    size: 100,
-    cell: ({ row }) => (
-      <span className="font-mono text-sm">{row.original.commission_rate}</span>
-    ),
-  },
-  {
-    accessorKey: "commission",
-    header: "Comisión",
-    size: 100,
-    cell: ({ row }) => (
-      <span className="font-mono text-sm font-semibold text-blue-600">
-        {row.original.commission ?? "—"}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "status",
-    header: "Estado",
-    size: 110,
-    cell: ({ row }) => (
-      <Badge color={statusColor(row.original.status)}>
-        {row.original.status}
-      </Badge>
-    ),
-  },
-];
+function StepIndicator({ steps, current }: { steps: string[]; current: number }) {
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      {steps.map((label, i) => {
+        const stepNum = i + 1;
+        const done = stepNum < current;
+        const active = stepNum === current;
+        return (
+          <div key={i} className="flex items-center gap-2">
+            {i > 0 && <div className={`h-px w-8 shrink-0 ${done ? "bg-primary" : "bg-muted-foreground/30"}`} />}
+            <div className={`flex items-center gap-1.5 ${active ? "text-primary font-semibold" : done ? "text-primary/70" : "text-muted-foreground"}`}>
+              {done ? (
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+              ) : (
+                <Circle className={`h-4 w-4 shrink-0 ${active ? "fill-primary/10" : ""}`} />
+              )}
+              <span className="whitespace-nowrap">{label}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SummaryCard({
+  icon: Icon,
+  label,
+  value,
+  color = "text-foreground",
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  color?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border bg-card p-4">
+      <div className="rounded-md bg-muted p-2">
+        <Icon className="h-5 w-5 text-muted-foreground" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground truncate">{label}</p>
+        <p className={`text-lg font-bold font-mono ${color}`}>{value}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function CommissionsReportPage() {
-  const [isExportingExcel, setIsExportingExcel] = useState(false);
-  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [reportData, setReportData] = useState<CommissionsReportResponse | null>(null);
+  const [commissionRates, setCommissionRates] = useState<Record<number, string>>({});
 
-  const { data: rawData, isLoading, fetch } = useCommissionsReport();
-
-  const _today = new Date();
-  const _todayStr = dateFnsFormat(_today, "yyyy-MM-dd");
-  const _threeMonthsAgoStr = dateFnsFormat(
-    new Date(_today.getFullYear(), _today.getMonth() - 3, 1),
-    "yyyy-MM-dd",
-  );
+  const currentMonth = dateFnsFormat(new Date(), "yyyy-MM");
 
   const form = useForm<FilterFormValues>({
-    defaultValues: {
-      document_type: "",
-      payment_type: "",
-      user_id: "",
-      warehouse_id: "",
-      start_date: _threeMonthsAgoStr,
-      end_date: _todayStr,
-    },
+    defaultValues: { selected_month: currentMonth },
   });
 
-  const buildParams = (values: FilterFormValues): CommissionsReportParams => ({
-    document_type:
-      (values.document_type as CommissionsReportParams["document_type"]) ||
-      null,
-    payment_type:
-      (values.payment_type as CommissionsReportParams["payment_type"]) || null,
-    user_id: values.user_id ? Number(values.user_id) : null,
-    warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
-    start_date: values.start_date || null,
-    end_date: values.end_date || null,
+  const sellers: CommissionDatum[] = reportData?.data ?? [];
+
+  const hasValidRates = Object.values(commissionRates).some((r) => {
+    const v = parseFloat(r);
+    return !isNaN(v) && v >= 0 && v <= 1;
   });
 
-  const handleSearch = (values: FilterFormValues) => {
-    fetch(buildParams(values));
+  const currentStep = !reportData ? 1 : !hasValidRates ? 2 : 3;
+
+  const handleSearch = async (values: FilterFormValues) => {
+    if (!values.selected_month) return;
+    setIsLoading(true);
+    try {
+      const res = await getCommissionsReport({ selected_month: values.selected_month });
+      setReportData(res);
+      const initial: Record<number, string> = {};
+      res.data.forEach((s) => {
+        initial[s.codigo] = "1";
+      });
+      setCommissionRates(initial);
+    } catch {
+      errorToast("Error al obtener el reporte de comisiones");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleExport = async (format: "excel" | "pdf") => {
+  const handleRateChange = (codigo: number, value: string) => {
+    setCommissionRates((prev) => ({ ...prev, [codigo]: value }));
+  };
+
+  const handleExport = async () => {
     const values = form.getValues();
-    if (format === "excel") setIsExportingExcel(true);
-    else setIsExportingPdf(true);
+    if (!values.selected_month || !hasValidRates) return;
+
+    const commission_rates: Record<number, number> = {};
+    for (const [id, rate] of Object.entries(commissionRates)) {
+      const parsed = parseFloat(rate);
+      if (!isNaN(parsed) && parsed >= 0 && parsed <= 1) {
+        commission_rates[Number(id)] = parsed;
+      }
+    }
+
+    setIsExporting(true);
     try {
-      const blob = await exportCommissionsReport(buildParams(values), format);
+      const blob = await exportCommissionsReport({
+        selected_month: values.selected_month,
+        commission_rates,
+        format: "excel",
+      });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `reporte-comisiones.${format === "pdf" ? "pdf" : "xlsx"}`;
+      link.download = `comisiones-${values.selected_month}.xlsx`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      successToast("Reporte de Comisiones exportado exitosamente");
+      successToast("Reporte de comisiones exportado exitosamente");
     } catch {
-      errorToast("Error al exportar el reporte de Comisiones");
+      errorToast("Error al exportar el reporte de comisiones");
     } finally {
-      setIsExportingExcel(false);
-      setIsExportingPdf(false);
+      setIsExporting(false);
     }
   };
 
-  const tableData = rawData?.data ?? [];
+  const totalToneladas = sellers.reduce((sum, s) => sum + s.toneladas, 0);
+  const totalVendido = sellers.reduce((sum, s) => sum + s.importe_vendido, 0);
+  const totalCobrado = sellers.reduce((sum, s) => sum + s.importe_cobrado, 0);
+  const totalComision = sellers.reduce((sum, s) => sum + s.importe_comision, 0);
+  const totalPorCobrar = sellers.reduce((sum, s) => sum + s.por_cobrar, 0);
 
   return (
     <PageWrapper size="3xl">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSearch)} className="space-y-6">
+
+          <StepIndicator
+            steps={["Selecciona el mes", "Ajusta las tasas", "Exporta el Excel"]}
+            current={currentStep}
+          />
+
           <GroupFormSection
-            title="Filtros de Búsqueda"
+            title="Paso 1 · Selecciona el mes"
             icon={Filter}
             gap="gap-2"
-            cols={{ sm: 1, md: 2, lg: 4 }}
+            cols={{ sm: 1, md: 3 }}
           >
-            <FormSelect
+            <FormInput
               control={form.control}
-              name="document_type"
-              label="Tipo Documento"
-              placeholder="Todos"
-              options={[
-                { label: "Factura", value: "FACTURA" },
-                { label: "Boleta", value: "BOLETA" },
-                { label: "Ticket", value: "TICKET" },
-              ]}
-            />
-
-            <FormSelect
-              control={form.control}
-              name="payment_type"
-              label="Forma de Pago"
-              placeholder="Todas"
-              options={[
-                { label: "Contado", value: "CONTADO" },
-                { label: "Crédito", value: "CREDITO" },
-              ]}
-            />
-
-            <FormSelectAsync
-              control={form.control}
-              name="user_id"
-              label="Vendedor"
-              placeholder="Buscar vendedor..."
-              useQueryHook={useUserAsyncSearch}
-              mapOptionFn={(item) => ({
-                label: item.name,
-                value: String(item.id),
-              })}
-            />
-
-            <FormSelectAsync
-              control={form.control}
-              name="warehouse_id"
-              label="Almacén"
-              placeholder="Buscar almacén..."
-              useQueryHook={useWarehouseAsyncSearch}
-              mapOptionFn={(item) => ({
-                label: item.name,
-                value: String(item.id),
-              })}
-            />
-
-            <DatePickerFormField
-              control={form.control}
-              name="start_date"
-              label="Del"
-            />
-            <DatePickerFormField
-              control={form.control}
-              name="end_date"
-              label="Al"
+              name="selected_month"
+              label="Mes"
+              type="month"
+              required
             />
             <div className="flex gap-2 items-end h-full">
-              <Button
-                variant="outline"
-                color="primary"
-                type="submit"
-                disabled={isLoading}
-              >
+              <Button variant="outline" color="primary" type="submit" disabled={isLoading}>
                 <Search className="mr-2 h-4 w-4" />
-                Buscar
-              </Button>
-              <Button
-                type="button"
-                color="green"
-                onClick={() => handleExport("excel")}
-                disabled={isExportingExcel || tableData.length === 0}
-              >
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Excel
-              </Button>
-              <Button
-                type="button"
-                color="red"
-                onClick={() => handleExport("pdf")}
-                disabled={isExportingPdf || tableData.length === 0}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                PDF
+                {isLoading ? "Cargando..." : "Buscar vendedores"}
               </Button>
             </div>
           </GroupFormSection>
 
-          {rawData && (
-            <GroupFormSection
-              title="Resumen de Comisiones"
-              icon={ArrowUpDown}
-              cols={{ sm: 1, md: 5 }}
-            >
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Ventas</p>
-                <p className="text-2xl font-bold">
-                  {rawData.summary.total_sales}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Monto Total</p>
-                <p className="text-2xl font-bold">
-                  {rawData.summary.total_amount}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Costo Total</p>
-                <p className="text-2xl font-bold">
-                  {rawData.summary.total_cost}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Utilidad Total</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {rawData.summary.total_profit}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">
-                  Total Comisiones
-                </p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {rawData.summary.total_commissions}
-                </p>
+          {reportData && sellers.length === 0 && (
+            <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
+              <Percent className="mx-auto mb-3 h-8 w-8 opacity-40" />
+              <p className="text-sm">No se encontraron vendedores con actividad en el mes seleccionado.</p>
+            </div>
+          )}
+
+          {reportData && sellers.length > 0 && (
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <SummaryCard icon={Package} label="Toneladas" value={fmt(totalToneladas)} />
+                <SummaryCard icon={DollarSign} label="Importe vendido" value={fmt(totalVendido)} />
+                <SummaryCard icon={TrendingUp} label="Importe cobrado" value={fmt(totalCobrado)} />
+                <SummaryCard icon={Percent} label="Total comisiones" value={fmt(totalComision)} color="text-blue-600" />
               </div>
 
-              {rawData.by_seller.length > 0 && (
-                <div className="md:col-span-5">
-                  <p className="text-sm font-medium mb-2">Por Vendedor</p>
+              <GroupFormSection
+                title="Paso 2 · Ajusta las tasas de comisión"
+                icon={Percent}
+                cols={{ sm: 1 }}
+              >
+                <div className="col-span-full space-y-3">
+                  {reportData.labels && (
+                    <p className="text-xs text-muted-foreground">
+                      Meses de referencia:{" "}
+                      <span className="font-medium text-foreground capitalize">{reportData.labels.month1}</span>
+                      {" "}y{" "}
+                      <span className="font-medium text-foreground capitalize">{reportData.labels.month2}</span>
+                    </p>
+                  )}
+
+                  <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+                    Revisa y ajusta la columna <strong>"Tasa"</strong> para cada vendedor.
+                    El valor debe estar entre <strong>0</strong> (sin comisión) y <strong>1</strong> (100%).
+                    Por defecto todos están en <strong>1</strong>. Cuando estés listo, exporta el Excel.
+                  </div>
+
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Vendedor</TableHead>
-                        <TableHead className="text-right">Ventas</TableHead>
-                        <TableHead className="text-right">Monto</TableHead>
-                        <TableHead className="text-right">Utilidad</TableHead>
-                        <TableHead className="text-right">Comisiones</TableHead>
+                        <TableHead className="text-right">Toneladas</TableHead>
+                        <TableHead className="text-right">Vendido</TableHead>
+                        <TableHead className="text-right">Cobrado</TableHead>
+                        <TableHead className="text-right">Por Cobrar</TableHead>
+                        <TableHead className="text-right">% Comisión</TableHead>
+                        <TableHead className="text-right">Importe Comisión</TableHead>
+                        <TableHead className="w-32 text-center">Tasa (0–1)</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {rawData.by_seller.map((s) => (
-                        <TableRow key={s.seller.id}>
-                          <TableCell className="font-medium">
-                            {s.seller.name}
+                      {sellers.map((s) => (
+                        <TableRow key={s.codigo}>
+                          <TableCell className="font-medium">{s.vendedor}</TableCell>
+                          <TableCell className="text-right font-mono text-sm">{fmt(s.toneladas)}</TableCell>
+                          <TableCell className="text-right font-mono text-sm">{fmt(s.importe_vendido)}</TableCell>
+                          <TableCell className="text-right font-mono text-sm">{fmt(s.importe_cobrado)}</TableCell>
+                          <TableCell className="text-right font-mono text-sm">
+                            <span className={s.por_cobrar < 0 ? "text-red-600 font-medium" : "text-green-700"}>
+                              {fmt(s.por_cobrar)}
+                            </span>
                           </TableCell>
-                          <TableCell className="text-right font-mono">
-                            {s.total_sales}
+                          <TableCell className="text-right font-mono text-sm">{fmt(s.pct_comision)}</TableCell>
+                          <TableCell className="text-right font-mono text-sm font-semibold text-blue-600">
+                            {fmt(s.importe_comision)}
                           </TableCell>
-                          <TableCell className="text-right font-mono">
-                            {s.total_amount}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-green-600">
-                            {s.total_profit}
-                          </TableCell>
-                          <TableCell className="text-right font-mono font-semibold text-blue-600">
-                            {s.total_commissions}
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min={0}
+                              max={1}
+                              step={0.01}
+                              placeholder="0.00"
+                              value={commissionRates[s.codigo] ?? ""}
+                              onChange={(e) => handleRateChange(s.codigo, e.target.value)}
+                              className="w-24 font-mono text-center"
+                            />
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
+                    <tfoot>
+                      <tr className="border-t-2 bg-muted/50 font-bold">
+                        <td className="p-2 pl-4 text-sm">Totales</td>
+                        <td className="p-2 text-right font-mono text-sm">{fmt(totalToneladas)}</td>
+                        <td className="p-2 text-right font-mono text-sm">{fmt(totalVendido)}</td>
+                        <td className="p-2 text-right font-mono text-sm">{fmt(totalCobrado)}</td>
+                        <td className="p-2 text-right font-mono text-sm">
+                          <span className={totalPorCobrar < 0 ? "text-red-600" : "text-green-700"}>
+                            {fmt(totalPorCobrar)}
+                          </span>
+                        </td>
+                        <td className="p-2" />
+                        <td className="p-2 text-right font-mono text-sm text-blue-600">{fmt(totalComision)}</td>
+                        <td className="p-2" />
+                      </tr>
+                    </tfoot>
                   </Table>
-                </div>
-              )}
-            </GroupFormSection>
-          )}
 
-          <DataTable
-            columns={columns}
-            data={tableData}
-            isLoading={isLoading}
-            initialColumnVisibility={{
-              tax_amount: false,
-            }}
-          />
+                  <div className="flex justify-end pt-2">
+                    <Button
+                      type="button"
+                      color="green"
+                      onClick={handleExport}
+                      disabled={isExporting || !hasValidRates}
+                      title={!hasValidRates ? "Ingresa al menos una tasa válida (0–1) para exportar" : ""}
+                    >
+                      <FileSpreadsheet className="mr-2 h-4 w-4" />
+                      {isExporting ? "Exportando..." : "Paso 3 · Exportar Excel"}
+                    </Button>
+                  </div>
+                </div>
+              </GroupFormSection>
+            </>
+          )}
         </form>
       </Form>
     </PageWrapper>

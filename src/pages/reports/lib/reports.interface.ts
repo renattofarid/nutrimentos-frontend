@@ -522,59 +522,30 @@ export interface DeliverySheetVehicle {
  */
 
 export interface CommissionsReportParams {
-  document_type?: "FACTURA" | "BOLETA" | "TICKET" | null;
-  end_date?: string | null;
-  format?: "excel" | "pdf" | null;
-  payment_type?: "CONTADO" | "CREDITO" | null;
-  start_date?: string | null;
-  user_id?: number | null;
-  warehouse_id?: number | null;
+  selected_month?: string | null;
+  commission_rates?: Record<number, number>;
+  format?: "excel" | null;
 }
 
 export interface CommissionsReportResponse {
-  summary: CommissionSummary;
-  by_seller: CommissionBySeller[];
   data: CommissionDatum[];
+  labels: CommissionLabels;
 }
 
-export interface CommissionSummary {
-  total_sales: number;
-  total_amount: number;
-  total_cost: number;
-  total_profit: number;
-  total_commissions: number;
-}
-
-export interface CommissionBySeller {
-  seller: CommissionSeller;
-  total_sales: number;
-  total_amount: number;
-  total_profit: number;
-  total_commissions: number;
+export interface CommissionLabels {
+  month1: string;
+  month2: string;
 }
 
 export interface CommissionDatum {
-  sale_id: number;
-  issue_date: string;
-  document_type: string;
-  document_number: string;
-  seller: CommissionSeller;
-  customer: CommissionSeller;
-  warehouse: CommissionSeller;
-  payment_type: string;
-  subtotal: string;
-  tax_amount: string;
-  total_amount: string;
-  cost_total: number;
-  gross_profit: number;
-  commission_rate: string;
-  commission: number;
-  status: string;
-}
-
-export interface CommissionSeller {
-  id: number;
-  name: string;
+  codigo: number;
+  vendedor: string;
+  toneladas: number;
+  importe_cobrado: number;
+  pct_comision: number;
+  importe_comision: number;
+  importe_vendido: number;
+  por_cobrar: number;
 }
 
 /**

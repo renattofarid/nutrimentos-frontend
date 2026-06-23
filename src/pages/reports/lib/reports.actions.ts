@@ -223,17 +223,23 @@ export async function getCommissionsReport(
 ): Promise<CommissionsReportResponse> {
   const { data } = await api.get<CommissionsReportResponse>(
     "/reports/commissions",
-    { params },
+    { params: { selected_month: params.selected_month } },
   );
   return data;
 }
 
 export async function exportCommissionsReport(
   params: CommissionsReportParams,
-  format: "excel" | "pdf",
 ): Promise<Blob> {
+  const { commission_rates, ...rest } = params;
+  const serialized: Record<string, any> = { ...rest };
+  if (commission_rates) {
+    for (const [id, rate] of Object.entries(commission_rates)) {
+      serialized[`commission_rates[${id}]`] = rate;
+    }
+  }
   const { data } = await api.get<Blob>("/reports/commissions", {
-    params: { ...params, format },
+    params: serialized,
     responseType: "blob",
   });
   return data;

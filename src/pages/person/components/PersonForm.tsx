@@ -504,13 +504,23 @@ export const PersonForm = ({
             reference: (data as any).reference || "",
             is_primary: true,
           });
-        } else if (isEditing && isClient && primaryZone?.id) {
-          await updatePersonZone(primaryZone.id, {
-            zone_id: parseInt((data as any).zone_id),
-            address: (data as any).address || "",
-            reference: (data as any).reference || "",
-            is_primary: true,
-          });
+        } else if (isEditing && isClient) {
+          if (primaryZone?.id) {
+            await updatePersonZone(primaryZone.id, {
+              zone_id: parseInt((data as any).zone_id),
+              address: (data as any).address || "",
+              reference: (data as any).reference || "",
+              is_primary: true,
+            });
+          } else if ((data as any).zone_id) {
+            await createPersonZone({
+              person_id: effectivePersonId,
+              zone_id: parseInt((data as any).zone_id),
+              address: (data as any).address || "",
+              reference: (data as any).reference || "",
+              is_primary: true,
+            });
+          }
         }
 
         if (stagedAddresses.length > 0) {

@@ -271,7 +271,7 @@ export const PersonForm = ({
       mother_surname: "",
       business_name: initialData?.business_name || "",
       commercial_name: initialData?.commercial_name || "",
-      address: primaryZone?.address || initialData?.address || "",
+      address: primaryZone?.address || initialData?.address || "-",
       phone: initialData?.phone || "",
       email: initialData?.email || "",
       role_id: roleId.toString(),

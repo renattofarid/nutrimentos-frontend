@@ -201,6 +201,11 @@ export function ClientManagementModal({
     onClientChange?.();
   };
 
+  const handleClose = () => {
+    queryClient.invalidateQueries({ queryKey: [CLIENT.QUERY_KEY] });
+    onOpenChange(false);
+  };
+
   const handleSetPrimaryZone = useCallback(async (zoneId: number) => {
     setUpdatingZoneId(zoneId);
     promiseToast(
@@ -243,7 +248,7 @@ export function ClientManagementModal({
       <Dialog
         open={open}
         onOpenChange={(v) => {
-          if (!v) onOpenChange(false);
+          if (!v) handleClose();
         }}
       >
         <DialogContent
@@ -292,7 +297,7 @@ export function ClientManagementModal({
                   variant="ghost"
                   size="icon"
                   tooltip="Cerrar"
-                  onClick={() => onOpenChange(false)}
+                  onClick={handleClose}
                 >
                   <X className="size-4" />
                 </Button>
@@ -497,7 +502,7 @@ export function ClientManagementModal({
                             getPersonName(person),
                             person,
                           );
-                          onOpenChange(false);
+                          handleClose();
                         }
                       }}
                       className={cn(

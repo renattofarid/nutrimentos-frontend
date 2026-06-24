@@ -24,7 +24,10 @@ export default function ClientAddPage() {
     setIsSubmitting(true);
     try {
       // For names field: send only the 'names' field as entered by the user
-      const namesOnly = data.names || "";
+      const fullName = [data.names, data.father_surname, data.mother_surname]
+        .map((s) => s?.trim())
+        .filter(Boolean)
+        .join(" ");
 
       // Build payload with only the fields present in the form
       const createPersonData: any = {
@@ -43,15 +46,15 @@ export default function ClientAddPage() {
         data.type_person === "NATURAL" ||
         data.document_type_id === TYPE_DOCUMENT.DNI.id
       ) {
-        createPersonData.names = namesOnly;
+        createPersonData.names = fullName;
       }
 
       // Add fields specific to NATURAL person
       if (data.type_person === "NATURAL") {
         createPersonData.gender = data.gender || "M";
         createPersonData.birth_date = data.birth_date || "";
-        createPersonData.father_surname = data.father_surname || "";
-        createPersonData.mother_surname = data.mother_surname || "";
+        createPersonData.father_surname = "";
+        createPersonData.mother_surname = "";
       }
 
       // Add fields specific to JURIDICA person

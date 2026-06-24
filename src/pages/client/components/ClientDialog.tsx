@@ -25,7 +25,10 @@ export function ClientDialog({
     setIsSubmitting(true);
     try {
       // Transform PersonSchemaClient to CreatePersonRequest
-      const namesOnly = data.names || "";
+      const fullName = [data.names, data.father_surname, data.mother_surname]
+        .map((s) => s?.trim())
+        .filter(Boolean)
+        .join(" ");
 
       // Build payload with only the fields present in the form
       const createPersonData: any = {
@@ -41,15 +44,15 @@ export function ClientDialog({
 
       // Only include names when NATURAL or when the document type is DNI
       if (data.type_person === "NATURAL" || data.document_type_id === "1") {
-        createPersonData.names = namesOnly;
+        createPersonData.names = fullName;
       }
 
       // Add fields specific to NATURAL person
       if (data.type_person === "NATURAL") {
         createPersonData.gender = data.gender || "M";
         createPersonData.birth_date = data.birth_date || "";
-        createPersonData.father_surname = data.father_surname || "";
-        createPersonData.mother_surname = data.mother_surname || "";
+        createPersonData.father_surname = "";
+        createPersonData.mother_surname = "";
       }
 
       // Add fields specific to JURIDICA person

@@ -70,7 +70,7 @@ const basePersonSchema = z.object({
 
   address: z
     .string()
-    .min(5, "La dirección debe tener al menos 5 caracteres")
+    .min(1, "La dirección no puede estar vacía")
     .max(200, "La dirección no puede exceder 200 caracteres")
     .optional()
     .or(z.literal("")),
@@ -153,7 +153,7 @@ export const createPersonSchema = (
 
       address: z
         .string()
-        .min(5, "La dirección debe tener al menos 5 caracteres")
+        .min(1, "La dirección no puede estar vacía")
         .max(200, "La dirección no puede exceder 200 caracteres")
         .optional()
         .or(z.literal("")),

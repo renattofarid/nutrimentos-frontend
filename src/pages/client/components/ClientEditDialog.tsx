@@ -74,14 +74,18 @@ export function ClientEditDialog({
         data.type_person === "NATURAL" ||
         data.document_type_id === TYPE_DOCUMENT.DNI.id
       ) {
-        updatePersonData.names = data.names || "";
+        const fullName = [data.names, data.father_surname, data.mother_surname]
+          .map((s) => s?.trim())
+          .filter(Boolean)
+          .join(" ");
+        updatePersonData.names = fullName;
       }
 
       if (data.type_person === "NATURAL") {
         updatePersonData.gender = data.gender || "M";
         updatePersonData.birth_date = data.birth_date || "";
-        updatePersonData.father_surname = data.father_surname || "";
-        updatePersonData.mother_surname = data.mother_surname || "";
+        updatePersonData.father_surname = "";
+        updatePersonData.mother_surname = "";
       }
 
       if (data.type_person === "JURIDICA") {
@@ -97,7 +101,10 @@ export function ClientEditDialog({
       pendingNameRef.current =
         data.type_person === "JURIDICA"
           ? data.business_name || ""
-          : `${data.names || ""} ${data.father_surname || ""}`.trim();
+          : [data.names, data.father_surname, data.mother_surname]
+              .map((s) => s?.trim())
+              .filter(Boolean)
+              .join(" ");
       successToast(
         SUCCESS_MESSAGE({ name: "Cliente", gender: false }, "update"),
       );

@@ -227,16 +227,19 @@ export const createPersonSchema = (
         }
       }
       if (data.type_person === "NATURAL") {
-        if (!data.names || data.names.trim() === "") {
+        const hasAnyName = !!(
+          data.names?.trim() ||
+          data.father_surname?.trim() ||
+          data.mother_surname?.trim()
+        );
+        if (!hasAnyName) {
           ctx.addIssue({
-            code: "invalid_type",
-            expected: "string",
-            message: "El nombre es obligatorio para personas naturales",
+            code: "custom",
+            message: "Ingrese al menos un nombre o apellido",
             path: ["names"],
           });
         }
 
-        // Validar que solo contenga letras y espacios para personas naturales
         if (data.names && !/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/.test(data.names)) {
           ctx.addIssue({
             code: "custom",

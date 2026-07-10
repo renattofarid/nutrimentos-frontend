@@ -18,6 +18,8 @@ import {
 import { TeamSwitcher } from "./team-switcher";
 import { NavMain } from "./nav-main";
 import { TYPE_USER } from "@/pages/type-users/lib/typeUser.interface";
+import { MENU_GROUP } from "@/pages/menu-group/lib/menuGroup.interface";
+import { PERMISSION } from "@/pages/permission/lib/permission.interface";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import { NavUser } from "./nav-user";
 import { USER } from "@/pages/users/lib/User.interface";
@@ -83,6 +85,18 @@ const {
   ROUTE: TypeUserRoute,
   MODEL: { name: TypeUserTitle },
 } = TYPE_USER;
+
+const {
+  ICON_REACT: MenuGroupIcon,
+  ROUTE: MenuGroupRoute,
+  MODEL: { name: MenuGroupTitle },
+} = MENU_GROUP;
+
+const {
+  ICON_REACT: PermissionIcon,
+  ROUTE: PermissionRoute,
+  MODEL: { name: PermissionTitle },
+} = PERMISSION;
 
 const {
   ICON_REACT: UserIcon,
@@ -548,6 +562,16 @@ const data = {
           title: TypeUserTitle,
           url: TypeUserRoute,
           icon: TypeUserIcon,
+        },
+        {
+          title: MenuGroupTitle,
+          url: MenuGroupRoute,
+          icon: MenuGroupIcon,
+        },
+        {
+          title: PermissionTitle,
+          url: PermissionRoute,
+          icon: PermissionIcon,
         },
       ],
     },

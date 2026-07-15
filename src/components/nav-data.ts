@@ -73,6 +73,8 @@ import { SettlementTitle } from "@/pages/deliverysheet/components/settlement/Set
 import { CustomerAccountStatementTitle } from "@/pages/reports/components/CustomerAccountStatementPage";
 import { RealCustomerAccountStatementTitle } from "@/pages/reports/components/RealCustomerAccountStatementPage";
 import type { LucideIcon } from "lucide-react";
+import { MENU_GROUP } from "@/pages/menu-group/lib/menuGroup.interface";
+import { PERMISSION } from "@/pages/permission/lib/permission.interface";
 
 const {
   ICON_REACT: TypeUserIcon,
@@ -84,6 +86,17 @@ const {
   ROUTE: UserRoute,
   MODEL: { name: UserTitle },
 } = USER;
+const {
+  ICON_REACT: MenuGroupIcon,
+  ROUTE: MenuGroupRoute,
+  MODEL: { name: MenuGroupTitle },
+} = MENU_GROUP;
+
+const {
+  ICON_REACT: PermissionIcon,
+  ROUTE: PermissionRoute,
+  MODEL: { name: PermissionTitle },
+} = PERMISSION;
 const {
   ICON_REACT: CompanyIcon,
   ROUTE: CompanyRoute,
@@ -449,5 +462,15 @@ export const securityNavItem: NavItem = {
   items: [
     { title: UserTitle, url: UserRoute, icon: UserIcon },
     { title: TypeUserTitle, url: TypeUserRoute, icon: TypeUserIcon },
+    {
+      title: MenuGroupTitle,
+      url: MenuGroupRoute,
+      icon: MenuGroupIcon,
+    },
+    {
+      title: PermissionTitle,
+      url: PermissionRoute,
+      icon: PermissionIcon,
+    },
   ],
 };

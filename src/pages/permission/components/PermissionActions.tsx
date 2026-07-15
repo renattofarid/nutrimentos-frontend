@@ -43,7 +43,7 @@ export default function PermissionActions({
             <Plus /> Nuevo
           </Button>
         )}
-        {can(ROUTE, ACTIONS.CREAR_EN_LOTE) && (
+        {can(ROUTE, ACTIONS.CREAR_EN_LOTE) && false && (
           <Button
             colorIcon="indigo"
             size="sm"

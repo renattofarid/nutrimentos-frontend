@@ -12,8 +12,13 @@ import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllBrands } from "@/pages/brand/lib/brand.hook";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import { useProductAsyncSearch } from "../lib/reports.hook";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "costo-de-ventas";
 
 export default function CostOfSalesReportPage() {
+  const { can } = usePermission();
   const { user } = useAuthStore();
   const company_id = user?.company_id;
 
@@ -130,16 +135,18 @@ export default function CostOfSalesReportPage() {
             className="w-full"
           />
 
-          <div className="flex justify-end">
-            <div className="w-fit">
-              <ExportButtons
-                excelEndpoint={excelEndpoint}
-                pdfEndpoint={pdfEndpoint}
-                excelFileName="costo-de-ventas.xlsx"
-                pdfFileName="costo-de-ventas.pdf"
-              />
+          {can(ROUTE, ACTIONS.EXPORTAR) && (
+            <div className="flex justify-end">
+              <div className="w-fit">
+                <ExportButtons
+                  excelEndpoint={excelEndpoint}
+                  pdfEndpoint={pdfEndpoint}
+                  excelFileName="costo-de-ventas.xlsx"
+                  pdfFileName="costo-de-ventas.pdf"
+                />
+              </div>
             </div>
-          </div>
+          )}
         </GroupFormSection>
       </div>
     </PageWrapper>

@@ -10,8 +10,13 @@ import {
 import AccountsPayableOptions from "./AccountsPayableOptions";
 import { getAccountsPayableColumns } from "./AccountsPayableColumns";
 import PageWrapper from "@/components/PageWrapper";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "cuentas-por-pagar";
 
 export default function AccountsPayablePage() {
+  const { can } = usePermission();
   const [installments, setInstallments] = useState<
     PurchaseInstallmentResource[]
   >([]);
@@ -123,7 +128,13 @@ export default function AccountsPayablePage() {
   };
 
   const columns = useMemo(
-    () => getAccountsPayableColumns(handleOpenPayment, handleOpenQuickView),
+    () =>
+      getAccountsPayableColumns(
+        handleOpenPayment,
+        handleOpenQuickView,
+        can(ROUTE, ACTIONS.VER),
+        can(ROUTE, ACTIONS.REGISTRAR_PAGO),
+      ),
     [],
   );
 

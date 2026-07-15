@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import { hasAccessToRoute } from "@/App";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
+import { isAdminUser } from "@/lib/permission-guard";
 import { useWindowManager } from "@/stores/window-manager.store";
 import { buttonVariants } from "./ui/button";
 import { navData, type NavItem } from "./nav-data";
@@ -19,7 +20,7 @@ export type { NavSubItem, NavItem } from "./nav-data";
 export { navData } from "./nav-data";
 
 export function TopNav() {
-  const { access } = useAuthStore();
+  const { access, user } = useAuthStore();
   const [filteredNav, setFilteredNav] = useState<NavItem[]>([]);
   const { tabs, activeTabId, openTab } = useWindowManager();
 
@@ -27,7 +28,7 @@ export function TopNav() {
   const activePath = activeTab?.path ?? "";
 
   useEffect(() => {
-    if (!ENABLE_PERMISSION_VALIDATION) {
+    if (!ENABLE_PERMISSION_VALIDATION || isAdminUser(user)) {
       setFilteredNav(navData);
       return;
     }
@@ -49,7 +50,7 @@ export function TopNav() {
       }, []);
 
     setFilteredNav(filterNav(navData));
-  }, [access]);
+  }, [access, user]);
 
   const isSubItemActive = (url: string) =>
     activePath === url || activePath.startsWith(url + "/");

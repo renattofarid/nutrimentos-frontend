@@ -21,6 +21,10 @@ import type { SalesBySellerMonthlyItem, SalesBySellerMonthlyReportParams } from 
 import { useWarehouseAsyncSearch } from "../lib/reports.hook";
 import { useWorkers } from "@/pages/worker/lib/worker.hook";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "ventas-detalladas-por-vendedor";
 
 interface FilterFormValues {
   month: string;
@@ -145,6 +149,7 @@ const columns: ColumnDef<SalesBySellerMonthlyItem>[] = [
 ];
 
 export default function SalesBySellerMonthlyReportPage() {
+  const { can } = usePermission();
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [reportData, setReportData] = useState<SalesBySellerMonthlyItem[] | null>(null);
@@ -319,15 +324,17 @@ export default function SalesBySellerMonthlyReportPage() {
                 <Search className="mr-2 h-4 w-4" />
                 Buscar
               </Button>
-              <Button
-                type="button"
-                color="green"
-                onClick={handleExport}
-                disabled={isExporting || tableData.length === 0}
-              >
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Excel
-              </Button>
+              {can(ROUTE, ACTIONS.EXPORTAR) && (
+                <Button
+                  type="button"
+                  color="green"
+                  onClick={handleExport}
+                  disabled={isExporting || tableData.length === 0}
+                >
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Excel
+                </Button>
+              )}
             </div>
           </GroupFormSection>
 

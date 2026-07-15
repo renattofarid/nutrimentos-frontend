@@ -22,19 +22,22 @@ export async function getAllMenuGroups({
 }
 
 export async function storeMenuGroup(data: any): Promise<MenuGroupResource> {
-  const response = await api.post<MenuGroupResource>(ENDPOINT, data);
-  return response.data;
+  const response = await api.post<{ message: string; data: MenuGroupResource }>(
+    ENDPOINT,
+    data
+  );
+  return response.data.data;
 }
 
 export async function updateMenuGroup(
   id: number,
   data: any
 ): Promise<MenuGroupResource> {
-  const response = await api.put<MenuGroupResource>(
+  const response = await api.put<{ message: string; data: MenuGroupResource }>(
     `${ENDPOINT}/${id}`,
     data
   );
-  return response.data;
+  return response.data.data;
 }
 
 export async function deleteMenuGroup(id: number): Promise<any> {

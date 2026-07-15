@@ -11,6 +11,10 @@ import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { useWarehouseAsyncSearch } from "@/pages/reports/lib/reports.hook";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "registro-compras";
 
 const DOCUMENT_TYPE_OPTIONS = [
   { value: "FACTURA", label: "Factura" },
@@ -41,6 +45,7 @@ interface FilterFormValues {
 }
 
 export default function PurchaseRegisterReportPage() {
+  const { can } = usePermission();
   const { user } = useAuthStore();
 
   const today = new Date();
@@ -178,10 +183,12 @@ export default function PurchaseRegisterReportPage() {
               </div>
 
               <div className="flex justify-end gap-2 pt-1">
-                <ExportButtons
-                  excelEndpoint={exportEndpoint}
-                  excelFileName="registro-compras.xlsx"
-                />
+                {can(ROUTE, ACTIONS.EXPORTAR) && (
+                  <ExportButtons
+                    excelEndpoint={exportEndpoint}
+                    excelFileName="registro-compras.xlsx"
+                  />
+                )}
               </div>
             </GroupFormSection>
           </div>

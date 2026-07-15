@@ -2,6 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Eye, DoorClosed, Trash2, X } from "lucide-react";
 import { useWindowManager } from "@/stores/window-manager.store";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "turnos-caja";
 
 interface Props {
   hasSelection?: boolean;
@@ -23,6 +27,7 @@ export default function BoxShiftActions({
   refetch,
 }: Props) {
   const { activeTabId, closeTab } = useWindowManager();
+  const { can } = usePermission();
   const handleCerrar = () => { if (activeTabId) closeTab(activeTabId); };
   const handleNew = () => {
     if (onNew) {
@@ -38,12 +43,16 @@ export default function BoxShiftActions({
         <Button colorIcon="green" size="sm" variant="outline" onClick={handleNew}>
           <Plus /> Nuevo
         </Button>
-        <Button colorIcon="blue" size="sm" variant="outline" onClick={onView ?? (() => {})} disabled={!hasSelection}>
-          <Eye /> Ver
-        </Button>
-        <Button colorIcon="amber" size="sm" variant="outline" onClick={onCloseShift ?? (() => {})} disabled={!hasSelection || !selectionIsOpen}>
-          <DoorClosed /> Cerrar Turno
-        </Button>
+        {can(ROUTE, ACTIONS.VER) && (
+          <Button colorIcon="blue" size="sm" variant="outline" onClick={onView ?? (() => {})} disabled={!hasSelection}>
+            <Eye /> Ver
+          </Button>
+        )}
+        {can(ROUTE, ACTIONS.CERRAR_TURNO) && (
+          <Button colorIcon="amber" size="sm" variant="outline" onClick={onCloseShift ?? (() => {})} disabled={!hasSelection || !selectionIsOpen}>
+            <DoorClosed /> Cerrar Turno
+          </Button>
+        )}
         <Button colorIcon="red" size="sm" variant="outline" onClick={onDelete ?? (() => {})} disabled={!hasSelection}>
           <Trash2 /> Eliminar
         </Button>

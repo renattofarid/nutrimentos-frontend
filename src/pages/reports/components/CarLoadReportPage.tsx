@@ -20,6 +20,10 @@ import { DataTable } from "@/components/DataTable";
 
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "llenado-carros";
 
 interface FilterFormValues {
   branch_id: string;
@@ -43,6 +47,7 @@ function formatDateParam(v: Date | string | undefined | null): string | null {
 }
 
 export default function CarLoadReportPage() {
+  const { can } = usePermission();
   const [selectedZones, setSelectedZones] = useState<string[]>([]);
   const isZoneAutoSelectRef = useRef(false);
 
@@ -197,10 +202,12 @@ export default function CarLoadReportPage() {
                 <Search className="mr-2 h-4 w-4" />
                 Buscar
               </Button>
-              <ExportButtons
-                onPdfDownload={handleExportPdf}
-                pdfLabel="Imprimir"
-              />
+              {can(ROUTE, ACTIONS.EXPORTAR) && (
+                <ExportButtons
+                  onPdfDownload={handleExportPdf}
+                  pdfLabel="Imprimir"
+                />
+              )}
             </div>
           </div>
 

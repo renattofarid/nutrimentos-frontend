@@ -40,6 +40,7 @@ export default function PermissionTable({
         onRowSelectionChange={onRowSelectionChange}
         getRowId={(row) => row.id.toString()}
         initialColumnVisibility={{}}
+        className="max-h-[70vh] overflow-y-auto"
       >
         {children}
       </DataTable>

@@ -32,6 +32,10 @@ import {
 import { errorToast, successToast, loadingToast, dismissToast } from "@/lib/core.function";
 import { getAllSalesFiltered } from "@/pages/sale/lib/sale.actions";
 import { previewDeliverySheet } from "@/pages/deliverysheet/lib/deliverysheet.actions";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "estado-cuenta-clientes";
 
 export const CustomerAccountStatementTitle = "Estado de Cuenta de Clientes";
 
@@ -192,6 +196,7 @@ const columns: ColumnDef<AccountStatementFlatRow>[] = [
 ];
 
 export default function CustomerAccountStatementPage() {
+  const { can } = usePermission();
   const [isExporting, setIsExporting] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -351,16 +356,18 @@ export default function CustomerAccountStatementPage() {
                 <Search className="mr-2 h-4 w-4" />
                 Buscar
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleExport}
-                disabled={isExporting}
-              >
-                <Printer className="mr-2 h-4 w-4" />
-                Imprimir
-              </Button>
+              {can(ROUTE, ACTIONS.EXPORTAR) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExport}
+                  disabled={isExporting}
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  Imprimir
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="ghost"

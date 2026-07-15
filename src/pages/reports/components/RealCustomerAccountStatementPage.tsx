@@ -30,6 +30,10 @@ import {
   calculateAccountStatementMetrics,
 } from "../lib/reports.utils";
 import { errorToast, successToast } from "@/lib/core.function";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "estado-cuenta-real";
 
 export const RealCustomerAccountStatementTitle = "Rep. créditos de vendedores";
 
@@ -216,6 +220,7 @@ const columns: ColumnDef<CustomerAccountStatementTableItem>[] = [
 ];
 
 export default function RealCustomerAccountStatementPage() {
+  const { can } = usePermission();
   const [isExporting, setIsExporting] = useState(false);
 
   const { data: zones } = useAllZones();
@@ -408,16 +413,18 @@ export default function RealCustomerAccountStatementPage() {
                     <Search className="mr-2 h-4 w-4" />
                     Buscar
                   </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleExport("excel")}
-                    disabled={isExporting}
-                  >
-                    <FileSpreadsheet className="mr-2 h-4 w-4" />
-                    Excel
-                  </Button>
+                  {can(ROUTE, ACTIONS.EXPORTAR) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleExport("excel")}
+                      disabled={isExporting}
+                    >
+                      <FileSpreadsheet className="mr-2 h-4 w-4" />
+                      Excel
+                    </Button>
+                  )}
                 </div>
               </GroupFormSection>
             </div>

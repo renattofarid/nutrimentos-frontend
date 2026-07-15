@@ -14,6 +14,10 @@ import {
 } from "@/components/ui/popover";
 import { exportCreditNotes } from "../lib/credit-note.actions";
 import { successToast, errorToast } from "@/lib/core.function";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "notas-credito";
 
 interface CreditNoteActionsProps {
   hasSelection: boolean;
@@ -32,6 +36,7 @@ export default function CreditNoteActions({
 }: CreditNoteActionsProps) {
   const navigate = useNavigate();
   const { activeTabId, closeTab } = useWindowManager();
+  const { can } = usePermission();
   const [isExporting, setIsExporting] = useState<"excel" | "pdf" | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -71,83 +76,93 @@ export default function CreditNoteActions({
   return (
     <div className="flex items-center justify-between mb-1 pb-1 border-b w-full">
       <div className="flex items-center gap-1">
-        <Button colorIcon="green" size="sm" variant="outline" onClick={() => navigate(CREDIT_NOTE.ROUTE_ADD)}>
-          <Plus />
-          Nuevo
-        </Button>
-        <Button
-          colorIcon="blue"
-          size="sm"
-          variant="outline"
-          onClick={onManage}
-          disabled={!hasSelection}
-        >
-          <Eye />
-          Gestionar
-        </Button>
-        <Button
-          colorIcon="red"
-          size="sm"
-          variant="outline"
-          onClick={onDelete}
-          disabled={!hasSelection}
-        >
-          <Trash2 />
-          Eliminar
-        </Button>
-        <Button
-          colorIcon="blue"
-          size="sm"
-          variant="outline"
-          onClick={onPrint}
-          disabled={!hasSelection}
-        >
-          <Printer />
-          PDF
-        </Button>
+        {can(ROUTE, ACTIONS.AGREGAR) && (
+          <Button colorIcon="green" size="sm" variant="outline" onClick={() => navigate(CREDIT_NOTE.ROUTE_ADD)}>
+            <Plus />
+            Nuevo
+          </Button>
+        )}
+        {can(ROUTE, ACTIONS.GESTIONAR) && (
+          <Button
+            colorIcon="blue"
+            size="sm"
+            variant="outline"
+            onClick={onManage}
+            disabled={!hasSelection}
+          >
+            <Eye />
+            Gestionar
+          </Button>
+        )}
+        {can(ROUTE, ACTIONS.ELIMINAR) && (
+          <Button
+            colorIcon="red"
+            size="sm"
+            variant="outline"
+            onClick={onDelete}
+            disabled={!hasSelection}
+          >
+            <Trash2 />
+            Eliminar
+          </Button>
+        )}
+        {can(ROUTE, ACTIONS.IMPRIMIR) && (
+          <Button
+            colorIcon="blue"
+            size="sm"
+            variant="outline"
+            onClick={onPrint}
+            disabled={!hasSelection}
+          >
+            <Printer />
+            PDF
+          </Button>
+        )}
         <div className="h-6 mx-2">
           <Separator orientation="vertical" />
         </div>
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button size="sm" variant="outline">
-              <Download />
-              Exportar
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-36 p-2" align="end">
-            <div className="flex flex-col gap-1">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="justify-start"
-                disabled={isExporting !== null}
-                onClick={() => handleExport("excel")}
-              >
-                {isExporting === "excel" ? (
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                ) : (
-                  <Sheet className="size-4 mr-2" />
-                )}
-                Excel
+        {can(ROUTE, ACTIONS.EXPORTAR) && (
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="outline">
+                <Download />
+                Exportar
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="justify-start"
-                disabled={isExporting !== null}
-                onClick={() => handleExport("pdf")}
-              >
-                {isExporting === "pdf" ? (
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                ) : (
-                  <FileText className="size-4 mr-2" />
-                )}
-                PDF
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
+            </PopoverTrigger>
+            <PopoverContent className="w-36 p-2" align="end">
+              <div className="flex flex-col gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="justify-start"
+                  disabled={isExporting !== null}
+                  onClick={() => handleExport("excel")}
+                >
+                  {isExporting === "excel" ? (
+                    <Loader2 className="size-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sheet className="size-4 mr-2" />
+                  )}
+                  Excel
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="justify-start"
+                  disabled={isExporting !== null}
+                  onClick={() => handleExport("pdf")}
+                >
+                  {isExporting === "pdf" ? (
+                    <Loader2 className="size-4 mr-2 animate-spin" />
+                  ) : (
+                    <FileText className="size-4 mr-2" />
+                  )}
+                  PDF
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
         <div className="h-6 mx-2">
           <Separator orientation="vertical" />
         </div>

@@ -25,6 +25,10 @@ import { useProduct } from "@/pages/product/lib/product.hook";
 import type { Option } from "@/lib/core.interface";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "kardex";
 
 interface FilterFormValues {
   product_id: string;
@@ -315,6 +319,7 @@ const columns: ColumnDef<KardexItem>[] = [
 ];
 
 export default function KardexReportPage() {
+  const { can } = usePermission();
   const [isExporting, setIsExporting] = useState(false);
 
   const { data: rawData, isLoading, fetch } = useKardexReport();
@@ -499,16 +504,18 @@ export default function KardexReportPage() {
               label="Al"
             />
             <div className="flex h-full items-end">
-              <Button
-                type="button"
-                variant="default"
-                onClick={handleExport}
-                color="green"
-                disabled={isExporting || tableData.length === 0}
-              >
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Excel
-              </Button>
+              {can(ROUTE, ACTIONS.EXPORTAR) && (
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={handleExport}
+                  color="green"
+                  disabled={isExporting || tableData.length === 0}
+                >
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Excel
+                </Button>
+              )}
             </div>
           </GroupFormSection>
 

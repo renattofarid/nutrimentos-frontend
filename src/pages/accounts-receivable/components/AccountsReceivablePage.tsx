@@ -10,8 +10,13 @@ import InstallmentPaymentsSheet from "@/pages/sale/components/InstallmentPayment
 import AccountsReceivableOptions from "./AccountsReceivableOptions";
 import { getAccountsReceivableColumns } from "./AccountsReceivableColumns";
 import PageWrapper from "@/components/PageWrapper";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "cuentas-por-cobrar";
 
 export default function AccountsReceivablePage() {
+  const { can } = usePermission();
   const [installments, setInstallments] = useState<SaleInstallmentResource[]>(
     [],
   );
@@ -130,7 +135,13 @@ export default function AccountsReceivablePage() {
   };
 
   const columns = useMemo(
-    () => getAccountsReceivableColumns(handleOpenPayment, handleOpenQuickView),
+    () =>
+      getAccountsReceivableColumns(
+        handleOpenPayment,
+        handleOpenQuickView,
+        can(ROUTE, ACTIONS.VER),
+        can(ROUTE, ACTIONS.REGISTRAR_PAGO),
+      ),
     [],
   );
 

@@ -49,6 +49,7 @@ import { GUIDE } from "@/pages/guide/lib/guide.interface";
 import { hasAccessToRoute } from "@/App";
 import { useEffect, useState } from "react";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
+import { isAdminUser } from "@/lib/permission-guard";
 import { SALE, SaleRoute } from "@/pages/sale/lib/sale.interface";
 import { CREDIT_NOTE } from "@/pages/credit-note/lib/credit-note.interface";
 import { BOX_SHIFT } from "@/pages/box-shift/lib/box-shift.interface";
@@ -583,8 +584,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [filteredNav, setFilteredNav] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!ENABLE_PERMISSION_VALIDATION) {
-      // Si no está habilitada la validación, mostrar todos los elementos
+    if (!ENABLE_PERMISSION_VALIDATION || isAdminUser(user)) {
+      // Sin validación habilitada, o usuario admin: mostrar todos los elementos
       setFilteredNav(data.navMain);
       return;
     }
@@ -601,7 +602,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       });
 
     setFilteredNav(filterNav(data.navMain));
-  }, [access]);
+  }, [access, user]);
 
   if (!user) {
     return null; // o spinner

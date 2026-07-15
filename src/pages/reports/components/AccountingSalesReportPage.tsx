@@ -14,6 +14,10 @@ import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { format } from "date-fns";
 import ExportButtons from "@/components/ExportButtons";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "ventas-contabilidad";
 
 interface FilterFormValues {
   branch_id: string;
@@ -53,6 +57,7 @@ const downloadBlob = async (blob: Blob, filename: string) => {
 };
 
 export default function AccountingSalesReportPage() {
+  const { can } = usePermission();
   const _today = new Date();
   const _todayStr = format(_today, "yyyy-MM-dd");
   const _threeMonthsAgoStr = format(new Date(_today.getFullYear(), _today.getMonth() - 3, 1), "yyyy-MM-dd");
@@ -156,16 +161,18 @@ export default function AccountingSalesReportPage() {
               label="Al"
             />
 
-            <div className="flex justify-end">
-              <div className="w-fit">
-                <ExportButtons
-                  onExcelDownload={handleExcelDownload}
-                  onPdfDownload={handlePdfDownload}
-                  excelFileName="ventas-contabilidad.xlsx"
-                  pdfFileName="ventas-contabilidad.pdf"
-                />
+            {can(ROUTE, ACTIONS.EXPORTAR) && (
+              <div className="flex justify-end">
+                <div className="w-fit">
+                  <ExportButtons
+                    onExcelDownload={handleExcelDownload}
+                    onPdfDownload={handlePdfDownload}
+                    excelFileName="ventas-contabilidad.xlsx"
+                    pdfFileName="ventas-contabilidad.pdf"
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </GroupFormSection>
         </form>
       </Form>

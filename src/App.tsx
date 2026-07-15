@@ -6,12 +6,20 @@ import LayoutComponent from "./components/layout";
 import type { Access } from "./pages/auth/lib/auth.interface";
 
 export const hasAccessToRoute = (access: Access[], route: string): boolean => {
-  const transformRoute = route.split("/").pop();
+  const transformRoute = route.split("/").pop()!;
+  // Tener cualquier permiso del módulo (ej. "clientes.editar") ya implica acceso
+  // al módulo en el navbar, aunque no exista el permiso "Ver" (ruta pelada).
   for (const node of access) {
-    if (node.permissions.some((p) => p.routes.includes(transformRoute!))) {
+    if (
+      node.permissions.some(
+        (p) =>
+          p.routes.includes(transformRoute) ||
+          p.routes.some((r) => r.startsWith(`${transformRoute}.`))
+      )
+    ) {
       return true;
     }
-    if (node.children && hasAccessToRoute(node.children, transformRoute!)) {
+    if (node.children && hasAccessToRoute(node.children, transformRoute)) {
       return true;
     }
   }

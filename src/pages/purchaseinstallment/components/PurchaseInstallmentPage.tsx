@@ -7,9 +7,14 @@ import PurchaseInstallmentOptions from "./PurchaseInstallmentOptions";
 import { PurchaseInstallmentColumns } from "./PurchaseInstallmentColumns";
 import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "cuota-compra";
 
 export default function PurchaseInstallmentPage() {
   const navigate = useNavigate();
+  const { can } = usePermission();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
@@ -29,6 +34,8 @@ export default function PurchaseInstallmentPage() {
         isLoading={isLoading}
         columns={PurchaseInstallmentColumns({
           onViewPurchase: handleViewPurchase,
+          canView: can(ROUTE, ACTIONS.VER),
+          canDelete: can(ROUTE, ACTIONS.ELIMINAR),
         })}
         data={data || []}
       >

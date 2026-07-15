@@ -18,6 +18,8 @@ import {
 import { TeamSwitcher } from "./team-switcher";
 import { NavMain } from "./nav-main";
 import { TYPE_USER } from "@/pages/type-users/lib/typeUser.interface";
+import { MENU_GROUP } from "@/pages/menu-group/lib/menuGroup.interface";
+import { PERMISSION } from "@/pages/permission/lib/permission.interface";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import { NavUser } from "./nav-user";
 import { USER } from "@/pages/users/lib/User.interface";
@@ -47,6 +49,7 @@ import { GUIDE } from "@/pages/guide/lib/guide.interface";
 import { hasAccessToRoute } from "@/App";
 import { useEffect, useState } from "react";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
+import { isAdminUser } from "@/lib/permission-guard";
 import { SALE, SaleRoute } from "@/pages/sale/lib/sale.interface";
 import { CREDIT_NOTE } from "@/pages/credit-note/lib/credit-note.interface";
 import { BOX_SHIFT } from "@/pages/box-shift/lib/box-shift.interface";
@@ -83,6 +86,18 @@ const {
   ROUTE: TypeUserRoute,
   MODEL: { name: TypeUserTitle },
 } = TYPE_USER;
+
+const {
+  ICON_REACT: MenuGroupIcon,
+  ROUTE: MenuGroupRoute,
+  MODEL: { name: MenuGroupTitle },
+} = MENU_GROUP;
+
+const {
+  ICON_REACT: PermissionIcon,
+  ROUTE: PermissionRoute,
+  MODEL: { name: PermissionTitle },
+} = PERMISSION;
 
 const {
   ICON_REACT: UserIcon,
@@ -549,6 +564,16 @@ const data = {
           url: TypeUserRoute,
           icon: TypeUserIcon,
         },
+        {
+          title: MenuGroupTitle,
+          url: MenuGroupRoute,
+          icon: MenuGroupIcon,
+        },
+        {
+          title: PermissionTitle,
+          url: PermissionRoute,
+          icon: PermissionIcon,
+        },
       ],
     },
   ],
@@ -559,8 +584,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [filteredNav, setFilteredNav] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!ENABLE_PERMISSION_VALIDATION) {
-      // Si no está habilitada la validación, mostrar todos los elementos
+    if (!ENABLE_PERMISSION_VALIDATION || isAdminUser(user)) {
+      // Sin validación habilitada, o usuario admin: mostrar todos los elementos
       setFilteredNav(data.navMain);
       return;
     }
@@ -577,7 +602,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       });
 
     setFilteredNav(filterNav(data.navMain));
-  }, [access]);
+  }, [access, user]);
 
   if (!user) {
     return null; // o spinner

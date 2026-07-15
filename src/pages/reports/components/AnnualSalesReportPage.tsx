@@ -22,6 +22,10 @@ import { exportAnnualSalesReport } from "../lib/reports.actions";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { FormInput } from "@/components/FormInput";
 import { errorToast, successToast } from "@/lib/core.function";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "ventas-anuales";
 
 const MONTH_NAMES = [
   "Ene",
@@ -99,6 +103,7 @@ const columns: ColumnDef<AnnualSalesItem>[] = [
 ];
 
 export default function AnnualSalesReportPage() {
+  const { can } = usePermission();
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
@@ -213,24 +218,28 @@ export default function AnnualSalesReportPage() {
                 <Search className="mr-2 h-4 w-4" />
                 Buscar
               </Button>
-              <Button
-                type="button"
-                color="green"
-                onClick={() => handleExport("excel")}
-                disabled={isExportingExcel}
-              >
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Excel
-              </Button>
-              <Button
-                type="button"
-                color="red"
-                onClick={() => handleExport("pdf")}
-                disabled={isExportingPdf}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                PDF
-              </Button>
+              {can(ROUTE, ACTIONS.EXPORTAR) && (
+                <>
+                  <Button
+                    type="button"
+                    color="green"
+                    onClick={() => handleExport("excel")}
+                    disabled={isExportingExcel}
+                  >
+                    <FileSpreadsheet className="mr-2 h-4 w-4" />
+                    Excel
+                  </Button>
+                  <Button
+                    type="button"
+                    color="red"
+                    onClick={() => handleExport("pdf")}
+                    disabled={isExportingPdf}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    PDF
+                  </Button>
+                </>
+              )}
             </div>
           </GroupFormSection>
 

@@ -21,6 +21,10 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { FilePlus } from "lucide-react";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const SALE_ROUTE = "ventas";
 
 type ActiveFilter = "" | "customer" | "motive" | "status";
 
@@ -63,6 +67,7 @@ export default function CreditNoteOptions({
 }: CreditNoteOptionsProps) {
   const { data: motives = [] } = useAllCreditNoteMotives();
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>("");
+  const { can } = usePermission();
 
   const motiveOptions = (motives ?? []).map((m) => ({
     value: String(m.id),
@@ -179,7 +184,7 @@ export default function CreditNoteOptions({
         className="w-[200px] bg-accent"
       />
 
-      {sale_id && onGenerateCreditNote && (
+      {sale_id && onGenerateCreditNote && can(SALE_ROUTE, ACTIONS.GENERAR_NOTA_CREDITO) && (
         <Button
           size="sm"
           variant="outline"

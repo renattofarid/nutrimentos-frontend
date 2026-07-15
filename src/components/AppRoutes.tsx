@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import HomePage from "@/pages/home/components/HomePage";
 import TypeUserPage from "@/pages/type-users/components/TypeUserPage";
+import MenuGroupPage from "@/pages/menu-group/components/MenuGroupPage";
+import PermissionPage from "@/pages/permission/components/PermissionPage";
 import UserPage from "@/pages/users/components/UserPage";
 import CompanyPage from "@/pages/company/components/CompanyPage";
 import BranchPage from "@/pages/branch/components/BranchPage";
@@ -91,6 +93,8 @@ import AccountingSalesReportPage from "@/pages/reports/components/AccountingSale
 import CostOfSalesReportPage from "@/pages/reports/components/CostOfSalesReportPage";
 import SalesBySellerMonthlyReportPage from "@/pages/reports/components/SalesBySellerMonthlyReportPage";
 import { TYPE_USER } from "@/pages/type-users/lib/typeUser.interface";
+import { MENU_GROUP } from "@/pages/menu-group/lib/menuGroup.interface";
+import { PERMISSION } from "@/pages/permission/lib/permission.interface";
 import { USER } from "@/pages/users/lib/User.interface";
 import { COMPANY } from "@/pages/company/lib/company.interface";
 import { BRANCH } from "@/pages/branch/lib/branch.interface";
@@ -153,6 +157,8 @@ import WarehouseProductPage from "@/pages/warehouse-product/components/Warehouse
 import { WAREHOUSE_PRODUCT } from "@/pages/warehouse-product/lib/warehouse-product.interface";
 
 const { ROUTE: TypeUserRoute } = TYPE_USER;
+const { ROUTE: MenuGroupRoute } = MENU_GROUP;
+const { ROUTE: PermissionRoute } = PERMISSION;
 const { ROUTE: UserRoute } = USER;
 const { ROUTE: CompanyRoute } = COMPANY;
 const { ROUTE: BranchRoute } = BRANCH;
@@ -213,6 +219,8 @@ export function AppRoutes() {
       {/* Seguridad */}
       <Route path={TypeUserRoute} element={<TypeUserPage />} />
       <Route path={UserRoute} element={<UserPage />} />
+      <Route path={MenuGroupRoute} element={<MenuGroupPage />} />
+      <Route path={PermissionRoute} element={<PermissionPage />} />
 
       {/* Configuración */}
       <Route path={CompanyRoute} element={<CompanyPage />} />

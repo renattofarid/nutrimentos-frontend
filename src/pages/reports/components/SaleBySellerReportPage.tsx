@@ -41,6 +41,10 @@ import { format } from "date-fns";
 import { errorToast, successToast } from "@/lib/core.function";
 import { useWorkers } from "@/pages/worker/lib/worker.hook";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "venta-por-vendedor";
 
 interface FilterFormValues {
   document_type: string;
@@ -265,6 +269,7 @@ const columns: ColumnDef<SaleWorkerReportResource>[] = [
 ];
 
 export default function SaleBySellerReportPage() {
+  const { can } = usePermission();
   const [isExporting, setIsExporting] = useState(false);
 
   const { data: rawData, isLoading, fetch } = useSaleBySellerReport();
@@ -414,15 +419,17 @@ export default function SaleBySellerReportPage() {
                 <Search className="mr-2 h-4 w-4" />
                 Buscar
               </Button>
-              <Button
-                type="button"
-                color="green"
-                onClick={handleExport}
-                disabled={isExporting || tableData.length === 0}
-              >
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Excel
-              </Button>
+              {can(ROUTE, ACTIONS.EXPORTAR) && (
+                <Button
+                  type="button"
+                  color="green"
+                  onClick={handleExport}
+                  disabled={isExporting || tableData.length === 0}
+                >
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Excel
+                </Button>
+              )}
             </div>
           </GroupFormSection>
 

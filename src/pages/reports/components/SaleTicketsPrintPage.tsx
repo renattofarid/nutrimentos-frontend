@@ -22,6 +22,10 @@ import { DOCUMENT_TYPES } from "@/pages/sale/lib/sale.interface";
 import { errorToast, promiseToast } from "@/lib/core.function";
 import { FormInput } from "@/components/FormInput";
 import { exportBulkCreditNoteTickets } from "@/pages/credit-note/lib/credit-note.actions";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "imprimir-tickets";
 
 interface DisplayItem {
   id: number;
@@ -34,6 +38,7 @@ interface DisplayItem {
 }
 
 export default function SaleTicketsPrintPage() {
+  const { can } = usePermission();
   const [searchParams, setSearchParams] = useState({
     document_type: "BOLETA",
     serie: "",
@@ -233,20 +238,22 @@ export default function SaleTicketsPrintPage() {
               Buscar
             </Button>
           )}
-          <Button
-            onClick={isCreditNote ? handlePrintCreditNote : handlePrintSales}
-            disabled={
-              isCreditNote ? creditNotePrintDisabled : isPrinting || selectedIds.length === 0
-            }
-          >
-            {isPrinting ? (
-              <Loader className="h-4 w-4 animate-spin" />
-            ) : (
-              <Printer className="h-4 w-4" />
-            )}
-            Imprimir
-            {!isCreditNote && selectedIds.length > 0 && ` (${selectedIds.length})`}
-          </Button>
+          {can(ROUTE, ACTIONS.IMPRIMIR) && (
+            <Button
+              onClick={isCreditNote ? handlePrintCreditNote : handlePrintSales}
+              disabled={
+                isCreditNote ? creditNotePrintDisabled : isPrinting || selectedIds.length === 0
+              }
+            >
+              {isPrinting ? (
+                <Loader className="h-4 w-4 animate-spin" />
+              ) : (
+                <Printer className="h-4 w-4" />
+              )}
+              Imprimir
+              {!isCreditNote && selectedIds.length > 0 && ` (${selectedIds.length})`}
+            </Button>
+          )}
         </div>
       </GroupFormSection>
 

@@ -46,7 +46,9 @@ export const getStatusBadge = (installment: PurchaseInstallmentResource) => {
 
 export const getAccountsPayableColumns = (
   onOpenPayment: (installment: PurchaseInstallmentResource) => void,
-  onOpenQuickView: (installment: PurchaseInstallmentResource) => void
+  onOpenQuickView: (installment: PurchaseInstallmentResource) => void,
+  canView = true,
+  canRegisterPayment = true
 ): ColumnDef<PurchaseInstallmentResource>[] => [
   {
     accessorKey: "purchase_correlativo",
@@ -149,16 +151,18 @@ export const getAccountsPayableColumns = (
       const isPending = parseFloat(row.original.pending_amount) > 0;
       return (
         <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onOpenQuickView(row.original)}
-            title="Vista rápida de pagos"
-          >
-            <Eye className="h-4 w-4 mr-1" />
-            Ver
-          </Button>
-          {isPending && (
+          {canView && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onOpenQuickView(row.original)}
+              title="Vista rápida de pagos"
+            >
+              <Eye className="h-4 w-4 mr-1" />
+              Ver
+            </Button>
+          )}
+          {isPending && canRegisterPayment && (
             <Button
               variant="default"
               size="sm"

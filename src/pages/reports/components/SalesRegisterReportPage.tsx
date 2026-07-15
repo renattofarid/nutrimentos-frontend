@@ -16,6 +16,10 @@ import {
 import { useWorkers } from "@/pages/worker/lib/worker.hook";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "registro-ventas";
 
 const DOCUMENT_TYPE_OPTIONS = [
   { value: "FACTURA", label: "Factura" },
@@ -43,6 +47,7 @@ interface FilterFormValues {
 }
 
 export default function SalesRegisterReportPage() {
+  const { can } = usePermission();
   const { user } = useAuthStore();
   const company_id = user?.company_id;
 
@@ -202,10 +207,12 @@ export default function SalesRegisterReportPage() {
               </div>
 
               <div className="flex justify-end gap-2 pt-1">
-                <ExportButtons
-                  excelEndpoint={exportEndpoint}
-                  excelFileName="registro-ventas.xlsx"
-                />
+                {can(ROUTE, ACTIONS.EXPORTAR) && (
+                  <ExportButtons
+                    excelEndpoint={exportEndpoint}
+                    excelFileName="registro-ventas.xlsx"
+                  />
+                )}
               </div>
             </GroupFormSection>
           </div>

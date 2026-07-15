@@ -22,6 +22,10 @@ import { exportInventoryReport } from "../lib/reports.actions";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import { errorToast, successToast } from "@/lib/core.function";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "inventario";
 
 interface FilterFormValues {
   product_id: string;
@@ -130,6 +134,7 @@ const columns: ColumnDef<InventoryItem>[] = [
 ];
 
 export default function InventoryReportPage() {
+  const { can } = usePermission();
   const [isExporting, setIsExporting] = useState(false);
 
   const { data: rawData, isLoading, fetch } = useInventoryReport();
@@ -201,16 +206,18 @@ export default function InventoryReportPage() {
                   <Search className="mr-2 h-4 w-4" />
                   Buscar
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  onClick={handleExport}
-                  disabled={isExporting}
-                >
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Excel
-                </Button>
+                {can(ROUTE, ACTIONS.EXPORTAR) && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    onClick={handleExport}
+                    disabled={isExporting}
+                  >
+                    <FileSpreadsheet className="mr-2 h-4 w-4" />
+                    Excel
+                  </Button>
+                )}
               </div>
             }
           >

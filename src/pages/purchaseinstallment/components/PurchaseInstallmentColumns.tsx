@@ -7,8 +7,12 @@ import { DeleteButton } from "@/components/SimpleDeleteDialog";
 
 export const PurchaseInstallmentColumns = ({
   onViewPurchase,
+  canView = true,
+  canDelete = true,
 }: {
   onViewPurchase: (purchaseId: number) => void;
+  canView?: boolean;
+  canDelete?: boolean;
 }): ColumnDef<PurchaseInstallmentResource>[] => [
   {
     accessorKey: "correlativo",
@@ -83,12 +87,16 @@ export const PurchaseInstallmentColumns = ({
 
       return (
         <div className="flex gap-2">
-          <ButtonAction
-            onClick={() => onViewPurchase(purchaseId)}
-            icon={Eye}
-            tooltip="Ver Compra"
-          />
-          <DeleteButton onClick={() => {/* handle delete action */}} />
+          {canView && (
+            <ButtonAction
+              onClick={() => onViewPurchase(purchaseId)}
+              icon={Eye}
+              tooltip="Ver Compra"
+            />
+          )}
+          {canDelete && (
+            <DeleteButton onClick={() => {/* handle delete action */}} />
+          )}
         </div>
       );
     },

@@ -7,11 +7,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import { hasAccessToRoute } from "@/App";
 import { ENABLE_PERMISSION_VALIDATION } from "@/lib/permissions.config";
+import { isAdminUser } from "@/lib/permission-guard";
 import { navData, type NavItem } from "./top-nav";
 import { useWindowManager } from "@/stores/window-manager.store";
 
 export function MobileNav() {
-  const { access } = useAuthStore();
+  const { access, user } = useAuthStore();
   const [open, setOpen] = useState(false);
   const [filteredNav, setFilteredNav] = useState<NavItem[]>([]);
   const { tabs, activeTabId, openTab } = useWindowManager();
@@ -26,7 +27,7 @@ export function MobileNav() {
   };
 
   useEffect(() => {
-    if (!ENABLE_PERMISSION_VALIDATION) {
+    if (!ENABLE_PERMISSION_VALIDATION || isAdminUser(user)) {
       setFilteredNav(navData);
       return;
     }
@@ -45,7 +46,7 @@ export function MobileNav() {
     }, []);
 
     setFilteredNav(filtered);
-  }, [access]);
+  }, [access, user]);
 
   const isSubItemActive = (url: string) =>
     activePath === url || activePath.startsWith(url + "/");

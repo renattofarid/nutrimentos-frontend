@@ -17,6 +17,10 @@ import { useProduct } from "@/pages/product/lib/product.hook";
 import { useZoneSearch } from "@/pages/zone/lib/zone.hook";
 import { useWorkers } from "@/pages/worker/lib/worker.hook";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "ventas-detallado-credito";
 
 interface FilterFormValues {
   branch_id: string;
@@ -33,6 +37,7 @@ interface FilterFormValues {
 }
 
 export default function CreditDetailedSalesReportPage() {
+  const { can } = usePermission();
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
@@ -241,14 +246,16 @@ export default function CreditDetailedSalesReportPage() {
               </div>
 
               <div className="flex justify-end gap-2 pt-1">
-                <ExportButtons
-                  onExcelDownload={handleExcelExport}
-                  onPdfDownload={handlePdfExport}
-                  excelFileName="reporte-ventas-detallado-credito.xlsx"
-                  pdfFileName="reporte-ventas-detallado-credito.pdf"
-                  disableExcel={isExportingExcel}
-                  disablePdf={isExportingPdf}
-                />
+                {can(ROUTE, ACTIONS.EXPORTAR) && (
+                  <ExportButtons
+                    onExcelDownload={handleExcelExport}
+                    onPdfDownload={handlePdfExport}
+                    excelFileName="reporte-ventas-detallado-credito.xlsx"
+                    pdfFileName="reporte-ventas-detallado-credito.pdf"
+                    disableExcel={isExportingExcel}
+                    disablePdf={isExportingPdf}
+                  />
+                )}
               </div>
             </GroupFormSection>
           </div>

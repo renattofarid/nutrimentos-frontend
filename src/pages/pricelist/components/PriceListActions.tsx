@@ -2,6 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Pencil, Trash2, X, Eye, UserPlus } from "lucide-react";
 import { useWindowManager } from "@/stores/window-manager.store";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "lista-precio";
 
 interface Props {
   hasSelection: boolean;
@@ -21,6 +25,7 @@ export default function PriceListActions({
   onAssignClient,
 }: Props) {
   const { activeTabId, closeTab } = useWindowManager();
+  const { can } = usePermission();
 
   const handleCerrar = () => {
     if (activeTabId) closeTab(activeTabId);
@@ -29,52 +34,62 @@ export default function PriceListActions({
   return (
     <div className="flex items-center justify-between mb-1 pb-1 border-b w-full">
       <div className="flex items-center gap-1">
-        <Button colorIcon="green" size="sm" variant="outline" onClick={onNew}>
-          <Plus />
-          Nuevo
-        </Button>
-        <Button
-          colorIcon="amber"
-          size="sm"
-          variant="outline"
-          onClick={onEdit}
-          disabled={!hasSelection}
-        >
-          <Pencil />
-          Editar
-        </Button>
-        <Button
-          colorIcon="red"
-          size="sm"
-          variant="outline"
-          onClick={onDelete}
-          disabled={!hasSelection}
-        >
-          <Trash2 />
-          Eliminar
-        </Button>
+        {can(ROUTE, ACTIONS.AGREGAR) && (
+          <Button colorIcon="green" size="sm" variant="outline" onClick={onNew}>
+            <Plus />
+            Nuevo
+          </Button>
+        )}
+        {can(ROUTE, ACTIONS.EDITAR) && (
+          <Button
+            colorIcon="amber"
+            size="sm"
+            variant="outline"
+            onClick={onEdit}
+            disabled={!hasSelection}
+          >
+            <Pencil />
+            Editar
+          </Button>
+        )}
+        {can(ROUTE, ACTIONS.ELIMINAR) && (
+          <Button
+            colorIcon="red"
+            size="sm"
+            variant="outline"
+            onClick={onDelete}
+            disabled={!hasSelection}
+          >
+            <Trash2 />
+            Eliminar
+          </Button>
+        )}
         <div className="h-6 mx-2">
           <Separator orientation="vertical" />
         </div>
-        <Button
-          colorIcon="blue"
-          size="sm"
-          variant="outline"
-          onClick={onViewDetails}
-          disabled={!hasSelection}
-        >
-          <Eye />
-          Ver Detalles
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={onAssignClient}
-          disabled={!hasSelection}
-        >
-          <UserPlus />
-          Asignar Cliente
-        </Button>
+        {can(ROUTE, ACTIONS.VER_DETALLES) && (
+          <Button
+            colorIcon="blue"
+            size="sm"
+            variant="outline"
+            onClick={onViewDetails}
+            disabled={!hasSelection}
+          >
+            <Eye />
+            Ver Detalles
+          </Button>
+        )}
+        {can(ROUTE, ACTIONS.ASIGNAR_CLIENTE) && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onAssignClient}
+            disabled={!hasSelection}
+          >
+            <UserPlus />
+            Asignar Cliente
+          </Button>
+        )}
         <div className="h-6 mx-2">
           <Separator orientation="vertical" />
         </div>

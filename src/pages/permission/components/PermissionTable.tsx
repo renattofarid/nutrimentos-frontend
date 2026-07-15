@@ -1,0 +1,49 @@
+import { DataTable } from "@/components/DataTable.tsx";
+import type { PermissionResource } from "../lib/permission.interface";
+import type {
+  ColumnDef,
+  RowSelectionState,
+  OnChangeFn,
+} from "@tanstack/react-table";
+
+interface Props {
+  columns: ColumnDef<PermissionResource>[];
+  data: PermissionResource[];
+  children?: React.ReactNode;
+  isLoading?: boolean;
+  onRowDoubleClick?: (row: PermissionResource) => void;
+  enableRowSelection?: boolean;
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+}
+
+export default function PermissionTable({
+  columns,
+  data,
+  children,
+  isLoading,
+  onRowDoubleClick,
+  enableRowSelection,
+  rowSelection,
+  onRowSelectionChange,
+}: Props) {
+  return (
+    <div className="border-none text-muted-foreground max-w-full">
+      <DataTable
+        columns={columns}
+        data={data}
+        isLoading={isLoading}
+        onRowDoubleClick={onRowDoubleClick}
+        enableRowSelection={enableRowSelection}
+        enableMultiRowSelection={false}
+        rowSelection={rowSelection}
+        onRowSelectionChange={onRowSelectionChange}
+        getRowId={(row) => row.id.toString()}
+        initialColumnVisibility={{}}
+        className="max-h-[70vh] overflow-y-auto"
+      >
+        {children}
+      </DataTable>
+    </div>
+  );
+}

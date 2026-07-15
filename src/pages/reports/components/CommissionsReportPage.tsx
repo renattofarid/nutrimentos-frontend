@@ -22,6 +22,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { usePermission } from "@/lib/permission-guard";
+import { ACTIONS } from "@/lib/permission-catalog";
+
+const ROUTE = "comisiones";
 
 interface FilterFormValues {
   selected_month: string;
@@ -80,6 +84,7 @@ function SummaryCard({
 }
 
 export default function CommissionsReportPage() {
+  const { can } = usePermission();
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [reportData, setReportData] = useState<CommissionsReportResponse | null>(null);
@@ -293,18 +298,20 @@ export default function CommissionsReportPage() {
                     </tfoot>
                   </Table>
 
-                  <div className="flex justify-end pt-2">
-                    <Button
-                      type="button"
-                      color="green"
-                      onClick={handleExport}
-                      disabled={isExporting || !hasValidRates}
-                      title={!hasValidRates ? "Ingresa al menos una tasa válida (0–1) para exportar" : ""}
-                    >
-                      <FileSpreadsheet className="mr-2 h-4 w-4" />
-                      {isExporting ? "Exportando..." : "Paso 3 · Exportar Excel"}
-                    </Button>
-                  </div>
+                  {can(ROUTE, ACTIONS.EXPORTAR) && (
+                    <div className="flex justify-end pt-2">
+                      <Button
+                        type="button"
+                        color="green"
+                        onClick={handleExport}
+                        disabled={isExporting || !hasValidRates}
+                        title={!hasValidRates ? "Ingresa al menos una tasa válida (0–1) para exportar" : ""}
+                      >
+                        <FileSpreadsheet className="mr-2 h-4 w-4" />
+                        {isExporting ? "Exportando..." : "Paso 3 · Exportar Excel"}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </GroupFormSection>
             </>

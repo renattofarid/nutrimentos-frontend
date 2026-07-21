@@ -159,16 +159,12 @@ export const PurchaseForm = ({
     if (isFirstDocumentRender.current) {
       isFirstDocumentRender.current = false;
       const combined =
-        documentSerie || documentNum
-          ? `${documentSerie}-${documentNum}`
-          : "";
+        documentSerie || documentNum ? `${documentSerie}-${documentNum}` : "";
       form.setValue("document_number", combined, { shouldValidate: false });
       return;
     }
     const combined =
-      documentSerie || documentNum
-        ? `${documentSerie}-${documentNum}`
-        : "";
+      documentSerie || documentNum ? `${documentSerie}-${documentNum}` : "";
     form.setValue("document_number", combined, { shouldValidate: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [documentSerie, documentNum]);
@@ -751,7 +747,9 @@ export const PurchaseForm = ({
     }
 
     // Preparar cuotas según el tipo de pago
-    let validInstallments: { id?: number; due_days: string; amount: number }[] | undefined;
+    let validInstallments:
+      | { id?: number; due_days: string; amount: number }[]
+      | undefined;
 
     if (selectedPaymentType === "CONTADO") {
       // Cuando es al contado, enviar una sola cuota con el monto total
@@ -759,7 +757,9 @@ export const PurchaseForm = ({
       const existingInstallmentId = installments[0]?.id;
       validInstallments = [
         {
-          ...(existingInstallmentId !== undefined && { id: existingInstallmentId }),
+          ...(existingInstallmentId !== undefined && {
+            id: existingInstallmentId,
+          }),
           due_days: "1",
           amount: purchaseTotal,
         },
@@ -856,8 +856,23 @@ export const PurchaseForm = ({
           title="Información General"
           icon={Users2}
           gap="gap-2"
-          cols={{ sm: 1, md: 2, lg: 4, xl: 5 }}
+          cols={{ sm: 1, md: 2, lg: 6 }}
         >
+          <FormSelect
+            control={form.control}
+            label="Tienda"
+            name="branch_id"
+            placeholder="Seleccione una tienda"
+            options={
+              branches?.map((branch) => ({
+                value: branch.id.toString(),
+                label: branch.name,
+                description: branch.address,
+              })) || []
+            }
+            withValue={false}
+          />
+
           {/* Proveedor y Almacén */}
           <div className="flex gap-2 items-end">
             <div className="truncate! flex-1">
@@ -895,71 +910,12 @@ export const PurchaseForm = ({
 
           <FormSelect
             control={form.control}
-            label="Tienda"
-            name="branch_id"
-            placeholder="Seleccione una tienda"
-            options={
-              branches?.map((branch) => ({
-                value: branch.id.toString(),
-                label: branch.name,
-                description: branch.address,
-              })) || []
-            }
-            withValue={false}
-          />
-
-          <FormSelect
-            control={form.control}
-            name="warehouse_id"
-            label="Almacén"
-            placeholder="Seleccione un almacén"
-            options={filteredWarehouses.map((warehouse) => ({
-              value: warehouse.id.toString(),
-              label: warehouse.name,
-              description: warehouse.address,
-            }))}
-          />
-
-          <FormSelect
-            control={form.control}
             name="document_type"
             label="Tipo de Documento"
             placeholder="Seleccione"
             options={DOCUMENT_TYPES.map((dt) => ({
               value: dt.value,
               label: dt.label,
-            }))}
-          />
-
-          <DatePickerFormField
-            control={form.control}
-            name="issue_date"
-            label="Fecha de Emisión"
-            placeholder="Seleccione fecha"
-          />
-
-          <DatePickerFormField
-            control={form.control}
-            name="reception_date"
-            label="Fecha de Recepción"
-            placeholder="Seleccione fecha"
-          />
-
-          <DatePickerFormField
-            control={form.control}
-            name="due_date"
-            label="Fecha de Vencimiento"
-            placeholder="Seleccione fecha"
-          />
-
-          <FormSelect
-            control={form.control}
-            name="currency"
-            label="Moneda"
-            placeholder="Seleccione"
-            options={CURRENCIES.map((c) => ({
-              value: c.value,
-              label: c.label,
             }))}
           />
 
@@ -972,9 +928,7 @@ export const PurchaseForm = ({
               <FormInput
                 name="document_serie"
                 value={documentSerie}
-                onChange={(e) =>
-                  setDocumentSerie(e.target.value.toUpperCase())
-                }
+                onChange={(e) => setDocumentSerie(e.target.value.toUpperCase())}
                 placeholder="Serie"
                 uppercase
                 maxLength={4}
@@ -1005,11 +959,41 @@ export const PurchaseForm = ({
             )}
           </div>
 
-          <FormInput
+          <DatePickerFormField
             control={form.control}
-            name="reference_number"
-            label="Número de Referencia"
-            placeholder="Número de referencia (opcional)"
+            name="issue_date"
+            label="Fecha de Emisión"
+            placeholder="Seleccione fecha"
+          />
+
+          <DatePickerFormField
+            control={form.control}
+            name="reception_date"
+            label="Fecha de Recepción"
+            placeholder="Seleccione fecha"
+          />
+
+          <FormSelect
+            control={form.control}
+            name="warehouse_id"
+            label="Almacén"
+            placeholder="Seleccione un almacén"
+            options={filteredWarehouses.map((warehouse) => ({
+              value: warehouse.id.toString(),
+              label: warehouse.name,
+              description: warehouse.address,
+            }))}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="currency"
+            label="Moneda"
+            placeholder="Seleccione"
+            options={CURRENCIES.map((c) => ({
+              value: c.value,
+              label: c.label,
+            }))}
           />
 
           <FormSelect
@@ -1021,6 +1005,20 @@ export const PurchaseForm = ({
               value: pt.value,
               label: pt.label,
             }))}
+          />
+
+          <DatePickerFormField
+            control={form.control}
+            name="due_date"
+            label="Fecha de Vencimiento"
+            placeholder="Seleccione fecha"
+          />
+
+          <FormInput
+            control={form.control}
+            name="reference_number"
+            label="Número de Referencia"
+            placeholder="Número de referencia (opcional)"
           />
         </GroupFormSection>
 
@@ -1215,9 +1213,7 @@ export const PurchaseForm = ({
 
                 {Number(watchFreight) > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">
-                      Flete
-                    </span>
+                    <span className="text-sm text-muted-foreground">Flete</span>
                     <span className="text-sm text-muted-foreground">
                       {currencySymbol}
                       {formatNumber(Number(watchFreight))}
@@ -1271,7 +1267,6 @@ export const PurchaseForm = ({
             </GroupFormSection>
           </div>
         </div>
-
       </form>
 
       {/* Diálogo para agregar proveedor */}

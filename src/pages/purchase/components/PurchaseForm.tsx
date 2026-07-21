@@ -5,19 +5,36 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
-import { Loader, Users2, UserPlus, DollarSign, Save, X } from "lucide-react";
+import {
+  Loader,
+  Users2,
+  UserPlus,
+  DollarSign,
+  Save,
+  X,
+  Plus,
+  Minus,
+} from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
+import { Input } from "@/components/ui/input";
+import { ButtonGroup } from "@/components/ui/button-group";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { CompanyResource } from "@/pages/company/lib/company.interface";
-import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  type ChangeEvent,
+} from "react";
 import { useProduct } from "@/pages/product/lib/product.hook";
 import { SupplierDialog } from "@/pages/supplier/components/SupplierDialog";
 
 import { errorToast, warningToast } from "@/lib/core.function";
-import { format } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import {
   purchaseSchemaCreate,
   purchaseSchemaUpdate,
@@ -136,6 +153,29 @@ export const PurchaseForm = ({
     const idx = dn.indexOf("-");
     return idx >= 0 ? dn.slice(idx + 1) : "";
   });
+
+  // Días de crédito: se suman a la fecha de emisión para calcular la fecha de vencimiento
+  const [creditDays, setCreditDays] = useState<number>(() => {
+    if (defaultValues.issue_date && defaultValues.due_date) {
+      const issue = parseISO(defaultValues.issue_date);
+      const due = parseISO(defaultValues.due_date);
+      if (isValid(issue) && isValid(due)) {
+        const diffDays = Math.round(
+          (due.getTime() - issue.getTime()) / (1000 * 60 * 60 * 24),
+        );
+        if (!isNaN(diffDays) && diffDays >= 0) return diffDays;
+      }
+    }
+    return 30;
+  });
+
+  const handleIncreaseCreditDays = () => setCreditDays((prev) => prev + 1);
+  const handleDecreaseCreditDays = () =>
+    setCreditDays((prev) => Math.max(0, prev - 1));
+  const handleCreditDaysChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value, 10);
+    setCreditDays(isNaN(val) || val < 0 ? 0 : val);
+  };
 
   const form = useForm({
     resolver: zodResolver(
@@ -294,13 +334,19 @@ export const PurchaseForm = ({
     const formattedDate = format(today, "yyyy-MM-dd");
     form.setValue("issue_date", formattedDate);
     form.setValue("reception_date", formattedDate);
-
-    // Establecer due_date a 30 días después por defecto
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 30);
-    const formattedDueDate = format(dueDate, "yyyy-MM-dd");
-    form.setValue("due_date", formattedDueDate);
   }, [form]);
+
+  // Calcular la fecha de vencimiento = fecha de emisión + días de crédito
+  const watchIssueDate = form.watch("issue_date");
+  useEffect(() => {
+    if (!watchIssueDate) return;
+    const base = parseISO(watchIssueDate);
+    if (!isValid(base)) return;
+    base.setDate(base.getDate() + creditDays);
+    const formattedDueDate = format(base, "yyyy-MM-dd");
+    form.setValue("due_date", formattedDueDate, { shouldValidate: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchIssueDate, creditDays]);
 
   // Inicializar details e installments desde defaultValues cuando se carga el formulario
   useEffect(() => {
@@ -1006,6 +1052,38 @@ export const PurchaseForm = ({
               label: pt.label,
             }))}
           />
+
+          <div className="flex flex-col gap-0.5">
+            <label className="flex justify-start items-center text-xs md:text-sm mb-0.5 leading-none h-fit font-bold uppercase text-muted-foreground">
+              Días de Crédito
+            </label>
+            <ButtonGroup>
+              <Input
+                type="number"
+                min={0}
+                value={creditDays}
+                onChange={handleCreditDaysChange}
+                className="h-7 md:h-8 text-xs md:text-sm"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleIncreaseCreditDays}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleDecreaseCreditDays}
+                disabled={creditDays === 0}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+            </ButtonGroup>
+          </div>
 
           <DatePickerFormField
             control={form.control}

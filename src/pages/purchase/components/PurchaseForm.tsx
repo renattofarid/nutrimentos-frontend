@@ -5,19 +5,36 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
-import { Loader, Users2, UserPlus, DollarSign, Save, X } from "lucide-react";
+import {
+  Loader,
+  Users2,
+  UserPlus,
+  DollarSign,
+  Save,
+  X,
+  Plus,
+  Minus,
+} from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
+import { Input } from "@/components/ui/input";
+import { ButtonGroup } from "@/components/ui/button-group";
 import type { WarehouseResource } from "@/pages/warehouse/lib/warehouse.interface";
 import type { PersonResource } from "@/pages/person/lib/person.interface";
 import type { CompanyResource } from "@/pages/company/lib/company.interface";
-import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  type ChangeEvent,
+} from "react";
 import { useProduct } from "@/pages/product/lib/product.hook";
 import { SupplierDialog } from "@/pages/supplier/components/SupplierDialog";
 
 import { errorToast, warningToast } from "@/lib/core.function";
-import { format } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import {
   purchaseSchemaCreate,
   purchaseSchemaUpdate,
@@ -137,6 +154,29 @@ export const PurchaseForm = ({
     return idx >= 0 ? dn.slice(idx + 1) : "";
   });
 
+  // Días de crédito: se suman a la fecha de emisión para calcular la fecha de vencimiento
+  const [creditDays, setCreditDays] = useState<number>(() => {
+    if (defaultValues.issue_date && defaultValues.due_date) {
+      const issue = parseISO(defaultValues.issue_date);
+      const due = parseISO(defaultValues.due_date);
+      if (isValid(issue) && isValid(due)) {
+        const diffDays = Math.round(
+          (due.getTime() - issue.getTime()) / (1000 * 60 * 60 * 24),
+        );
+        if (!isNaN(diffDays) && diffDays >= 0) return diffDays;
+      }
+    }
+    return 30;
+  });
+
+  const handleIncreaseCreditDays = () => setCreditDays((prev) => prev + 1);
+  const handleDecreaseCreditDays = () =>
+    setCreditDays((prev) => Math.max(0, prev - 1));
+  const handleCreditDaysChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value, 10);
+    setCreditDays(isNaN(val) || val < 0 ? 0 : val);
+  };
+
   const form = useForm({
     resolver: zodResolver(
       mode === "create" ? purchaseSchemaCreate : purchaseSchemaUpdate,
@@ -159,16 +199,12 @@ export const PurchaseForm = ({
     if (isFirstDocumentRender.current) {
       isFirstDocumentRender.current = false;
       const combined =
-        documentSerie || documentNum
-          ? `${documentSerie}-${documentNum}`
-          : "";
+        documentSerie || documentNum ? `${documentSerie}-${documentNum}` : "";
       form.setValue("document_number", combined, { shouldValidate: false });
       return;
     }
     const combined =
-      documentSerie || documentNum
-        ? `${documentSerie}-${documentNum}`
-        : "";
+      documentSerie || documentNum ? `${documentSerie}-${documentNum}` : "";
     form.setValue("document_number", combined, { shouldValidate: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [documentSerie, documentNum]);
@@ -298,13 +334,19 @@ export const PurchaseForm = ({
     const formattedDate = format(today, "yyyy-MM-dd");
     form.setValue("issue_date", formattedDate);
     form.setValue("reception_date", formattedDate);
-
-    // Establecer due_date a 30 días después por defecto
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 30);
-    const formattedDueDate = format(dueDate, "yyyy-MM-dd");
-    form.setValue("due_date", formattedDueDate);
   }, [form]);
+
+  // Calcular la fecha de vencimiento = fecha de emisión + días de crédito
+  const watchIssueDate = form.watch("issue_date");
+  useEffect(() => {
+    if (!watchIssueDate) return;
+    const base = parseISO(watchIssueDate);
+    if (!isValid(base)) return;
+    base.setDate(base.getDate() + creditDays);
+    const formattedDueDate = format(base, "yyyy-MM-dd");
+    form.setValue("due_date", formattedDueDate, { shouldValidate: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchIssueDate, creditDays]);
 
   // Inicializar details e installments desde defaultValues cuando se carga el formulario
   useEffect(() => {
@@ -751,7 +793,9 @@ export const PurchaseForm = ({
     }
 
     // Preparar cuotas según el tipo de pago
-    let validInstallments: { id?: number; due_days: string; amount: number }[] | undefined;
+    let validInstallments:
+      | { id?: number; due_days: string; amount: number }[]
+      | undefined;
 
     if (selectedPaymentType === "CONTADO") {
       // Cuando es al contado, enviar una sola cuota con el monto total
@@ -759,7 +803,9 @@ export const PurchaseForm = ({
       const existingInstallmentId = installments[0]?.id;
       validInstallments = [
         {
-          ...(existingInstallmentId !== undefined && { id: existingInstallmentId }),
+          ...(existingInstallmentId !== undefined && {
+            id: existingInstallmentId,
+          }),
           due_days: "1",
           amount: purchaseTotal,
         },
@@ -856,8 +902,23 @@ export const PurchaseForm = ({
           title="Información General"
           icon={Users2}
           gap="gap-2"
-          cols={{ sm: 1, md: 2, lg: 4, xl: 5 }}
+          cols={{ sm: 1, md: 2, lg: 6 }}
         >
+          <FormSelect
+            control={form.control}
+            label="Tienda"
+            name="branch_id"
+            placeholder="Seleccione una tienda"
+            options={
+              branches?.map((branch) => ({
+                value: branch.id.toString(),
+                label: branch.name,
+                description: branch.address,
+              })) || []
+            }
+            withValue={false}
+          />
+
           {/* Proveedor y Almacén */}
           <div className="flex gap-2 items-end">
             <div className="truncate! flex-1">
@@ -895,71 +956,12 @@ export const PurchaseForm = ({
 
           <FormSelect
             control={form.control}
-            label="Tienda"
-            name="branch_id"
-            placeholder="Seleccione una tienda"
-            options={
-              branches?.map((branch) => ({
-                value: branch.id.toString(),
-                label: branch.name,
-                description: branch.address,
-              })) || []
-            }
-            withValue={false}
-          />
-
-          <FormSelect
-            control={form.control}
-            name="warehouse_id"
-            label="Almacén"
-            placeholder="Seleccione un almacén"
-            options={filteredWarehouses.map((warehouse) => ({
-              value: warehouse.id.toString(),
-              label: warehouse.name,
-              description: warehouse.address,
-            }))}
-          />
-
-          <FormSelect
-            control={form.control}
             name="document_type"
             label="Tipo de Documento"
             placeholder="Seleccione"
             options={DOCUMENT_TYPES.map((dt) => ({
               value: dt.value,
               label: dt.label,
-            }))}
-          />
-
-          <DatePickerFormField
-            control={form.control}
-            name="issue_date"
-            label="Fecha de Emisión"
-            placeholder="Seleccione fecha"
-          />
-
-          <DatePickerFormField
-            control={form.control}
-            name="reception_date"
-            label="Fecha de Recepción"
-            placeholder="Seleccione fecha"
-          />
-
-          <DatePickerFormField
-            control={form.control}
-            name="due_date"
-            label="Fecha de Vencimiento"
-            placeholder="Seleccione fecha"
-          />
-
-          <FormSelect
-            control={form.control}
-            name="currency"
-            label="Moneda"
-            placeholder="Seleccione"
-            options={CURRENCIES.map((c) => ({
-              value: c.value,
-              label: c.label,
             }))}
           />
 
@@ -972,9 +974,7 @@ export const PurchaseForm = ({
               <FormInput
                 name="document_serie"
                 value={documentSerie}
-                onChange={(e) =>
-                  setDocumentSerie(e.target.value.toUpperCase())
-                }
+                onChange={(e) => setDocumentSerie(e.target.value.toUpperCase())}
                 placeholder="Serie"
                 uppercase
                 maxLength={4}
@@ -1005,11 +1005,41 @@ export const PurchaseForm = ({
             )}
           </div>
 
-          <FormInput
+          <DatePickerFormField
             control={form.control}
-            name="reference_number"
-            label="Número de Referencia"
-            placeholder="Número de referencia (opcional)"
+            name="issue_date"
+            label="Fecha de Emisión"
+            placeholder="Seleccione fecha"
+          />
+
+          <DatePickerFormField
+            control={form.control}
+            name="reception_date"
+            label="Fecha de Recepción"
+            placeholder="Seleccione fecha"
+          />
+
+          <FormSelect
+            control={form.control}
+            name="warehouse_id"
+            label="Almacén"
+            placeholder="Seleccione un almacén"
+            options={filteredWarehouses.map((warehouse) => ({
+              value: warehouse.id.toString(),
+              label: warehouse.name,
+              description: warehouse.address,
+            }))}
+          />
+
+          <FormSelect
+            control={form.control}
+            name="currency"
+            label="Moneda"
+            placeholder="Seleccione"
+            options={CURRENCIES.map((c) => ({
+              value: c.value,
+              label: c.label,
+            }))}
           />
 
           <FormSelect
@@ -1021,6 +1051,52 @@ export const PurchaseForm = ({
               value: pt.value,
               label: pt.label,
             }))}
+          />
+
+          <div className="flex flex-col gap-0.5">
+            <label className="flex justify-start items-center text-xs md:text-sm mb-0.5 leading-none h-fit font-bold uppercase text-muted-foreground">
+              Días de Crédito
+            </label>
+            <ButtonGroup>
+              <Input
+                type="number"
+                min={0}
+                value={creditDays}
+                onChange={handleCreditDaysChange}
+                className="h-7 md:h-8 text-xs md:text-sm"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleIncreaseCreditDays}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleDecreaseCreditDays}
+                disabled={creditDays === 0}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+            </ButtonGroup>
+          </div>
+
+          <DatePickerFormField
+            control={form.control}
+            name="due_date"
+            label="Fecha de Vencimiento"
+            placeholder="Seleccione fecha"
+          />
+
+          <FormInput
+            control={form.control}
+            name="reference_number"
+            label="Número de Referencia"
+            placeholder="Número de referencia (opcional)"
           />
         </GroupFormSection>
 
@@ -1215,9 +1291,7 @@ export const PurchaseForm = ({
 
                 {Number(watchFreight) > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">
-                      Flete
-                    </span>
+                    <span className="text-sm text-muted-foreground">Flete</span>
                     <span className="text-sm text-muted-foreground">
                       {currencySymbol}
                       {formatNumber(Number(watchFreight))}
@@ -1271,7 +1345,6 @@ export const PurchaseForm = ({
             </GroupFormSection>
           </div>
         </div>
-
       </form>
 
       {/* Diálogo para agregar proveedor */}

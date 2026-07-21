@@ -68,7 +68,7 @@ export function TopNav() {
             <MenubarTrigger
               className={cn(
                 buttonVariants({ variant: "default", color: "muted" }),
-                "h-7 text-sm px-1.5 uppercase cursor-pointer text-zinc-700 font-semibold",
+                "h-7 text-sm px-1.5 uppercase cursor-pointer font-semibold",
                 isItemActive(item) && "font-bold",
               )}
             >
@@ -81,7 +81,7 @@ export function TopNav() {
                   key={sub.title}
                   onClick={() => openTab(sub.url, sub.title)}
                   className={cn(
-                    "gap-1.5 uppercase cursor-pointer text-zinc-700",
+                    "gap-1.5 uppercase cursor-pointer",
                     isSubItemActive(sub.url) &&
                       "bg-accent/50 text-accent-foreground font-bold",
                   )}
@@ -98,7 +98,7 @@ export function TopNav() {
               onClick={() => openTab(item.url, item.title)}
               className={cn(
                 buttonVariants({ variant: "default", color: "muted" }),
-                "h-7 text-sm px-1.5 uppercase cursor-pointer text-zinc-700 font-semibold",
+                "h-7 text-sm px-1.5 uppercase cursor-pointer font-semibold",
                 isItemActive(item) && "font-bold",
               )}
             >

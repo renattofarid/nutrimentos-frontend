@@ -8,7 +8,7 @@ export function TabBar() {
   if (tabs.length === 0) return null;
 
   return (
-    <div className="flex items-stretch gap-1 px-2 bg-muted/30 border-b shrink-0 min-h-8">
+    <div className="flex items-stretch gap-1 px-2 py-0.5 bg-muted/30 border-b shrink-0 min-h-9">
       {tabs.map((tab) => (
         <button
           key={tab.id}

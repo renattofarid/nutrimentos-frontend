@@ -1,8 +1,10 @@
+import { Building2 } from "lucide-react";
 import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import { NavUser } from "./nav-user";
 import { NotificationBell } from "./NotificationBell";
 import { TopNav } from "./top-nav";
 import { MobileNav } from "./mobile-nav";
+import { Badge } from "./ui/badge";
 
 export default function HeaderComponent() {
   const { user } = useAuthStore();
@@ -24,7 +26,12 @@ export default function HeaderComponent() {
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-1 shrink-0 ml-auto">
+      <div className="flex items-center gap-2 shrink-0 ml-auto">
+        {user.company && (
+          <Badge variant="default" color="sky" size="lg" icon={Building2}>
+            <span className="truncate">{user.company}</span>
+          </Badge>
+        )}
         <NotificationBell />
         <NavUser user={user} />
       </div>

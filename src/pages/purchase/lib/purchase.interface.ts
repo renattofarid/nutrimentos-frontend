@@ -285,6 +285,7 @@ export const PurchaseEditRoute = "/compras/actualizar/:id";
 export const DOCUMENT_TYPES = [
   { value: "FACTURA", label: "Factura" },
   { value: "BOLETA", label: "Boleta" },
+  { value: "OTRO", label: "Nota de Venta" },
   // { value: "GUIA", label: "Guía de Remisión" },
 ] as const;
 

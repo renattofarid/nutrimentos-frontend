@@ -14,6 +14,7 @@ import {
 import { Loader, Info, Weight, Save, X } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
+import { MultiSelectTags } from "@/components/MultiSelectTags";
 import { FormSwitch } from "@/components/FormSwitch";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import type { UnitResource } from "@/pages/unit/lib/unit.interface";
@@ -111,17 +112,16 @@ export const ProductForm = ({
             uppercase
           />
 
-          <FormSelect
+          <MultiSelectTags
             control={form.control}
-            name="company_id"
+            name="company_ids"
             label="Empresa"
-            placeholder="Seleccione una empresa"
-            options={companies.map((company) => ({
-              value: company.id.toString(),
-              label: company.social_reason,
-              description: company.trade_name,
-            }))}
-            withValue
+            placeholder="Seleccione una o más empresas"
+            searchPlaceholder="Buscar empresa..."
+            options={companies}
+            getDisplayValue={(company) => company.social_reason}
+            getSecondaryText={(company) => company.trade_name}
+            required
           />
 
           <FormSelect

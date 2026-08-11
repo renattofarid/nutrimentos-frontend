@@ -31,7 +31,7 @@ export default function ProductAddPage() {
   const getDefaultValues = (): Partial<ProductSchema> => ({
     codigo: "",
     name: "",
-    company_id: undefined,
+    company_ids: companies?.map((company) => company.id) ?? [],
     product_type_id: undefined,
     unit_id: undefined,
     is_taxed: false,

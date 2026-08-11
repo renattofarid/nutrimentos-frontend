@@ -2,6 +2,7 @@
 
 import { CheckIcon } from "lucide-react";
 import type { Control } from "react-hook-form";
+import { cn } from "@/lib/utils";
 import {
   FormControl,
   FormDescription,
@@ -21,6 +22,7 @@ import {
   TagsTrigger,
   TagsValue,
 } from "./Tags";
+import { useFormLayout } from "./GroupFormSection";
 
 interface MultiSelectTagsItem {
   id: number;
@@ -58,6 +60,8 @@ export function MultiSelectTags<T extends MultiSelectTagsItem>({
   disabled = false,
   required = false,
 }: MultiSelectTagsProps<T>) {
+  const { horizontal, labelWidth } = useFormLayout();
+
   return (
     <FormField
       control={control}
@@ -89,75 +93,95 @@ export function MultiSelectTags<T extends MultiSelectTagsItem>({
         };
 
         return (
-          <FormItem>
+          <FormItem
+            className={cn(
+              horizontal
+                ? "flex flex-row items-center gap-3"
+                : "flex flex-col justify-start gap-0.5",
+            )}
+          >
             {label && (
-              <FormLabel>
+              <FormLabel
+                className={cn(
+                  "flex items-center font-bold uppercase",
+                  horizontal
+                    ? `${labelWidth} shrink-0 justify-end text-right`
+                    : "justify-start",
+                )}
+              >
                 {label}
                 {required && <span className="text-destructive ml-1">*</span>}
               </FormLabel>
             )}
-            <FormControl>
-              <Tags
-                className={className}
-                value={selectedItems}
-                setValue={() => {
-                  // No hacer nada, manejamos cambios con handleSelect/handleRemove
-                }}
-              >
-                <TagsTrigger placeholder={placeholder} disabled={disabled}>
-                  {selectedItems.map((item: T) => (
-                    <TagsValue
-                      key={item.id}
-                      onRemove={() => handleRemove(item.id)}
-                    >
-                      {getDisplayValue(item)}
-                    </TagsValue>
-                  ))}
-                </TagsTrigger>
-                <TagsContent
-                  onWheel={(e) => e.stopPropagation()}
-                  onWheelCapture={(e) => e.stopPropagation()}
-                  onTouchMove={(e) => e.stopPropagation()}
+
+            <div
+              className={cn(
+                horizontal ? "flex-1 min-w-0 flex flex-col gap-0.5" : "contents",
+              )}
+            >
+              {description && (
+                <FormDescription className="text-sm text-muted-foreground !mb-0">
+                  {description}
+                </FormDescription>
+              )}
+              <FormControl>
+                <Tags
+                  className={className}
+                  value={selectedItems}
+                  setValue={() => {
+                    // No hacer nada, manejamos cambios con handleSelect/handleRemove
+                  }}
                 >
-                  <TagsInput placeholder={searchPlaceholder} />
-                  <TagsList>
-                    <TagsEmpty>{emptyMessage}</TagsEmpty>
-                    <TagsGroup>
-                      {options.map((item) => (
-                        <TagsItem
-                          key={item.id}
-                          onSelect={() => handleSelect(item)}
-                          value={getDisplayValue(item)}
-                        >
-                          <div className="flex-1">
-                            <div className="font-medium">
-                              {getDisplayValue(item)}
-                            </div>
-                            {getSecondaryText && getSecondaryText(item) && (
-                              <div className="text-xs text-muted-foreground">
-                                {getSecondaryText(item)}
+                  <TagsTrigger placeholder={placeholder} disabled={disabled}>
+                    {selectedItems.map((item: T) => (
+                      <TagsValue
+                        key={item.id}
+                        onRemove={() => handleRemove(item.id)}
+                      >
+                        {getDisplayValue(item)}
+                      </TagsValue>
+                    ))}
+                  </TagsTrigger>
+                  <TagsContent
+                    onWheel={(e) => e.stopPropagation()}
+                    onWheelCapture={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
+                  >
+                    <TagsInput placeholder={searchPlaceholder} />
+                    <TagsList>
+                      <TagsEmpty>{emptyMessage}</TagsEmpty>
+                      <TagsGroup>
+                        {options.map((item) => (
+                          <TagsItem
+                            key={item.id}
+                            onSelect={() => handleSelect(item)}
+                            value={getDisplayValue(item)}
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium">
+                                {getDisplayValue(item)}
                               </div>
+                              {getSecondaryText && getSecondaryText(item) && (
+                                <div className="text-xs text-muted-foreground">
+                                  {getSecondaryText(item)}
+                                </div>
+                              )}
+                            </div>
+                            {isSelected(item.id) && (
+                              <CheckIcon
+                                className="text-muted-foreground"
+                                size={14}
+                              />
                             )}
-                          </div>
-                          {isSelected(item.id) && (
-                            <CheckIcon
-                              className="text-muted-foreground"
-                              size={14}
-                            />
-                          )}
-                        </TagsItem>
-                      ))}
-                    </TagsGroup>
-                  </TagsList>
-                </TagsContent>
-              </Tags>
-            </FormControl>
-            {description && (
-              <FormDescription className="text-xs text-muted-foreground">
-                {description}
-              </FormDescription>
-            )}
-            <FormMessage />
+                          </TagsItem>
+                        ))}
+                      </TagsGroup>
+                    </TagsList>
+                  </TagsContent>
+                </Tags>
+              </FormControl>
+              <FormMessage />
+            </div>
           </FormItem>
         );
       }}

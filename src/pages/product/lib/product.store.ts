@@ -41,7 +41,9 @@ const createFormData = (data: ProductSchema): FormData => {
 
   formData.append("codigo", data.codigo);
   formData.append("name", data.name);
-  formData.append("company_id", data.company_id.toString());
+  data.company_ids.forEach((companyId) => {
+    formData.append("company_id[]", companyId.toString());
+  });
   formData.append("product_type_id", data.product_type_id.toString());
   formData.append("unit_id", data.unit_id.toString());
   formData.append("is_taxed", data.is_taxed ? "1" : "0");

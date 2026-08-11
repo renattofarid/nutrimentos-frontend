@@ -37,7 +37,7 @@ export const PRODUCT: ModelComplete<ProductSchema> = {
   EMPTY: {
     codigo: "",
     name: "",
-    company_id: "",
+    company_ids: [],
     product_type_id: "",
     unit_id: "",
     is_taxed: true,
@@ -58,6 +58,7 @@ export interface ProductResponse {
 export interface ProductResource {
   id: number;
   company_id: number;
+  company_ids: number[];
   codigo: string;
   name: string;
   category_id: number;

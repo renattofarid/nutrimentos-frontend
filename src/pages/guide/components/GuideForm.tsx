@@ -468,7 +468,7 @@ export const GuideForm = ({
         await createProduct({
           codigo: normalizedCode,
           name: productName,
-          company_id: companyId.toString(),
+          company_ids: [companyId],
           product_type_id: productTypeId.toString(),
           unit_id: matchedUnit.id.toString(),
           is_taxed: false,

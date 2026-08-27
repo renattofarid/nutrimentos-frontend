@@ -71,6 +71,8 @@ export interface UserResource {
   id: number;
   name: string;
   username: string;
+  company_id?: number;
+  company?: string;
   person_id: number;
   person: Person;
   rol_id: number | string;
@@ -88,6 +90,7 @@ export interface getUserProps {
 interface Person {
   id: number;
   type_document: string;
+  document_type_id?: number;
   type_person: string;
   number_document: string;
   names: string;

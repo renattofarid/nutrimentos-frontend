@@ -121,6 +121,20 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+/* Acento del header por empresa (solo tiñe el header/topnav, no el resto del tema) */
+:root {
+  --header-bg: oklch(0.6361 0.1291 243.97); /* DISTRIBUCION DE NUTRIMENTOS SEÑOR DE LOS MILAGROS SAC (default) */
+  --header-fg: oklch(0.985 0 0);
+}
+:root[data-company="1"] {
+  --header-bg: oklch(0.5 0.13 150); /* EL MILAGRO CHICLAYO S.A.C. */
+  --header-fg: oklch(0.985 0 0);
+}
+:root[data-company="18"] {
+  --header-bg: oklch(0.52 0.16 35); /* CONCENTRADOS */
+  --header-fg: oklch(0.985 0 0);
+}
+
 @layer utilities {
   *::-webkit-scrollbar {
     width: 6px;

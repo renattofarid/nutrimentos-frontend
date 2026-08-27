@@ -14,7 +14,10 @@ export default function HeaderComponent() {
   }
 
   return (
-    <header className="bg-primary py-2 sticky top-0 z-50 flex h-fit shrink-0 items-center gap-3 border-b px-4 bg-quaternary/80 backdrop-blur-md">
+    <header
+      className="py-2 sticky top-0 z-50 flex h-fit shrink-0 items-center gap-3 border-b px-4 backdrop-blur-md text-[var(--header-fg)]"
+      style={{ backgroundColor: "var(--header-bg)" }}
+    >
       {/* Mobile: hamburger */}
       <div className="md:hidden">
         <MobileNav />

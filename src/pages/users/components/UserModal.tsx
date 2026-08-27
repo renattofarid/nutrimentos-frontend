@@ -70,7 +70,7 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
           errorToast(
             error.response.data.message ??
               error.response.data.error ??
-              ERROR_MESSAGE(MODEL, "create")
+              ERROR_MESSAGE(MODEL, "create"),
           );
         });
     } else {
@@ -85,7 +85,7 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
           errorToast(
             error.response.data.message ??
               error.response.data.error ??
-              ERROR_MESSAGE(MODEL, "update")
+              ERROR_MESSAGE(MODEL, "update"),
           );
         });
     }
@@ -100,7 +100,9 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
       open={open}
       onClose={onClose}
       title={title}
-      maxWidth="!max-w-(--breakpoint-md)"
+      subtitle={mode === "create" ? "Crear Usuario" : "Editar Usuario"}
+      size="2xl"
+      icon="Users2"
     >
       {!isLoadingAny && user && typeUsers ? (
         <UserForm

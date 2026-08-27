@@ -10,9 +10,7 @@ export const productSchemaCreate = z.object({
     .string()
     .min(1, { message: "El nombre es requerido" })
     .max(255, { message: "El nombre no puede exceder 255 caracteres" }),
-  company_ids: z
-    .array(z.number())
-    .min(1, { message: "Debe seleccionar al menos una empresa" }),
+  company_ids: z.array(z.number()).optional(),
   product_type_id: requiredStringId("Debe seleccionar un tipo de producto"),
   unit_id: requiredStringId("Debe seleccionar una unidad"),
   is_taxed: z.boolean().default(true),

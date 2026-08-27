@@ -42,12 +42,18 @@ export const useUserStore = create<UserStore>((set) => ({
     }
   },
   fetchUser: async (id: number) => {
-    set({ isFinding: true, error: null });
+    set({ isFinding: true, error: null, User: null });
     try {
       const { data } = await findUserById(id);
       set({ User: data, isFinding: false });
-    } catch (err) {
-      set({ error: "Error al cargar el usuario", isFinding: false });
+    } catch (err: any) {
+      set({
+        error:
+          err?.response?.data?.message ??
+          err?.response?.data?.error ??
+          "Error al cargar el usuario",
+        isFinding: false,
+      });
     }
   },
 

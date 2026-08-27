@@ -41,9 +41,9 @@ const createFormData = (data: ProductSchema): FormData => {
 
   formData.append("codigo", data.codigo);
   formData.append("name", data.name);
-  data.company_ids.forEach((companyId) => {
-    formData.append("company_id[]", companyId.toString());
-  });
+  // company_ids ya no se envía: el producto queda disponible en todas las
+  // empresas por defecto. El campo se mantiene en el formulario solo como
+  // referencia visual.
   formData.append("product_type_id", data.product_type_id.toString());
   formData.append("unit_id", data.unit_id.toString());
   formData.append("is_taxed", data.is_taxed ? "1" : "0");

@@ -1,14 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Loader } from "lucide-react";
 import {
@@ -17,16 +9,15 @@ import {
   type UserSchema,
 } from "../lib/User.schema";
 import { FormSelect } from "@/components/FormSelect";
+import { FormInput } from "@/components/FormInput";
 import type { TypeUserResource } from "@/pages/type-users/lib/typeUser.interface";
 import { useState, useEffect } from "react";
 import React from "react";
-import {
-  searchDNI,
-  searchRUC,
-  isValidData,
-} from "@/lib/document-search.service";
-import { Search } from "lucide-react";
 import { useAllCompanies } from "@/pages/company/lib/company.hook";
+import {
+  DocumentNumberField,
+  type FieldsFromSearch,
+} from "./DocumentNumberField";
 
 interface MetricFormProps {
   defaultValues: Partial<UserSchema>;
@@ -45,11 +36,8 @@ export const UserForm = ({
   mode = "create",
   typeUsers,
 }: MetricFormProps) => {
-  const {
-    data: companies,
-    isLoading: loadingCompanies,
-    refetch,
-  } = useAllCompanies();
+  const { data: companies, isLoading: loadingCompanies, refetch } =
+    useAllCompanies();
 
   const form = useForm({
     resolver: zodResolver(
@@ -63,14 +51,9 @@ export const UserForm = ({
 
   const type_person = form.watch("type_person");
   const type_document = form.watch("type_document");
-  const number_document = form.watch("number_document");
 
-  useEffect(() => {
-    refetch();
-  }, []);
-
-  const [isSearching, setIsSearching] = useState(false);
-  const [fieldsFromSearch, setFieldsFromSearch] = useState({
+  const [showPassword, setShowPassword] = useState(false);
+  const [fieldsFromSearch, setFieldsFromSearch] = useState<FieldsFromSearch>({
     names: false,
     father_surname: false,
     mother_surname: false,
@@ -78,26 +61,9 @@ export const UserForm = ({
     address: false,
   });
 
-  // Función para detectar el tipo de documento según la longitud
-  const detectDocumentType = (docNumber: string): string | null => {
-    if (!docNumber) return null;
-    const length = docNumber.length;
-    
-    if (length === 8 && /^\d+$/.test(docNumber)) return "DNI";
-    if (length === 11 && /^\d+$/.test(docNumber)) return "RUC";
-    if (length === 12 && /^\d+$/.test(docNumber)) return "CE";
-    if (length >= 7 && length <= 9) return "PASAPORTE";
-    
-    return null;
-  };
-
-  // Detectar si el número ingresado no coincide con el tipo seleccionado
-  const detectedDocType = detectDocumentType(number_document || "");
-  const hasDocumentMismatch =
-    detectedDocType &&
-    type_document &&
-    detectedDocType !== type_document &&
-    (number_document?.length === 8 || number_document?.length === 11 || number_document?.length === 12);
+  useEffect(() => {
+    refetch();
+  }, []);
 
   // Lógica de validación entre tipo de persona y tipo de documento
   const getValidDocumentTypes = (personType: string) => {
@@ -140,7 +106,26 @@ export const UserForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-6 w-full"
+        autoComplete="off"
+      >
+        {/* Campos señuelo para evitar que el navegador autocomplete usuario/contraseña */}
+        <input
+          type="text"
+          name="username"
+          autoComplete="username"
+          className="hidden"
+          tabIndex={-1}
+        />
+        <input
+          type="password"
+          name="password"
+          autoComplete="new-password"
+          className="hidden"
+          tabIndex={-1}
+        />
         <div className="bg-tertiary rounded-lg p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormSelect
@@ -184,356 +169,113 @@ export const UserForm = ({
               ]}
             />
 
-            <FormField
-              control={form.control}
-              name="number_document"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-normal">
-                    Número de Documento
-                  </FormLabel>
-                  <FormControl>
-                    <div className="flex gap-2">
-                      <Input
-                        maxLength={
-                          type_document === "RUC"
-                            ? 11
-                            : type_document === "DNI"
-                            ? 8
-                            : type_document === "CE"
-                            ? 12
-                            : type_document === "PASAPORTE"
-                            ? 9
-                            : 0
-                        }
-                        placeholder="Número de Documento"
-                        {...field}
-                      />
-                      {(type_document === "DNI" || type_document === "RUC") && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          disabled={
-                            !field.value ||
-                            (type_document === "DNI" &&
-                              field.value.length !== 8) ||
-                            (type_document === "RUC" &&
-                              field.value.length !== 11) ||
-                            isSearching
-                          }
-                          onClick={async () => {
-                            if (field.value) {
-                              setIsSearching(true);
-                              try {
-                                if (
-                                  type_document === "DNI" &&
-                                  field.value.length === 8
-                                ) {
-                                  const response = await searchDNI({
-                                    search: field.value,
-                                  });
-                                  if (response.data) {
-                                    const newFieldsFromSearch = {
-                                      ...fieldsFromSearch,
-                                    };
-                                    if (isValidData(response.data.names)) {
-                                      form.setValue(
-                                        "names",
-                                        response.data.names
-                                      );
-                                      newFieldsFromSearch.names = true;
-                                    }
-                                    if (
-                                      isValidData(response.data.father_surname)
-                                    ) {
-                                      form.setValue(
-                                        "father_surname",
-                                        response.data.father_surname
-                                      );
-                                      newFieldsFromSearch.father_surname = true;
-                                    }
-                                    if (
-                                      isValidData(response.data.mother_surname)
-                                    ) {
-                                      form.setValue(
-                                        "mother_surname",
-                                        response.data.mother_surname
-                                      );
-                                      newFieldsFromSearch.mother_surname = true;
-                                    }
-                                    setFieldsFromSearch(newFieldsFromSearch);
-                                  }
-                                } else if (
-                                  type_document === "RUC" &&
-                                  field.value.length === 11
-                                ) {
-                                  const response = await searchRUC({
-                                    search: field.value,
-                                  });
-                                  if (response.data) {
-                                    const newFieldsFromSearch = {
-                                      ...fieldsFromSearch,
-                                    };
-                                    if (
-                                      isValidData(response.data.business_name)
-                                    ) {
-                                      form.setValue(
-                                        "business_name",
-                                        response.data.business_name
-                                      );
-                                      newFieldsFromSearch.business_name = true;
-                                    }
-                                    if (isValidData(response.data.address)) {
-                                      form.setValue(
-                                        "address",
-                                        response.data.address!
-                                      );
-                                      newFieldsFromSearch.address = true;
-                                    }
-                                    setFieldsFromSearch(newFieldsFromSearch);
-                                  }
-                                }
-                              } catch (error) {
-                                console.error(
-                                  "Error searching document:",
-                                  error
-                                );
-                              } finally {
-                                setIsSearching(false);
-                              }
-                            }
-                          }}
-                        >
-                          {isSearching ? (
-                            <Loader className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Search className="h-4 w-4" />
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                  </FormControl>
-                  {hasDocumentMismatch && (
-                    <p className="text-sm text-amber-600 dark:text-amber-500 mt-1">
-                      ⚠️ El número ingresado parece ser un {detectedDocType}, pero
-                      seleccionaste {type_document}
-                    </p>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
+            <DocumentNumberField
+              form={form}
+              typeDocument={type_document}
+              setFieldsFromSearch={setFieldsFromSearch}
             />
 
             {type_person === "NATURAL" && (
               <>
-                <FormField
+                <FormInput
                   control={form.control}
                   name="names"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-normal">
-                        Nombres
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Juan"
-                          disabled={fieldsFromSearch.names}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label="Nombres"
+                  placeholder="Juan"
+                  disabled={fieldsFromSearch.names}
                 />
-                <FormField
+                <FormInput
                   control={form.control}
                   name="father_surname"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-normal">
-                        Apellido Paterno
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Perez"
-                          disabled={fieldsFromSearch.father_surname}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label="Apellido Paterno"
+                  placeholder="Perez"
+                  disabled={fieldsFromSearch.father_surname}
                 />
-
-                <FormField
+                <FormInput
                   control={form.control}
                   name="mother_surname"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-normal">
-                        Apellido Materno
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Gomez"
-                          disabled={fieldsFromSearch.mother_surname}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label="Apellido Materno"
+                  placeholder="Gomez"
+                  disabled={fieldsFromSearch.mother_surname}
                 />
               </>
             )}
 
             {type_person === "JURIDICA" && (
-              <FormField
+              <FormInput
                 control={form.control}
                 name="business_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-normal">
-                      Razón Social
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Razón Social"
-                        disabled={fieldsFromSearch.business_name}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label="Razón Social"
+                placeholder="Razón Social"
+                disabled={fieldsFromSearch.business_name}
               />
             )}
 
-            <FormField
+            <FormInput
               control={form.control}
               name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-normal">
-                    Dirección
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Dirección"
-                      disabled={fieldsFromSearch.address}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Dirección"
+              placeholder="Dirección"
+              disabled={fieldsFromSearch.address}
             />
 
-            <FormField
+            <FormInput
               control={form.control}
               name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-normal">
-                    Teléfono
-                  </FormLabel>
-                  <FormControl>
-                    <Input maxLength={9} placeholder="Teléfono" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Teléfono"
+              placeholder="Teléfono"
+              maxLength={9}
             />
 
-            <FormField
+            <FormInput
               control={form.control}
               name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-normal">
-                    Correo Electrónico
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="Correo Electrónico"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Correo Electrónico"
+              type="email"
+              placeholder="Correo Electrónico"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
+            <FormInput
               control={form.control}
               name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-normal">Usuario</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Usuario" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="Usuario"
+              placeholder="Usuario"
+              autoComplete="off"
             />
-            <FormField
+
+            <FormInput
               control={form.control}
               name="password"
-              render={({ field }) => {
-                const [showPassword, setShowPassword] = useState(false);
-                return (
-                  <FormItem>
-                    <FormLabel className="text-sm font-normal">
-                      Contraseña
-                    </FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Contraseña"
-                          {...field}
-                        />
-                        <button
-                          type="button"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer hover:text-primary text-muted-foreground"
-                          onClick={() => setShowPassword((prev) => !prev)}
-                          tabIndex={-1}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
+              label="Contraseña"
+              type={showPassword ? "text" : "password"}
+              placeholder="Contraseña"
+              autoComplete="new-password"
+              addonEnd={
+                <button
+                  type="button"
+                  className="cursor-pointer hover:text-primary text-muted-foreground"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              }
             />
           </div>
         </div>
-
-        {/* <code>
-          <pre>{JSON.stringify(form.getValues(), null, 2)}</pre>
-          <pre>{JSON.stringify(form.formState.errors, null, 2)}</pre>
-        </code> */}
 
         {/* Botones */}
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             Cancelar
           </Button>
-          {/* <Button type="button" variant="neutral" onClick={() => form.trigger()}>
-            Validate
-          </Button> */}
-         <Button
+          <Button
             size="sm"
             type="submit"
             disabled={isSubmitting || !form.formState.isValid}

@@ -29,16 +29,31 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
   const {
     data: user,
     isFinding: findingUser,
+    error: userError,
     refetch: refetchUser,
   } = mode === "create"
     ? {
         data: EMPTY,
         isFinding: false,
+        error: null,
         refetch: refetch,
       }
     : useUser(id!);
 
+  // Ids según person.constants.ts (TYPE_DOCUMENT)
+  const DOCUMENT_TYPE_BY_ID: Record<number, TypeDocument> = {
+    1: "DNI",
+    2: "RUC",
+  };
+
   const mapUserToForm = (data: UserResource): Partial<UserSchema> => {
+    const typeDocument =
+      (data.person?.type_document as TypeDocument) ||
+      (data.person?.document_type_id != null
+        ? DOCUMENT_TYPE_BY_ID[data.person.document_type_id]
+        : undefined) ||
+      "DNI";
+
     return {
       names: data.person?.names ?? "",
       address: data.person?.address ?? "",
@@ -48,10 +63,11 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
       mother_surname: data.person?.mother_surname ?? "",
       number_document: data.person?.number_document ?? "",
       phone: data.person?.phone ?? "",
-      type_document: (data.person?.type_document as TypeDocument) ?? "DNI",
+      type_document: typeDocument,
       type_person: (data.person?.type_person as TypePerson) ?? "JURIDICA",
       username: data.username ?? "",
-      rol_id: String(data.rol_id),
+      rol_id: data.rol_id != null ? String(data.rol_id) : "",
+      company_id: data.company_id != null ? String(data.company_id) : "",
       password: "",
     };
   };
@@ -70,7 +86,7 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
           errorToast(
             error.response.data.message ??
               error.response.data.error ??
-              ERROR_MESSAGE(MODEL, "create")
+              ERROR_MESSAGE(MODEL, "create"),
           );
         });
     } else {
@@ -85,7 +101,7 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
           errorToast(
             error.response.data.message ??
               error.response.data.error ??
-              ERROR_MESSAGE(MODEL, "update")
+              ERROR_MESSAGE(MODEL, "update"),
           );
         });
     }
@@ -100,9 +116,22 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
       open={open}
       onClose={onClose}
       title={title}
-      maxWidth="!max-w-(--breakpoint-md)"
+      subtitle={mode === "create" ? "Crear Usuario" : "Editar Usuario"}
+      size="2xl"
+      icon="Users2"
     >
-      {!isLoadingAny && user && typeUsers ? (
+      {!findingUser && userError ? (
+        <div className="flex flex-col items-center gap-4 py-8 text-center">
+          <p className="text-sm text-destructive font-medium">{userError}</p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-sm text-muted-foreground hover:text-foreground underline"
+          >
+            Cerrar
+          </button>
+        </div>
+      ) : !isLoadingAny && user && typeUsers ? (
         <UserForm
           typeUsers={typeUsers}
           defaultValues={mapUserToForm(user)}

@@ -14,9 +14,10 @@ import {
 import { Loader, Info, Weight, Save, X } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
-import { MultiSelectTags } from "@/components/MultiSelectTags";
 import { FormSwitch } from "@/components/FormSwitch";
-import { GroupFormSection } from "@/components/GroupFormSection";
+import { GroupFormSection, useFormLayout } from "@/components/GroupFormSection";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { UnitResource } from "@/pages/unit/lib/unit.interface";
 import type { ProductTypeResource } from "@/pages/product-type/lib/product-type.interface";
 import type { CompanyResource } from "@/pages/company/lib/company.interface";
@@ -112,17 +113,7 @@ export const ProductForm = ({
             uppercase
           />
 
-          <MultiSelectTags
-            control={form.control}
-            name="company_ids"
-            label="Empresa"
-            placeholder="Seleccione una o más empresas"
-            searchPlaceholder="Buscar empresa..."
-            options={companies}
-            getDisplayValue={(company) => company.social_reason}
-            getSecondaryText={(company) => company.trade_name}
-            required
-          />
+          <CompaniesPreview companies={companies} />
 
           <FormSelect
             control={form.control}
@@ -221,5 +212,44 @@ export const ProductForm = ({
         </GroupFormSection>
       </form>
     </Form>
+  );
+};
+
+// Vista informativa: el producto ahora queda disponible en todas las
+// empresas por defecto, así que aquí solo se muestran como referencia,
+// sin formar parte de los datos que se envían al backend.
+const CompaniesPreview = ({ companies }: { companies: CompanyResource[] }) => {
+  const { horizontal, labelWidth } = useFormLayout();
+
+  return (
+    <div className={horizontal ? "flex flex-row items-center gap-3" : "flex flex-col gap-0.5"}>
+      <span
+        className={cn(
+          "shrink-0 text-xs font-bold uppercase text-muted-foreground leading-none",
+          horizontal ? `${labelWidth} text-right` : "h-fit flex",
+        )}
+      >
+        Empresas
+      </span>
+      <div className="flex flex-1 min-w-0 flex-wrap items-center gap-1.5 rounded-lg border shadow-xs bg-background p-2 min-h-7 md:min-h-8">
+        {companies.length === 0 ? (
+          <span className="text-xs text-muted-foreground">
+            No hay empresas registradas
+          </span>
+        ) : (
+          companies.map((company) => (
+            <Badge
+              key={company.id}
+              color="blue"
+              variant="outline"
+              size="sm"
+              tooltip={company.trade_name}
+            >
+              {company.social_reason}
+            </Badge>
+          ))
+        )}
+      </div>
+    </div>
   );
 };

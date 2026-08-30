@@ -162,6 +162,8 @@ export interface CustomerAccountStatementResponse {
 export interface InventoryReportParams {
   product_id?: number | null;
   warehouse_id?: number | null;
+  page?: number | null;
+  per_page?: number | null;
   export?: "excel" | null;
 }
 

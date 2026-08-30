@@ -108,3 +108,21 @@ export async function getWarehouseDocumentPdf(id: number): Promise<Blob> {
   });
   return response.data;
 }
+
+// Stock actual (en sacos) de un producto en un almacén concreto.
+// Se consulta al escribir la cantidad en el traslado, igual que ventas consulta
+// el precio dinámico. Usa los mismos filtros del reporte de inventario.
+// Devuelve null si el producto no tiene registro de stock en ese almacén.
+export async function getWarehouseStock(
+  warehouseId: number,
+  productId: number,
+): Promise<number | null> {
+  const { data } = await api.get<{ data: { stock: string | number }[] }>(
+    "/inventory",
+    { params: { warehouse_id: warehouseId, product_id: productId, per_page: 1 } },
+  );
+  const row = data?.data?.[0];
+  if (!row) return null;
+  const parsed = Number(row.stock);
+  return Number.isFinite(parsed) ? parsed : null;
+}

@@ -146,21 +146,36 @@ export default function InventoryReportPage() {
     },
   });
 
+  const requireWarehouse = (warehouseId: string) => {
+    if (warehouseId) {
+      form.clearErrors("warehouse_id");
+      return true;
+    }
+    form.setError("warehouse_id", {
+      type: "required",
+      message: "Selecciona un almacén para generar el reporte",
+    });
+    errorToast("El almacén es un filtro obligatorio del reporte de inventario");
+    return false;
+  };
+
   const handleSearch = (values: FilterFormValues) => {
+    if (!requireWarehouse(values.warehouse_id)) return;
     const params: InventoryReportParams = {
       product_id: values.product_id ? Number(values.product_id) : null,
-      warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
+      warehouse_id: Number(values.warehouse_id),
     };
     fetch(params);
   };
 
   const handleExport = async () => {
     const values = form.getValues();
+    if (!requireWarehouse(values.warehouse_id)) return;
     setIsExporting(true);
     try {
       const params: InventoryReportParams = {
         product_id: values.product_id ? Number(values.product_id) : null,
-        warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
+        warehouse_id: Number(values.warehouse_id),
       };
 
       const blob = await exportInventoryReport(params);
@@ -226,11 +241,15 @@ export default function InventoryReportPage() {
               name="warehouse_id"
               label="Almacén"
               placeholder="Buscar almacén..."
+              required
               useQueryHook={useWarehouseAsyncSearch}
               mapOptionFn={(item) => ({
                 label: item.name,
                 value: String(item.id),
               })}
+              onValueChange={(value) => {
+                if (value) form.clearErrors("warehouse_id");
+              }}
             />
             <FormSelectAsync
               control={form.control}

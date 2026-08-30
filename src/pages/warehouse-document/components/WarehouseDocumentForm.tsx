@@ -18,6 +18,8 @@ import {
 } from "@/components/ExcelGrid";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useProduct } from "@/pages/product/lib/product.hook";
+import { warningToast, errorToast } from "@/lib/core.function";
+import { getWarehouseStock } from "../lib/warehouse-document.actions";
 
 interface WarehouseDocumentFormProps {
   onSubmit: (data: WarehouseDocumentSchema) => void;
@@ -42,6 +44,7 @@ interface DetailRow {
   price_per_kg?: string;
 }
 
+
 export default function WarehouseDocumentForm({
   onSubmit,
   defaultValues,
@@ -52,6 +55,23 @@ export default function WarehouseDocumentForm({
   onCancel,
 }: WarehouseDocumentFormProps) {
   const [details, setDetails] = useState<DetailRow[]>([]);
+
+  // ── Aviso de stock del almacén de origen ────────────────────────────────
+  // Al escribir la cantidad se consulta el stock al backend (GET /inventory con
+  // warehouse_id + product_id), igual que ventas consulta el precio dinámico.
+  // Es solo un aviso (warningToast / errorToast): no bloquea el guardado.
+  // peso del saco por producto, para comparar cuando la línea va en kg.
+  const [productWeight, setProductWeight] = useState<Record<string, number>>({});
+  // Última cantidad ya avisada por fila, para no repetir el toast en cada tecla.
+  const lastStockWarnRef = useRef<Record<number, string>>({});
+  // Timers de debounce por fila para no consultar en cada tecla.
+  const stockDebounceRef = useRef<Record<number, ReturnType<typeof setTimeout>>>(
+    {},
+  );
+  // Productos con error de consulta ya notificado (para no repetir el toast).
+  const stockErrorToastRef = useRef<Set<string>>(new Set());
+  // Si ya se avisó que falta elegir el almacén de origen.
+  const noWarehouseWarnedRef = useRef(false);
 
   // Estado para búsqueda async de producto por código (al dar Tab)
   const [productCodeSearch, setProductCodeSearch] = useState<{
@@ -129,6 +149,19 @@ export default function WarehouseDocumentForm({
 
   // Funciones para ExcelGrid
   const handleAddRow = () => {
+    // No permitir agregar filas si aún no se eligieron los almacenes:
+    // sin almacén de origen no se puede validar el stock, y en un traslado
+    // también hace falta el de destino.
+    const originId = form.getValues("warehouse_origin_id");
+    const destId = form.getValues("warehouse_dest_id");
+    if (!originId || (isTraslado && !destId)) {
+      warningToast(
+        isTraslado
+          ? "Selecciona el almacén de origen y el de destino antes de agregar productos"
+          : "Selecciona el almacén de origen antes de agregar productos",
+      );
+      return;
+    }
     const newDetail: DetailRow = {
       product_id: "",
       product_code: "",
@@ -157,6 +190,124 @@ export default function WarehouseDocumentForm({
     }
   };
 
+  const warehouseOriginId = form.watch("warehouse_origin_id");
+
+  // Al cambiar el almacén de origen se reinician los avisos ya mostrados y se
+  // vuelve a consultar el stock de las filas que ya tienen producto y cantidad
+  // (el usuario pudo escribir la cantidad antes de elegir el almacén).
+  useEffect(() => {
+    lastStockWarnRef.current = {};
+    stockErrorToastRef.current.clear();
+    noWarehouseWarnedRef.current = false;
+    Object.values(stockDebounceRef.current).forEach((t) => clearTimeout(t));
+
+    if (!warehouseOriginId) return;
+    details.forEach((row, index) => {
+      if (!row.product_id) return;
+      const sacksQty = parseFloat(row.quantity_sacks) || 0;
+      const kgQty = parseFloat(row.quantity_kg) || 0;
+      if (sacksQty > 0) {
+        void checkStock(
+          index,
+          "quantity_sacks",
+          row.quantity_sacks,
+          row.product_id,
+          row.product_name,
+        );
+      } else if (kgQty > 0) {
+        void checkStock(
+          index,
+          "quantity_kg",
+          row.quantity_kg,
+          row.product_id,
+          row.product_name,
+        );
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [warehouseOriginId]);
+
+  // Limpiar timers de debounce al desmontar.
+  useEffect(() => {
+    const timers = stockDebounceRef.current;
+    return () => {
+      Object.values(timers).forEach((t) => clearTimeout(t));
+    };
+  }, []);
+
+  // Consulta el stock al backend y, si la cantidad ingresada lo supera, avisa
+  // con warningToast (no bloquea). Si la consulta falla, avisa con errorToast.
+  const checkStock = useCallback(
+    async (
+      index: number,
+      field: "quantity_sacks" | "quantity_kg",
+      value: string,
+      productId: string,
+      productName: string | undefined,
+    ) => {
+      const warehouseId = form.getValues("warehouse_origin_id");
+      if (!warehouseId || !productId) return;
+
+      const name = productName || "el producto";
+      const qty = parseFloat(value) || 0;
+      if (qty <= 0) {
+        delete lastStockWarnRef.current[index];
+        return;
+      }
+
+      // Muestra el aviso solo si cambió respecto al último ya mostrado en la fila.
+      const notifyOnce = (msg: string) => {
+        if (lastStockWarnRef.current[index] !== msg) {
+          lastStockWarnRef.current[index] = msg;
+          warningToast(msg);
+        }
+      };
+
+      let sacks: number | null;
+      try {
+        sacks = await getWarehouseStock(Number(warehouseId), Number(productId));
+        stockErrorToastRef.current.delete(productId);
+      } catch (error) {
+        console.error("No se pudo consultar el stock del almacén de origen:", error);
+        if (!stockErrorToastRef.current.has(productId)) {
+          stockErrorToastRef.current.add(productId);
+          errorToast(
+            `No se pudo consultar el stock de ${name} en el almacén de origen`,
+          );
+        }
+        return;
+      }
+
+      // Respuesta 200 pero sin registro de inventario para ese producto/almacén.
+      if (sacks == null) {
+        notifyOnce(`${name} no tiene stock registrado en el almacén de origen`);
+        return;
+      }
+
+      const weight = productWeight[productId] ?? 0;
+      const isSacks = field === "quantity_sacks";
+      const unit = isSacks ? "saco(s)" : "kg";
+      const available = isSacks ? sacks : weight > 0 ? sacks * weight : null;
+
+      // Línea en kg pero no conocemos el peso del saco: no se puede comparar.
+      if (available == null) {
+        notifyOnce(
+          `No se pudo verificar el stock en kg de ${name}: falta el peso del saco`,
+        );
+        return;
+      }
+
+      if (qty > available) {
+        notifyOnce(
+          `Stock insuficiente de ${name}: disponible ${available} ${unit} en el almacén de origen`,
+        );
+      } else {
+        delete lastStockWarnRef.current[index];
+      }
+    },
+    [form, productWeight],
+  );
+
   const handleCellChange = (index: number, field: string, value: string) => {
     const updatedDetails = [...details];
     const current = { ...updatedDetails[index], [field]: value };
@@ -165,10 +316,38 @@ export default function WarehouseDocumentForm({
     setDetails(updatedDetails);
     form.setValue("details", convertDetailsToSchema(updatedDetails) as any);
     form.clearErrors("details");
+
+    // Al escribir la cantidad, consultar el stock al backend (debounce por fila),
+    // igual que ventas consulta el precio dinámico.
+    if (
+      (field === "quantity_sacks" || field === "quantity_kg") &&
+      current.product_id
+    ) {
+      if (!warehouseOriginId) {
+        if (!noWarehouseWarnedRef.current) {
+          noWarehouseWarnedRef.current = true;
+          warningToast(
+            "Selecciona el almacén de origen para validar el stock disponible",
+          );
+        }
+        return;
+      }
+      const productId = current.product_id;
+      const productName = current.product_name;
+      const qtyField = field;
+      clearTimeout(stockDebounceRef.current[index]);
+      stockDebounceRef.current[index] = setTimeout(() => {
+        void checkStock(index, qtyField, value, productId, productName);
+      }, 350);
+    }
   };
 
   const handleProductSelect = useCallback(
     (index: number, product: ProductOption) => {
+      setProductWeight((prev) => ({
+        ...prev,
+        [product.id]: product.weight ? parseFloat(product.weight) || 0 : 0,
+      }));
       setDetails((prev) => {
         const updatedDetails = [...prev];
         const current = updatedDetails[index];

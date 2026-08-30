@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useInventoryReport } from "../lib/reports.hook";
 import {
@@ -24,6 +24,8 @@ import type { ProductResource } from "@/pages/product/lib/product.interface";
 import { errorToast, successToast } from "@/lib/core.function";
 import { usePermission } from "@/lib/permission-guard";
 import { ACTIONS } from "@/lib/permission-catalog";
+import DataTablePagination from "@/components/DataTablePagination";
+import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
 const ROUTE = "inventario";
 
@@ -139,6 +141,14 @@ export default function InventoryReportPage() {
 
   const { data: rawData, isLoading, fetch } = useInventoryReport();
 
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(DEFAULT_PER_PAGE);
+  // Filtros de la última búsqueda confirmada (para poder paginar sin re-enviar el form)
+  const [appliedFilters, setAppliedFilters] = useState<{
+    product_id: number | null;
+    warehouse_id: number;
+  } | null>(null);
+
   const form = useForm<FilterFormValues>({
     defaultValues: {
       product_id: "",
@@ -146,21 +156,48 @@ export default function InventoryReportPage() {
     },
   });
 
+  const requireWarehouse = (warehouseId: string) => {
+    if (warehouseId) {
+      form.clearErrors("warehouse_id");
+      return true;
+    }
+    form.setError("warehouse_id", {
+      type: "required",
+      message: "Selecciona un almacén para generar el reporte",
+    });
+    errorToast("El almacén es un filtro obligatorio del reporte de inventario");
+    return false;
+  };
+
   const handleSearch = (values: FilterFormValues) => {
-    const params: InventoryReportParams = {
+    if (!requireWarehouse(values.warehouse_id)) return;
+    setAppliedFilters({
       product_id: values.product_id ? Number(values.product_id) : null,
-      warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
+      warehouse_id: Number(values.warehouse_id),
+    });
+    setPage(1);
+  };
+
+  // Dispara la búsqueda cuando cambian los filtros confirmados, la página o el tamaño de página
+  useEffect(() => {
+    if (!appliedFilters) return;
+    const params: InventoryReportParams = {
+      ...appliedFilters,
+      page,
+      per_page: perPage,
     };
     fetch(params);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedFilters, page, perPage]);
 
   const handleExport = async () => {
     const values = form.getValues();
+    if (!requireWarehouse(values.warehouse_id)) return;
     setIsExporting(true);
     try {
       const params: InventoryReportParams = {
         product_id: values.product_id ? Number(values.product_id) : null,
-        warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
+        warehouse_id: Number(values.warehouse_id),
       };
 
       const blob = await exportInventoryReport(params);
@@ -182,8 +219,9 @@ export default function InventoryReportPage() {
   };
 
   const tableData = rawData?.data ?? [];
+  const meta = rawData?.meta;
 
-  const totalProducts = tableData.length;
+  const totalProducts = meta?.total ?? tableData.length;
   const withStock = tableData.filter((i) => Number(i.stock) > 0).length;
   const lowStock = tableData.filter(
     (i) => Number(i.stock) > 0 && Number(i.stock) <= Number(i.min_stock),
@@ -226,11 +264,15 @@ export default function InventoryReportPage() {
               name="warehouse_id"
               label="Almacén"
               placeholder="Buscar almacén..."
+              required
               useQueryHook={useWarehouseAsyncSearch}
               mapOptionFn={(item) => ({
                 label: item.name,
                 value: String(item.id),
               })}
+              onValueChange={(value) => {
+                if (value) form.clearErrors("warehouse_id");
+              }}
             />
             <FormSelectAsync
               control={form.control}
@@ -257,21 +299,41 @@ export default function InventoryReportPage() {
                 <p className="text-2xl font-bold">{totalProducts}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Con Stock</p>
+                <p className="text-sm text-muted-foreground">
+                  Con Stock (página)
+                </p>
                 <p className="text-2xl font-bold text-green-600">{withStock}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Stock Bajo</p>
+                <p className="text-sm text-muted-foreground">
+                  Stock Bajo (página)
+                </p>
                 <p className="text-2xl font-bold text-orange-500">{lowStock}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Sin Stock</p>
+                <p className="text-sm text-muted-foreground">
+                  Sin Stock (página)
+                </p>
                 <p className="text-2xl font-bold text-red-600">{noStock}</p>
               </div>
             </GroupFormSection>
           )}
 
           <DataTable columns={columns} data={tableData} isLoading={isLoading} />
+
+          {meta && meta.total > 0 && (
+            <DataTablePagination
+              page={page}
+              totalPages={meta.last_page || 1}
+              onPageChange={setPage}
+              per_page={perPage}
+              setPerPage={(value) => {
+                setPerPage(value);
+                setPage(1);
+              }}
+              totalData={meta.total}
+            />
+          )}
         </form>
       </Form>
     </PageWrapper>

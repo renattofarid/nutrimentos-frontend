@@ -1,4 +1,4 @@
-import { api } from "@/lib/config";
+import { api, DEFAULT_COMPANY_ID } from "@/lib/config";
 import { useAuthStore } from "./auth.store";
 import type { AuthResponse } from "./auth.interface";
 
@@ -6,12 +6,15 @@ import type { AuthResponse } from "./auth.interface";
 export interface LoginBody {
   username: string;
   password: string;
-  company_id: number;
+  company_id?: number;
 }
 
 export async function login(body: LoginBody): Promise<AuthResponse> {
   try {
-    const { data } = await api.post<AuthResponse>("/login", body);
+    const { data } = await api.post<AuthResponse>("/login", {
+      ...body,
+      company_id: body.company_id ?? DEFAULT_COMPANY_ID,
+    });
 
     const { setToken, setUser, setAccess } = useAuthStore.getState();
 

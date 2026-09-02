@@ -1,12 +1,14 @@
 import axios from "axios";
 import { errorToast } from "./core.function";
 
-const baseURL = "https://develop.garzasoft.com:82/nutrimentos/public/api";
-export const prodAssetURL =
-  "https://develop.garzasoft.com:82/nutrimentos/public/";
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ??
+  "https://develop.garzasoft.com:82/nutrimentos/public";
 
-export const prodAssetStorageURL =
-  "https://develop.garzasoft.com:82/nutrimentos/public/storage/";
+const baseURL = `${API_BASE}/api`;
+export const prodAssetURL = `${API_BASE}/`;
+
+export const prodAssetStorageURL = `${API_BASE}/storage/`;
 
 export const api = axios.create({
   baseURL,
@@ -61,3 +63,9 @@ api.interceptors.response.use(
 );
 
 export const APP_LOCALE = "es-PE";
+
+// Company por defecto para el login. Ya no se muestra en el formulario;
+// se puede sobreescribir con VITE_DEFAULT_COMPANY_ID en el .env
+export const DEFAULT_COMPANY_ID = Number(
+  import.meta.env.VITE_DEFAULT_COMPANY_ID ?? 1
+);

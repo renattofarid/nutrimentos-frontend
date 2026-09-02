@@ -12,7 +12,7 @@ import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import FormSkeleton from "@/components/FormSkeleton";
 import { ERROR_MESSAGE, errorToast, successToast } from "@/lib/core.function";
-import { useAuthStore } from "@/pages/auth/lib/auth.store";
+// import { useAuthStore } from "@/pages/auth/lib/auth.store";
 import PageWrapper from "@/components/PageWrapper";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -33,9 +33,9 @@ export const SaleAddPage = () => {
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [showNextDialog, setShowNextDialog] = useState(false);
   const [pendingSaleId, setPendingSaleId] = useState<number | null>(null);
-  const { user } = useAuthStore();
+  // const { user } = useAuthStore();
   const { data: branches, isLoading: branchesLoading } = useAllBranches({
-    company_id: user?.company_id,
+    // company_id: user?.company_id,
   });
   const {
     data: warehouses,

@@ -74,7 +74,7 @@ export function MobileNav() {
             <SheetTitle asChild>
               <button
                 className="flex items-center gap-2 w-full"
-                onClick={() => handleOpen("/inicio", "Dashboard")}
+                onClick={() => handleOpen("/", "Dashboard")}
               >
                 <div className="bg-sidebar-primary text-primary-foreground flex aspect-square size-7 items-center justify-center rounded-sm">
                   <Wheat className="size-4" />

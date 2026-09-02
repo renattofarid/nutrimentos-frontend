@@ -213,8 +213,7 @@ const {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/inicio" replace />} />
-      <Route path="/inicio" element={<HomePage />} />
+      <Route path="/" element={<HomePage />} />
 
       {/* Seguridad */}
       <Route path={TypeUserRoute} element={<TypeUserPage />} />
@@ -351,7 +350,7 @@ export function AppRoutes() {
 
       <Route path={PurchaseInstallmentRoute} element={<PurchaseInstallmentPage />} />
 
-      <Route path="*" element={<Navigate to="/inicio" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

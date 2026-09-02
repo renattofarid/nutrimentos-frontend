@@ -42,7 +42,7 @@ export default function LoginPage() {
         password: data.password,
       });
       successToast("Inicio de sesión exitoso");
-      navigate("/inicio");
+      navigate("/");
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message ||

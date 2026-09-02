@@ -263,7 +263,7 @@ export type NavItem = {
 };
 
 export const navData: NavItem[] = [
-  { title: "Dashboard", url: "/inicio", icon: LayoutGrid },
+  { title: "Dashboard", url: "/", icon: LayoutGrid },
   {
     title: "Mantenimiento",
     url: "#",

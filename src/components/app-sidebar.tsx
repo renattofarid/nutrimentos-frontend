@@ -291,7 +291,7 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/inicio",
+      url: "/",
       icon: LayoutGrid,
     },
     {

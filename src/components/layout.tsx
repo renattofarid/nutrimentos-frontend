@@ -11,7 +11,7 @@ export default function LayoutComponent() {
   // Abre el Dashboard automáticamente si no hay ningún tab abierto
   useEffect(() => {
     if (tabs.length === 0) {
-      openTab("/inicio", "Dashboard");
+      openTab("/", "Dashboard");
     }
   }, []);
 

@@ -69,3 +69,11 @@ export const APP_LOCALE = "es-PE";
 export const DEFAULT_COMPANY_ID = Number(
   import.meta.env.VITE_DEFAULT_COMPANY_ID ?? 1
 );
+
+// Nombre de la empresa para esta instancia (branding: login, título, etc.)
+export const APP_COMPANY_NAME =
+  import.meta.env.VITE_APP_COMPANY_NAME ?? "Grupo El Milagro";
+
+export const APP_COMPANY_SHORT_NAME =
+  import.meta.env.VITE_APP_COMPANY_SHORT_NAME ??
+  "Sistema de Gestión Empresarial";

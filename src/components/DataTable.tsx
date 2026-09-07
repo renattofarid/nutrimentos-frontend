@@ -46,7 +46,7 @@ const dataTableVariants = cva("hidden md:block w-full", {
 const headerVariants = cva("sticky top-0 z-10", {
   variants: {
     variant: {
-      default: "bg-[#82BBE3]",
+      default: "bg-[var(--table-header)] [&_th]:text-foreground",
       simple: "",
       outline: "bg-muted/50",
       ghost: "",
@@ -202,7 +202,7 @@ export function DataTable<TData, TValue>({
       ? "bg-muted/50"
       : variant === "simple" || variant === "ghost"
         ? "bg-background"
-        : "bg-[#82BBE3]";
+        : "bg-[var(--table-header)]";
 
   return (
     <div

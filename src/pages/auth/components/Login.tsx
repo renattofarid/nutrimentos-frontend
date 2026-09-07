@@ -10,6 +10,7 @@ import { login } from "../lib/auth.actions";
 import { errorToast, successToast } from "@/lib/core.function";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { APP_COMPANY_NAME, APP_COMPANY_SHORT_NAME } from "@/lib/config";
 
 const formSchema = z.object({
   username: z
@@ -56,23 +57,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center bg-muted/50 justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="bg-background rounded-2xl shadow-lg p-8 border">
+    <div className="min-h-screen flex items-center bg-gray-100 justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-background rounded-2xl shadow-lg p-10 border">
           {/* Profile Icon and Branding */}
-          <div className="text-start mb-8">
-            <div className="text-base font-extrabold text-primary">
-              Grupo El Milagro
+          <div className="text-center mb-8">
+            <div className="text-2xl font-extrabold text-primary tracking-tight">
+              {APP_COMPANY_NAME}
             </div>
-            <div className="text-xs font-semibold text-muted-foreground ">
-              Sistema de Gestión de Nutrimentos para animales
+            <div className="text-sm font-semibold text-muted-foreground">
+              {APP_COMPANY_SHORT_NAME}
             </div>
           </div>
 
           {/* Login Form */}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <h3 className="flex justify-start text-foreground text-lg font-bold text-center mb-6">
+              <h3 className="text-foreground text-xl font-bold text-center mb-6">
                 Iniciar sesión
               </h3>
 

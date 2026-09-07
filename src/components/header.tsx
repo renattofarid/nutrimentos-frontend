@@ -31,7 +31,12 @@ export default function HeaderComponent() {
       {/* Right side */}
       <div className="flex items-center gap-2 shrink-0 ml-auto">
         {user.company && (
-          <Badge variant="default" color="sky" size="lg" icon={Building2}>
+          <Badge
+            variant="default"
+            size="lg"
+            icon={Building2}
+            className="bg-white/15 text-[var(--header-fg)] border-white/20 hover:bg-white/20"
+          >
             <span className="truncate">{user.company}</span>
           </Badge>
         )}

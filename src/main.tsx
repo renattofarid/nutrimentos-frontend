@@ -13,6 +13,12 @@ import "@fontsource/poppins/800.css";
 import "@fontsource/poppins/900.css";
 import { ReactQueryProvider } from "./providers/ReactQueryProvider.tsx";
 import { Toaster } from "./components/ui/sonner.tsx";
+import { DEFAULT_COMPANY_ID } from "./lib/config.ts";
+
+// Acento visual (color de header, etc.) de esta instancia según la empresa
+// configurada en el .env. AuthInitializer puede sobreescribirlo una vez
+// autenticado el usuario, si su company_id difiere.
+document.documentElement.dataset.company = String(DEFAULT_COMPANY_ID);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

@@ -59,19 +59,18 @@
   --card-foreground: oklch(0.141 0.005 285.823);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.6361 0.1291 243.97);
-  --primary-foreground: oklch(0.97 0.014 254.604);
+  /* --primary, --ring, --sidebar-primary* y --sidebar-ring: ver bloque
+     "Marca por empresa" más abajo, derivados de --brand */
   --secondary: oklch(0.398 0.195 277.366);
   --secondary-foreground: oklch(0.97 0.014 254.604);
-  --muted: oklch(0.97 0.014 254.604);
-  --muted-foreground: oklch(0.552 0.016 285.938);
+  /* --muted, --muted-foreground: ver bloque "Marca por empresa" más abajo,
+     derivados de --brand */
   --accent: oklch(0.967 0.001 286.375);
   --accent-foreground: oklch(0.21 0.006 285.885);
   --destructive: oklch(0.577 0.245 27.325);
   --descructive-foreground: oklch(0.97 0.014 254.604);
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.6361 0.1291 243.97);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -79,12 +78,9 @@
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.6361 0.1291 243.97);
-  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
   --sidebar-accent: oklch(0.967 0.001 286.375);
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.6361 0.1291 243.97);
 }
 
 .dark {
@@ -94,18 +90,17 @@
   --card-foreground: oklch(0.985 0.002 247.839);
   --popover: oklch(0.2544 0.0317 262.45);
   --popover-foreground: oklch(0.985 0.002 247.839);
-  --primary: oklch(0.6361 0.1291 243.97);
-  --primary-foreground: oklch(0.985 0 0);
+  /* --primary, --ring, --sidebar-primary*: ver bloque
+     "Marca por empresa" más abajo, derivados de --brand */
   --secondary: oklch(0.398 0.195 277.366);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.278 0.033 256.848);
-  --muted-foreground: oklch(0.707 0.022 261.325);
+  /* --muted, --muted-foreground: ver bloque "Marca por empresa" más abajo,
+     derivados de --brand */
   --accent: oklch(0.278 0.033 256.848);
   --accent-foreground: oklch(0.985 0.002 247.839);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -113,26 +108,66 @@
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.278 0.033 256.848);
   --sidebar-foreground: oklch(0.985 0.002 247.839);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0.002 247.839);
   --sidebar-accent: oklch(0.278 0.033 256.848);
   --sidebar-accent-foreground: oklch(0.985 0.002 247.839);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
-/* Acento del header por empresa (solo tiñe el header/topnav, no el resto del tema) */
+/*
+ * Marca por empresa: un único color (--brand) tiñe TODO el sistema
+ * (header, botones/links primarios, foco de inputs, sidebar activo,
+ * checkboxes/switches, etc.), no solo el header. Cada instancia
+ * (servidor) trae fijo su data-company vía VITE_DEFAULT_COMPANY_ID
+ * (ver main.tsx), así que basta un bloque por empresa acá.
+ *
+ * Para agregar una empresa nueva: sumar un bloque
+ * :root[data-company="ID"] { --brand: ...; } y, si hace falta un
+ * matiz distinto en dark mode, su .dark[data-company="ID"].
+ */
 :root {
-  --header-bg: oklch(0.6361 0.1291 243.97); /* DISTRIBUCION DE NUTRIMENTOS SEÑOR DE LOS MILAGROS SAC (default) */
-  --header-fg: oklch(0.985 0 0);
+  --brand: oklch(0.6361 0.1291 243.97); /* DISTRIBUCION DE NUTRIMENTOS SEÑOR DE LOS MILAGROS SAC (default) */
+  --brand-foreground: oklch(0.985 0 0);
 }
 :root[data-company="1"] {
-  --header-bg: oklch(0.5 0.13 150); /* EL MILAGRO CHICLAYO S.A.C. */
-  --header-fg: oklch(0.985 0 0);
+  --brand: oklch(0.5 0.13 150); /* EL MILAGRO CHICLAYO S.A.C. */
+  --brand-foreground: oklch(0.985 0 0);
 }
 :root[data-company="18"] {
-  --header-bg: oklch(0.52 0.16 35); /* CONCENTRADOS */
-  --header-fg: oklch(0.985 0 0);
+  --brand: oklch(0.52 0.16 35); /* CONCENTRADOS */
+  --brand-foreground: oklch(0.985 0 0);
+}
+
+:root {
+  --header-bg: var(--brand);
+  --header-fg: var(--brand-foreground);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --ring: var(--brand);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--brand-foreground);
+  --sidebar-ring: var(--brand);
+  /* Tintes suaves de --brand para fondos "muted" (filas seleccionadas,
+     hover de tablas, chips, etc.), en vez de un gris neutro fijo */
+  --muted: color-mix(in oklch, var(--brand) 10%, white);
+  --muted-foreground: color-mix(in oklch, var(--brand) 60%, black);
+  /* Fondo del encabezado de tablas (DataTable/ExcelGrid): tinte de --brand
+     más marcado que --muted pero siempre con texto negro (--foreground) */
+  --table-header: color-mix(in oklch, var(--brand) 24%, white);
+}
+
+.dark {
+  --header-bg: var(--brand);
+  --header-fg: var(--brand-foreground);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --ring: var(--brand);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--brand-foreground);
+  --sidebar-ring: var(--brand);
+  --muted: color-mix(in oklch, var(--brand) 18%, oklch(0.278 0.033 256.848));
+  --muted-foreground: color-mix(in oklch, var(--brand) 45%, white);
+  --table-header: color-mix(in oklch, var(--brand) 30%, oklch(0.278 0.033 256.848));
 }
 
 @layer utilities {

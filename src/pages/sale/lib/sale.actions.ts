@@ -1,4 +1,4 @@
-import { api } from "@/lib/config";
+import { api, DEFAULT_COMPANY_ID } from "@/lib/config";
 import type {
   SaleResponse,
   SaleResource,
@@ -190,7 +190,7 @@ export const getNextSeries = async (
   document_type: string,
 ): Promise<NextSeriesData> => {
   const response = await api.get<NextSeriesResponse>(`/next-series`, {
-    params: { branch_id, document_type },
+    params: { branch_id, document_type, company_id: DEFAULT_COMPANY_ID },
   });
   return response.data.data;
 };

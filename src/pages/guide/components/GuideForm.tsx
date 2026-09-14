@@ -91,6 +91,7 @@ import { useAllCompanies } from "@/pages/company/lib/company.hook";
 import { useAllUnits } from "@/pages/unit/lib/unit.hook";
 import { useAllProductTypes } from "@/pages/product-type/lib/product-type.hook";
 import { SUPPLIER_ROLE_CODE } from "@/pages/supplier/lib/supplier.interface";
+import { DEFAULT_COMPANY_ID } from "@/lib/config";
 
 interface GuideFormProps {
   defaultValues: Partial<GuideSchema>;
@@ -138,6 +139,7 @@ export const GuideForm = ({
     serie: "",
     numero_inicio: "",
     numero_fin: "",
+    company_id: DEFAULT_COMPANY_ID,
   });
 
   // Cargar transportistas
@@ -520,20 +522,17 @@ export const GuideForm = ({
     ],
   );
 
-  const buildAutoProductCode = useCallback(
-    (name: string, rowIndex: number) => {
-      const base = name
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toUpperCase()
-        .replace(/[^A-Z0-9]+/g, "")
-        .slice(0, 16);
+  const buildAutoProductCode = useCallback((name: string, rowIndex: number) => {
+    const base = name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, "")
+      .slice(0, 16);
 
-      const suffix = `${Date.now()}`.slice(-6);
-      return `AUTO${base || "PROD"}${rowIndex + 1}${suffix}`.slice(0, 50);
-    },
-    [],
-  );
+    const suffix = `${Date.now()}`.slice(-6);
+    return `AUTO${base || "PROD"}${rowIndex + 1}${suffix}`.slice(0, 50);
+  }, []);
 
   const resolveDetailProduct = useCallback(
     async (
@@ -884,8 +883,7 @@ export const GuideForm = ({
 
             return {
               product_id: parseInt(resolvedProductId),
-              description:
-                detail.description || detail.product_name || null,
+              description: detail.description || detail.product_name || null,
               quantity_sacks: parseFloat(detail.quantity_sacks) || 0,
               quantity_kg: parseFloat(detail.quantity_kg) || 0,
               unit_code: detail.unit_code,
@@ -1107,7 +1105,6 @@ export const GuideForm = ({
     if (nextZoneId !== selectedPersonZoneId) {
       setSelectedPersonZoneId(nextZoneId);
     }
-
 
     if (
       !hasCurrentSelection ||
@@ -1388,7 +1385,6 @@ export const GuideForm = ({
                     label: item.name,
                     description: item.cadena,
                   })}
-
                 />
               </div>
 
@@ -1503,7 +1499,10 @@ export const GuideForm = ({
                         form.setValue("driver_document_number", docNum);
                         form.setValue("driver_name", vehicle.owner.full_name);
                         if (vehicle.owner.driver_license) {
-                          form.setValue("driver_license", vehicle.owner.driver_license);
+                          form.setValue(
+                            "driver_license",
+                            vehicle.owner.driver_license,
+                          );
                         }
                       }
                     } else {
@@ -1562,7 +1561,10 @@ export const GuideForm = ({
                           driver.business_name ||
                           `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
                         form.setValue("driver_name", fullName);
-                        form.setValue("driver_license", driver.driver_license || "");
+                        form.setValue(
+                          "driver_license",
+                          driver.driver_license || "",
+                        );
                       }
                     }}
                     preloadItemId={"37"}
@@ -1840,30 +1842,56 @@ export const GuideForm = ({
                           </TableRow>
                           {isExpanded && sale.details.length > 0 && (
                             <TableRow key={`${sale.id}-details`}>
-                              <TableCell colSpan={6} className="p-0 bg-muted/20">
+                              <TableCell
+                                colSpan={6}
+                                className="p-0 bg-muted/20"
+                              >
                                 <div className="px-8 py-2">
                                   <table className="w-full text-xs">
                                     <thead>
                                       <tr className="text-muted-foreground border-b">
-                                        <th className="text-left py-1 font-medium">Producto</th>
-                                        <th className="text-right py-1 font-medium">Sacos</th>
-                                        <th className="text-right py-1 font-medium">Kg</th>
-                                        <th className="text-right py-1 font-medium">P. Unit.</th>
-                                        <th className="text-right py-1 font-medium">Subtotal</th>
+                                        <th className="text-left py-1 font-medium">
+                                          Producto
+                                        </th>
+                                        <th className="text-right py-1 font-medium">
+                                          Sacos
+                                        </th>
+                                        <th className="text-right py-1 font-medium">
+                                          Kg
+                                        </th>
+                                        <th className="text-right py-1 font-medium">
+                                          P. Unit.
+                                        </th>
+                                        <th className="text-right py-1 font-medium">
+                                          Subtotal
+                                        </th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {sale.details.map((detail) => (
-                                        <tr key={detail.id} className="border-b last:border-0">
+                                        <tr
+                                          key={detail.id}
+                                          className="border-b last:border-0"
+                                        >
                                           <td className="py-1">
-                                            <span className="font-medium">{detail.product.codigo}</span>
+                                            <span className="font-medium">
+                                              {detail.product.codigo}
+                                            </span>
                                             {" — "}
                                             {detail.product.name}
                                           </td>
-                                          <td className="text-right py-1">{detail.quantity_sacks}</td>
-                                          <td className="text-right py-1">{detail.quantity_kg}</td>
-                                          <td className="text-right py-1">{detail.unit_price.toFixed(2)}</td>
-                                          <td className="text-right py-1">{detail.subtotal.toFixed(2)}</td>
+                                          <td className="text-right py-1">
+                                            {detail.quantity_sacks}
+                                          </td>
+                                          <td className="text-right py-1">
+                                            {detail.quantity_kg}
+                                          </td>
+                                          <td className="text-right py-1">
+                                            {detail.unit_price.toFixed(2)}
+                                          </td>
+                                          <td className="text-right py-1">
+                                            {detail.subtotal.toFixed(2)}
+                                          </td>
                                         </tr>
                                       ))}
                                     </tbody>

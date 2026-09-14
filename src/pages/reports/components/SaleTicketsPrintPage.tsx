@@ -24,6 +24,7 @@ import { FormInput } from "@/components/FormInput";
 import { exportBulkCreditNoteTickets } from "@/pages/credit-note/lib/credit-note.actions";
 import { usePermission } from "@/lib/permission-guard";
 import { ACTIONS } from "@/lib/permission-catalog";
+import { DEFAULT_COMPANY_ID } from "@/lib/config";
 
 const ROUTE = "imprimir-tickets";
 
@@ -64,6 +65,7 @@ export default function SaleTicketsPrintPage() {
         document_type: searchParams.document_type,
         numero_inicio: searchParams.numero_inicio,
         numero_fin: searchParams.numero_fin,
+        company_id: DEFAULT_COMPANY_ID,
         ...(searchParams.serie && { serie: searchParams.serie }),
       };
       const response = await getSalesByRange(params);
@@ -151,7 +153,9 @@ export default function SaleTicketsPrintPage() {
       loading: "Generando tickets...",
       success: `${selectedIds.length} ticket(s) generado(s) correctamente`,
       error: (error: any) =>
-        error?.response?.data?.message ?? error?.message ?? "Error al generar tickets",
+        error?.response?.data?.message ??
+        error?.message ??
+        "Error al generar tickets",
     });
 
     downloadPromise.finally(() => setIsPrinting(false));
@@ -242,7 +246,9 @@ export default function SaleTicketsPrintPage() {
             <Button
               onClick={isCreditNote ? handlePrintCreditNote : handlePrintSales}
               disabled={
-                isCreditNote ? creditNotePrintDisabled : isPrinting || selectedIds.length === 0
+                isCreditNote
+                  ? creditNotePrintDisabled
+                  : isPrinting || selectedIds.length === 0
               }
             >
               {isPrinting ? (
@@ -251,7 +257,9 @@ export default function SaleTicketsPrintPage() {
                 <Printer className="h-4 w-4" />
               )}
               Imprimir
-              {!isCreditNote && selectedIds.length > 0 && ` (${selectedIds.length})`}
+              {!isCreditNote &&
+                selectedIds.length > 0 &&
+                ` (${selectedIds.length})`}
             </Button>
           )}
         </div>

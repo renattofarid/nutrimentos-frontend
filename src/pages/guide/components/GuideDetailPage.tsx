@@ -96,7 +96,7 @@ export default function GuideDetailPage() {
   return (
     <PageWrapper>
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="outline" onClick={() => navigate(GUIDE.ROUTE)}>
+        <Button size="sm" variant="outline" onClick={() => navigate(`${GUIDE.ROUTE}/listado`)}>
           <X /> Cerrar
         </Button>
       </div>

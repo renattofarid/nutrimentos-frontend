@@ -296,9 +296,8 @@ export const exportPurchases = async (
 };
 
 export const exportPurchaseById = async (id: number): Promise<Blob> => {
-  const response = await api.get<Blob>(`${PURCHASE_ENDPOINT}/export`, {
-    params: { purchase_id: id, export: "pdf" },
-    responseType: "blob",
+  const response = await api.get<Blob>(`purchases/${id}/report`, {
+    responseType: "blob", 
   });
   return response.data;
 };

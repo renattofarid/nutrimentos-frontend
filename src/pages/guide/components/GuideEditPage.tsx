@@ -142,7 +142,7 @@ export default function GuideEditPage() {
     try {
       await updateGuide(Number(id), data);
       successToast("Guía de remisión actualizada correctamente");
-      navigate(ROUTE);
+      navigate(`${ROUTE}/listado`);
     } catch (error: any) {
       errorToast(error.response?.data?.message || ERROR_MESSAGE);
     } finally {
@@ -184,7 +184,7 @@ export default function GuideEditPage() {
           <GuideForm
             defaultValues={mapGuideToForm(guide)}
             onSubmit={handleSubmit}
-            onCancel={() => navigate(ROUTE)}
+            onCancel={() => navigate(`${ROUTE}/listado`)}
             isSubmitting={isSubmitting}
             mode="update"
             branches={branches}

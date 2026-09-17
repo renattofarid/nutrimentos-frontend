@@ -219,7 +219,7 @@ const {
 } = WAREHOUSE_DOCUMENT;
 const {
   ICON_REACT: GuideIcon,
-  ROUTE_ADD: GuideAddRoute,
+  ROUTE: GuideRoute,
   MODEL: { name: GuideTitle },
 } = GUIDE;
 const {
@@ -314,7 +314,7 @@ export const navData: NavItem[] = [
         url: WarehouseDocumentRoute,
         icon: WarehouseDocumentIcon,
       },
-      { title: GuideTitle!, url: GuideAddRoute, icon: GuideIcon },
+      { title: GuideTitle!, url: GuideRoute, icon: GuideIcon },
       {
         title: DeliverySheetTitle!,
         url: DeliverySheetRoute,

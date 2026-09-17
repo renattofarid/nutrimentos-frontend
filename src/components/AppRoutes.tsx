@@ -296,7 +296,8 @@ export function AppRoutes() {
       <Route path={CreditNoteManageRoutePattern} element={<CreditNoteManagePage />} />
 
       {/* Guías */}
-      <Route path={GuideRoute} element={<GuidePage />} />
+      <Route path={GuideRoute} element={<GuideAddPage />} />
+      <Route path={`${GuideRoute}/listado`} element={<GuidePage />} />
       <Route path={`${GuideRoute}/agregar`} element={<GuideAddPage />} />
       <Route path={`${GuideRoute}/actualizar/:id`} element={<GuideEditPage />} />
       <Route path={`${GuideRoute}/:id`} element={<GuideDetailPage />} />

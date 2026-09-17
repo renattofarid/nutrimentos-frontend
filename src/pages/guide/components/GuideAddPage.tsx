@@ -201,7 +201,7 @@ export default function GuideAddPage() {
             key={formKey}
             defaultValues={getDefaultValues()}
             onSubmit={handleSubmit}
-            onCancel={() => navigate(GUIDE.ROUTE)}
+            onCancel={() => navigate(`${GUIDE.ROUTE}/listado`)}
             isSubmitting={isSubmitting}
             mode="create"
             branches={branches}
@@ -235,7 +235,7 @@ export default function GuideAddPage() {
           setFormKey((k) => k + 1);
           setShowNextDialog(false);
         }}
-        onCancel={() => navigate(GUIDE.ROUTE)}
+        onCancel={() => navigate(`${GUIDE.ROUTE}/listado`)}
       />
     </PageWrapper>
   );

@@ -57,7 +57,6 @@ export default function ProductEditPage() {
   ): Partial<ProductSchema> => ({
     codigo: product.codigo,
     name: product.name,
-    company_ids: product.company_ids ?? [product.company_id],
     product_type_id: product.product_type_id.toString(),
     unit_id: product.unit_id.toString(),
     is_taxed: product.is_taxed === 1,

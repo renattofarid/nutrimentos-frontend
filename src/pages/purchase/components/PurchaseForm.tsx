@@ -14,6 +14,7 @@ import {
   X,
   Plus,
   Minus,
+  ClipboardPaste,
 } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
@@ -54,6 +55,10 @@ import {
   type ProductOption,
 } from "@/components/ExcelGrid";
 import { formatNumber } from "@/lib/formatCurrency";
+import {
+  PurchasePasteDialog,
+  type PastedDetail,
+} from "./PurchasePasteDialog";
 
 interface PurchaseFormProps {
   defaultValues: Partial<PurchaseSchema>;
@@ -83,6 +88,12 @@ interface DetailRow {
   total: number;
   is_by_sack: boolean; // true = compra por saco, false = compra por kg
 }
+
+const isBlankRow = (d: DetailRow) =>
+  !d.product_id &&
+  !d.product_code?.trim() &&
+  !d.quantity?.trim() &&
+  !d.unit_price?.trim();
 
 interface InstallmentRow {
   id?: number;
@@ -131,6 +142,9 @@ export const PurchaseForm = ({
   // Estado para el diálogo de proveedor
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
 
+  // Estado para el diálogo de pegado masivo desde Excel
+  const [isPasteDialogOpen, setIsPasteDialogOpen] = useState(false);
+
   // Estados para detalles
   const [details, setDetails] = useState<DetailRow[]>([]);
   const [includeIgv, setIncludeIgv] = useState<boolean>(
@@ -138,6 +152,10 @@ export const PurchaseForm = ({
   );
 
   const IGV_RATE = 0.18;
+
+  // Trunca a 6 decimales hacia abajo: evita que el monto de la cuota supere
+  // al total que recalcula el backend por diferencias de punto flotante (ej. 5.8e-11)
+  const floor6 = (value: number) => Math.floor(value * 1e6 + 1e-6) / 1e6;
 
   // Estados para cuotas
   const [installments, setInstallments] = useState<InstallmentRow[]>([]);
@@ -305,7 +323,7 @@ export const PurchaseForm = ({
     ) {
       const total = calculatePurchaseTotal();
       const inst: InstallmentRow[] = [
-        { due_days: "30", amount: total > 0 ? total.toFixed(2) : "0.00" },
+        { due_days: "30", amount: total > 0 ? floor6(total).toString() : "0.00" },
       ];
       setInstallments(inst);
       form.setValue("installments", inst);
@@ -319,7 +337,7 @@ export const PurchaseForm = ({
       const total = calculatePurchaseTotal();
       if (total >= 0) {
         const updated: InstallmentRow[] = [
-          { ...installments[0], amount: total.toFixed(2) },
+          { ...installments[0], amount: floor6(total).toString() },
         ];
         setInstallments(updated);
         form.setValue("installments", updated);
@@ -432,6 +450,45 @@ export const PurchaseForm = ({
     });
   };
 
+  // Pegado masivo desde Excel: agrega las filas al final (descartando filas vacías)
+  const handlePasteDetails = (rows: PastedDetail[]) => {
+    const newRows: DetailRow[] = rows.map((r) => {
+      const productWeight = r.product.weight ? parseFloat(r.product.weight) : 0;
+      let subtotal = 0;
+      let tax = 0;
+      let total = 0;
+      if (includeIgv) {
+        total = r.quantity * r.unit_price;
+        subtotal = total / (1 + IGV_RATE);
+        tax = total - subtotal;
+      } else {
+        subtotal = r.quantity * r.unit_price;
+        tax = subtotal * IGV_RATE;
+        total = subtotal + tax;
+      }
+      const quantityKg = r.is_by_sack ? r.quantity * productWeight : r.quantity;
+      return {
+        product_id: r.product.id.toString(),
+        product_code: r.product.codigo,
+        product_name: r.product.name,
+        product_weight: productWeight,
+        quantity: r.quantity.toString(),
+        quantity_kg: quantityKg > 0 ? quantityKg.toString() : "",
+        unit_price: r.unit_price.toString(),
+        tax: tax.toFixed(2),
+        subtotal,
+        total,
+        is_by_sack: r.is_by_sack,
+      };
+    });
+
+    setDetails((prev) => {
+      const updatedDetails = [...prev.filter((d) => !isBlankRow(d)), ...newRows];
+      form.setValue("details", updatedDetails, { shouldValidate: true });
+      return updatedDetails;
+    });
+  };
+
   const handleRemoveRow = (index: number) => {
     const updatedDetails = details.filter((_, i) => i !== index);
     setDetails(updatedDetails);
@@ -441,6 +498,17 @@ export const PurchaseForm = ({
   const handleCellChange = (index: number, field: string, value: string) => {
     const updatedDetails = [...details];
     updatedDetails[index] = { ...updatedDetails[index], [field]: value };
+
+    // Si se edita el código, el producto anterior deja de ser válido:
+    // se vuelve a resolver al presionar Tab/Enter en la celda de código
+    if (field === "product_code") {
+      updatedDetails[index] = {
+        ...updatedDetails[index],
+        product_id: "",
+        product_name: "",
+        product_weight: 0,
+      };
+    }
 
     const detail = updatedDetails[index];
 
@@ -770,10 +838,10 @@ export const PurchaseForm = ({
     if (installments.length === 0) return true; // Si no hay cuotas, está ok
     const purchaseTotal = calculatePurchaseTotal();
     const installmentsTotal = calculateInstallmentsTotal();
-    return Math.abs(purchaseTotal - installmentsTotal) < 0.000001; // Tolerancia acorde a 6 decimales
+    return Math.abs(purchaseTotal - installmentsTotal) < 0.00001; // Tolerancia: cuotas truncadas a 6 decimales
   };
 
-  const handleFormSubmit = (data: any) => {
+  const handleFormSubmit = (data: any, submitDetails: DetailRow[] = details) => {
     // Validar que si es a crédito, debe tener cuotas
     if (selectedPaymentType === "CREDITO" && installments.length === 0) {
       errorToast("Para pagos a crédito, debe agregar al menos una cuota");
@@ -807,7 +875,7 @@ export const PurchaseForm = ({
             id: existingInstallmentId,
           }),
           due_days: "1",
-          amount: purchaseTotal,
+          amount: floor6(purchaseTotal),
         },
       ];
     } else {
@@ -817,12 +885,12 @@ export const PurchaseForm = ({
         .map((inst) => ({
           ...(inst.id !== undefined && { id: inst.id }),
           due_days: inst.due_days,
-          amount: parseFloat(inst.amount),
+          amount: floor6(parseFloat(inst.amount)),
         }));
     }
 
     // Formatear detalles para el backend
-    const formattedDetails = details.map((d) => ({
+    const formattedDetails = submitDetails.map((d) => ({
       product_id: parseInt(d.product_id),
       quantity_kg: d.is_by_sack ? 0 : parseFloat(d.quantity_kg),
       quantity_sacks: d.is_by_sack
@@ -848,29 +916,64 @@ export const PurchaseForm = ({
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(handleFormSubmit, (errors) => {
-          const getFirstError = (
-            obj: any,
-            path = "",
-          ): { field: string; message: string } | null => {
-            for (const key in obj) {
-              const val = obj[key];
-              const currentPath = path ? `${path}.${key}` : key;
-              if (val?.message)
-                return { field: currentPath, message: val.message };
-              if (typeof val === "object") {
-                const nested = getFirstError(val, currentPath);
-                if (nested) return nested;
+        onSubmit={(e) => {
+          // Quitar filas totalmente vacías (ej. la que se crea al dar Tab/Enter en la última celda)
+          const nonEmpty = details.filter((d) => !isBlankRow(d));
+          if (nonEmpty.length !== details.length) {
+            setDetails(nonEmpty);
+            form.setValue("details", nonEmpty);
+          }
+          return form.handleSubmit(
+            (data) => handleFormSubmit(data, nonEmpty),
+            (errors) => {
+              const getFirstError = (
+                obj: any,
+                path = "",
+              ): { field: string; message: string } | null => {
+                for (const key in obj) {
+                  const val = obj[key];
+                  const currentPath = path ? `${path}.${key}` : key;
+                  if (val?.message)
+                    return { field: currentPath, message: val.message };
+                  if (typeof val === "object") {
+                    const nested = getFirstError(val, currentPath);
+                    if (nested) return nested;
+                  }
+                }
+                return null;
+              };
+              const first = getFirstError(errors);
+              if (!first) {
+                warningToast(
+                  "Formulario inválido",
+                  "Hay campos inválidos en el formulario",
+                );
+                return;
               }
-            }
-            return null;
-          };
-          const first = getFirstError(errors);
-          warningToast(
-            first ? `Campo: ${first.field}` : "Formulario inválido",
-            first ? first.message : "Hay campos inválidos en el formulario",
-          );
-        })}
+
+              // Errores de detalle: identificar la fila (1-based) y su código/descripción
+              const detailMatch = first.field.match(/^details\.(\d+)\./);
+              if (detailMatch) {
+                const idx = Number(detailMatch[1]);
+                const row = nonEmpty[idx];
+                const ref = row
+                  ? [row.product_code, row.product_name]
+                      .filter(Boolean)
+                      .join(" - ")
+                  : "";
+                warningToast(
+                  `Detalle fila ${idx + 1}${ref ? ` (${ref})` : " (sin código)"}`,
+                  row?.product_code && !row.product_id
+                    ? `El código "${row.product_code}" no fue validado. Ubíquese en la celda de código y presione Tab o Enter.`
+                    : first.message,
+                );
+                return;
+              }
+
+              warningToast(`Campo: ${first.field}`, first.message);
+            },
+          )(e);
+        }}
         className="space-y-6 w-full"
       >
         {/* Form Actions */}
@@ -1108,6 +1211,7 @@ export const PurchaseForm = ({
         >
           <ExcelGrid
             columns={gridColumns}
+            showRowNumbers
             data={details}
             onAddRow={handleAddRow}
             onRemoveRow={handleRemoveRow}
@@ -1118,6 +1222,27 @@ export const PurchaseForm = ({
             emptyMessage="Agregue productos a la compra"
             disabled={!selectedWarehouseId}
             skipColumnsOnEnter={["product"]}
+            extraActions={
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="gap-2 uppercase"
+                colorIcon="emerald"
+                disabled={!selectedWarehouseId}
+                onClick={() => setIsPasteDialogOpen(true)}
+              >
+                <ClipboardPaste className="h-4 w-4" />
+                Pegar desde Excel
+              </Button>
+            }
+          />
+          <PurchasePasteDialog
+            open={isPasteDialogOpen}
+            onOpenChange={setIsPasteDialogOpen}
+            includeIgv={includeIgv}
+            igvRate={IGV_RATE}
+            onConfirm={handlePasteDetails}
           />
         </GroupFormSection>
 

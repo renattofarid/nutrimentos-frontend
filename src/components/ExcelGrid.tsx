@@ -65,6 +65,8 @@ interface ExcelGridProps<T> {
   skipColumnsOnEnter?: string[];
   minHeight?: string;
   hideActionButtons?: boolean;
+  showRowNumbers?: boolean; // Muestra un índice sutil (1, 2, 3…) para ubicar filas
+  extraActions?: React.ReactNode; // Botones adicionales junto a Agregar/Quitar
 }
 
 export function ExcelGrid<T extends Record<string, any>>({
@@ -83,6 +85,8 @@ export function ExcelGrid<T extends Record<string, any>>({
   skipColumnsOnEnter = [],
   minHeight = "250px",
   hideActionButtons = false,
+  showRowNumbers = false,
+  extraActions,
 }: ExcelGridProps<T>) {
   const [focusedCell, setFocusedCell] = React.useState<{
     row: number;
@@ -629,6 +633,7 @@ export function ExcelGrid<T extends Record<string, any>>({
             <X className="h-4 w-4" />
             Quitar
           </Button>
+          {extraActions}
         </div>
       )}
 
@@ -637,6 +642,11 @@ export function ExcelGrid<T extends Record<string, any>>({
         <Table>
           <TableHeader>
             <TableRow className="border-b">
+              {showRowNumbers && (
+                <TableHead className="w-8 px-1 h-8 border-r text-center text-[10px] font-normal text-muted-foreground bg-[var(--table-header)]">
+                  #
+                </TableHead>
+              )}
               {columns.map((column) => (
                 <TableHead
                   key={column.id}
@@ -652,7 +662,7 @@ export function ExcelGrid<T extends Record<string, any>>({
             {data.length === 0 ? (
               <TableRow className="border-b">
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={columns.length + (showRowNumbers ? 1 : 0)}
                   className="text-center py-8 text-muted-foreground"
                 >
                   {emptyMessage}
@@ -664,6 +674,11 @@ export function ExcelGrid<T extends Record<string, any>>({
                   key={rowIndex}
                   className="group hover:bg-muted/50 border-b!"
                 >
+                  {showRowNumbers && (
+                    <TableCell className="w-8 p-0 h-9 border-r text-center text-[10px] tabular-nums text-muted-foreground/70 select-none">
+                      {rowIndex + 1}
+                    </TableCell>
+                  )}
                   {columns.map((column, colIndex) => {
                     const hidden = isColumnHidden(column, row);
                     return (

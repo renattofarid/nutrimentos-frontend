@@ -32,8 +32,11 @@ for (const t of targets) {
 
   const zip = path.join(OUT_ROOT, `${t}.zip`);
   if (process.platform === "win32") {
+    // ZipFile con includeBaseDirectory=false: el zip trae el contenido, no la carpeta
+    const src = path.resolve(outDir);
+    const dest = path.resolve(zip);
     run(
-      `powershell -NoProfile -Command "Compress-Archive -Path '${outDir}\*' -DestinationPath '${zip}' -Force"`,
+      `powershell -NoProfile -Command "Add-Type -AssemblyName System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::CreateFromDirectory('${src}', '${dest}', 'Optimal', $false)"`,
     );
   } else {
     run(`cd ${outDir} && zip -qr ../${t}.zip .`);

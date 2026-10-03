@@ -294,6 +294,8 @@ export interface KardexReportParams {
   start_date?: string | null;
   end_date?: string | null;
   export?: "excel" | null;
+  page?: number;
+  per_page?: number;
 }
 
 // Item plano para la tabla con información de jerarquía (legacy)

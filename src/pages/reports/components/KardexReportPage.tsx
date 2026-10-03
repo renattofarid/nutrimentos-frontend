@@ -27,6 +27,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePermission } from "@/lib/permission-guard";
 import { ACTIONS } from "@/lib/permission-catalog";
+import DataTablePagination from "@/components/DataTablePagination";
+import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 
 const ROUTE = "kardex";
 
@@ -321,6 +323,8 @@ const columns: ColumnDef<KardexItem>[] = [
 export default function KardexReportPage() {
   const { can } = usePermission();
   const [isExporting, setIsExporting] = useState(false);
+  const [page, setPage] = useState(1);
+  const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
 
   const { data: rawData, isLoading, fetch } = useKardexReport();
 
@@ -367,6 +371,15 @@ export default function KardexReportPage() {
   const watchedValues = form.watch();
 
   useEffect(() => {
+    setPage(1);
+  }, [
+    watchedValues.product_id,
+    watchedValues.warehouse_id,
+    watchedValues.start_date,
+    watchedValues.end_date,
+  ]);
+
+  useEffect(() => {
     const params: KardexReportParams = {
       product_id: watchedValues.product_id
         ? Number(watchedValues.product_id)
@@ -376,9 +389,13 @@ export default function KardexReportPage() {
         : null,
       start_date: watchedValues.start_date || null,
       end_date: watchedValues.end_date || null,
+      page,
+      per_page,
     };
     fetch(params);
   }, [
+    page,
+    per_page,
     watchedValues.product_id,
     watchedValues.warehouse_id,
     watchedValues.start_date,
@@ -416,7 +433,8 @@ export default function KardexReportPage() {
 
   const tableData = rawData?.data ?? [];
 
-  const totalMovements = tableData.length;
+  const meta = rawData?.meta;
+  const totalMovements = meta?.total ?? tableData.length;
   const totalEntries = tableData.filter(
     (i) => i.movement_type === "ENTRADA" || i.movement_type === "IN",
   ).length;
@@ -566,6 +584,14 @@ export default function KardexReportPage() {
                 quantity_out: false,
                 balance_quantity: false,
               }}
+            />
+            <DataTablePagination
+              page={page}
+              totalPages={meta?.last_page || 1}
+              onPageChange={setPage}
+              per_page={per_page}
+              setPerPage={setPerPage}
+              totalData={meta?.total || 0}
             />
           </div>
         </form>

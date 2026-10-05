@@ -41,22 +41,21 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Solo mostrar el toast y redirigir si no se ha manejado ya
-      if (!isSessionExpired) {
-        isSessionExpired = true;
-        console.error(
-          "No autenticado: Redirigiendo al inicio de sesión en 3 segundos..."
-        );
-        localStorage.removeItem("token");
-        errorToast(
-          "SESIÓN EXPIRADA",
-          "Redirigiendo al inicio de sesión en 3 segundos"
-        );
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 3000);
-      }
+    const status = error.response?.status;
+    const message = String(error.response?.data?.message ?? "");
+    const isUnauthenticated =
+      status === 401 || /unauthenticated/i.test(message);
+    // El login mismo devuelve 401 con credenciales inválidas: no es sesión expirada
+    const isLoginRequest = String(error.config?.url ?? "").includes("/login");
+
+    if (isUnauthenticated && !isLoginRequest && !isSessionExpired) {
+      isSessionExpired = true;
+      ["token", "user", "access", "message"].forEach((k) =>
+        localStorage.removeItem(k)
+      );
+      errorToast("SESIÓN EXPIRADA", "Inicia sesión nuevamente");
+      // Recarga completa: el store se reinicia sin token y App muestra el Login
+      window.location.replace("/");
     }
     return Promise.reject(error);
   }

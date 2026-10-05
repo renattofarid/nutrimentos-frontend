@@ -23,7 +23,7 @@ export const productSchemaCreate = z.object({
   is_kg: z.boolean().default(true),
   price_per_kg: z.coerce
     .string()
-    .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) > 0), {
+    .refine((val) => val === "" || (!isNaN(Number(val)) && Number(val) >= 0), {
       message: "Debe ser un número válido mayor o igual a 0",
     }),
   price: z.coerce

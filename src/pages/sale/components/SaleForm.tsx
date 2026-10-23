@@ -40,6 +40,7 @@ import { ClientManagementModal } from "@/pages/client/components/ClientManagemen
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { getNextSeries } from "../lib/sale.actions";
 import { useDynamicPrice } from "../lib/dynamic-price.hook";
+import { buildSaleDetailsPayload } from "../lib/sale-details.payload";
 import {
   ExcelGrid,
   type ExcelGridColumn,
@@ -1138,12 +1139,7 @@ export const SaleForm = ({
     const totalWeight = calculateTotalWeight();
 
     // Preparar detalles para enviar al backend
-    const validDetails = details.map((detail) => ({
-      product_id: detail.product_id,
-      quantity_sacks: detail.quantity_sacks || "", // Cantidad de sacos (vacío si se vende por kg)
-      quantity_kg: detail.quantity_kg || "", // Cantidad de kg (vacío si se vende por sacos)
-      unit_price: detail.unit_price,
-    }));
+    const validDetails = buildSaleDetailsPayload(details);
 
     onSubmit({
       ...data,

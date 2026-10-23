@@ -5,6 +5,7 @@ import { z } from "zod";
 
 export const saleDetailSchema = z.object({
   product_id: requiredStringId("Debe seleccionar un producto"),
+  description: z.string().optional(),
   quantity_sacks: z
     .string()
     .min(0, { message: "La cantidad de sacos es requerida" })

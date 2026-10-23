@@ -119,6 +119,7 @@ export const useSaleStore = create<SaleStore>((set) => ({
         observations: data.observations || "",
         details: data.details.map((detail) => ({
           product_id: Number(detail.product_id),
+          ...(detail.description && { description: detail.description }),
           quantity_sacks: Number(detail.quantity_sacks),
           quantity_kg: Number(detail.quantity_kg),
           unit_price: Number(detail.unit_price),
@@ -175,6 +176,7 @@ export const useSaleStore = create<SaleStore>((set) => ({
           data.details.length > 0 && {
             details: data.details.map((detail) => ({
               product_id: Number(detail.product_id),
+              ...(detail.description && { description: detail.description }),
               quantity_sacks: Number(detail.quantity_sacks),
               quantity_kg: Number(detail.quantity_kg),
               unit_price: Number(detail.unit_price),

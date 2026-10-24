@@ -43,7 +43,7 @@ export default function CreditDetailedSalesReportPage() {
 
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
-  const threeMonthsAgoStr = new Date(today.getFullYear(), today.getMonth() - 3, 1).toISOString().split("T")[0];
+  const defaultStartStr = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().split("T")[0];
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
@@ -52,7 +52,7 @@ export default function CreditDetailedSalesReportPage() {
       document_type: "",
       vendedor_id: "",
       warehouse_id: "",
-      start_date: threeMonthsAgoStr,
+      start_date: defaultStartStr,
       end_date: todayStr,
       zone_id: "",
       brand_id: "",

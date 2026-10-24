@@ -176,7 +176,7 @@ export default function WarehouseKardexPage() {
   const [selectedMovementType, setSelectedMovementType] = useState("");
   const [fromDate, setFromDate] = useState(() => {
     const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth() - 3, 1);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
   });
   const [toDate, setToDate] = useState(
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),

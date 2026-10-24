@@ -64,7 +64,7 @@ export default function DeliverySheetPage() {
   const [company_id, setCompanyId] = useState("");
   const [issue_date_from, setIssueDateFrom] = useState<Date | undefined>(() => {
     const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth() - 3, 1);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
   });
   const [issue_date_to, setIssueDateTo] = useState<Date | undefined>(() => new Date());
   const [delivery_date_from, setDeliveryDateFrom] = useState<

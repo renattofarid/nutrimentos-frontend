@@ -38,7 +38,7 @@ export default function CreditNotePage() {
   const [selectedSale, setSelectedSale] = useState<SaleResource | null>(null);
   const [issue_date_from, setIssueDateFrom] = useState<Date | undefined>(() => {
     const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth() - 3, 1);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
   });
   const [issue_date_to, setIssueDateTo] = useState<Date | undefined>(() => new Date());
   const [page, setPage] = useState(1);

@@ -50,7 +50,7 @@ export default function PurchaseRegisterReportPage() {
 
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
-  const threeMonthsAgoStr = new Date(today.getFullYear(), today.getMonth() - 3, 1)
+  const defaultStartStr = new Date(today.getFullYear(), today.getMonth(), today.getDate())
     .toISOString()
     .split("T")[0];
 
@@ -62,7 +62,7 @@ export default function PurchaseRegisterReportPage() {
       document_type: "",
       payment_type: "",
       status: "",
-      start_date: threeMonthsAgoStr,
+      start_date: defaultStartStr,
       end_date: todayStr,
     },
   });

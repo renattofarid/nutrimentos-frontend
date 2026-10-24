@@ -51,7 +51,7 @@ export default function WarehouseDocumentPage() {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>(() => {
     const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth() - 3, 1);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
   });
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [deleteId, setDeleteId] = useState<number | null>(null);

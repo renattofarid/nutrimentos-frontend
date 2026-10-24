@@ -139,8 +139,8 @@ export default function SalesByProductReportPage() {
 
   const _today = new Date();
   const _todayStr = format(_today, "yyyy-MM-dd");
-  const _threeMonthsAgoStr = format(
-    new Date(_today.getFullYear(), _today.getMonth() - 3, 1),
+  const _defaultStartStr = format(
+    new Date(_today.getFullYear(), _today.getMonth(), _today.getDate()),
     "yyyy-MM-dd",
   );
 
@@ -149,7 +149,7 @@ export default function SalesByProductReportPage() {
       branch_id: "",
       user_id: "",
       warehouse_id: "",
-      start_date: _threeMonthsAgoStr,
+      start_date: _defaultStartStr,
       end_date: _todayStr,
     },
   });

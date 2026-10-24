@@ -43,7 +43,7 @@ export default function PurchasePage() {
   const [warehouse_id, setWarehouseId] = useState("");
   const [start_date, setStartDate] = useState<Date | undefined>(() => {
     const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth() - 3, 1);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
   });
   const [end_date, setEndDate] = useState<Date | undefined>(() => new Date());
 

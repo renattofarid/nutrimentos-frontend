@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { format } from "date-fns";
+import { format, subDays, startOfWeek, startOfMonth } from "date-fns";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   useCarLoadReport,
@@ -18,6 +18,14 @@ import { exportCarLoadReport } from "../lib/reports.actions";
 import ExportButtons from "@/components/ExportButtons";
 import { DataTable } from "@/components/DataTable";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { usePermission } from "@/lib/permission-guard";
@@ -38,7 +46,34 @@ interface ZoneOption {
 }
 
 const today = new Date();
-const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+
+type PeriodValue = "today" | "yesterday" | "week" | "month" | "custom";
+
+const PERIOD_OPTIONS: { label: string; value: PeriodValue }[] = [
+  { label: "Hoy", value: "today" },
+  { label: "Ayer", value: "yesterday" },
+  { label: "Semana", value: "week" },
+  { label: "Mes", value: "month" },
+  { label: "Personalizado", value: "custom" },
+];
+
+function getPeriodRange(period: PeriodValue): { from: Date; to: Date } | null {
+  const now = new Date();
+  switch (period) {
+    case "today":
+      return { from: now, to: now };
+    case "yesterday": {
+      const y = subDays(now, 1);
+      return { from: y, to: y };
+    }
+    case "week":
+      return { from: startOfWeek(now, { weekStartsOn: 1 }), to: now };
+    case "month":
+      return { from: startOfMonth(now), to: now };
+    default:
+      return null;
+  }
+}
 
 function formatDateParam(v: Date | string | undefined | null): string | null {
   if (!v) return null;
@@ -49,6 +84,7 @@ function formatDateParam(v: Date | string | undefined | null): string | null {
 export default function CarLoadReportPage() {
   const { can } = usePermission();
   const [selectedZones, setSelectedZones] = useState<string[]>([]);
+  const [period, setPeriod] = useState<PeriodValue>("today");
   const isZoneAutoSelectRef = useRef(false);
 
   const { data: rawData, isLoading, fetch } = useCarLoadReport();
@@ -56,10 +92,18 @@ export default function CarLoadReportPage() {
   const form = useForm<FilterFormValues>({
     defaultValues: {
       branch_id: "1",
-      date_from: threeMonthsAgo,
+      date_from: today,
       date_to: today,
     },
   });
+
+  const handlePeriodChange = (value: PeriodValue) => {
+    setPeriod(value);
+    const range = getPeriodRange(value);
+    if (!range) return;
+    form.setValue("date_from", range.from);
+    form.setValue("date_to", range.to);
+  };
 
   const watchedDateFrom = form.watch("date_from");
   const watchedDateTo = form.watch("date_to");
@@ -184,18 +228,40 @@ export default function CarLoadReportPage() {
                   value: String(item.id),
                 })}
               />
-              <DatePickerFormField
-                control={form.control}
-                name="date_from"
-                label="Desde"
-                placeholder="Fecha inicio"
-              />
-              <DatePickerFormField
-                control={form.control}
-                name="date_to"
-                label="Hasta"
-                placeholder="Fecha fin"
-              />
+              <div className="flex flex-col gap-0.5">
+                <Label className="font-bold uppercase">Fecha</Label>
+                <Select
+                  value={period}
+                  onValueChange={(v) => handlePeriodChange(v as PeriodValue)}
+                >
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PERIOD_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {period === "custom" && (
+                <>
+                  <DatePickerFormField
+                    control={form.control}
+                    name="date_from"
+                    label="Desde"
+                    placeholder="Fecha inicio"
+                  />
+                  <DatePickerFormField
+                    control={form.control}
+                    name="date_to"
+                    label="Hasta"
+                    placeholder="Fecha fin"
+                  />
+                </>
+              )}
             </div>
             <div className="flex gap-2 pb-0.5">
               <Button type="submit" disabled={isLoading} size="sm">

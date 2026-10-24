@@ -10,6 +10,7 @@ export interface SaleDetailResource {
   id: number;
   sale_id: number;
   product_id: number;
+  description?: string | null;
   quantity_sacks: number;
   quantity_kg: number;
   unit_price: number;

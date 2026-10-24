@@ -83,7 +83,7 @@ export const SaleEditPage = () => {
       data.details?.map((detail) => ({
         product_id: detail.product_id.toString(),
         product_code: detail.product?.codigo || "",
-        product_name: detail.product?.name || "",
+        product_name: detail.description?.trim() || detail.product?.name || "",
         product_weight: (detail.product?.weight ?? 0).toString(),
         quantity_sacks: detail.quantity_sacks.toString(),
         quantity_kg: "0",

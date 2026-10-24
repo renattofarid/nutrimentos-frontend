@@ -40,7 +40,10 @@ import { ClientManagementModal } from "@/pages/client/components/ClientManagemen
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { getNextSeries } from "../lib/sale.actions";
 import { useDynamicPrice } from "../lib/dynamic-price.hook";
-import { buildSaleDetailsPayload } from "../lib/sale-details.payload";
+import {
+  buildSaleDetailsPayload,
+  FREE_DESCRIPTION_PRODUCT_CODE,
+} from "../lib/sale-details.payload";
 import {
   ExcelGrid,
   type ExcelGridColumn,
@@ -1074,6 +1077,20 @@ export const SaleForm = ({
     // Validar que haya al menos un producto
     if (details.length === 0 || details.every((d) => !d.product_id)) {
       errorToast("Debe agregar al menos un producto a la venta");
+      return;
+    }
+
+    // Validar que el código 999 siempre lleve descripción
+    const emptyFreeIndex = details.findIndex(
+      (d) =>
+        d.product_id &&
+        d.product_code === FREE_DESCRIPTION_PRODUCT_CODE &&
+        !d.product_name?.trim(),
+    );
+    if (emptyFreeIndex !== -1) {
+      errorToast(
+        `La descripción es obligatoria para el producto con código ${FREE_DESCRIPTION_PRODUCT_CODE} (fila ${emptyFreeIndex + 1})`,
+      );
       return;
     }
 

@@ -241,7 +241,7 @@ export default function RealCustomerAccountStatementPage() {
 
   const _today = new Date();
   const _todayStr = format(_today, "yyyy-MM-dd");
-  const _defaultStartStr = format(new Date(_today.getFullYear(), _today.getMonth(), _today.getDate()), "yyyy-MM-dd");
+  const _defaultStartStr = format(new Date(_today.getFullYear() - 1, _today.getMonth(), _today.getDate()), "yyyy-MM-dd");
 
   const form = useForm<FilterFormValues>({
     defaultValues: {

@@ -32,6 +32,7 @@ import {
   type ChangeEvent,
 } from "react";
 import { useProduct } from "@/pages/product/lib/product.hook";
+import { findProductById } from "@/pages/product/lib/product.actions";
 import { SupplierDialog } from "@/pages/supplier/components/SupplierDialog";
 
 import { errorToast, warningToast } from "@/lib/core.function";
@@ -412,6 +413,37 @@ export const PurchaseForm = ({
       });
       setDetails(mappedDetails);
       form.setValue("details", mappedDetails);
+
+      // El API no envía el peso ni los kg de las líneas por saco: se consulta
+      // el peso de cada producto para calcular los kilos totales.
+      const productIds = Array.from(
+        new Set(
+          mappedDetails
+            .filter((d) => d.is_by_sack && d.product_id)
+            .map((d) => Number(d.product_id)),
+        ),
+      );
+      Promise.all(
+        productIds.map((pid) =>
+          findProductById(pid)
+            .then((res) => [pid, parseFloat(res.data.weight ?? "") || 0] as const)
+            .catch(() => [pid, 0] as const),
+        ),
+      ).then((entries) => {
+        const weights = new Map(entries);
+        const enriched = mappedDetails.map((d) => {
+          if (!d.is_by_sack) return d;
+          const weight = weights.get(Number(d.product_id)) || 0;
+          const kg = (parseFloat(d.quantity) || 0) * weight;
+          return {
+            ...d,
+            product_weight: weight,
+            quantity_kg: kg > 0 ? kg.toFixed(2) : "",
+          };
+        });
+        setDetails(enriched);
+        form.setValue("details", enriched);
+      });
     }
 
     if (defaultValues.installments && defaultValues.installments.length > 0) {

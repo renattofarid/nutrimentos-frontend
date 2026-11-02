@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useSearchParams } from "react-router-dom";
 import { useKardexReport } from "../lib/reports.hook";
 import {
   useProductAsyncSearch,
@@ -330,16 +331,38 @@ export default function KardexReportPage() {
 
   const [productCodeInput, setProductCodeInput] = useState("");
   const [codeToSearch, setCodeToSearch] = useState<string | null>(null);
+  // Filtros precargados cuando se abre desde Inventario (botón "Ver Kardex")
+  const [searchParams] = useSearchParams();
+  const presetProductId = searchParams.get("product_id") ?? "";
+  const presetWarehouseId = searchParams.get("warehouse_id") ?? "";
+  const presetWarehouseOption: Option | undefined = presetWarehouseId
+    ? {
+        value: presetWarehouseId,
+        label: searchParams.get("warehouse_name") ?? presetWarehouseId,
+      }
+    : undefined;
   const [externalProductOption, setExternalProductOption] =
-    useState<Option | null>(null);
+    useState<Option | null>(
+      presetProductId
+        ? {
+            value: presetProductId,
+            label: searchParams.get("product_name") ?? presetProductId,
+            description: searchParams.get("product_code") ?? undefined,
+          }
+        : null,
+    );
 
   const { data: productByCode, isFetching: isSearchingByCode } = useProduct(
-    codeToSearch ? { codigo: codeToSearch, per_page: 5 } : undefined,
+    codeToSearch ? { codigo: codeToSearch, per_page: 50 } : undefined,
   );
 
   useEffect(() => {
     if (!codeToSearch || isSearchingByCode) return;
-    const product = productByCode?.data?.[0];
+    // La API devuelve códigos parecidos: se toma solo el que coincide exacto
+    const wanted = codeToSearch.trim().toLowerCase();
+    const product = productByCode?.data?.find(
+      (p) => p.codigo.trim().toLowerCase() === wanted,
+    );
     if (product) {
       setExternalProductOption({
         value: String(product.id),
@@ -361,9 +384,9 @@ export default function KardexReportPage() {
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
-      product_id: "",
-      warehouse_id: "",
-      start_date: _defaultStartStr,
+      product_id: presetProductId,
+      warehouse_id: presetWarehouseId,
+      start_date: searchParams.get("start_date") || _defaultStartStr,
       end_date: _todayStr,
     },
   });
@@ -504,6 +527,7 @@ export default function KardexReportPage() {
               name="warehouse_id"
               label="Almacén"
               placeholder="Buscar almacén..."
+              defaultOption={presetWarehouseOption}
               useQueryHook={useWarehouseAsyncSearch}
               mapOptionFn={(item) => ({
                 label: item.name,

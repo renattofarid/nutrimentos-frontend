@@ -1,4 +1,9 @@
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useProduct } from "@/pages/product/lib/product.hook";
+import type { Option } from "@/lib/core.interface";
 import { useForm } from "react-hook-form";
 import { useInventoryReport } from "../lib/reports.hook";
 import {
@@ -15,7 +20,18 @@ import type {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { FileSpreadsheet, Search, Filter, Package } from "lucide-react";
+import {
+  FileSpreadsheet,
+  Search,
+  Filter,
+  Package,
+  BookOpen,
+} from "lucide-react";
+import { useWindowManager } from "@/stores/window-manager.store";
+import {
+  getKardexYearStart,
+  KARDEX_REPORT_ROUTE,
+} from "../lib/reports.interface";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportInventoryReport } from "../lib/reports.actions";
@@ -32,6 +48,39 @@ const ROUTE = "inventario";
 interface FilterFormValues {
   product_id: string;
   warehouse_id: string;
+}
+
+// Abre el Kardex en su propia ventana, filtrado por producto + almacén y
+// con el rango de fechas del año actual.
+function OpenKardexButton({ item }: { item: InventoryItem }) {
+  const { openTab } = useWindowManager();
+
+  const handleOpen = () => {
+    const query = new URLSearchParams({
+      product_id: String(item.product_id),
+      product_name: item.product_name,
+      product_code: item.product_code,
+      warehouse_id: String(item.warehouse_id),
+      warehouse_name: item.warehouse_name,
+      start_date: getKardexYearStart(),
+    });
+    openTab(
+      `${KARDEX_REPORT_ROUTE}?${query.toString()}`,
+      `Kardex ${item.product_code}`,
+    );
+  };
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      title="Ver Kardex"
+      onClick={handleOpen}
+    >
+      <BookOpen className="h-4 w-4" />
+    </Button>
+  );
 }
 
 const columns: ColumnDef<InventoryItem>[] = [
@@ -80,23 +129,44 @@ const columns: ColumnDef<InventoryItem>[] = [
   //   ),
   // },
   {
-    accessorKey: "current_stock",
-    header: "Stock Actual",
-    size: 120,
-    cell: ({ row }) => {
-      const stock = Number(row.original.stock);
-      const min = Number(row.original.min_stock);
-      const isLow = stock <= min;
-      return (
-        <span
-          className={`font-bold text-base ${
-            isLow ? "text-red-600" : "text-green-600"
-          }`}
-        >
-          {stock}
-        </span>
-      );
-    },
+    accessorKey: "weight_per_sack",
+    header: "Peso x Saco (kg)",
+    size: 110,
+    cell: ({ row }) => (
+      <span className="text-sm">
+        {Number(row.original.weight_per_sack ?? 0).toFixed(2)}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "stock_sacks",
+    header: "Sacos",
+    size: 90,
+    cell: ({ row }) => (
+      <span className="text-sm font-semibold">
+        {row.original.stock_sacks ?? 0}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "stock_kg",
+    header: "Kg sueltos",
+    size: 100,
+    cell: ({ row }) => (
+      <span className="text-sm font-semibold">
+        {Number(row.original.stock_kg ?? 0).toFixed(2)}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "stock_tn",
+    header: "Toneladas",
+    size: 100,
+    cell: ({ row }) => (
+      <span className="text-sm font-semibold">
+        {Number(row.original.stock_tn ?? 0).toFixed(3)}
+      </span>
+    ),
   },
   {
     accessorKey: "min_stock",
@@ -133,6 +203,31 @@ const columns: ColumnDef<InventoryItem>[] = [
       );
     },
   },
+  {
+    accessorKey: "current_stock",
+    header: "Stock Actual (kg)",
+    size: 120,
+    cell: ({ row }) => {
+      const stock = Number(row.original.stock);
+      const min = Number(row.original.min_stock);
+      const isLow = stock <= min;
+      return (
+        <span
+          className={`font-bold text-base ${
+            isLow ? "text-red-600" : "text-green-600"
+          }`}
+        >
+          {stock} kg
+        </span>
+      );
+    },
+  },
+  {
+    id: "kardex",
+    header: "Kardex",
+    size: 80,
+    cell: ({ row }) => <OpenKardexButton item={row.original} />,
+  },
 ];
 
 export default function InventoryReportPage() {
@@ -143,6 +238,44 @@ export default function InventoryReportPage() {
 
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(DEFAULT_PER_PAGE);
+  // Búsqueda por código: Enter/Tab consulta la API y selecciona el producto con código exacto
+  const [productCodeInput, setProductCodeInput] = useState("");
+  const [codeToSearch, setCodeToSearch] = useState<string | null>(null);
+  const [externalProductOption, setExternalProductOption] =
+    useState<Option | null>(null);
+
+  const { data: productByCode, isFetching: isSearchingByCode } = useProduct(
+    codeToSearch ? { codigo: codeToSearch, per_page: 50 } : undefined,
+  );
+
+  useEffect(() => {
+    if (!codeToSearch || isSearchingByCode) return;
+    // La API devuelve códigos parecidos: se toma solo el que coincide exacto
+    const wanted = codeToSearch.trim().toLowerCase();
+    const product = productByCode?.data?.find(
+      (p) => p.codigo.trim().toLowerCase() === wanted,
+    );
+    if (product) {
+      setExternalProductOption({
+        value: String(product.id),
+        label: product.name,
+        description: product.codigo,
+      });
+      // Producto encontrado: se dispara la búsqueda del inventario
+      const warehouseId = form.getValues("warehouse_id");
+      if (requireWarehouse(warehouseId)) {
+        setAppliedFilters({
+          product_id: product.id,
+          warehouse_id: Number(warehouseId),
+        });
+        setPage(1);
+      }
+    } else {
+      errorToast(`No se encontró producto con código "${codeToSearch}"`);
+    }
+    setCodeToSearch(null);
+  }, [productByCode, isSearchingByCode, codeToSearch]);
+
   // Filtros de la última búsqueda confirmada (para poder paginar sin re-enviar el form)
   const [appliedFilters, setAppliedFilters] = useState<{
     product_id: number | null;
@@ -274,6 +407,31 @@ export default function InventoryReportPage() {
                 if (value) form.clearErrors("warehouse_id");
               }}
             />
+            <div className="flex flex-col gap-0.5">
+              <Label className="text-sm font-bold uppercase leading-none">
+                Código
+              </Label>
+              <div className="relative">
+                <Input
+                  value={productCodeInput}
+                  onChange={(e) => setProductCodeInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === "Tab") {
+                      if (productCodeInput.trim()) {
+                        e.preventDefault();
+                        setCodeToSearch(productCodeInput.trim());
+                      }
+                    }
+                  }}
+                  placeholder="Ej: 60"
+                  className="h-8 text-sm pr-7"
+                  autoComplete="off"
+                />
+                {isSearchingByCode && (
+                  <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                )}
+              </div>
+            </div>
             <FormSelectAsync
               control={form.control}
               name="product_id"
@@ -285,6 +443,13 @@ export default function InventoryReportPage() {
                 value: String(item.id),
                 description: item.codigo,
               })}
+              externalOption={externalProductOption}
+              onValueChange={(value) => {
+                if (!value) {
+                  setProductCodeInput("");
+                  setExternalProductOption(null);
+                }
+              }}
             />
           </GroupFormSection>
 
@@ -319,7 +484,12 @@ export default function InventoryReportPage() {
             </GroupFormSection>
           )}
 
-          <DataTable columns={columns} data={tableData} isLoading={isLoading} />
+          <DataTable
+            columns={columns}
+            data={tableData}
+            isLoading={isLoading}
+            initialColumnVisibility={{ min_stock: false }}
+          />
 
           {meta && meta.total > 0 && (
             <DataTablePagination

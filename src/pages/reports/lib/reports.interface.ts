@@ -47,6 +47,8 @@ export const INVENTORY_REPORT_ROUTE = `${ROUTE}/inventario`;
 
 // Kardex Report
 export const KARDEX_REPORT_ROUTE = `${ROUTE}/kardex`;
+// Fecha de inicio del Kardex abierto desde Inventario: 1 de enero del año actual
+export const getKardexYearStart = () => `${new Date().getFullYear()}-01-01`;
 
 // Sale By Seller Report
 export const SALE_BY_SELLER_REPORT_ROUTE = `${ROUTE}/venta-por-vendedor`;
@@ -174,7 +176,11 @@ export interface InventoryItem {
   product_id: number;
   product_code: string;
   product_name: string;
+  weight_per_sack?: number;
   stock: string;
+  stock_sacks?: number;
+  stock_kg?: number;
+  stock_tn?: number;
   min_stock: string;
   max_stock: string;
   created_at: string;

@@ -148,6 +148,7 @@ export const SaleProductSheet = ({
       const result = await fetchDynamicPrice({
         product_id: selectedProductId,
         person_id: customerId,
+        warehouse_id: Number(warehouseId) || undefined,
         quantity_sacks: quantitySacksDecimal,
         quantity_kg: 0, // Los kg adicionales ya están incluidos en quantity_sacks
       });
@@ -159,7 +160,13 @@ export const SaleProductSheet = ({
 
     fetchPrice();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProductId, selectedQuantity, selectedAdditionalKg, customerId]);
+  }, [
+    selectedProductId,
+    selectedQuantity,
+    selectedAdditionalKg,
+    customerId,
+    warehouseId,
+  ]);
 
   const handleSubmit = (data: DetailSchema) => {
     // Validar que tengamos precio (ya sea dinámico o manual)

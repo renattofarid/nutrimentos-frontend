@@ -661,6 +661,7 @@ export const SaleForm = ({
             const result = await fetchDynamicPrice({
               product_id: detail.product_id,
               person_id: customerId || "",
+              warehouse_id: Number(form.getValues("warehouse_id")) || undefined,
               quantity_sacks: qtySacks,
               quantity_kg: 0,
             });

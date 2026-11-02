@@ -3,6 +3,7 @@ import { api } from "@/lib/config";
 export interface DynamicPriceRequest {
   product_id: string;
   person_id: string;
+  warehouse_id?: number;
   quantity_sacks: number;
   quantity_kg: number;
 }

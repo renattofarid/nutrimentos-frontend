@@ -16,11 +16,13 @@ interface PurchaseDetailTableProps {
   onEdit: (detailId: number) => void;
   onRefresh: () => void;
   isPurchasePaid?: boolean;
+  totalAmount?: number | string;
 }
 
 export function PurchaseDetailTable({
   details,
   onRefresh,
+  totalAmount,
 }: PurchaseDetailTableProps) {
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
@@ -37,6 +39,9 @@ export function PurchaseDetailTable({
   };
 
   const calculateTotal = () => {
+    const purchaseTotal = Number(totalAmount);
+    if (totalAmount !== undefined && totalAmount !== "" && !isNaN(purchaseTotal))
+      return purchaseTotal;
     return details.reduce((sum, detail) => sum + detail.total, 0);
   };
 
@@ -102,7 +107,7 @@ export function PurchaseDetailTable({
                 TOTAL:
               </TableCell>
               <TableCell className="text-right font-bold text-lg text-primary">
-                {calculateTotal().toFixed(6)}
+                {calculateTotal().toFixed(2)}
               </TableCell>
               <TableCell></TableCell>
             </TableRow>

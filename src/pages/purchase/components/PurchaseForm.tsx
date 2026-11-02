@@ -669,6 +669,9 @@ export const PurchaseForm = ({
     return detailsTotal - discount;
   };
 
+  const calculateTotalKg = () =>
+    details.reduce((sum, d) => sum + (parseFloat(d.quantity_kg) || 0), 0);
+
   const calculateSubtotalTotal = () => {
     const sum = details.reduce(
       (sum, detail) => sum + (detail.subtotal || 0),
@@ -1344,6 +1347,28 @@ export const PurchaseForm = ({
                 min={0}
                 placeholder="0.00"
               />
+
+              <div className="col-span-full flex flex-wrap items-center gap-x-6 gap-y-1 rounded-md bg-muted/50 px-3 py-2 text-sm">
+                <span>
+                  Total kilos:{" "}
+                  <strong>
+                    {formatNumber(calculateTotalKg())} kg
+                  </strong>
+                </span>
+                <span>
+                  Toneladas:{" "}
+                  <strong>
+                    {(calculateTotalKg() / 1000).toLocaleString("en-US", {
+                      minimumFractionDigits: 3,
+                      maximumFractionDigits: 3,
+                    })}{" "}
+                    t
+                  </strong>
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  (Flete y estiba = toneladas × tarifa)
+                </span>
+              </div>
 
               <FormInput
                 control={form.control}

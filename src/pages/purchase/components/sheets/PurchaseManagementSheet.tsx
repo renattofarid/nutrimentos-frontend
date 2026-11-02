@@ -216,6 +216,7 @@ export function PurchaseManagementSheet({
                 onEdit={() => {}}
                 onRefresh={() => {}}
                 isPurchasePaid={true}
+                totalAmount={currentPurchase.total_amount}
               />
             </TabsContent>
 

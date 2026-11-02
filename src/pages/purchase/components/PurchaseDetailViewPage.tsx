@@ -263,6 +263,7 @@ export const PurchaseDetailViewPage = () => {
               onEdit={() => {}}
               onRefresh={() => fetchPurchase(Number(id))}
               isPurchasePaid={purchase?.status === "PAGADO"}
+              totalAmount={purchase.total_amount}
             />
           </GroupFormSection>
 

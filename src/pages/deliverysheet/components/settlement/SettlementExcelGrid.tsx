@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useWatch } from "react-hook-form";
 import type { UseFormReturn } from "react-hook-form";
 import {
@@ -176,6 +176,7 @@ function PaymentAmountCell({
   const value =
     (useWatch({ control: form.control, name: `sales.${index}.payment_amount` }) as string) || "0";
   const error = form.formState.errors.sales?.[index]?.payment_amount;
+  const deletePressed = useRef(false);
   return (
     <input
       type="number"
@@ -184,11 +185,42 @@ function PaymentAmountCell({
       max={pendingAmount.toString()}
       value={value}
       disabled={locked}
-      onChange={(e) =>
+      data-pay-index={index}
+      onBlur={() => {
+        deletePressed.current = false;
+      }}
+      onChange={(e) => {
+        deletePressed.current = false;
         form.setValue(`sales.${index}.payment_amount`, e.target.value, {
           shouldValidate: true,
-        })
-      }
+        });
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Delete") {
+          e.preventDefault();
+          deletePressed.current = true;
+          form.setValue(`sales.${index}.payment_amount`, "0", {
+            shouldValidate: true,
+          });
+          e.currentTarget.select();
+          return;
+        }
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        if (deletePressed.current && pendingAmount > 0) {
+          deletePressed.current = false;
+          form.setValue(
+            `sales.${index}.payment_amount`,
+            pendingAmount.toFixed(2),
+            { shouldValidate: true },
+          );
+        }
+        const next = document.querySelector<HTMLInputElement>(
+          `input[data-pay-index="${index + 1}"]`,
+        );
+        next?.focus();
+        next?.select();
+      }}
       className={`w-full h-full px-2 py-1 text-right text-xs border-0 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary bg-transparent ${
         error ? "ring-1 ring-red-500" : ""
       }`}

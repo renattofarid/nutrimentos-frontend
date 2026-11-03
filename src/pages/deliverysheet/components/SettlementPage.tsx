@@ -442,6 +442,11 @@ export default function SettlementPage() {
           <Form {...form}>
             <form
               id="settlement-form"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
+                  e.preventDefault();
+                }
+              }}
               onSubmit={form.handleSubmit(handleSubmit)}
               className="space-y-6"
             >

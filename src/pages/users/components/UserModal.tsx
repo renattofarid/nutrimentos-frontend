@@ -46,6 +46,13 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
     2: "RUC",
   };
 
+  // El número de documento es opcional: si va vacío no se envía.
+  const withoutEmptyDocument = (data: UserSchema): UserSchema => {
+    if (data.number_document) return data;
+    const { number_document: _omit, ...rest } = data;
+    return rest as UserSchema;
+  };
+
   const mapUserToForm = (data: UserResource): Partial<UserSchema> => {
     const typeDocument =
       (data.person?.type_document as TypeDocument) ||
@@ -76,7 +83,7 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
 
   const handleSubmit = async (data: UserSchema) => {
     if (mode === "create") {
-      await createUser(data)
+      await createUser(withoutEmptyDocument(data))
         .then(() => {
           onClose();
           successToast(SUCCESS_MESSAGE(MODEL, "create"));
@@ -90,7 +97,9 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
           );
         });
     } else {
-      await updateUser(id!, data)
+      // En edición la contraseña es opcional: si va vacía no se envía.
+      const { password, ...rest } = data;
+      await updateUser(id!, withoutEmptyDocument(password ? data : (rest as UserSchema)))
         .then(() => {
           onClose();
           successToast(SUCCESS_MESSAGE(MODEL, "update"));

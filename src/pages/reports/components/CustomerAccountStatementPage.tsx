@@ -285,7 +285,7 @@ export default function CustomerAccountStatementPage() {
   const workerOptions: Option[] =
     workers?.map((worker) => ({
       value: worker.id.toString(),
-      label: `${worker.names} ${worker.father_surname} ${worker.mother_surname}`,
+      label: `${worker.names ?? ""} ${worker.father_surname ?? ""} ${worker.mother_surname ?? ""}`,
     })) || [];
 
   const paymentTypeOptions: Option[] = [

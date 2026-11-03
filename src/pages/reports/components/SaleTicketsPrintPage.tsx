@@ -81,7 +81,7 @@ export default function SaleTicketsPrintPage() {
         document_type: s.document_type,
         customer_name:
           s.customer.business_name ||
-          `${s.customer.names} ${s.customer.father_surname}`,
+          `${s.customer.names ?? ""} ${s.customer.father_surname ?? ""}`,
         issue_date: s.issue_date,
         currency: s.currency,
         total_amount: s.total_amount,

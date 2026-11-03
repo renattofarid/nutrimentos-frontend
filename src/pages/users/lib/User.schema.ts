@@ -55,7 +55,7 @@ export const userCreateSchema = z
     number_document: z
       .string()
       .refine(
-        (val) => /^[0-9]{8,11}$/.test(val),
+        (val) => val === "" || /^[0-9]{8,11}$/.test(val),
         "El número de documento debe tener entre 8 y 11 dígitos"
       ),
 

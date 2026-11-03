@@ -260,7 +260,7 @@ export const PurchaseCreditNoteForm = ({
               value: supplier.id.toString(),
               label: supplier.business_name
                 ? supplier.business_name
-                : `${supplier.names} ${supplier.father_surname} ${supplier.mother_surname}`,
+                : `${supplier.names ?? ""} ${supplier.father_surname ?? ""} ${supplier.mother_surname ?? ""}`,
             })}
             disabled={isDetailed && !!selectedPurchase}
             preloadItemId={defaultValues.supplier_id}

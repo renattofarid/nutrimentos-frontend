@@ -340,7 +340,7 @@ export default function SaleDetailSheet({
                     <p className="text-xs text-muted-foreground">Vendedor</p>
                     <p className="font-semibold">
                       {sale.vendedor.business_name ||
-                        `${sale.vendedor.names} ${sale.vendedor.father_surname || ""} ${sale.vendedor.mother_surname || ""}`.trim()}
+                        `${sale.vendedor.names ?? ""} ${sale.vendedor.father_surname || ""} ${sale.vendedor.mother_surname || ""}`.trim()}
                     </p>
                   </div>
                   {sale.vendedor.number_document && (

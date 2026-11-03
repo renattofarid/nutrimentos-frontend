@@ -113,7 +113,7 @@ export default function BoxMovementCreateModal({
               value: customer.id.toString(),
               label:
                 customer.business_name ??
-                `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
+                `${customer.names ?? ""} ${customer.father_surname ?? ""} ${customer.mother_surname ?? ""}`.trim(),
               description: customer.number_document ?? "-",
             })}
           />

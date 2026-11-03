@@ -381,7 +381,7 @@ export default function SaleBySellerReportPage() {
               useQueryHook={useWorkers}
               mapOptionFn={(item: PersonResource) => ({
                   label:
-                    `${item.names} ${item.father_surname} ${item.mother_surname}`.trim(),
+                    `${item.names ?? ""} ${item.father_surname ?? ""} ${item.mother_surname ?? ""}`.trim(),
                   description: item.number_document ?? undefined,
                   value: String(item.id),
                 })}

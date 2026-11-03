@@ -127,7 +127,7 @@ export const VehicleForm = ({
               value: driver.id.toString(),
               label: driver.business_name
                 ? driver.business_name
-                : `${driver.names} ${driver.father_surname} ${driver.mother_surname}`,
+                : `${driver.names ?? ""} ${driver.father_surname ?? ""} ${driver.mother_surname ?? ""}`,
             })}
             preloadItemId={defaultValues.owner_id}
           />

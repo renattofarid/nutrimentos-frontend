@@ -541,7 +541,7 @@ export default function WarehouseDocumentForm({
             placeholder="Seleccione una persona"
             options={persons.map((p) => ({
               value: p.id.toString(),
-              label: `${p.names} ${p.father_surname ?? ""} ${
+              label: `${p.names ?? ""} ${p.father_surname ?? ""} ${
                 p.mother_surname ?? ""
               }`.trim(),
             }))}
@@ -573,7 +573,7 @@ export default function WarehouseDocumentForm({
                 placeholder="Seleccione una persona"
                 options={persons.map((p) => ({
                   value: p.id.toString(),
-                  label: `${p.names} ${p.father_surname ?? ""} ${
+                  label: `${p.names ?? ""} ${p.father_surname ?? ""} ${
                     p.mother_surname ?? ""
                   }`.trim(),
                 }))}

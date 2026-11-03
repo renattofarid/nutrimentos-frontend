@@ -116,7 +116,7 @@ export default function ClientPage() {
           personId={priceListPerson.id}
           personName={
             priceListPerson.business_name ||
-            `${priceListPerson.names} ${priceListPerson.father_surname || ""} ${
+            `${priceListPerson.names ?? ""} ${priceListPerson.father_surname || ""} ${
               priceListPerson.mother_surname || ""
             }`.trim()
           }
@@ -130,7 +130,7 @@ export default function ClientPage() {
           personId={assignPriceListPerson.id}
           personName={
             assignPriceListPerson.business_name ||
-            `${assignPriceListPerson.names} ${
+            `${assignPriceListPerson.names ?? ""} ${
               assignPriceListPerson.father_surname || ""
             } ${assignPriceListPerson.mother_surname || ""}`.trim()
           }
@@ -152,7 +152,7 @@ export default function ClientPage() {
           personId={addressesPerson.id}
           personName={
             addressesPerson.business_name ||
-            `${addressesPerson.names} ${addressesPerson.father_surname || ""} ${
+            `${addressesPerson.names ?? ""} ${addressesPerson.father_surname || ""} ${
               addressesPerson.mother_surname || ""
             }`.trim()
           }

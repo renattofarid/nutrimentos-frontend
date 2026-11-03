@@ -67,7 +67,7 @@ export default function AssignClientModal({
             mapOptionFn={(person: PersonResource) => ({
               label:
                 person.business_name ??
-                `${person.names} ${person.father_surname} ${person.mother_surname}`,
+                `${person.names ?? ""} ${person.father_surname ?? ""} ${person.mother_surname ?? ""}`,
               value: person.id.toString(),
               description: person.number_document ?? undefined,
             })}

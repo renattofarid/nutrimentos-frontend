@@ -1069,11 +1069,11 @@ export const PurchaseForm = ({
                   value: supplier.id.toString(),
                   label:
                     supplier.business_name ??
-                    supplier.names +
+                    (supplier.names ?? "") +
                       " " +
-                      supplier.father_surname +
+                      (supplier.father_surname ?? "") +
                       " " +
-                      supplier.mother_surname,
+                      (supplier.mother_surname ?? ""),
                   description:
                     (supplier.number_document ?? "-") +
                     " | " +

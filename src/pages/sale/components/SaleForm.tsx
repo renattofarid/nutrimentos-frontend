@@ -1369,7 +1369,7 @@ export const SaleForm = ({
             options={[
               ...(workers?.map((worker) => ({
                 value: worker.id.toString(),
-                label: `${worker.names} ${worker.father_surname}`,
+                label: `${worker.names ?? ""} ${worker.father_surname ?? ""}`,
                 description: worker.number_document ?? "-",
               })) || []),
             ]}

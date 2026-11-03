@@ -263,7 +263,7 @@ export default function RealCustomerAccountStatementPage() {
   const workerOptions: Option[] =
     workers?.map((worker) => ({
       value: worker.id.toString(),
-      label: `${worker.names} ${worker.father_surname} ${worker.mother_surname}`,
+      label: `${worker.names ?? ""} ${worker.father_surname ?? ""} ${worker.mother_surname ?? ""}`,
     })) || [];
 
   const paymentTypeOptions: Option[] = [
@@ -360,7 +360,7 @@ export default function RealCustomerAccountStatementPage() {
                     value: customer.id.toString(),
                     label:
                       customer.business_name ??
-                      `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
+                      `${customer.names ?? ""} ${customer.father_surname ?? ""} ${customer.mother_surname ?? ""}`.trim(),
                     description: customer.number_document ?? "-",
                   })}
                 />

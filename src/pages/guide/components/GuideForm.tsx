@@ -136,7 +136,7 @@ export const GuideForm = ({
   const [isSearchingSales, setIsSearchingSales] = useState(false);
   const [searchParams, setSearchParams] = useState({
     document_type: "BOLETA",
-    serie: "",
+    serie: "001",
     numero_inicio: "",
     numero_fin: "",
     company_id: DEFAULT_COMPANY_ID,
@@ -267,7 +267,7 @@ export const GuideForm = ({
         form.setValue(
           "carrier_name",
           existingCarrier.business_name ||
-            `${existingCarrier.names} ${existingCarrier.father_surname}`.trim(),
+            `${existingCarrier.names ?? ""} ${existingCarrier.father_surname ?? ""}`.trim(),
         );
         successToast("Transportista encontrado en el sistema");
         return;
@@ -306,11 +306,7 @@ export const GuideForm = ({
 
   // Función para buscar ventas por rango
   const handleSearchSalesByRange = async () => {
-    if (
-      !searchParams.serie ||
-      !searchParams.numero_inicio ||
-      !searchParams.numero_fin
-    ) {
+    if (!searchParams.numero_inicio || !searchParams.numero_fin) {
       errorToast("Complete todos los campos de búsqueda");
       return;
     }
@@ -1240,7 +1236,7 @@ export const GuideForm = ({
                     value: customer.id.toString(),
                     label:
                       customer.business_name ||
-                      `${customer.names} ${customer.father_surname} ${customer.mother_surname}`.trim(),
+                      `${customer.names ?? ""} ${customer.father_surname ?? ""} ${customer.mother_surname ?? ""}`.trim(),
                     description: customer.number_document || "",
                   })}
                   onValueChange={handleCustomerChange}
@@ -1544,7 +1540,7 @@ export const GuideForm = ({
                       value: driver.id.toString(),
                       label:
                         driver.business_name ||
-                        `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim(),
+                        `${driver.names ?? ""} ${driver.father_surname ?? ""} ${driver.mother_surname ?? ""}`.trim(),
                       description: driver.number_document || "",
                     })}
                     onValueChange={(_value, driver) => {
@@ -1559,7 +1555,7 @@ export const GuideForm = ({
                         );
                         const fullName =
                           driver.business_name ||
-                          `${driver.names} ${driver.father_surname} ${driver.mother_surname}`.trim();
+                          `${driver.names ?? ""} ${driver.father_surname ?? ""} ${driver.mother_surname ?? ""}`.trim();
                         form.setValue("driver_name", fullName);
                         form.setValue(
                           "driver_license",
@@ -1684,16 +1680,6 @@ export const GuideForm = ({
                   }
                   placeholder="Seleccione tipo"
                   className="md:w-full"
-                />
-
-                <FormInput
-                  name="serie"
-                  label="Serie"
-                  placeholder="Ej: F001"
-                  value={searchParams.serie}
-                  onChange={(e) =>
-                    setSearchParams({ ...searchParams, serie: e.target.value })
-                  }
                 />
 
                 <div className="space-y-2">
@@ -1824,7 +1810,7 @@ export const GuideForm = ({
                             </TableCell>
                             <TableCell>
                               {sale.customer.business_name ||
-                                `${sale.customer.names} ${sale.customer.father_surname}`}
+                                `${sale.customer.names ?? ""} ${sale.customer.father_surname ?? ""} ${sale.customer.mother_surname ?? ""}`.trim()}
                             </TableCell>
                             <TableCell>
                               {new Date(sale.issue_date).toLocaleDateString(

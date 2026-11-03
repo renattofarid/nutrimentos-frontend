@@ -265,7 +265,7 @@ export const DeliverySheetForm = ({
         cell: ({ row }) => {
           const vendedor = row.original.vendedor;
           return vendedor
-            ? `${vendedor.names} ${vendedor.father_surname} ${vendedor.mother_surname}`
+            ? `${vendedor.names ?? ""} ${vendedor.father_surname ?? ""} ${vendedor.mother_surname ?? ""}`
             : "-";
         },
       },
@@ -290,7 +290,7 @@ export const DeliverySheetForm = ({
         header: "Cliente",
         cell: ({ row }) =>
           row.original.customer.business_name ??
-          `${row.original.customer.names} ${row.original.customer.father_surname} ${row.original.customer.mother_surname}`,
+          `${row.original.customer.names ?? ""} ${row.original.customer.father_surname ?? ""} ${row.original.customer.mother_surname ?? ""}`,
       },
       {
         id: "total",
@@ -616,7 +616,7 @@ export const DeliverySheetForm = ({
                     </div>
                     <div className="text-muted-foreground">
                       {sale.customer.business_name ??
-                        `${sale.customer.names} ${sale.customer.father_surname} ${sale.customer.mother_surname}`}
+                        `${sale.customer.names ?? ""} ${sale.customer.father_surname ?? ""} ${sale.customer.mother_surname ?? ""}`}
                     </div>
                     <div className="flex items-center justify-between">
                       <Badge variant="outline">

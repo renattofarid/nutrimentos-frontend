@@ -98,12 +98,12 @@ export default function DeliverySheetOptions({
   // const driverOptions =
   //   drivers?.map((d) => ({
   //     value: String(d.id),
-  //     label: `${d.names} ${d.father_surname}`.trim(),
+  //     label: `${d.names ?? ""} ${d.father_surname ?? ""}`.trim(),
   //   })) ?? [];
   // const clientOptions =
   //   clients?.map((c) => ({
   //     value: String(c.id),
-  //     label: c.business_name || `${c.names} ${c.father_surname}`.trim(),
+  //     label: c.business_name || `${c.names ?? ""} ${c.father_surname ?? ""}`.trim(),
   //   })) ?? [];
 
   const resetAdditionalFilters = () => {

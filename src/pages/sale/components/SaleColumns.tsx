@@ -52,7 +52,7 @@ export const getSaleColumns = (): ColumnDef<SaleResource>[] => [
     header: "Vendedor",
     cell: ({ row }) => {
       const vendedor = row.original.vendedor;
-      return vendedor ? `${vendedor.names} ${vendedor.father_surname}` : "-";
+      return vendedor ? `${vendedor.names ?? ""} ${vendedor.father_surname ?? ""}` : "-";
     },
   },
   {

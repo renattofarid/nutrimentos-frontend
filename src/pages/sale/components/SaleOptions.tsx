@@ -105,7 +105,7 @@ export default function SaleOptions({
   const workerOptions =
     workers?.map((w) => ({
       value: String(w.id),
-      label: `${w.names} ${w.father_surname}`,
+      label: `${w.names ?? ""} ${w.father_surname ?? ""}`,
     })) || [];
 
   const resetAllFilters = () => {

@@ -199,7 +199,7 @@ export default function DetailedSalesReportPage() {
                 mapOptionFn={(item) => ({
                   label:
                     item.business_name ??
-                    `${item.names} ${item.father_surname} ${item.mother_surname}`.trim(),
+                    `${item.names ?? ""} ${item.father_surname ?? ""} ${item.mother_surname ?? ""}`.trim(),
                   value: String(item.id),
                   description: item.number_document ?? undefined,
                 })}
@@ -227,7 +227,7 @@ export default function DetailedSalesReportPage() {
                 useQueryHook={useWorkers}
                 mapOptionFn={(item: PersonResource) => ({
                   label:
-                    `${item.names} ${item.father_surname} ${item.mother_surname}`.trim(),
+                    `${item.names ?? ""} ${item.father_surname ?? ""} ${item.mother_surname ?? ""}`.trim(),
                   description: item.number_document ?? undefined,
                   value: String(item.id),
                 })}

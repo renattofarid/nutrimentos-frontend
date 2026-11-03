@@ -167,7 +167,7 @@ export default function SalesRegisterReportPage() {
                 placeholder="Buscar vendedor..."
                 useQueryHook={useWorkers}
                 mapOptionFn={(item: PersonResource) => ({
-                  label: `${item.names} ${item.father_surname} ${item.mother_surname}`.trim(),
+                  label: `${item.names ?? ""} ${item.father_surname ?? ""} ${item.mother_surname ?? ""}`.trim(),
                   description: item.number_document ?? undefined,
                   value: String(item.id),
                 })}

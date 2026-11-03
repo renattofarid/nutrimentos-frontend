@@ -7,12 +7,12 @@ export interface DNISearchRequest {
 export interface DNISearchResponse {
   message: string;
   data: {
-    number_document: string;
-    names: string;
-    father_surname: string;
-    mother_surname: string;
-    birthday: string;
-    ubigeo: string;
+    number_document: string | null;
+    names: string | null;
+    father_surname: string | null;
+    mother_surname: string | null;
+    birthday: string | null;
+    ubigeo: string | null;
   };
 }
 

@@ -8,6 +8,7 @@ import {
   searchRUC,
   isValidData,
 } from "@/lib/document-search.service";
+import { warningToast } from "@/lib/core.function";
 
 const MAX_LENGTH_BY_TYPE: Record<string, number> = {
   RUC: 11,
@@ -69,7 +70,13 @@ export function DocumentNumberField({
     try {
       if (typeDocument === "DNI" && numberDocument.length === 8) {
         const response = await searchDNI({ search: numberDocument });
-        if (response.data) {
+        if (
+          !response.data ||
+          (!isValidData(response.data.names) &&
+            !isValidData(response.data.father_surname))
+        ) {
+          warningToast("No se encontró información para ese DNI. Ingrese los datos manualmente.");
+        } else if (response.data) {
           setFieldsFromSearch((prev) => {
             const next = { ...prev };
             if (isValidData(response.data.names)) {

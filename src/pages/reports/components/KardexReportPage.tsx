@@ -11,9 +11,17 @@ import { DataTable } from "@/components/DataTable";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { KardexItem, KardexReportParams } from "../lib/reports.interface";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { FileSpreadsheet, Filter, ArrowUpDown, Loader2 } from "lucide-react";
+import {
+  FileSpreadsheet,
+  Filter,
+  ArrowUpDown,
+  Loader2,
+  Search,
+  PackageSearch,
+} from "lucide-react";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import PageWrapper from "@/components/PageWrapper";
 import { exportKardexReport } from "../lib/reports.actions";
@@ -30,6 +38,7 @@ import { usePermission } from "@/lib/permission-guard";
 import { ACTIONS } from "@/lib/permission-catalog";
 import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import { getAllWarehouses } from "@/pages/warehouse/lib/warehouse.actions";
 
 const ROUTE = "kardex";
 
@@ -369,6 +378,12 @@ export default function KardexReportPage() {
         label: product.name,
         description: product.codigo,
       });
+      form.setValue("product_id", String(product.id));
+      setPage(1);
+      setAppliedFilters({
+        ...form.getValues(),
+        product_id: String(product.id),
+      });
     } else {
       errorToast(`No se encontró producto con código "${codeToSearch}"`);
     }
@@ -391,39 +406,56 @@ export default function KardexReportPage() {
     },
   });
 
-  const watchedValues = form.watch();
+  // Filtros aplicados: solo cambian al pulsar "Buscar" (o al abrir desde Inventario)
+  const [appliedFilters, setAppliedFilters] = useState<FilterFormValues | null>(
+    presetProductId ? form.getValues() : null,
+  );
+  const [externalWarehouseOption, setExternalWarehouseOption] =
+    useState<Option | null>(null);
 
+  // CHOSICA seleccionado por defecto (se puede cambiar manualmente)
   useEffect(() => {
+    if (presetWarehouseId) return;
+    let cancelled = false;
+    getAllWarehouses()
+      .then((list) => {
+        const chosica = list.find((w) =>
+          w.name.trim().toLowerCase().includes("chosica"),
+        );
+        if (!chosica || cancelled || form.getValues("warehouse_id")) return;
+        setExternalWarehouseOption({
+          value: String(chosica.id),
+          label: chosica.name,
+        });
+        form.setValue("warehouse_id", String(chosica.id));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleSearch = () => {
     setPage(1);
-  }, [
-    watchedValues.product_id,
-    watchedValues.warehouse_id,
-    watchedValues.start_date,
-    watchedValues.end_date,
-  ]);
+    setAppliedFilters({ ...form.getValues() });
+  };
 
   useEffect(() => {
+    if (!appliedFilters) return;
     const params: KardexReportParams = {
-      product_id: watchedValues.product_id
-        ? Number(watchedValues.product_id)
+      product_id: appliedFilters.product_id
+        ? Number(appliedFilters.product_id)
         : null,
-      warehouse_id: watchedValues.warehouse_id
-        ? Number(watchedValues.warehouse_id)
+      warehouse_id: appliedFilters.warehouse_id
+        ? Number(appliedFilters.warehouse_id)
         : null,
-      start_date: watchedValues.start_date || null,
-      end_date: watchedValues.end_date || null,
+      start_date: appliedFilters.start_date || null,
+      end_date: appliedFilters.end_date || null,
       page,
       per_page,
     };
     fetch(params);
-  }, [
-    page,
-    per_page,
-    watchedValues.product_id,
-    watchedValues.warehouse_id,
-    watchedValues.start_date,
-    watchedValues.end_date,
-  ]);
+  }, [page, per_page, appliedFilters]);
 
   const handleExport = async () => {
     const values = form.getValues();
@@ -528,6 +560,7 @@ export default function KardexReportPage() {
               label="Almacén"
               placeholder="Buscar almacén..."
               defaultOption={presetWarehouseOption}
+              externalOption={externalWarehouseOption}
               useQueryHook={useWarehouseAsyncSearch}
               mapOptionFn={(item) => ({
                 label: item.name,
@@ -545,7 +578,11 @@ export default function KardexReportPage() {
               name="end_date"
               label="Al"
             />
-            <div className="flex h-full items-end">
+            <div className="flex h-full items-end gap-2">
+              <Button type="button" onClick={handleSearch}>
+                <Search className="mr-2 h-4 w-4" />
+                Buscar
+              </Button>
               {can(ROUTE, ACTIONS.EXPORTAR) && (
                 <Button
                   type="button"
@@ -595,20 +632,29 @@ export default function KardexReportPage() {
           )}
 
           <div className="col-span-full">
-            <DataTable
-              key={watchedValues.product_id ? "filtered" : "all"}
-              columns={columns}
-              data={tableData}
-              isLoading={isLoading}
-              initialColumnVisibility={{
-                product_codigo: !watchedValues.product_id,
-                product_name: !watchedValues.product_id,
-                document_type: false,
-                quantity_in: false,
-                quantity_out: false,
-                balance_quantity: false,
-              }}
-            />
+            {appliedFilters && !isLoading && tableData.length === 0 ? (
+              <EmptyState
+                className="w-full col-span-full"
+                icon={PackageSearch}
+                title="Sin movimientos"
+                description="No se encontraron movimientos de Kardex con los filtros seleccionados."
+              />
+            ) : (
+              <DataTable
+                key={appliedFilters?.product_id ? "filtered" : "all"}
+                columns={columns}
+                data={tableData}
+                isLoading={isLoading}
+                initialColumnVisibility={{
+                  product_codigo: !appliedFilters?.product_id,
+                  product_name: !appliedFilters?.product_id,
+                  document_type: false,
+                  quantity_in: false,
+                  quantity_out: false,
+                  balance_quantity: false,
+                }}
+              />
+            )}
             <DataTablePagination
               page={page}
               totalPages={meta?.last_page || 1}

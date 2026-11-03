@@ -288,7 +288,7 @@ export function DataTable<TData, TValue>({
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length}>
+                  <TableCell colSpan={table.getVisibleLeafColumns().length || 1}>
                     <FormSkeleton />
                   </TableCell>
                 </TableRow>
@@ -352,7 +352,7 @@ export function DataTable<TData, TValue>({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center">
+                  <TableCell colSpan={table.getVisibleLeafColumns().length || 1} className="text-center">
                     No se encontraron registros.
                   </TableCell>
                 </TableRow>

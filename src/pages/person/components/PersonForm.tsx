@@ -50,6 +50,7 @@ import {
   searchRUC,
   isValidData,
 } from "@/lib/document-search.service";
+import { warningToast } from "@/lib/core.function";
 import type { PersonResource } from "../lib/person.interface";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { useAllDocumentTypes } from "@/pages/document-type/lib/document-type.hook";
@@ -422,7 +423,13 @@ export const PersonForm = ({
       if (typeDocument === TYPE_DOCUMENT.DNI.id) {
         const result = await searchDNI({ search: numberDocument });
 
-        if (result && isValidData(result.message) && result.data) {
+        if (
+          !result?.data ||
+          (!isValidData(result.data.names) &&
+            !isValidData(result.data.father_surname))
+        ) {
+          warningToast("No se encontró información para ese DNI. Ingrese los datos manualmente.");
+        } else if (result && isValidData(result.message) && result.data) {
           const updates: Record<string, string> = {};
           const fieldsSet = {
             names: false,

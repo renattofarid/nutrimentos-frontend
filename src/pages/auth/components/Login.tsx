@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Form } from "@/components/ui/form";
 import { FormInput } from "@/components/FormInput";
 import { login } from "../lib/auth.actions";
@@ -37,6 +37,7 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    setIsLoading(true);
     try {
       await login({
         username: data.username,
@@ -72,12 +73,16 @@ export default function LoginPage() {
 
           {/* Login Form */}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6"
+              aria-busy={isLoading}
+            >
               <h3 className="text-foreground text-xl font-bold text-center mb-6">
                 Iniciar sesión
               </h3>
 
-              <div className="space-y-4">
+              <fieldset disabled={isLoading} className="space-y-4">
                 <FormInput
                   name="username"
                   label="Usuario"
@@ -105,7 +110,7 @@ export default function LoginPage() {
                     </button>
                   }
                 />
-              </div>
+              </fieldset>
 
               <Button
                 type="submit"
@@ -113,7 +118,14 @@ export default function LoginPage() {
                 variant="default"
                 className="w-full"
               >
-                {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Iniciando sesión...
+                  </>
+                ) : (
+                  "Iniciar sesión"
+                )}
               </Button>
             </form>
           </Form>

@@ -46,12 +46,6 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
     2: "RUC",
   };
 
-  // El número de documento es opcional: si va vacío no se envía.
-  const withoutEmptyDocument = (data: UserSchema): UserSchema => {
-    if (data.number_document) return data;
-    const { number_document: _omit, ...rest } = data;
-    return rest as UserSchema;
-  };
 
   const mapUserToForm = (data: UserResource): Partial<UserSchema> => {
     const typeDocument =
@@ -83,7 +77,7 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
 
   const handleSubmit = async (data: UserSchema) => {
     if (mode === "create") {
-      await createUser(withoutEmptyDocument(data))
+      await createUser(data)
         .then(() => {
           onClose();
           successToast(SUCCESS_MESSAGE(MODEL, "create"));
@@ -97,11 +91,10 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
           );
         });
     } else {
-      // En edición no se envían los campos vacíos (contraseña, documento, etc.)
-      // para no borrar en el backend datos que el formulario no pudo cargar.
-      const payload = Object.fromEntries(
-        Object.entries(data).filter(([, v]) => v !== "" && v != null),
-      ) as UserSchema;
+      // Los campos vacíos se envían como "" para poder limpiarlos; solo la
+      // contraseña vacía se omite (significa "no cambiar").
+      const { password, ...rest } = data;
+      const payload = (password ? data : rest) as UserSchema;
       await updateUser(id!, payload)
         .then(() => {
           onClose();

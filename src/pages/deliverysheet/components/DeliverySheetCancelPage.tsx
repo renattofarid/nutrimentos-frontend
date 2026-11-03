@@ -31,16 +31,20 @@ const getStatusLabel = (status: string) => {
     EN_REPARTO: "En Reparto",
     COMPLETADO: "Completado",
     CANCELADO: "Cancelado",
+    NO_CANCELADO: "No cancelado",
+    ANULADA: "Anulada",
     RENDIDA: "Rendida",
   };
   return labels[status] ?? status;
 };
 
-const getStatusColor = (status: string): "default" | "secondary" | "destructive" | "green" | "muted" => {
+const getStatusColor = (status: string): "default" | "secondary" | "destructive" | "green" | "muted" | "orange" => {
   if (status === "PENDIENTE") return "secondary";
   if (status === "EN_REPARTO") return "default";
   if (status === "COMPLETADO") return "green";
-  if (status === "CANCELADO") return "destructive";
+  if (status === "CANCELADO") return "green";
+  if (status === "NO_CANCELADO") return "orange";
+  if (status === "ANULADA") return "destructive";
   return "muted";
 };
 
@@ -128,7 +132,7 @@ export default function DeliverySheetCancelPage() {
   const handleConfirmCancel = async () => {
     if (!sheet) return;
     await cancelDeliverySheet(sheet.id);
-    setSheet((prev) => prev ? { ...prev, status: "CANCELADO" } : null);
+    setSheet((prev) => prev ? { ...prev, status: "ANULADA" } : null);
   };
 
   const handleClose = () => {
@@ -136,7 +140,7 @@ export default function DeliverySheetCancelPage() {
     else navigate(-1);
   };
 
-  const alreadyCancelled = sheet?.status === "CANCELADO";
+  const alreadyCancelled = sheet?.status === "ANULADA" || sheet?.status === "CANCELADO";
 
   return (
     <PageWrapper size="xl">

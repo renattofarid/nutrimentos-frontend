@@ -232,7 +232,9 @@ export default function DeliverySheetPage() {
     : null;
   const hasSelection = !!toolbarDeliverySheet;
   const canDelete = toolbarDeliverySheet?.status === "PENDIENTE";
-  const canCancel = toolbarDeliverySheet?.status !== "CANCELADO";
+  const canCancel =
+    toolbarDeliverySheet?.status !== "CANCELADO" &&
+    toolbarDeliverySheet?.status !== "ANULADA";
 
   const handleEdit = (deliverySheet: DeliverySheetResource) => {
     navigate(`/planillas/actualizar/${deliverySheet.id}`);

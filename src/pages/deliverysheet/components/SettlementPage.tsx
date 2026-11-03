@@ -23,7 +23,6 @@ import PageWrapper from "@/components/PageWrapper";
 import { cn, parseFormattedNumber } from "@/lib/utils";
 import {
   findDeliverySheetById,
-  previewDeliverySheet,
   exportDeliverySheetById,
 } from "../lib/deliverysheet.actions";
 import { useDeliverySheetStore } from "../lib/deliverysheet.store";
@@ -44,12 +43,18 @@ import FormSkeleton from "@/components/FormSkeleton";
 // Payment status helpers
 // ============================================================
 
-type PaymentStatus = "CANCELADO" | "PENDIENTE" | "NO_CANCELADO";
+type PaymentStatus = "CANCELADO" | "PENDIENTE" | "NO_CANCELADO" | "ANULADA";
 
 const PAYMENT_STATUS_CONFIG: Record<
   PaymentStatus,
   { label: string; icon: React.ElementType; className: string }
 > = {
+  ANULADA: {
+    label: "ANULADA",
+    icon: XCircle,
+    className:
+      "bg-red-50 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-300 dark:border-red-700",
+  },
   CANCELADO: {
     label: "CANCELADO",
     icon: CheckCircle2,
@@ -60,19 +65,20 @@ const PAYMENT_STATUS_CONFIG: Record<
     label: "PENDIENTE",
     icon: Clock,
     className:
-      "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-700",
+      "bg-sky-50 text-sky-700 border-sky-300 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-700",
   },
   NO_CANCELADO: {
     label: "NO CANCELADO",
     icon: XCircle,
     className:
-      "bg-red-50 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-300 dark:border-red-700",
+      "bg-orange-50 text-orange-700 border-orange-300 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-700",
   },
 };
 
 function resolvePaymentStatus(sheet: DeliverySheetById): PaymentStatus {
   const pending = parseFloat(sheet.pending_amount_raw);
   const collected = parseFloat(sheet.collected_amount_raw);
+  if (sheet.status === "ANULADA") return "ANULADA";
   if (pending === 0 || sheet.status === "RENDIDA") return "CANCELADO";
   if (collected > 0) return "PENDIENTE";
   return "NO_CANCELADO";
@@ -92,7 +98,7 @@ export default function SettlementPage() {
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
   const getPreviewErrorMessage = async (error: any): Promise<string> => {
-    const fallback = "Error al generar la vista previa";
+    const fallback = "Error al generar el PDF de la planilla";
 
     const responseData = error?.response?.data;
     if (!responseData) return fallback;
@@ -149,23 +155,7 @@ export default function SettlementPage() {
       setDeliverySheet(response.data);
 
       if (response.data.sheet_sales && response.data.sheet_sales.length > 0) {
-        form.reset({
-          sales: response.data.sheet_sales.map((sheetSale) => ({
-            sale_id: sheetSale.sale_id,
-            delivery_status:
-              sheetSale.delivery_status === "PENDIENTE"
-                ? "ENTREGADO"
-                : sheetSale.delivery_status,
-            delivery_notes: sheetSale.delivery_notes || "",
-            payment_amount: Math.max(
-              0,
-              parseFormattedNumber(sheetSale.current_amount) -
-                parseFormattedNumber(sheetSale.collected_amount),
-            ).toFixed(2),
-          })),
-          payment_date: new Date().toISOString().split("T")[0],
-          observations: "",
-        });
+        resetSettlementForm(response.data);
       } else {
         setErrors(["La planilla no tiene ventas asociadas"]);
       }
@@ -188,6 +178,26 @@ export default function SettlementPage() {
       observations: "",
     },
   });
+
+  const resetSettlementForm = (sheet: DeliverySheetById) => {
+    form.reset({
+      sales: sheet.sheet_sales.map((sheetSale) => ({
+        sale_id: sheetSale.sale_id,
+        delivery_status:
+          sheetSale.delivery_status === "PENDIENTE"
+            ? "ENTREGADO"
+            : sheetSale.delivery_status,
+        delivery_notes: sheetSale.delivery_notes || "",
+        payment_amount: Math.max(
+          0,
+          parseFormattedNumber(sheetSale.current_amount) -
+            parseFormattedNumber(sheetSale.collected_amount),
+        ).toFixed(2),
+      })),
+      payment_date: new Date().toISOString().split("T")[0],
+      observations: "",
+    });
+  };
 
   const handleSubmit = async (data: SettlementFormSchema) => {
     if (!deliverySheet) {
@@ -231,6 +241,7 @@ export default function SettlementPage() {
       const reloadResponse = await findDeliverySheetById(deliverySheet.id);
       if (reloadResponse.data) {
         setDeliverySheet(reloadResponse.data);
+        resetSettlementForm(reloadResponse.data);
       }
 
       successToast("Rendición registrada exitosamente");
@@ -245,28 +256,7 @@ export default function SettlementPage() {
     if (!deliverySheet) return;
     try {
       setIsLoadingPreview(true);
-      let blob: Blob;
-      if (isAlreadyPaid) {
-        blob = await exportDeliverySheetById(deliverySheet.id);
-      } else {
-        const saleIds = deliverySheet.sheet_sales
-          .filter((sheetSale, index) => {
-            const creditNotesTotal = sheetSale.sale.credit_notes_total_raw || 0;
-            const pendingAmount =
-              parseFormattedNumber(sheetSale.current_amount) - creditNotesTotal;
-            const paymentAmount = parseFloat(
-              salesValues[index]?.payment_amount || "0",
-            );
-            return paymentAmount === pendingAmount;
-          })
-          .map((s) => s.sale_id);
-        blob = await previewDeliverySheet({
-          type: deliverySheet.type,
-          zone_id: deliverySheet.zone?.id,
-          driver_id: deliverySheet.driver?.id,
-          sale_ids: saleIds,
-        });
-      }
+      const blob = await exportDeliverySheetById(deliverySheet.id);
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
     } catch (error: any) {
@@ -292,7 +282,8 @@ export default function SettlementPage() {
     return resolvePaymentStatus(deliverySheet);
   }, [deliverySheet]);
 
-  const isAlreadyPaid = paymentStatus === "CANCELADO";
+  const isAlreadyPaid =
+    paymentStatus === "CANCELADO" || paymentStatus === "ANULADA";
 
   const totalPendiente = useMemo(() => {
     if (!deliverySheet?.sheet_sales) return 0;
@@ -368,9 +359,7 @@ export default function SettlementPage() {
               )}
               {isLoadingPreview
                 ? "Generando..."
-                : isAlreadyPaid
-                  ? "Ver PDF Planilla"
-                  : "Vista Previa PDF"}
+                : "Ver PDF Planilla"}
             </Button>
           </div>
 

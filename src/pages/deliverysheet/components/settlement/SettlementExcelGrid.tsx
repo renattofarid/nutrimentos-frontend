@@ -52,7 +52,9 @@ interface SettlementGridRow {
 function PayAllHeader({
   sales,
   form,
+  locked,
 }: {
+  locked?: boolean;
   sales: SaleWithIndex[];
   form: UseFormReturn<SettlementFormSchema, any, undefined>;
 }) {
@@ -82,26 +84,29 @@ function PayAllHeader({
     });
   };
 
-  return <Checkbox checked={allPaid} onCheckedChange={handlePayAll} />;
+  return <Checkbox checked={allPaid} onCheckedChange={handlePayAll} disabled={locked} />;
 }
 
 function CheckboxCell({
   index,
   saldo,
   form,
+  locked,
 }: {
+  locked?: boolean;
   index: number;
   saldo: number;
   form: UseFormReturn<SettlementFormSchema, any, undefined>;
 }) {
   const value =
     (useWatch({ control: form.control, name: `sales.${index}.payment_amount` }) as string) || "0";
-  const isAutoFilled = Math.abs(parseFloat(value) - saldo) < 0.01;
+  const isAutoFilled = saldo > 0 && Math.abs(parseFloat(value) - saldo) < 0.01;
 
   return (
     <div className="w-full h-full flex items-center justify-center">
       <Checkbox
         checked={isAutoFilled}
+        disabled={locked || saldo <= 0}
         onCheckedChange={(checked) =>
           form.setValue(
             `sales.${index}.payment_amount`,
@@ -117,7 +122,9 @@ function CheckboxCell({
 function StatusCell({
   index,
   form,
+  locked,
 }: {
+  locked?: boolean;
   index: number;
   form: UseFormReturn<SettlementFormSchema, any, undefined>;
 }) {
@@ -128,6 +135,7 @@ function StatusCell({
   return (
     <Select
       value={value}
+      disabled={locked}
       onValueChange={(v) =>
         form.setValue(`sales.${index}.delivery_status`, v, { shouldValidate: true })
       }
@@ -155,12 +163,14 @@ function StatusCell({
 }
 
 function PaymentAmountCell({
+  locked,
   index,
   pendingAmount,
   form,
 }: {
   index: number;
   pendingAmount: number;
+  locked?: boolean;
   form: UseFormReturn<SettlementFormSchema, any, undefined>;
 }) {
   const value =
@@ -173,6 +183,7 @@ function PaymentAmountCell({
       min="0"
       max={pendingAmount.toString()}
       value={value}
+      disabled={locked}
       onChange={(e) =>
         form.setValue(`sales.${index}.payment_amount`, e.target.value, {
           shouldValidate: true,
@@ -208,7 +219,9 @@ function NuevoSaldoCell({
 function ObservationsCell({
   index,
   form,
+  locked,
 }: {
+  locked?: boolean;
   index: number;
   form: UseFormReturn<SettlementFormSchema, any, undefined>;
 }) {
@@ -220,6 +233,7 @@ function ObservationsCell({
       type="text"
       maxLength={500}
       value={value}
+      disabled={locked}
       onChange={(e) =>
         form.setValue(`sales.${index}.delivery_notes`, e.target.value, {
           shouldValidate: true,
@@ -351,10 +365,10 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
     () => [
       {
         id: "checkbox",
-        header: <PayAllHeader sales={sales} form={form} />,
+        header: <PayAllHeader sales={sales} form={form} locked={isDisabled} />,
         type: "readonly",
         width: "40px",
-        render: (row) => <CheckboxCell index={row.index} saldo={row.saldo} form={form} />,
+        render: (row) => <CheckboxCell index={row.index} saldo={row.saldo} form={form} locked={isDisabled} />,
       },
       {
         id: "fecha",
@@ -423,7 +437,7 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
         type: "readonly",
         width: "130px",
         render: (row) => (
-          <PaymentAmountCell index={row.index} pendingAmount={row.saldo} form={form} />
+          <PaymentAmountCell index={row.index} pendingAmount={row.saldo} form={form} locked={isDisabled} />
         ),
       },
       {
@@ -463,17 +477,17 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
         header: "ESTADO",
         type: "readonly",
         width: "160px",
-        render: (row) => <StatusCell index={row.index} form={form} />,
+        render: (row) => <StatusCell index={row.index} form={form} locked={isDisabled} />,
       },
       {
         id: "delivery_notes",
         header: "OBSERVACIONES",
         type: "readonly",
         width: "200px",
-        render: (row) => <ObservationsCell index={row.index} form={form} />,
+        render: (row) => <ObservationsCell index={row.index} form={form} locked={isDisabled} />,
       },
     ],
-    [form, sales],
+    [form, sales, isDisabled],
   );
 
   return (

@@ -30,7 +30,14 @@ export interface DeliverySheetById {
   id: number;
   sheet_number: string;
   type: "CONTADO" | "CREDITO";
-  status: "PENDIENTE" | "EN_REPARTO" | "COMPLETADO" | "CANCELADO" | "RENDIDA";
+  status:
+    | "PENDIENTE"
+    | "EN_REPARTO"
+    | "COMPLETADO"
+    | "CANCELADO"
+    | "NO_CANCELADO"
+    | "ANULADA"
+    | "RENDIDA";
   issue_date: string;
   delivery_date: string;
   total_amount: string;
@@ -174,7 +181,14 @@ export interface DeliverySheetResource {
   id: number;
   sheet_number: string;
   type: "CONTADO" | "CREDITO";
-  status: "PENDIENTE" | "EN_REPARTO" | "COMPLETADO" | "CANCELADO" | "RENDIDA";
+  status:
+    | "PENDIENTE"
+    | "EN_REPARTO"
+    | "COMPLETADO"
+    | "CANCELADO"
+    | "NO_CANCELADO"
+    | "ANULADA"
+    | "RENDIDA";
   issue_date: string;
   delivery_date: string;
   total_amount: string;

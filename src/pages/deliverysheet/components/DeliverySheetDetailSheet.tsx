@@ -59,11 +59,13 @@ export default function DeliverySheetDetailSheet({
 
   const getStatusVariant = (
     status: string,
-  ): "default" | "secondary" | "destructive" | "green" | "muted" => {
+  ): "default" | "secondary" | "destructive" | "green" | "muted" | "orange" => {
     if (status === "PENDIENTE") return "secondary";
     if (status === "EN_REPARTO") return "default";
     if (status === "COMPLETADO") return "green";
-    if (status === "CANCELADO") return "destructive";
+    if (status === "CANCELADO") return "green";
+    if (status === "NO_CANCELADO") return "orange";
+    if (status === "ANULADA") return "destructive";
     return "muted";
   };
 

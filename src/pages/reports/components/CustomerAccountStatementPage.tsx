@@ -14,7 +14,7 @@ import { useAllZones } from "@/pages/zone/lib/zone.hook";
 import { useAllWorkers } from "@/pages/worker/lib/worker.hook";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { Printer, Search, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
+import { Printer, FilePlus2, Search, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { useClients } from "@/pages/client/lib/client.hook";
@@ -30,8 +30,15 @@ import {
   calculateAccountStatementMetrics,
 } from "../lib/reports.utils";
 import { errorToast, successToast, loadingToast, dismissToast } from "@/lib/core.function";
-import { getAllSalesFiltered } from "@/pages/sale/lib/sale.actions";
-import { previewDeliverySheet } from "@/pages/deliverysheet/lib/deliverysheet.actions";
+import {
+  previewDeliverySheet,
+  storeDeliverySheet,
+} from "@/pages/deliverysheet/lib/deliverysheet.actions";
+import { api } from "@/lib/config";
+import { DELIVERY_SHEET_ENDPOINT } from "@/pages/deliverysheet/lib/deliverysheet.interface";
+import type { AvailableSalesResponse } from "@/pages/deliverysheet/lib/deliverysheet.interface";
+import { useAllBranches } from "@/pages/branch/lib/branch.hook";
+import { ConfirmationDialog } from "@/components/ConfirmationDialog";
 import { usePermission } from "@/lib/permission-guard";
 import { ACTIONS } from "@/lib/permission-catalog";
 
@@ -195,14 +202,51 @@ const columns: ColumnDef<AccountStatementFlatRow>[] = [
   },
 ];
 
+function getCustomerDescription(customer: PersonResource): string {
+  const zoneNames = new Set<string>();
+  if (customer.zone_name) zoneNames.add(customer.zone_name);
+  customer.person_zones?.forEach((pz) => {
+    if (pz.zone_name) zoneNames.add(pz.zone_name);
+  });
+  const zones = zoneNames.size ? [...zoneNames].join(", ") : "Sin zona";
+  return customer.number_document
+    ? `${zones} - ${customer.number_document}`
+    : zones;
+}
+
+async function fetchSalesForSheet(
+  values: FilterFormValues,
+  paymentType: "CONTADO" | "CREDITO",
+) {
+  const today = format(new Date(), "yyyy-MM-dd");
+  const response = await api.get<AvailableSalesResponse>(
+    `${DELIVERY_SHEET_ENDPOINT}/available-sales/list`,
+    {
+      params: {
+        payment_type: paymentType,
+        customer_id: values.customer_id ? Number(values.customer_id) : undefined,
+        zone_id: values.zone_id ? Number(values.zone_id) : undefined,
+        date_from: values.start_date || today,
+        date_to: values.end_date || today,
+      },
+    },
+  );
+  const { data } = response.data;
+  return data;
+}
+
 export default function CustomerAccountStatementPage() {
   const { can } = usePermission();
   const [isExporting, setIsExporting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [confirmGenerateOpen, setConfirmGenerateOpen] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const { data: zones } = useAllZones();
   const { data: workers } = useAllWorkers();
+  const { data: branchesData } = useAllBranches();
+  const branches = branchesData ?? [];
   const { data: rawData, isLoading, fetch } = useCustomerAccountStatement();
 
   const { flatRows, meta } = useMemo(() => {
@@ -282,13 +326,7 @@ export default function CustomerAccountStatementPage() {
           ? undefined
           : (values.payment_type as "CONTADO" | "CREDITO");
 
-      const sales = await getAllSalesFiltered({
-        customer_id: values.customer_id ? Number(values.customer_id) : undefined,
-        vendedor_id: values.vendedor_id ? Number(values.vendedor_id) : undefined,
-        payment_type: paymentType,
-        start_date: values.start_date || undefined,
-        end_date: values.end_date || undefined,
-      });
+      const sales = await fetchSalesForSheet(values, paymentType ?? "CONTADO");
 
       const sale_ids = sales.map((s) => s.id);
 
@@ -307,6 +345,49 @@ export default function CustomerAccountStatementPage() {
     } finally {
       dismissToast(toastId);
       setIsExporting(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    const values = form.getValues();
+
+    if (values.payment_type === "ALL") {
+      errorToast("Seleccione el tipo de pago (Contado o Crédito) para generar la planilla");
+      return;
+    }
+    if (branches.length === 0) {
+      errorToast("No se encontró una sucursal para generar la planilla");
+      return;
+    }
+
+    setIsGenerating(true);
+    const toastId = loadingToast("Generando planilla...");
+    try {
+      const paymentType = values.payment_type as "CONTADO" | "CREDITO";
+
+      const sales = await fetchSalesForSheet(values, paymentType ?? "CONTADO");
+
+      if (sales.length === 0) {
+        errorToast("No hay ventas para generar la planilla con los filtros actuales");
+        return;
+      }
+
+      await storeDeliverySheet({
+        branch_id: branches[0].id,
+        zone_id: values.zone_id ? Number(values.zone_id) : undefined,
+        customer_id: values.customer_id ? Number(values.customer_id) : undefined,
+        type: paymentType,
+        issue_date: format(new Date(), "yyyy-MM-dd"),
+        sale_ids: sales.map((s) => s.id),
+      });
+
+      successToast("Planilla generada exitosamente");
+    } catch (error) {
+      errorToast("Error al generar la planilla");
+      console.error(error);
+    } finally {
+      dismissToast(toastId);
+      setIsGenerating(false);
     }
   };
 
@@ -348,8 +429,17 @@ export default function CustomerAccountStatementPage() {
                     label:
                       customer.business_name ??
                       `${customer.names ?? ""} ${customer.father_surname ?? ""} ${customer.mother_surname ?? ""}`.trim(),
-                    description: customer.number_document ?? "-",
+                    description: getCustomerDescription(customer),
                   })}
+                />
+              </div>
+              <div className="w-48">
+                <FormSelect
+                  control={form.control}
+                  name="zone_id"
+                  label="Zona"
+                  placeholder="Seleccionar zona"
+                  options={zoneOptions}
                 />
               </div>
               <Button type="submit" disabled={isLoading} size="sm">
@@ -365,8 +455,31 @@ export default function CustomerAccountStatementPage() {
                   disabled={isExporting}
                 >
                   <Printer className="mr-2 h-4 w-4" />
-                  Imprimir
+                  Preview
                 </Button>
+              )}
+              {can(ROUTE, ACTIONS.EXPORTAR) && (
+                <>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => setConfirmGenerateOpen(true)}
+                    disabled={isGenerating}
+                  >
+                    <FilePlus2 className="mr-2 h-4 w-4" />
+                    Generar planilla
+                  </Button>
+                  <ConfirmationDialog
+                    open={confirmGenerateOpen}
+                    onOpenChange={setConfirmGenerateOpen}
+                    title="Generar planilla"
+                    description="Se creará una planilla de reparto con las ventas que coinciden con los filtros actuales. ¿Desea continuar?"
+                    confirmText="Sí, generar"
+                    cancelText="Cancelar"
+                    icon="info"
+                    onConfirm={handleGenerate}
+                  />
+                </>
               )}
               <Button
                 type="button"
@@ -385,13 +498,6 @@ export default function CustomerAccountStatementPage() {
 
             {showMoreFilters && (
               <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-5">
-                <FormSelect
-                  control={form.control}
-                  name="zone_id"
-                  label="Zona"
-                  placeholder="Seleccionar zona"
-                  options={zoneOptions}
-                />
                 <FormSelect
                   control={form.control}
                   name="vendedor_id"

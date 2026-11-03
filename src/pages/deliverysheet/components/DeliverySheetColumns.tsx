@@ -33,13 +33,19 @@ export const getDeliverySheetColumns = (): ColumnDef<DeliverySheetResource>[] =>
     header: "Estado",
     cell: ({ row }) => {
       const status = row.original.status;
-      let variant: "default" | "secondary" | "destructive" | "green" | "muted" =
-        "muted";
+      let variant:
+        | "default"
+        | "secondary"
+        | "destructive"
+        | "green"
+        | "muted"
+        | "orange" = "muted";
 
       if (status === "PENDIENTE") variant = "secondary";
       if (status === "EN_REPARTO") variant = "default";
-      if (status === "COMPLETADO") variant = "green";
-      if (status === "CANCELADO") variant = "destructive";
+      if (status === "COMPLETADO" || status === "CANCELADO") variant = "green";
+      if (status === "NO_CANCELADO") variant = "orange";
+      if (status === "ANULADA") variant = "destructive";
 
       return <Badge color={variant}>{status.replace("_", " ")}</Badge>;
     },

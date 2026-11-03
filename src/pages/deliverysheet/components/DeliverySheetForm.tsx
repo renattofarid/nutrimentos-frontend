@@ -113,7 +113,12 @@ export const DeliverySheetForm = ({
     zone_id: "",
     customer_id: "",
     person_zone_id: "",
-    date_from: new Date() as Date | undefined,
+    // Al crear, "Del" está oculto y se envía 10 años antes internamente
+    date_from: (() => {
+      const d = new Date();
+      if (mode === "create") d.setFullYear(d.getFullYear() - 10);
+      return d;
+    })() as Date | undefined,
     date_to: new Date() as Date | undefined,
   });
 
@@ -378,6 +383,18 @@ export const DeliverySheetForm = ({
       <form
         id={formId}
         onSubmit={form.handleSubmit(handleFormSubmit)}
+        onKeyDown={(e) => {
+          // Enter (p. ej. al elegir una zona) no debe guardar la planilla;
+          // solo se guarda con clic en el botón.
+          const target = e.target as HTMLElement;
+          if (
+            e.key === "Enter" &&
+            target.tagName !== "TEXTAREA" &&
+            target.tagName !== "BUTTON"
+          ) {
+            e.preventDefault();
+          }
+        }}
         className="grid grid-cols-1 gap-4"
       >
         {showHeaderActions && (
@@ -490,18 +507,20 @@ export const DeliverySheetForm = ({
 
           <div className="flex items-end gap-2 lg:col-span-2">
             {/* {showDateFilter && ( */}
-            <DatePickerFilter
-              label="Del"
-              value={searchParams.date_from}
-              onChange={(dateFrom) =>
-                setSearchParams((prev) => ({
-                  ...prev,
-                  date_from: dateFrom,
-                }))
-              }
-              placeholder="Fecha desde"
-              vertical
-            />
+            {mode !== "create" && (
+              <DatePickerFilter
+                label="Del"
+                value={searchParams.date_from}
+                onChange={(dateFrom) =>
+                  setSearchParams((prev) => ({
+                    ...prev,
+                    date_from: dateFrom,
+                  }))
+                }
+                placeholder="Fecha desde"
+                vertical
+              />
+            )}
             <DatePickerFilter
               label="Al"
               value={searchParams.date_to}
@@ -519,6 +538,20 @@ export const DeliverySheetForm = ({
 
           {showMoreFields && (
             <>
+              {mode === "create" && (
+                <DatePickerFilter
+                  label="Del"
+                  value={searchParams.date_from}
+                  onChange={(dateFrom) =>
+                    setSearchParams((prev) => ({
+                      ...prev,
+                      date_from: dateFrom,
+                    }))
+                  }
+                  placeholder="Fecha desde"
+                  vertical
+                />
+              )}
               <FormSelect
                 control={form.control}
                 name="branch_id"

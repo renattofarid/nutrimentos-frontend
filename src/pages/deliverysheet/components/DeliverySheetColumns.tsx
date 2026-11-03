@@ -55,7 +55,9 @@ export const getDeliverySheetColumns = (): ColumnDef<DeliverySheetResource>[] =>
     header: "Zona",
     cell: ({ row }) => (
       <div className="flex flex-col">
-        <span className="font-medium">{row.original.zone?.name}</span>
+        <span className="font-medium">
+          {row.original.zone?.name ?? "Sin zona"}
+        </span>
         <span className="text-xs text-muted-foreground">
           {row.original.zone?.code}
         </span>

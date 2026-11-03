@@ -186,7 +186,11 @@ const columns: ColumnDef<SaleWorkerReportResource>[] = [
     header: "Forma Pago",
     size: 110,
     cell: ({ row }) => (
-      <Badge color="secondary">{row.original.payment_type}</Badge>
+      <Badge
+        color={row.original.payment_type === "CREDITO" ? "yellow" : "green"}
+      >
+        {row.original.payment_type}
+      </Badge>
     ),
   },
   {
@@ -295,7 +299,7 @@ export default function SaleBySellerReportPage() {
   const buildParams = (values: FilterFormValues): SaleBySellerReportParams => ({
     document_type: values.document_type || undefined,
     status: values.status || null,
-    person_id: values.person_id ? Number(values.person_id) : null,
+    vendedor_id: values.person_id ? Number(values.person_id) : null,
     warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
     start_date: values.start_date || null,
     end_date: values.end_date || null,

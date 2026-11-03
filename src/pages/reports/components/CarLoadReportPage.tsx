@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -46,9 +46,8 @@ function formatDateParam(v: Date | string | undefined | null): string | null {
 export default function CarLoadReportPage() {
   const { can } = usePermission();
   const [selectedZones, setSelectedZones] = useState<string[]>([]);
-  const isZoneAutoSelectRef = useRef(false);
 
-  const { data: rawData, isLoading, fetch } = useCarLoadReport();
+  const { isLoading, fetch } = useCarLoadReport();
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
@@ -89,19 +88,9 @@ export default function CarLoadReportPage() {
     date_to: formatDateParam(values.date_to),
   });
 
-  // Cuando cambian las zonas del API (nuevo rango de fechas), seleccionar todas
-  useEffect(() => {
-    if (zoneOptions.length === 0) return;
-    isZoneAutoSelectRef.current = true;
-    setSelectedZones(zoneOptions.map((z) => z.value));
-  }, [zonesData]);
-
   // Cuando cambia la selección de zonas, re-fetchar el reporte
   useEffect(() => {
     if (selectedZones.length === 0) return;
-    if (isZoneAutoSelectRef.current) {
-      isZoneAutoSelectRef.current = false;
-    }
     const timer = setTimeout(() => {
       fetch(buildParams(form.getValues(), selectedZones));
     }, 300);
@@ -134,7 +123,7 @@ export default function CarLoadReportPage() {
     );
   };
 
-  const displayedZones = rawData ? zoneOptions : [];
+  const displayedZones = zoneOptions;
 
   const zoneColumns = useMemo<ColumnDef<ZoneOption>[]>(
     () => [

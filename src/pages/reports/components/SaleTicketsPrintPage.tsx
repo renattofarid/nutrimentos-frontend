@@ -42,7 +42,7 @@ export default function SaleTicketsPrintPage() {
   const { can } = usePermission();
   const [searchParams, setSearchParams] = useState({
     document_type: "BOLETA",
-    serie: "",
+    serie: "001",
     numero_inicio: "",
     numero_fin: "",
   });
@@ -173,7 +173,7 @@ export default function SaleTicketsPrintPage() {
       <GroupFormSection
         title="Filtros"
         icon={Filter}
-        cols={{ sm: 1, md: 2, lg: 5 }}
+        cols={{ sm: 1, md: 2, lg: 4 }}
       >
         <SearchableSelect
           label="Tipo de documento"
@@ -182,24 +182,13 @@ export default function SaleTicketsPrintPage() {
           onChange={(val) =>
             setSearchParams({
               document_type: val,
-              serie: "",
+              serie: "001",
               numero_inicio: "",
               numero_fin: "",
             })
           }
           placeholder="Tipo de documento"
           className="w-full!"
-        />
-
-        <FormInput
-          label="Serie"
-          name="serie"
-          value={searchParams.serie}
-          onChange={(e) =>
-            setSearchParams({ ...searchParams, serie: e.target.value })
-          }
-          placeholder="Ej: B001"
-          className="h-8"
         />
 
         <FormInput

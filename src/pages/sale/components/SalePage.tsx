@@ -23,6 +23,7 @@ import {
 } from "../lib/sale.actions";
 
 import { errorToast, promiseToast } from "@/lib/core.function";
+import { isSaleEditable, SALE_EDIT_EXPIRED_MESSAGE } from "../lib/sale.rules";
 import { InstallmentPaymentManagementSheet } from "@/pages/accounts-receivable/components";
 import PageWrapper from "@/components/PageWrapper";
 import { useWindowManager } from "@/stores/window-manager.store";
@@ -150,6 +151,10 @@ export default function SalePage() {
   const { activeTabId, closeTab, openTab } = useWindowManager();
 
   const handleEdit = (sale: SaleResource) => {
+    if (!isSaleEditable(sale.created_at)) {
+      errorToast(SALE_EDIT_EXPIRED_MESSAGE);
+      return;
+    }
     navigate(`/ventas/actualizar/${sale.id}`);
   };
 

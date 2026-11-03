@@ -33,12 +33,20 @@ import { errorToast, successToast, loadingToast, dismissToast } from "@/lib/core
 import {
   previewDeliverySheet,
   storeDeliverySheet,
+  exportDeliverySheetById,
 } from "@/pages/deliverysheet/lib/deliverysheet.actions";
 import { api } from "@/lib/config";
 import { DELIVERY_SHEET_ENDPOINT } from "@/pages/deliverysheet/lib/deliverysheet.interface";
 import type { AvailableSalesResponse } from "@/pages/deliverysheet/lib/deliverysheet.interface";
 import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { ConfirmationDialog } from "@/components/ConfirmationDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { usePermission } from "@/lib/permission-guard";
 import { ACTIONS } from "@/lib/permission-catalog";
 
@@ -214,6 +222,8 @@ function getCustomerDescription(customer: PersonResource): string {
     : zones;
 }
 
+type SheetType = "CONTADO" | "CREDITO";
+
 async function fetchSalesForSheet(
   values: FilterFormValues,
   paymentType: "CONTADO" | "CREDITO",
@@ -240,6 +250,11 @@ export default function CustomerAccountStatementPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [confirmGenerateOpen, setConfirmGenerateOpen] = useState(false);
+  const [typeChoice, setTypeChoice] = useState<{
+    resolve: (type: SheetType | null) => void;
+    contado: number;
+    credito: number;
+  } | null>(null);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -271,7 +286,6 @@ export default function CustomerAccountStatementPage() {
       zone_id: "",
       customer_id: "",
       vendedor_id: "",
-      payment_type: "ALL",
       start_date: _defaultStartStr,
       end_date: _todayStr,
       query_type: "todo",
@@ -288,12 +302,6 @@ export default function CustomerAccountStatementPage() {
       label: `${worker.names ?? ""} ${worker.father_surname ?? ""} ${worker.mother_surname ?? ""}`,
     })) || [];
 
-  const paymentTypeOptions: Option[] = [
-    { value: "ALL", label: "Todos" },
-    { value: "CONTADO", label: "Contado" },
-    { value: "CREDITO", label: "Crédito" },
-  ];
-
   const queryTypeOptions: Option[] = [
     { value: "todo", label: "Todo" },
     { value: "solo_deuda", label: "Solo Deudas" },
@@ -304,10 +312,7 @@ export default function CustomerAccountStatementPage() {
       zone_id: values.zone_id ? Number(values.zone_id) : null,
       customer_id: values.customer_id ? Number(values.customer_id) : null,
       vendedor_id: values.vendedor_id ? Number(values.vendedor_id) : null,
-      payment_type:
-        values.payment_type === "ALL"
-          ? null
-          : (values.payment_type as "CONTADO" | "CREDITO"),
+      payment_type: null,
       start_date: values.start_date || null,
       end_date: values.end_date || null,
       query_type: values.query_type as "solo_deuda" | "todo",
@@ -316,34 +321,78 @@ export default function CustomerAccountStatementPage() {
     fetch(params);
   };
 
+  // Las ventas salen de lo que se ve en la tabla (ya filtrado por cliente,
+  // zona, etc.) y solo entran las que siguen disponibles para una planilla.
+  // El tipo (contado/crédito) se toma de cada venta, no de un filtro. Si hay
+  // ventas de ambos tipos se le pide al usuario cuál planilla generar.
+  const pickSalesForSheet = async (values: FilterFormValues) => {
+    const [contadoAvail, creditoAvail] = await Promise.all([
+      fetchSalesForSheet(values, "CONTADO"),
+      fetchSalesForSheet(values, "CREDITO"),
+    ]);
+    const available = new Set(
+      [...contadoAvail, ...creditoAvail].map((s) => s.id),
+    );
+
+    const byType: Record<SheetType, number[]> = { CONTADO: [], CREDITO: [] };
+    const seen = new Set<number>();
+    for (const row of flatRows) {
+      if (!available.has(row.sale_id) || seen.has(row.sale_id)) continue;
+      seen.add(row.sale_id);
+      byType[row.payment_type === "CREDITO" ? "CREDITO" : "CONTADO"].push(
+        row.sale_id,
+      );
+    }
+
+    let type: SheetType;
+    if (byType.CONTADO.length > 0 && byType.CREDITO.length > 0) {
+      const chosen = await new Promise<SheetType | null>((resolve) =>
+        setTypeChoice({
+          resolve,
+          contado: byType.CONTADO.length,
+          credito: byType.CREDITO.length,
+        }),
+      );
+      setTypeChoice(null);
+      if (!chosen) return null;
+      type = chosen;
+    } else {
+      type = byType.CREDITO.length > 0 ? "CREDITO" : "CONTADO";
+    }
+    return { type, saleIds: byType[type] };
+  };
+
   const handleExport = async () => {
     const values = form.getValues();
+    if (flatRows.length === 0) {
+      errorToast("Primero realice la búsqueda para generar la planilla");
+      return;
+    }
     setIsExporting(true);
-    const toastId = loadingToast("Generando planilla de reparto...");
     try {
-      const paymentType =
-        values.payment_type === "ALL"
-          ? undefined
-          : (values.payment_type as "CONTADO" | "CREDITO");
+      const picked = await pickSalesForSheet(values);
+      if (!picked) return;
+      if (picked.saleIds.length === 0) {
+        errorToast("No hay ventas para generar la planilla con los filtros actuales");
+        return;
+      }
 
-      const sales = await fetchSalesForSheet(values, paymentType ?? "CONTADO");
-
-      const sale_ids = sales.map((s) => s.id);
-
-      const blob = await previewDeliverySheet({
-        type: paymentType ?? "CONTADO",
-        zone_id: values.zone_id ? Number(values.zone_id) : undefined,
-        sale_ids,
-      });
-
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-      successToast("Planilla generada exitosamente");
+      const toastId = loadingToast("Generando planilla de reparto...");
+      try {
+        const blob = await previewDeliverySheet({
+          type: picked.type,
+          zone_id: values.zone_id ? Number(values.zone_id) : undefined,
+          sale_ids: picked.saleIds,
+        });
+        window.open(URL.createObjectURL(blob), "_blank");
+        successToast("Planilla generada exitosamente");
+      } finally {
+        dismissToast(toastId);
+      }
     } catch (error) {
       errorToast("Error al generar la planilla");
       console.error(error);
     } finally {
-      dismissToast(toastId);
       setIsExporting(false);
     }
   };
@@ -351,42 +400,50 @@ export default function CustomerAccountStatementPage() {
   const handleGenerate = async () => {
     const values = form.getValues();
 
-    if (values.payment_type === "ALL") {
-      errorToast("Seleccione el tipo de pago (Contado o Crédito) para generar la planilla");
-      return;
-    }
     if (branches.length === 0) {
       errorToast("No se encontró una sucursal para generar la planilla");
       return;
     }
 
+    if (flatRows.length === 0) {
+      errorToast("Primero realice la búsqueda para generar la planilla");
+      return;
+    }
+
     setIsGenerating(true);
-    const toastId = loadingToast("Generando planilla...");
     try {
-      const paymentType = values.payment_type as "CONTADO" | "CREDITO";
-
-      const sales = await fetchSalesForSheet(values, paymentType ?? "CONTADO");
-
-      if (sales.length === 0) {
+      const picked = await pickSalesForSheet(values);
+      if (!picked) return;
+      if (picked.saleIds.length === 0) {
         errorToast("No hay ventas para generar la planilla con los filtros actuales");
         return;
       }
 
-      await storeDeliverySheet({
-        branch_id: branches[0].id,
-        zone_id: values.zone_id ? Number(values.zone_id) : undefined,
-        customer_id: values.customer_id ? Number(values.customer_id) : undefined,
-        type: paymentType,
-        issue_date: format(new Date(), "yyyy-MM-dd"),
-        sale_ids: sales.map((s) => s.id),
-      });
-
-      successToast("Planilla generada exitosamente");
+      const toastId = loadingToast("Generando planilla...");
+      try {
+        const created = await storeDeliverySheet({
+          branch_id: branches[0].id,
+          zone_id: values.zone_id ? Number(values.zone_id) : undefined,
+          customer_id: values.customer_id ? Number(values.customer_id) : undefined,
+          type: picked.type,
+          issue_date: format(new Date(), "yyyy-MM-dd"),
+          sale_ids: picked.saleIds,
+        });
+        successToast("Planilla generada exitosamente");
+        try {
+          const blob = await exportDeliverySheetById(created.data.id);
+          window.open(URL.createObjectURL(blob), "_blank");
+        } catch (pdfError) {
+          errorToast("La planilla se creó, pero no se pudo abrir el PDF");
+          console.error(pdfError);
+        }
+      } finally {
+        dismissToast(toastId);
+      }
     } catch (error) {
       errorToast("Error al generar la planilla");
       console.error(error);
     } finally {
-      dismissToast(toastId);
       setIsGenerating(false);
     }
   };
@@ -479,6 +536,37 @@ export default function CustomerAccountStatementPage() {
                     icon="info"
                     onConfirm={handleGenerate}
                   />
+                  <Dialog
+                    open={!!typeChoice}
+                    onOpenChange={(open) => {
+                      if (!open) typeChoice?.resolve(null);
+                    }}
+                  >
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>¿Qué planilla desea generar?</DialogTitle>
+                        <DialogDescription>
+                          Hay ventas de contado y de crédito. Elija el tipo de
+                          planilla a generar.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => typeChoice?.resolve("CONTADO")}
+                        >
+                          Contado ({typeChoice?.contado})
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => typeChoice?.resolve("CREDITO")}
+                        >
+                          Crédito ({typeChoice?.credito})
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </>
               )}
               <Button
@@ -514,13 +602,6 @@ export default function CustomerAccountStatementPage() {
                   control={form.control}
                   name="end_date"
                   label="Al"
-                />
-                <FormSelect
-                  control={form.control}
-                  name="payment_type"
-                  label="Tipo de Pago"
-                  placeholder="Seleccionar tipo"
-                  options={paymentTypeOptions}
                 />
                 <FormSelect
                   control={form.control}

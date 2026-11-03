@@ -42,6 +42,14 @@ export function DeliverySheetInfo({
         label="Observaciones de la Planilla"
         placeholder="Ingresa las observaciones de la planilla"
       />
+
+      <FormInput
+        name="sheet_type"
+        label="Tipo de Planilla"
+        value={deliverySheet.type === "CREDITO" ? "CRÉDITO" : "CONTADO"}
+        readOnly
+        disabled
+      />
     </GroupFormSection>
   );
 }

@@ -12,6 +12,7 @@ import { useAllBranches } from "@/pages/branch/lib/branch.hook";
 import { type SaleResource } from "../lib/sale.interface";
 import FormSkeleton from "@/components/FormSkeleton";
 import { errorToast } from "@/lib/core.function";
+import { isSaleEditable, SALE_EDIT_EXPIRED_MESSAGE } from "../lib/sale.rules";
 import PageWrapper from "@/components/PageWrapper";
 import { Button } from "@/components/ui/button";
 import { Loader, Save, X } from "lucide-react";
@@ -54,6 +55,11 @@ export const SaleEditPage = () => {
   // Validar que la venta no tenga pagos registrados en sus cuotas
   useEffect(() => {
     if (sale) {
+      if (!isSaleEditable(sale.created_at)) {
+        errorToast(SALE_EDIT_EXPIRED_MESSAGE);
+        navigate("/ventas");
+        return;
+      }
       // Verificar si alguna cuota tiene pagos registrados
       // const hasPayments =
       //   sale.installments?.some((inst) => inst.pending_amount < inst.amount) ??

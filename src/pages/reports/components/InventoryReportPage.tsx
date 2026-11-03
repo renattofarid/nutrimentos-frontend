@@ -6,6 +6,7 @@ import { useProduct } from "@/pages/product/lib/product.hook";
 import type { Option } from "@/lib/core.interface";
 import { useForm } from "react-hook-form";
 import { useInventoryReport } from "../lib/reports.hook";
+import { useAllWarehouses } from "@/pages/warehouse/lib/warehouse.hook";
 import {
   useProductAsyncSearch,
   useWarehouseAsyncSearch,
@@ -289,6 +290,23 @@ export default function InventoryReportPage() {
     },
   });
 
+  // Almacén por defecto: Chosica
+  const { data: allWarehouses } = useAllWarehouses();
+  const [defaultWarehouseOption, setDefaultWarehouseOption] =
+    useState<Option | null>(null);
+  useEffect(() => {
+    if (defaultWarehouseOption || form.getValues("warehouse_id")) return;
+    const chosica = allWarehouses?.find((w) =>
+      w.name.toLowerCase().includes("chosica"),
+    );
+    if (chosica) {
+      setDefaultWarehouseOption({
+        value: String(chosica.id),
+        label: chosica.name,
+      });
+    }
+  }, [allWarehouses]);
+
   const requireWarehouse = (warehouseId: string) => {
     if (warehouseId) {
       form.clearErrors("warehouse_id");
@@ -399,6 +417,7 @@ export default function InventoryReportPage() {
               placeholder="Buscar almacén..."
               required
               useQueryHook={useWarehouseAsyncSearch}
+              externalOption={defaultWarehouseOption}
               mapOptionFn={(item) => ({
                 label: item.name,
                 value: String(item.id),

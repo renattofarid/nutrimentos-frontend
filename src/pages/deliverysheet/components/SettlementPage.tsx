@@ -347,8 +347,6 @@ export default function SettlementPage() {
             <Button
               type="button"
               size="sm"
-              colorIcon="blue"
-              variant="outline"
               onClick={handleViewPdf}
               disabled={!deliverySheet || isLoadingPreview}
             >
@@ -359,7 +357,7 @@ export default function SettlementPage() {
               )}
               {isLoadingPreview
                 ? "Generando..."
-                : "Ver PDF Planilla"}
+                : "Reimprimir"}
             </Button>
           </div>
 

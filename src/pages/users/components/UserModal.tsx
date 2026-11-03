@@ -97,9 +97,12 @@ export default function UserModal({ id, open, title, mode, onClose }: Props) {
           );
         });
     } else {
-      // En edición la contraseña es opcional: si va vacía no se envía.
-      const { password, ...rest } = data;
-      await updateUser(id!, withoutEmptyDocument(password ? data : (rest as UserSchema)))
+      // En edición no se envían los campos vacíos (contraseña, documento, etc.)
+      // para no borrar en el backend datos que el formulario no pudo cargar.
+      const payload = Object.fromEntries(
+        Object.entries(data).filter(([, v]) => v !== "" && v != null),
+      ) as UserSchema;
+      await updateUser(id!, payload)
         .then(() => {
           onClose();
           successToast(SUCCESS_MESSAGE(MODEL, "update"));

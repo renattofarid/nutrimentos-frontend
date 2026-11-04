@@ -475,7 +475,11 @@ export default function SettlementPage() {
                 <span className="text-muted-foreground">
                   Monto cobrado:{" "}
                   <span className="font-bold text-primary">
-                    S/. {totalPagando.toFixed(2)}
+                    S/.{" "}
+                    {(isAlreadyPaid
+                      ? parseFloat(deliverySheet.collected_amount_raw || "0")
+                      : totalPagando
+                    ).toFixed(2)}
                   </span>
                 </span>
               </div>

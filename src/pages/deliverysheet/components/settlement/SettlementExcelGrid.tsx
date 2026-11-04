@@ -35,6 +35,7 @@ interface SettlementGridRow {
   sale_id: number;
   total: number;
   saldo: number;
+  cobrado: number;
   nota_credito_raw: number;
   has_credit_notes: boolean;
   credit_notes: Array<{
@@ -383,6 +384,10 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
           sale_id: sheetSale.sale.id,
           total: parseFormattedNumber(sheetSale.original_amount),
           saldo,
+          cobrado: Math.max(
+            collectedAmount,
+            parseFormattedNumber(sheetSale.original_amount) - currentAmount,
+          ),
           nota_credito_raw: sheetSale.sale.credit_notes_total_raw || 0,
           has_credit_notes: sheetSale.sale.credit_notes.length > 0,
           credit_notes: sheetSale.sale.credit_notes,
@@ -469,7 +474,13 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
         type: "readonly",
         width: "130px",
         render: (row) => (
-          <PaymentAmountCell index={row.index} pendingAmount={row.saldo} form={form} locked={isDisabled} />
+          isDisabled ? (
+            <div className="w-full h-full flex items-center justify-end px-2 text-xs">
+              S/. {row.cobrado.toFixed(2)}
+            </div>
+          ) : (
+            <PaymentAmountCell index={row.index} pendingAmount={row.saldo} form={form} locked={isDisabled} />
+          )
         ),
       },
       {

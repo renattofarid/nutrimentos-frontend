@@ -142,6 +142,7 @@ export const DeliverySheetForm = ({
   const zoneValue = form.watch("zone_id");
   const customerValue = form.watch("customer_id");
   const forSingleCustomer = form.watch("for_single_customer");
+  const hideSelection = mode === "create" && typeValue === "CREDITO";
 
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -245,25 +246,30 @@ export const DeliverySheetForm = ({
 
   const saleColumns = useMemo<ColumnDef<AvailableSale>[]>(
     () => [
-      {
-        id: "selected",
-        header: () => (
-          <Checkbox
-            checked={
-              selectedSaleIds.length === availableSales.length &&
-              availableSales.length > 0
-            }
-            onCheckedChange={handleToggleAll}
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={selectedSaleIds.includes(row.original.id)}
-            onCheckedChange={() => handleToggleSale(row.original.id)}
-          />
-        ),
-        enableSorting: false,
-      },
+      // Al crear a crédito, todas las ventas vienen seleccionadas: no se muestran checks
+      ...(hideSelection
+        ? []
+        : [
+            {
+              id: "selected",
+              header: () => (
+                <Checkbox
+                  checked={
+                    selectedSaleIds.length === availableSales.length &&
+                    availableSales.length > 0
+                  }
+                  onCheckedChange={handleToggleAll}
+                />
+              ),
+              cell: ({ row }: { row: { original: AvailableSale } }) => (
+                <Checkbox
+                  checked={selectedSaleIds.includes(row.original.id)}
+                  onCheckedChange={() => handleToggleSale(row.original.id)}
+                />
+              ),
+              enableSorting: false,
+            } as ColumnDef<AvailableSale>,
+          ]),
       {
         id: "vendedor",
         header: "Vendedor",
@@ -371,7 +377,7 @@ export const DeliverySheetForm = ({
         ),
       },
     ],
-    [availableSales.length, selectedSaleIds],
+    [availableSales.length, selectedSaleIds, hideSelection],
   );
 
   const handleFormSubmit = (data: DeliverySheetSchema) => {
@@ -507,20 +513,19 @@ export const DeliverySheetForm = ({
 
           <div className="flex items-end gap-2 lg:col-span-2">
             {/* {showDateFilter && ( */}
-            {mode !== "create" && (
-              <DatePickerFilter
-                label="Del"
-                value={searchParams.date_from}
-                onChange={(dateFrom) =>
-                  setSearchParams((prev) => ({
-                    ...prev,
-                    date_from: dateFrom,
-                  }))
-                }
-                placeholder="Fecha desde"
-                vertical
-              />
-            )}
+            <DatePickerFilter
+              label="Del"
+              value={searchParams.date_from}
+              onChange={(dateFrom) =>
+                setSearchParams((prev) => ({
+                  ...prev,
+                  date_from: dateFrom,
+                }))
+              }
+              placeholder="Fecha desde"
+              vertical
+            />
+
             <DatePickerFilter
               label="Al"
               value={searchParams.date_to}
@@ -538,20 +543,6 @@ export const DeliverySheetForm = ({
 
           {showMoreFields && (
             <>
-              {mode === "create" && (
-                <DatePickerFilter
-                  label="Del"
-                  value={searchParams.date_from}
-                  onChange={(dateFrom) =>
-                    setSearchParams((prev) => ({
-                      ...prev,
-                      date_from: dateFrom,
-                    }))
-                  }
-                  placeholder="Fecha desde"
-                  vertical
-                />
-              )}
               <FormSelect
                 control={form.control}
                 name="branch_id"
@@ -642,10 +633,12 @@ export const DeliverySheetForm = ({
                       <span className="font-mono font-semibold">
                         {sale.serie}-{sale.numero}
                       </span>
-                      <Checkbox
-                        checked={selectedSaleIds.includes(sale.id)}
-                        onCheckedChange={() => handleToggleSale(sale.id)}
-                      />
+                      {!hideSelection && (
+                        <Checkbox
+                          checked={selectedSaleIds.includes(sale.id)}
+                          onCheckedChange={() => handleToggleSale(sale.id)}
+                        />
+                      )}
                     </div>
                     <div className="text-muted-foreground">
                       {sale.customer.business_name ??

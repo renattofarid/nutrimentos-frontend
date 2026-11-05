@@ -43,7 +43,7 @@ export default function CreditDetailedSalesReportPage() {
 
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
-  const defaultStartStr = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().split("T")[0];
+  const defaultStartStr = new Date(today.getFullYear() - 10, today.getMonth(), today.getDate()).toISOString().split("T")[0];
 
   const form = useForm<FilterFormValues>({
     defaultValues: {

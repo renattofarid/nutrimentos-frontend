@@ -507,12 +507,20 @@ export const SaleForm = ({
   }, [selectedPaymentType, details, selectedDiscountGlobal]);
 
   // Auto-agregar cuota inicial al cambiar a CREDITO
+  const prevPaymentTypeRef = useRef(selectedPaymentType);
   useEffect(() => {
-    if (selectedPaymentType === "CREDITO" && installments.length === 0) {
+    const switchedFromCash =
+      prevPaymentTypeRef.current === "CONTADO" &&
+      selectedPaymentType === "CREDITO";
+    prevPaymentTypeRef.current = selectedPaymentType;
+    if (
+      selectedPaymentType === "CREDITO" &&
+      (installments.length === 0 || switchedFromCash)
+    ) {
       const saleTotal = calculateDetailsTotal();
       const newInstallment: InstallmentRow = {
         installment_number: "1",
-        due_days: "30",
+        due_days: "15",
         amount: saleTotal > 0 ? saleTotal.toString() : "0",
       };
       setInstallments([newInstallment]);

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -275,7 +275,7 @@ export default function SettlementPage() {
     }));
   }, [deliverySheet]);
 
-  const salesValues = form.watch("sales");
+  const salesValues = useWatch({ control: form.control, name: "sales" });
 
   const paymentStatus = useMemo<PaymentStatus | null>(() => {
     if (!deliverySheet) return null;
@@ -302,13 +302,12 @@ export default function SettlementPage() {
     );
   }, [deliverySheet]);
 
-  const totalPagando = useMemo(() => {
-    if (!salesValues?.length) return 0;
-    return salesValues.reduce(
-      (sum, sale) => sum + parseFloat(sale.payment_amount || "0"),
-      0,
-    );
-  }, [salesValues]);
+  // Sin useMemo: form.watch puede devolver la misma referencia del array
+  // cuando se edita un campo anidado, lo que dejaba el total desactualizado.
+  const totalPagando = (salesValues ?? []).reduce(
+    (sum, sale) => sum + (parseFloat(sale?.payment_amount || "0") || 0),
+    0,
+  );
 
   return (
     <PageWrapper>
@@ -469,7 +468,11 @@ export default function SettlementPage() {
                 <span className="text-muted-foreground">
                   Saldo pend.:{" "}
                   <span className="font-semibold text-foreground">
-                    S/. {totalPendiente.toFixed(2)}
+                    S/.{" "}
+                    {(isAlreadyPaid
+                      ? totalPendiente
+                      : Math.max(0, totalPendiente - totalPagando)
+                    ).toFixed(2)}
                   </span>
                 </span>
                 <span className="text-muted-foreground">

@@ -302,6 +302,19 @@ export default function SettlementPage() {
     );
   }, [deliverySheet]);
 
+  // Suma de la columna "Monto cobrado" de la grilla (misma fórmula por fila),
+  // para que el pie siempre cuadre con las filas.
+  const totalCobradoFilas = useMemo(() => {
+    if (!deliverySheet?.sheet_sales) return 0;
+    return deliverySheet.sheet_sales.reduce((sum, s) => {
+      const current = parseFormattedNumber(s.current_amount);
+      const collected = parseFormattedNumber(s.collected_amount);
+      const original = parseFormattedNumber(s.original_amount);
+      const nc = s.sale.credit_notes_total_raw || 0;
+      return sum + Math.max(0, Math.max(collected, original - current) - nc);
+    }, 0);
+  }, [deliverySheet]);
+
   // Total neto de notas de crédito
   const totalOriginal = useMemo(() => {
     if (!deliverySheet?.sheet_sales) return 0;
@@ -489,7 +502,7 @@ export default function SettlementPage() {
                   <span className="font-bold text-primary">
                     S/.{" "}
                     {(isAlreadyPaid
-                      ? parseFloat(deliverySheet.collected_amount_raw || "0")
+                      ? totalCobradoFilas
                       : totalPagando
                     ).toFixed(2)}
                   </span>

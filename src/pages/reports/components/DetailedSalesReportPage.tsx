@@ -10,6 +10,7 @@ import { exportDetailedSalesReport } from "../lib/reports.actions";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { FormSelect } from "@/components/FormSelect";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
+import { format } from "date-fns";
 import { useClients } from "@/pages/client/lib/client.hook";
 import ExportButtons from "@/components/ExportButtons";
 import { useBrandSearch } from "@/pages/brand/lib/brand.hook";
@@ -42,9 +43,8 @@ export default function DetailedSalesReportPage() {
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
-  const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
-  const defaultStartStr = new Date(today.getFullYear() - 10, today.getMonth(), today.getDate()).toISOString().split("T")[0];
+  // Desde y Hasta por defecto: el día de hoy (fecha local, no UTC)
+  const todayStr = format(new Date(), "yyyy-MM-dd");
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
@@ -54,7 +54,7 @@ export default function DetailedSalesReportPage() {
       payment_type: "",
       vendedor_id: "",
       warehouse_id: "",
-      start_date: defaultStartStr,
+      start_date: todayStr,
       end_date: todayStr,
       zone_id: "",
       brand_id: "",

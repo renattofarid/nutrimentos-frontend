@@ -63,7 +63,7 @@ function OpenKardexButton({ item }: { item: InventoryItem }) {
       product_code: item.product_code,
       warehouse_id: String(item.warehouse_id),
       warehouse_name: item.warehouse_name,
-      start_date: getKardexYearStart(),
+      from: getKardexYearStart(),
     });
     openTab(
       `${KARDEX_REPORT_ROUTE}?${query.toString()}`,

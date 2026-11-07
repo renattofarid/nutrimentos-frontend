@@ -197,6 +197,17 @@ export interface KardexReportResponse {
   data: KardexItem[];
   links: Links;
   meta: Meta;
+  summary?: KardexSummary;
+}
+
+export interface KardexSummary {
+  entradas: number;
+  salidas: number;
+  stock: {
+    total_sacos: number;
+    total_kg: number;
+    total_toneladas: number;
+  };
 }
 
 export interface KardexItem {
@@ -204,6 +215,7 @@ export interface KardexItem {
   movement_type: string;
   document_type: string;
   document_number: string;
+  description?: string | null;
   movement_date: string;
   movement_date_formatted: string;
   product_id: number;
@@ -297,8 +309,8 @@ interface Unit {
 export interface KardexReportParams {
   product_id?: number | null;
   warehouse_id?: number | null;
-  start_date?: string | null;
-  end_date?: string | null;
+  from?: string | null;
+  to?: string | null;
   export?: "excel" | null;
   page?: number;
   per_page?: number;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router-dom";
 import { useKardexReport } from "../lib/reports.hook";
@@ -27,7 +27,6 @@ import PageWrapper from "@/components/PageWrapper";
 import { exportKardexReport } from "../lib/reports.actions";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
-import { format } from "date-fns";
 import type { ProductResource } from "@/pages/product/lib/product.interface";
 import { errorToast, successToast } from "@/lib/core.function";
 import { useProduct } from "@/pages/product/lib/product.hook";
@@ -36,8 +35,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePermission } from "@/lib/permission-guard";
 import { ACTIONS } from "@/lib/permission-catalog";
-import DataTablePagination from "@/components/DataTablePagination";
-import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
 import { getAllWarehouses } from "@/pages/warehouse/lib/warehouse.actions";
 
 const ROUTE = "kardex";
@@ -45,8 +42,8 @@ const ROUTE = "kardex";
 interface FilterFormValues {
   product_id: string;
   warehouse_id: string;
-  start_date: string;
-  end_date: string;
+  from: string;
+  to: string;
 }
 
 const columns: ColumnDef<KardexItem>[] = [
@@ -133,6 +130,14 @@ const columns: ColumnDef<KardexItem>[] = [
           }
           return <span className="text-sm text-muted-foreground">-</span>;
         },
+      },
+      {
+        accessorKey: "description",
+        header: "Descripción",
+        size: 260,
+        cell: ({ row }) => (
+          <span className="text-sm">{row.original.description || "-"}</span>
+        ),
       },
       {
         accessorKey: "product_codigo",
@@ -253,13 +258,12 @@ const columns: ColumnDef<KardexItem>[] = [
         header: "Und.",
         size: 100,
         cell: ({ row }) => {
-          const qty = row.original.quantity_out;
+          const qty = row.original.balance_quantity;
           if (!qty || qty === 0)
             return <span className="text-muted-foreground text-sm">0</span>;
           return (
             <span className="font-semibold text-slate-600">
-              {qty} {row.original.product.unit.name}{" "}
-              {row.original.product.unit.name}
+              {qty} {row.original.product.unit.name}
             </span>
           );
         },
@@ -334,7 +338,7 @@ export default function KardexReportPage() {
   const { can } = usePermission();
   const [isExporting, setIsExporting] = useState(false);
   const [page, setPage] = useState(1);
-  const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
+  const per_page = 50; // tamaño de cada tanda del scroll infinito
 
   const { data: rawData, isLoading, fetch } = useKardexReport();
 
@@ -390,19 +394,12 @@ export default function KardexReportPage() {
     setCodeToSearch(null);
   }, [productByCode, isSearchingByCode, codeToSearch]);
 
-  const _today = new Date();
-  const _todayStr = format(_today, "yyyy-MM-dd");
-  const _defaultStartStr = format(
-    new Date(_today.getFullYear(), _today.getMonth(), _today.getDate()),
-    "yyyy-MM-dd",
-  );
-
   const form = useForm<FilterFormValues>({
     defaultValues: {
       product_id: presetProductId,
       warehouse_id: presetWarehouseId,
-      start_date: searchParams.get("start_date") || _defaultStartStr,
-      end_date: _todayStr,
+      from: searchParams.get("from") || "",
+      to: "",
     },
   });
 
@@ -449,8 +446,8 @@ export default function KardexReportPage() {
       warehouse_id: appliedFilters.warehouse_id
         ? Number(appliedFilters.warehouse_id)
         : null,
-      start_date: appliedFilters.start_date || null,
-      end_date: appliedFilters.end_date || null,
+      from: appliedFilters.from || null,
+      to: appliedFilters.to || null,
       page,
       per_page,
     };
@@ -464,8 +461,8 @@ export default function KardexReportPage() {
       const params: KardexReportParams = {
         product_id: values.product_id ? Number(values.product_id) : null,
         warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
-        start_date: values.start_date || null,
-        end_date: values.end_date || null,
+        from: values.from || null,
+        to: values.to || null,
       };
 
       const blob = await exportKardexReport(params);
@@ -486,16 +483,45 @@ export default function KardexReportPage() {
     }
   };
 
-  const tableData = rawData?.data ?? [];
-
   const meta = rawData?.meta;
+
+  // Resultados acumulados: la página 1 reemplaza, las siguientes se agregan
+  const [tableData, setTableData] = useState<KardexItem[]>([]);
+  useEffect(() => {
+    if (!rawData) return;
+    if (rawData.meta.current_page <= 1) {
+      setTableData(rawData.data);
+    } else {
+      setTableData((prev) => {
+        const ids = new Set(prev.map((i) => i.id));
+        return [...prev, ...rawData.data.filter((i) => !ids.has(i.id))];
+      });
+    }
+  }, [rawData]);
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const hasMore =
+    !!meta && meta.current_page === page && meta.current_page < meta.last_page;
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasMore || isLoading) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) setPage((p) => p + 1);
+      },
+      { rootMargin: "300px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, tableData.length]);
+
   const totalMovements = meta?.total ?? tableData.length;
-  const totalEntries = tableData.filter(
-    (i) => i.movement_type === "ENTRADA" || i.movement_type === "IN",
-  ).length;
-  const totalExits = tableData.filter(
-    (i) => i.movement_type === "SALIDA" || i.movement_type === "OUT",
-  ).length;
+  const summary = rawData?.summary;
+  const totalEntries = summary?.entradas ?? 0;
+  const totalExits = summary?.salidas ?? 0;
+  const stock = summary?.stock;
+  const formatNumber = (n?: number) =>
+    new Intl.NumberFormat("es-PE", { maximumFractionDigits: 3 }).format(n ?? 0);
 
   return (
     <PageWrapper size="3xl">
@@ -570,12 +596,12 @@ export default function KardexReportPage() {
 
             <DatePickerFormField
               control={form.control}
-              name="start_date"
+              name="from"
               label="Del"
             />
             <DatePickerFormField
               control={form.control}
-              name="end_date"
+              name="to"
               label="Al"
             />
             <div className="flex h-full items-end gap-2">
@@ -602,7 +628,7 @@ export default function KardexReportPage() {
             <GroupFormSection
               title="Resumen de Movimientos"
               icon={ArrowUpDown}
-              cols={{ sm: 1, md: 3 }}
+              cols={{ sm: 2, md: 3 }}
             >
               <div className="space-y-1">
                 <p className="text-xs text-center text-muted-foreground">
@@ -628,11 +654,38 @@ export default function KardexReportPage() {
                   {totalExits}
                 </p>
               </div>
+              <div className="space-y-1">
+                <p className="text-xs text-center text-muted-foreground">
+                  Stock (Sacos)
+                </p>
+                <p className="text-xl text-center font-bold">
+                  {formatNumber(stock?.total_sacos)}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-center text-muted-foreground">
+                  Stock (Kg)
+                </p>
+                <p className="text-xl text-center font-bold">
+                  {formatNumber(stock?.total_kg)}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-center text-muted-foreground">
+                  Stock (Toneladas)
+                </p>
+                <p className="text-xl text-center font-bold">
+                  {formatNumber(stock?.total_toneladas)}
+                </p>
+              </div>
             </GroupFormSection>
           )}
 
           <div className="col-span-full">
-            {appliedFilters && !isLoading && tableData.length === 0 ? (
+            {appliedFilters &&
+            !isLoading &&
+            rawData &&
+            rawData.data.length === 0 ? (
               <EmptyState
                 className="w-full col-span-full"
                 icon={PackageSearch}
@@ -644,25 +697,24 @@ export default function KardexReportPage() {
                 key={appliedFilters?.product_id ? "filtered" : "all"}
                 columns={columns}
                 data={tableData}
-                isLoading={isLoading}
+                isLoading={isLoading && tableData.length === 0}
                 initialColumnVisibility={{
                   product_codigo: !appliedFilters?.product_id,
                   product_name: !appliedFilters?.product_id,
                   document_type: false,
+                  customer_name: false,
                   quantity_in: false,
                   quantity_out: false,
                   balance_quantity: false,
                 }}
               />
             )}
-            <DataTablePagination
-              page={page}
-              totalPages={meta?.last_page || 1}
-              onPageChange={setPage}
-              per_page={per_page}
-              setPerPage={setPerPage}
-              totalData={meta?.total || 0}
-            />
+            {/* Scroll infinito: al llegar al final se carga la siguiente página */}
+            <div ref={sentinelRef} className="flex h-12 items-center justify-center">
+              {isLoading && tableData.length > 0 && (
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              )}
+            </div>
           </div>
         </form>
       </Form>

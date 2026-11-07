@@ -385,8 +385,11 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
           total: parseFormattedNumber(sheetSale.original_amount),
           saldo,
           cobrado: Math.max(
-            collectedAmount,
-            parseFormattedNumber(sheetSale.original_amount) - currentAmount,
+            0,
+            Math.max(
+              collectedAmount,
+              parseFormattedNumber(sheetSale.original_amount) - currentAmount,
+            ) - (sheetSale.sale.credit_notes_total_raw || 0),
           ),
           nota_credito_raw: sheetSale.sale.credit_notes_total_raw || 0,
           has_credit_notes: sheetSale.sale.credit_notes.length > 0,

@@ -288,19 +288,28 @@ export default function SettlementPage() {
   const totalPendiente = useMemo(() => {
     if (!deliverySheet?.sheet_sales) return 0;
     return deliverySheet.sheet_sales.reduce((sum, sheetSale) => {
-      const creditNotesTotal = sheetSale.sale.credit_notes_total_raw || 0;
       const currentAmount = parseFormattedNumber(sheetSale.current_amount);
-      return sum + (currentAmount - creditNotesTotal);
+      const collectedAmount = parseFormattedNumber(sheetSale.collected_amount);
+      return sum + Math.max(0, currentAmount - collectedAmount);
     }, 0);
   }, [deliverySheet]);
 
+  const totalNotasCredito = useMemo(() => {
+    if (!deliverySheet?.sheet_sales) return 0;
+    return deliverySheet.sheet_sales.reduce(
+      (sum, s) => sum + (s.sale.credit_notes_total_raw || 0),
+      0,
+    );
+  }, [deliverySheet]);
+
+  // Total neto de notas de crédito
   const totalOriginal = useMemo(() => {
     if (!deliverySheet?.sheet_sales) return 0;
     return deliverySheet.sheet_sales.reduce(
       (sum, s) => sum + parseFormattedNumber(s.original_amount),
       0,
-    );
-  }, [deliverySheet]);
+    ) - totalNotasCredito;
+  }, [deliverySheet, totalNotasCredito]);
 
   // Sin useMemo: form.watch puede devolver la misma referencia del array
   // cuando se edita un campo anidado, lo que dejaba el total desactualizado.
@@ -480,7 +489,11 @@ export default function SettlementPage() {
                   <span className="font-bold text-primary">
                     S/.{" "}
                     {(isAlreadyPaid
-                      ? parseFloat(deliverySheet.collected_amount_raw || "0")
+                      ? Math.max(
+                          0,
+                          parseFloat(deliverySheet.collected_amount_raw || "0") -
+                            totalNotasCredito,
+                        )
                       : totalPagando
                     ).toFixed(2)}
                   </span>

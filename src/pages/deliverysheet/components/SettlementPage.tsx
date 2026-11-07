@@ -489,11 +489,7 @@ export default function SettlementPage() {
                   <span className="font-bold text-primary">
                     S/.{" "}
                     {(isAlreadyPaid
-                      ? Math.max(
-                          0,
-                          parseFloat(deliverySheet.collected_amount_raw || "0") -
-                            totalNotasCredito,
-                        )
+                      ? parseFloat(deliverySheet.collected_amount_raw || "0")
                       : totalPagando
                     ).toFixed(2)}
                   </span>

@@ -466,6 +466,14 @@ export const SaleForm = ({
   // Efecto para obtener serie y número automático
   useEffect(() => {
     const fetchNextSeries = async () => {
+      // En edición se conservan la serie y el número reales de la venta
+      if (mode === "update") {
+        if (sale) {
+          setAutoSerie(sale.serie ?? "");
+          setAutoNumero(sale.numero ?? "");
+        }
+        return;
+      }
       if (selectedBranchId && selectedDocumentType && mode === "create") {
         try {
           const response = await getNextSeries(
@@ -485,7 +493,7 @@ export const SaleForm = ({
       }
     };
     fetchNextSeries();
-  }, [selectedBranchId, selectedDocumentType, mode]);
+  }, [selectedBranchId, selectedDocumentType, mode, sale]);
 
   const buildCashInstallment = (): InstallmentRow => {
     const saleTotal = calculateDetailsTotal();

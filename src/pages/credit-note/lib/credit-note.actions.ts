@@ -123,6 +123,12 @@ export async function deleteCreditNote(id: number): Promise<any> {
   return data;
 }
 
+// Anular
+export async function voidCreditNote(id: number): Promise<any> {
+  const { data } = await api.patch<any>(`${ENDPOINT}/${id}/void`);
+  return data;
+}
+
 // Exportar (excel | pdf)
 export async function exportCreditNotes(
   params: Record<string, any>

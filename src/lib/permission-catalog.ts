@@ -255,6 +255,7 @@ export const PERMISSION_CATALOG: PermissionCatalogSection[] = [
           ACTIONS.AGREGAR,
           ACTIONS.GESTIONAR,
           ACTIONS.ELIMINAR,
+          ACTIONS.ANULAR,
           ACTIONS.IMPRIMIR,
           ACTIONS.EXPORTAR,
         ],

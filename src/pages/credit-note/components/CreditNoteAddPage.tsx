@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 
@@ -45,7 +45,12 @@ export default function CreditNoteAddPage() {
     [preselectedSale, saleById, selectedSaleId],
   );
 
+  const submittingRef = useRef(false);
+
   const handleSubmit = async (data: CreditNoteSchema) => {
+    // Evita doble clic / envíos simultáneos (el state tarda en actualizarse)
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsSubmitting(true);
     try {
       const creditNoteId = await createCreditNote({
@@ -75,7 +80,8 @@ export default function CreditNoteAddPage() {
         error.response?.data?.message ||
         ERROR_MESSAGE(MODEL, "create");
       errorToast(message);
-    } finally {
+      // Solo se libera si falló; tras crear queda bloqueado para no duplicar la NC
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };

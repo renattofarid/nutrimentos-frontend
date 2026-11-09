@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, X, Download, Sheet, FileText, Loader2, Printer, Eye } from "lucide-react";
+import { Ban, Plus, Trash2, X, Download, Sheet, FileText, Loader2, Printer, Eye } from "lucide-react";
 import { CREDIT_NOTE } from "../lib/credit-note.interface";
 import { useNavigate } from "react-router-dom";
 import { useWindowManager } from "@/stores/window-manager.store";
@@ -19,9 +19,14 @@ import { ACTIONS } from "@/lib/permission-catalog";
 
 const ROUTE = "notas-credito";
 
+// Anular NC: pendiente de confirmación del negocio. Poner en true para habilitar el botón.
+const SHOW_VOID = false;
+
 interface CreditNoteActionsProps {
   hasSelection: boolean;
   onDelete: () => void;
+  onVoid: () => void;
+  canVoid?: boolean;
   onPrint: () => void;
   onManage?: () => void;
   filters?: Record<string, any>;
@@ -30,6 +35,8 @@ interface CreditNoteActionsProps {
 export default function CreditNoteActions({
   hasSelection,
   onDelete,
+  onVoid,
+  canVoid = true,
   onPrint,
   onManage,
   filters,
@@ -104,6 +111,18 @@ export default function CreditNoteActions({
           >
             <Trash2 />
             Eliminar
+          </Button>
+        )}
+        {SHOW_VOID && can(ROUTE, ACTIONS.ANULAR) && (
+          <Button
+            colorIcon="red"
+            size="sm"
+            variant="outline"
+            onClick={onVoid}
+            disabled={!hasSelection || !canVoid}
+          >
+            <Ban />
+            Anular
           </Button>
         )}
         {can(ROUTE, ACTIONS.IMPRIMIR) && (

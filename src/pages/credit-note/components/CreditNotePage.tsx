@@ -8,8 +8,9 @@ import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 import CreditNoteActions from "./CreditNoteActions";
 import CreditNoteTable from "./CreditNoteTable";
 import CreditNoteOptions from "./CreditNoteOptions";
-import { deleteCreditNote } from "../lib/credit-note.actions";
+import { deleteCreditNote, voidCreditNote } from "../lib/credit-note.actions";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
+import { ConfirmationDialog } from "@/components/ConfirmationDialog";
 import {
   successToast,
   errorToast,
@@ -44,6 +45,8 @@ export default function CreditNotePage() {
   const [page, setPage] = useState(1);
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [voidId, setVoidId] = useState<number | null>(null);
+  const [isVoiding, setIsVoiding] = useState(false);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { data, meta, isLoading, refetch } = useCreditNote();
 
@@ -98,6 +101,25 @@ export default function CreditNotePage() {
     }
   };
 
+  const handleVoid = async () => {
+    if (!voidId || isVoiding) return;
+    setIsVoiding(true);
+    try {
+      await voidCreditNote(voidId);
+      await refetch();
+      successToast("Nota de crédito anulada correctamente");
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        "Error al anular la nota de crédito";
+      errorToast(message);
+    } finally {
+      setIsVoiding(false);
+      setVoidId(null);
+    }
+  };
+
   const handlePrint = () => {
     if (!toolbarNote) return;
     const download = api
@@ -140,6 +162,8 @@ export default function CreditNotePage() {
       <CreditNoteActions
         hasSelection={hasSelection}
         onDelete={() => toolbarNote && setDeleteId(toolbarNote.id)}
+        onVoid={() => toolbarNote && setVoidId(toolbarNote.id)}
+        canVoid={toolbarNote?.status !== "ANULADO"}
         onPrint={handlePrint}
         onManage={() =>
           toolbarNote &&
@@ -188,6 +212,18 @@ export default function CreditNotePage() {
         per_page={per_page}
         setPerPage={setPerPage}
         totalData={meta?.total || 0}
+      />
+
+      <ConfirmationDialog
+        open={voidId !== null}
+        onOpenChange={(open) => !open && setVoidId(null)}
+        icon="danger"
+        variant="destructive"
+        title="Anular nota de crédito"
+        description={`¿Deseas anular la nota de crédito ${toolbarNote?.full_document_number ?? ""}? Esta acción revertirá su efecto en la venta.`}
+        confirmText="Sí, anular"
+        cancelText="No, volver"
+        onConfirm={handleVoid}
       />
 
       {deleteId !== null && (

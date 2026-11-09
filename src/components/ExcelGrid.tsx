@@ -6,6 +6,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -67,6 +68,8 @@ interface ExcelGridProps<T> {
   hideActionButtons?: boolean;
   showRowNumbers?: boolean; // Muestra un índice sutil (1, 2, 3…) para ubicar filas
   extraActions?: React.ReactNode; // Botones adicionales junto a Agregar/Quitar
+  // Fila de totales al final: contenido por id de columna (las no listadas quedan vacías)
+  footer?: Record<string, React.ReactNode>;
 }
 
 export function ExcelGrid<T extends Record<string, any>>({
@@ -87,6 +90,7 @@ export function ExcelGrid<T extends Record<string, any>>({
   hideActionButtons = false,
   showRowNumbers = false,
   extraActions,
+  footer,
 }: ExcelGridProps<T>) {
   const [focusedCell, setFocusedCell] = React.useState<{
     row: number;
@@ -701,6 +705,22 @@ export function ExcelGrid<T extends Record<string, any>>({
               ))
             )}
           </TableBody>
+          {footer && data.length > 0 && (
+            <TableFooter>
+              <TableRow className="border-t-2 bg-[var(--table-header)] hover:bg-[var(--table-header)]">
+                {showRowNumbers && <TableCell className="w-8 p-0 border-r" />}
+                {columns.map((column) => (
+                  <TableCell
+                    key={column.id}
+                    className="p-0 h-10 border-r last:border-r-0"
+                    style={{ width: column.width }}
+                  >
+                    {footer[column.id]}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableFooter>
+          )}
         </Table>
       </div>
     </div>

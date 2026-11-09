@@ -537,10 +537,48 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
     [form, sales, isDisabled],
   );
 
+  const salesValues = useWatch({ control: form.control, name: "sales" });
+  const totales = useMemo(() => {
+    const t = { total: 0, saldo: 0, nc: 0, cobrado: 0, nuevoSaldo: 0 };
+    gridData.forEach((row) => {
+      const pagando = isDisabled
+        ? row.cobrado
+        : parseFloat(salesValues?.[row.index]?.payment_amount || "0") || 0;
+      t.total += row.total;
+      t.saldo += row.saldo;
+      t.nc += row.nota_credito_raw;
+      t.cobrado += pagando;
+      t.nuevoSaldo += row.saldo - (isDisabled ? 0 : pagando);
+    });
+    return t;
+  }, [gridData, salesValues, isDisabled]);
+
+  const cell = (value: number, className?: string) => (
+    <div
+      className={`px-2 text-xs font-mono font-bold text-right tabular-nums ${className ?? ""}`}
+    >
+      S/. {value.toFixed(2)}
+    </div>
+  );
+
+  const footer = {
+    documento: (
+      <div className="px-2 text-xs font-bold uppercase tracking-wide">
+        Totales ({gridData.length})
+      </div>
+    ),
+    total: cell(totales.total),
+    saldo: cell(totales.saldo),
+    nota_credito: cell(totales.nc, totales.nc > 0 ? "text-orange-600" : "text-muted-foreground"),
+    payment_amount: cell(totales.cobrado, "text-primary"),
+    nuevo_saldo: cell(totales.nuevoSaldo),
+  };
+
   return (
     <ExcelGrid
       columns={columns}
       data={gridData}
+      footer={footer}
       onAddRow={() => {}}
       onRemoveRow={() => {}}
       onCellChange={() => {}}

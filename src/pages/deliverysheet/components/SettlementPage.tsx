@@ -85,6 +85,41 @@ function resolvePaymentStatus(sheet: DeliverySheetById): PaymentStatus {
   return "NO_CANCELADO";
 }
 
+function SummaryCard({
+  label,
+  value,
+  tone = "default",
+  hint,
+}: {
+  label: string;
+  value: number;
+  tone?: "default" | "primary" | "warning" | "muted";
+  hint?: string;
+}) {
+  const toneClass = {
+    default: "text-foreground",
+    primary: "text-primary",
+    warning: "text-orange-600",
+    muted: "text-muted-foreground",
+  }[tone];
+  return (
+    <div
+      className={cn(
+        "rounded-lg border bg-card px-4 py-3",
+        tone === "primary" && "border-primary/40 bg-primary/5",
+      )}
+    >
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className={cn("text-2xl font-bold font-mono tabular-nums", toneClass)}>
+        {value < 0 ? "- " : ""}S/. {Math.abs(value).toFixed(2)}
+      </p>
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
+
 export default function SettlementPage() {
   const navigate = useNavigate();
   const [sheetNumberInput, setSheetNumberInput] = useState<string>("");
@@ -475,33 +510,30 @@ export default function SettlementPage() {
                 isDisabled={isAlreadyPaid}
               />
 
-              <div className="flex gap-6 text-xs font-mono border-t pt-2">
-                <span className="text-muted-foreground">
-                  Total:{" "}
-                  <span className="font-semibold text-foreground">
-                    S/. {totalOriginal.toFixed(2)}
-                  </span>
-                </span>
-                <span className="text-muted-foreground">
-                  Saldo pend.:{" "}
-                  <span className="font-semibold text-foreground">
-                    S/.{" "}
-                    {(isAlreadyPaid
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+                <SummaryCard
+                  label="Total documentos"
+                  value={totalOriginal + totalNotasCredito}
+                />
+                <SummaryCard
+                  label="Notas de crédito"
+                  value={-totalNotasCredito}
+                  tone={totalNotasCredito > 0 ? "warning" : "muted"}
+                />
+                <SummaryCard
+                  label="Saldo pendiente"
+                  value={
+                    isAlreadyPaid
                       ? totalPendiente
                       : Math.max(0, totalPendiente - totalPagando)
-                    ).toFixed(2)}
-                  </span>
-                </span>
-                <span className="text-muted-foreground">
-                  Monto cobrado:{" "}
-                  <span className="font-bold text-primary">
-                    S/.{" "}
-                    {(isAlreadyPaid
-                      ? totalCobradoFilas
-                      : totalPagando
-                    ).toFixed(2)}
-                  </span>
-                </span>
+                  }
+                />
+                <SummaryCard
+                  label="Monto cobrado"
+                  value={isAlreadyPaid ? totalCobradoFilas : totalPagando}
+                  tone="primary"
+                  hint={`Total neto S/. ${totalOriginal.toFixed(2)}`}
+                />
               </div>
             </form>
           </Form>

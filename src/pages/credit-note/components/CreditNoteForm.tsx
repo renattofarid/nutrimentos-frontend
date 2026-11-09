@@ -8,7 +8,8 @@ import {
   creditNoteSchemaCreate,
   type CreditNoteSchema,
 } from "../lib/credit-note.schema";
-import { FormSelect } from "@/components/FormSelect";
+import { FormSelectAsync } from "@/components/FormSelectAsync";
+import { useSaleByDocument } from "@/pages/sale/lib/sale.hook";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
@@ -98,6 +99,24 @@ function getFirstErrorMessage(
   return visit(errors);
 }
 
+// Precio efectivo cobrado en la venta (total con IGV / cantidad), para que la
+// nota de crédito reproduzca los montos reales de la venta.
+function getSaleUnitPrice(detail: {
+  unit_price?: number | string | null;
+  total?: number | string | null;
+  quantity_sacks?: number | null;
+  quantity_kg?: number | null;
+}): number {
+  const listPrice = parseFloat(detail.unit_price?.toString() ?? "0") || 0;
+  const total = parseFloat(detail.total?.toString() ?? "0") || 0;
+  const qty =
+    (detail.quantity_sacks ?? 0) > 0
+      ? (detail.quantity_sacks ?? 0)
+      : (detail.quantity_kg ?? 0);
+  if (total > 0 && qty > 0) return round6(total / qty);
+  return listPrice;
+}
+
 function calcRow(row: CreditNoteDetailRow): CreditNoteDetailRow {
   const sacks = parseFloat(row.quantity_sacks) || 0;
   const kg = parseFloat(row.quantity_kg) || 0;
@@ -122,7 +141,6 @@ export const CreditNoteForm = ({
   onSubmit,
   onCancel,
   isSubmitting = false,
-  sales = [],
   selectedSale,
   onSaleChange,
   readOnlySale = false,
@@ -174,7 +192,7 @@ export const CreditNoteForm = ({
     if (selectedSale?.details) {
       const rows: CreditNoteDetailRow[] = selectedSale.details.map(
         (detail, i) => {
-          const saleUnitPrice = parseFloat(detail.unit_price?.toString() ?? "0");
+          const saleUnitPrice = getSaleUnitPrice(detail);
           const weight = detail.product?.weight ?? 0;
           const isSackSale = (detail.quantity_sacks ?? 0) > 0;
           const pricePerKg = isSackSale && weight > 0 ? round6(saleUnitPrice / weight) : saleUnitPrice;
@@ -298,7 +316,7 @@ export const CreditNoteForm = ({
     const selectedDetail = saleDetailMap.get(Number(product.id));
     if (!selectedDetail) return;
 
-    const selUnitPrice = parseFloat(selectedDetail.unit_price?.toString() ?? "0");
+    const selUnitPrice = getSaleUnitPrice(selectedDetail);
     const selWeight = selectedDetail.product?.weight ?? 0;
     const selIsSack = (selectedDetail.quantity_sacks ?? 0) > 0;
     const selPricePerKg = selIsSack && selWeight > 0 ? round6(selUnitPrice / selWeight) : selUnitPrice;
@@ -574,12 +592,25 @@ export const CreditNoteForm = ({
               </div>
             </div>
           ) : (
-            <FormSelect
+            <FormSelectAsync
               control={form.control}
               name="sale_id"
               label="VENTA"
-              placeholder="Seleccione una venta"
-              options={sales}
+              placeholder="Buscar por serie-número (ej. B001-00067904)"
+              useQueryHook={useSaleByDocument}
+              mapOptionFn={(sale: SaleResource) => {
+                const c = sale.customer;
+                const name =
+                  c?.business_name?.trim() ||
+                  [c?.names, c?.father_surname, c?.mother_surname]
+                    .filter((s) => typeof s === "string" && s.trim() !== "")
+                    .join(" ");
+                return {
+                  value: sale.id.toString(),
+                  label: `${sale.serie}-${sale.numero} - ${name}`,
+                  description: `${sale.document_type} · ${sale.currency === "USD" ? "$" : "S/."} ${formatNumber(sale.total_amount)}`,
+                };
+              }}
               uppercase
             />
           )}

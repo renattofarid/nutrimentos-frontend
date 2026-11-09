@@ -15,8 +15,7 @@ import {
 import { CREDIT_NOTE } from "../lib/credit-note.interface";
 import { useCreditNoteStore } from "../lib/credit-note.store";
 import { getCreditNoteTicket } from "../lib/credit-note.actions";
-import FormSkeleton from "@/components/FormSkeleton";
-import { useAllSales } from "@/pages/sale/lib/sale.hook";
+import { useSaleById } from "@/pages/sale/lib/sale.hook";
 import PageWrapper from "@/components/PageWrapper";
 import { ConfirmationDialog } from "@/components/ConfirmationDialog";
 
@@ -36,36 +35,14 @@ export default function CreditNoteAddPage() {
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [pendingCreditNoteId, setPendingCreditNoteId] = useState<number | null>(null);
 
-  const { data: sales, isLoading: isLoadingSales } = useAllSales();
-
-  // Obtener la venta seleccionada
-  const selectedSale = useMemo(
-    () =>
-      preselectedSale ||
-      sales?.find((sale) => sale.id === selectedSaleId) ||
-      null,
-    [preselectedSale, sales, selectedSaleId],
+  // Venta completa (show) solo cuando se selecciona una en el select async
+  const { data: saleById } = useSaleById(
+    isReadOnlySale ? 0 : (selectedSaleId ?? 0),
   );
 
-  // Transformar datos para los selects (solo cuando no hay venta preseleccionada)
-  const salesOptions = useMemo(
-    () =>
-      isReadOnlySale
-        ? []
-        : sales?.map((sale) => {
-            const customer = sale.customer ?? {};
-            const name =
-              customer.names?.trim() ||
-              customer.business_name?.trim() ||
-              [customer.names, customer.father_surname, customer.mother_surname]
-                .filter((s) => typeof s === "string" && s.trim() !== "")
-                .join(" ");
-            return {
-              value: sale.id.toString(),
-              label: `${sale.serie}-${sale.numero} - ${name || ""}`,
-            };
-          }) || [],
-    [isReadOnlySale, sales],
+  const selectedSale = useMemo(
+    () => preselectedSale || (selectedSaleId ? saleById?.data : null) || null,
+    [preselectedSale, saleById, selectedSaleId],
   );
 
   const handleSubmit = async (data: CreditNoteSchema) => {
@@ -122,14 +99,6 @@ export default function CreditNoteAddPage() {
     navigate(ROUTE);
   };
 
-  if (!isReadOnlySale && isLoadingSales) {
-    return (
-      <PageWrapper>
-        <FormSkeleton />
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper>
       <CreditNoteForm
@@ -139,7 +108,6 @@ export default function CreditNoteAddPage() {
         onSubmit={handleSubmit}
         onCancel={() => navigate(ROUTE)}
         isSubmitting={isSubmitting}
-        sales={salesOptions}
         selectedSale={selectedSale}
         onSaleChange={setSelectedSaleId}
         readOnlySale={isReadOnlySale}

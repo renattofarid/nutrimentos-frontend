@@ -10,6 +10,20 @@ export function useSale(params?: GetSalesParams) {
   });
 }
 
+// Búsqueda por documento: "B001-00067904" se envía como serie + numero;
+// sin guion se envía solo como numero (igual que el buscador de ventas).
+export function useSaleByDocument(
+  params: GetSalesParams & { search?: string },
+) {
+  const { search, ...rest } = params;
+  const doc = (search ?? "").trim();
+  const dashIndex = doc.indexOf("-");
+  const serie = dashIndex > 0 ? doc.slice(0, dashIndex) : undefined;
+  const numero =
+    dashIndex > 0 ? doc.slice(dashIndex + 1) || undefined : doc || undefined;
+  return useSale({ ...rest, serie, numero });
+}
+
 export function useAllSales() {
   return useQuery({
     queryKey: [SALE_QUERY_KEY, "all"],

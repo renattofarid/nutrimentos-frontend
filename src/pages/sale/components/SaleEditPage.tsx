@@ -55,7 +55,7 @@ export const SaleEditPage = () => {
   // Validar que la venta no tenga pagos registrados en sus cuotas
   useEffect(() => {
     if (sale) {
-      if (!isSaleEditable(sale.created_at)) {
+      if (!isSaleEditable(sale.created_at, sale.document_type)) {
         errorToast(SALE_EDIT_EXPIRED_MESSAGE);
         navigate("/ventas");
         return;

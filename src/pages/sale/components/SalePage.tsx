@@ -151,7 +151,7 @@ export default function SalePage() {
   const { activeTabId, closeTab, openTab } = useWindowManager();
 
   const handleEdit = (sale: SaleResource) => {
-    if (!isSaleEditable(sale.created_at)) {
+    if (!isSaleEditable(sale.created_at, sale.document_type)) {
       errorToast(SALE_EDIT_EXPIRED_MESSAGE);
       return;
     }

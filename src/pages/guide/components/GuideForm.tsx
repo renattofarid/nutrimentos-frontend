@@ -1673,6 +1673,7 @@ export const GuideForm = ({
                   options={[
                     { value: "FACTURA", label: "FACTURA" },
                     { value: "BOLETA", label: "BOLETA" },
+                    { value: "NOTA_VENTA", label: "NOTA DE VENTA" },
                   ]}
                   value={searchParams.document_type}
                   onChange={(value) =>

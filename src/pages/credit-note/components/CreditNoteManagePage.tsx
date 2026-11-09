@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { formatIssueDate } from "../lib/credit-note.date";
 import { useParams } from "react-router-dom";
 import { useCreditNoteStore } from "../lib/credit-note.store";
 import { Badge } from "@/components/ui/badge";
@@ -27,14 +28,7 @@ export default function CreditNoteManagePage() {
         ? "$"
         : "€";
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
+  const formatDate = formatIssueDate;
 
   const handlePrint = () => {
     if (!creditNote) return;

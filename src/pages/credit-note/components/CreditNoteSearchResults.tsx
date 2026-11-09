@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { formatIssueDate } from "../lib/credit-note.date";
 import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,12 +34,7 @@ export default function CreditNoteSearchResults({
       {
         accessorKey: "issue_date",
         header: "Fecha",
-        cell: ({ row }) =>
-          new Date(row.original.issue_date).toLocaleDateString("es-PE", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          }),
+        cell: ({ row }) => formatIssueDate(row.original.issue_date),
       },
       {
         id: "customer",

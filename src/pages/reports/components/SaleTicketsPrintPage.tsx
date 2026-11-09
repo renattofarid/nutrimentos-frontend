@@ -21,7 +21,11 @@ import {
 import { DOCUMENT_TYPES } from "@/pages/sale/lib/sale.interface";
 import { errorToast, promiseToast } from "@/lib/core.function";
 import { FormInput } from "@/components/FormInput";
-import { exportBulkCreditNoteTickets } from "@/pages/credit-note/lib/credit-note.actions";
+import {
+  exportBulkCreditNoteTickets,
+  getCreditNotesByRange,
+  getCreditNoteTicket,
+} from "@/pages/credit-note/lib/credit-note.actions";
 import { usePermission } from "@/lib/permission-guard";
 import { ACTIONS } from "@/lib/permission-catalog";
 import { DEFAULT_COMPANY_ID } from "@/lib/config";
@@ -36,6 +40,9 @@ interface DisplayItem {
   issue_date: string;
   currency: string;
   total_amount: number;
+  // Solo notas de crédito: serie y correlativo, para imprimir por rango
+  series?: string;
+  number?: number;
 }
 
 export default function SaleTicketsPrintPage() {
@@ -61,31 +68,64 @@ export default function SaleTicketsPrintPage() {
 
     setIsSearching(true);
     try {
-      const params = {
-        document_type: searchParams.document_type,
-        numero_inicio: searchParams.numero_inicio,
-        numero_fin: searchParams.numero_fin,
-        company_id: DEFAULT_COMPANY_ID,
-        ...(searchParams.serie && { serie: searchParams.serie }),
-      };
-      const response = await getSalesByRange(params);
-      if (response.data.length === 0) {
-        errorToast("No se encontraron ventas en el rango especificado");
+      let mapped: DisplayItem[];
+      if (isCreditNote) {
+        const response = await getCreditNotesByRange({
+          numero_inicio: Number(searchParams.numero_inicio),
+          numero_fin: Number(searchParams.numero_fin),
+          company_id: DEFAULT_COMPANY_ID,
+        });
+        // El endpoint no filtra por serie: se filtra aquí
+        const serieFilter = searchParams.serie.trim().toUpperCase();
+        mapped = response.data
+          .filter(
+            (n) =>
+              !serieFilter ||
+              n.document_series?.trim().toUpperCase() === serieFilter,
+          )
+          .map((n) => ({
+          id: n.id,
+          full_document_number: n.full_document_number,
+          document_type: "NOTA_CREDITO",
+          customer_name:
+            n.customer?.business_name || n.customer?.full_name || "",
+          issue_date: n.issue_date,
+          currency: n.currency,
+          total_amount: Number(n.total_amount),
+          series: n.document_series,
+          number: Number(n.document_number),
+        }));
+      } else {
+        const params = {
+          document_type: searchParams.document_type,
+          numero_inicio: searchParams.numero_inicio,
+          numero_fin: searchParams.numero_fin,
+          company_id: DEFAULT_COMPANY_ID,
+          ...(searchParams.serie && { serie: searchParams.serie }),
+        };
+        const response = await getSalesByRange(params);
+        mapped = response.data.map((s) => ({
+          id: s.id,
+          full_document_number: s.full_document_number,
+          document_type: s.document_type,
+          customer_name:
+            s.customer.business_name ||
+            `${s.customer.names ?? ""} ${s.customer.father_surname ?? ""}`,
+          issue_date: s.issue_date,
+          currency: s.currency,
+          total_amount: s.total_amount,
+        }));
+      }
+      if (mapped.length === 0) {
+        errorToast(
+          isCreditNote
+            ? "No se encontraron notas de crédito en el rango especificado"
+            : "No se encontraron ventas en el rango especificado",
+        );
         setItems([]);
         setSelectedIds([]);
         return;
       }
-      const mapped: DisplayItem[] = response.data.map((s) => ({
-        id: s.id,
-        full_document_number: s.full_document_number,
-        document_type: s.document_type,
-        customer_name:
-          s.customer.business_name ||
-          `${s.customer.names ?? ""} ${s.customer.father_surname ?? ""}`,
-        issue_date: s.issue_date,
-        currency: s.currency,
-        total_amount: s.total_amount,
-      }));
       setItems(mapped);
       setSelectedIds(mapped.map((i) => i.id));
     } catch (error: any) {
@@ -97,27 +137,46 @@ export default function SaleTicketsPrintPage() {
     }
   };
 
+  const openBlob = (blob: Blob) => {
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
+
   const handlePrintCreditNote = () => {
-    if (!searchParams.numero_inicio || !searchParams.numero_fin) {
-      errorToast("Complete los campos de número inicio y fin");
+    const selected = items
+      .filter((i) => selectedIds.includes(i.id))
+      .sort((x, y) => (x.number ?? 0) - (y.number ?? 0));
+    if (selected.length === 0) {
+      errorToast("No hay notas de crédito seleccionadas");
       return;
     }
 
-    setIsPrinting(true);
+    // Una sola serie y números consecutivos entre sí → un solo ticket por rango.
+    // Si hay "huecos" entre lo seleccionado, se imprime cada nota por separado.
+    const first = selected[0];
+    const last = selected[selected.length - 1];
+    const isContiguous =
+      selected.every((n) => n.series === first.series) &&
+      selected.every(
+        (n, idx) => idx === 0 || n.number === (selected[idx - 1].number ?? 0) + 1,
+      );
 
-    const printPromise = exportBulkCreditNoteTickets({
-      document_series: searchParams.serie,
-      numero_inicio: Number(searchParams.numero_inicio),
-      numero_fin: Number(searchParams.numero_fin),
-    }).then((blob) => {
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, "_blank");
-    });
+    setIsPrinting(true);
+    const printPromise = isContiguous
+      ? exportBulkCreditNoteTickets({
+          document_series: first.series ?? searchParams.serie,
+          numero_inicio: first.number ?? 0,
+          numero_fin: last.number ?? 0,
+        }).then(openBlob)
+      : Promise.all(selected.map((n) => getCreditNoteTicket(n.id))).then(
+          (blobs) => blobs.forEach(openBlob),
+        );
 
     promiseToast(printPromise, {
       loading: "Generando ticket...",
       success: "Ticket generado correctamente",
-      error: (err: any) => err?.message || "Error al generar ticket",
+      error: (err: any) =>
+        err?.response?.data?.message || err?.message || "Error al generar ticket",
     });
 
     printPromise.finally(() => setIsPrinting(false));
@@ -164,9 +223,6 @@ export default function SaleTicketsPrintPage() {
   const allSelected = items.length > 0 && selectedIds.length === items.length;
   const someSelected =
     selectedIds.length > 0 && selectedIds.length < items.length;
-
-  const creditNotePrintDisabled =
-    isPrinting || !searchParams.numero_inicio || !searchParams.numero_fin;
 
   return (
     <PageWrapper>
@@ -216,29 +272,23 @@ export default function SaleTicketsPrintPage() {
         />
 
         <div className="flex justify-end items-end h-full gap-2">
-          {!isCreditNote && (
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={handleSearch}
-              disabled={isSearching}
-            >
-              {isSearching ? (
-                <Loader className="h-4 w-4 animate-spin" />
-              ) : (
-                <Search className="h-4 w-4" />
-              )}
-              Buscar
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleSearch}
+            disabled={isSearching}
+          >
+            {isSearching ? (
+              <Loader className="h-4 w-4 animate-spin" />
+            ) : (
+              <Search className="h-4 w-4" />
+            )}
+            Buscar
+          </Button>
           {can(ROUTE, ACTIONS.IMPRIMIR) && (
             <Button
               onClick={isCreditNote ? handlePrintCreditNote : handlePrintSales}
-              disabled={
-                isCreditNote
-                  ? creditNotePrintDisabled
-                  : isPrinting || selectedIds.length === 0
-              }
+              disabled={isPrinting || selectedIds.length === 0}
             >
               {isPrinting ? (
                 <Loader className="h-4 w-4 animate-spin" />
@@ -246,17 +296,15 @@ export default function SaleTicketsPrintPage() {
                 <Printer className="h-4 w-4" />
               )}
               Imprimir
-              {!isCreditNote &&
-                selectedIds.length > 0 &&
-                ` (${selectedIds.length})`}
+              {selectedIds.length > 0 && ` (${selectedIds.length})`}
             </Button>
           )}
         </div>
       </GroupFormSection>
 
-      {!isCreditNote && items.length > 0 && (
+      {items.length > 0 && (
         <GroupFormSection
-          title={`Ventas encontradas (${items.length})`}
+          title={`${isCreditNote ? "Notas de crédito" : "Ventas"} encontradas (${items.length})`}
           icon={Filter}
           cols={{ sm: 1 }}
         >
@@ -329,7 +377,7 @@ export default function SaleTicketsPrintPage() {
           {selectedIds.length > 0 && (
             <div className="p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
               <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                {selectedIds.length} venta(s) seleccionada(s) para imprimir
+                {selectedIds.length} documento(s) seleccionado(s) para imprimir
               </p>
             </div>
           )}

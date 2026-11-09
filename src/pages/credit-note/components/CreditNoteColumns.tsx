@@ -1,6 +1,7 @@
 import type { CreditNoteResource } from "../lib/credit-note.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
+import { formatIssueDate } from "../lib/credit-note.date";
 
 export const CreditNoteColumns = (
   onManage?: (id: number, title: string) => void,
@@ -29,14 +30,7 @@ export const CreditNoteColumns = (
   {
     accessorKey: "issue_date",
     header: "Fecha de Emisión",
-    cell: ({ getValue }) => {
-      const date = new Date(getValue() as string);
-      return date.toLocaleDateString("es-PE", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-    },
+    cell: ({ getValue }) => formatIssueDate(getValue() as string),
   },
   {
     accessorKey: "sale",

@@ -672,6 +672,9 @@ export const CreditNoteForm = ({
               "Agregue una fila para comenzar"
             }
             minHeight="180px"
+            // Al editar, el backend solo actualiza cabecera: el detalle es de solo lectura
+            disabled={readOnlySale}
+            hideActionButtons={readOnlySale}
           />
 
           {(form.formState.errors.details as any)?.message && (

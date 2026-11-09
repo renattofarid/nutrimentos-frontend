@@ -7,6 +7,7 @@ import {
   type CreditNoteResponse,
   type CreateCreditNoteRequest,
   type UpdateCreditNoteRequest,
+  type UpdateCreditNoteResponse,
 } from "./credit-note.interface";
 import type { AxiosRequestConfig } from "axios";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
@@ -80,9 +81,12 @@ export async function exportBulkCreditNoteTickets(
 
 // Buscar por rango de números
 export interface GetCreditNotesByRangeParams {
-  serie?: string;
-  numero_inicio: string;
-  numero_fin: string;
+  numero_inicio: number;
+  numero_fin: number;
+  company_id?: number | null;
+  customer_id?: number | null;
+  status?: string | null;
+  warehouse_id?: number | null;
 }
 
 export interface CreditNotesByRangeResponse {
@@ -101,9 +105,9 @@ export interface CreditNotesByRangeResponse {
 export async function getCreditNotesByRange(
   params: GetCreditNotesByRangeParams
 ): Promise<CreditNotesByRangeResponse> {
-  const response = await api.post<CreditNotesByRangeResponse>(
+  const response = await api.get<CreditNotesByRangeResponse>(
     `${ENDPOINT}/by-range`,
-    params
+    { params }
   );
   return response.data;
 }
@@ -112,8 +116,8 @@ export async function getCreditNotesByRange(
 export async function updateCreditNote(
   id: number,
   data: UpdateCreditNoteRequest
-): Promise<CreditNoteResponse> {
-  const response = await api.put<CreditNoteResponse>(`${ENDPOINT}/${id}`, data);
+): Promise<UpdateCreditNoteResponse> {
+  const response = await api.put<UpdateCreditNoteResponse>(`${ENDPOINT}/${id}`, data);
   return response.data;
 }
 

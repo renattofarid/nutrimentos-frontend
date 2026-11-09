@@ -55,7 +55,7 @@ interface ExcelGridProps<T> {
   onProductCodeTab?: (
     rowIndex: number,
     code: string,
-    advance: () => void,
+    advance: (skipColumnIds?: string[]) => void,
     setError: (msg: string) => void,
     columnId?: string,
   ) => void;
@@ -192,10 +192,10 @@ export function ExcelGrid<T extends Record<string, any>>({
           const code = inputEl.value.trim();
           const isShift = e.shiftKey;
 
-          const advance = () => {
+          const advance = (skipColumnIds: string[] = []) => {
             const nextCell = isShift
               ? getPreviousEditableCell(rowIndex, colIndex)
-              : getNextEditableCell(rowIndex, colIndex);
+              : getNextEditableCell(rowIndex, colIndex, skipColumnIds);
 
             if (nextCell) {
               setFocusedCell(nextCell);
@@ -308,12 +308,11 @@ export function ExcelGrid<T extends Record<string, any>>({
       e.preventDefault();
 
       // Helper: avanzar como Tab pero saltando skipColumnsOnEnter
-      const advanceEnter = () => {
-        const nextCell = getNextEditableCell(
-          rowIndex,
-          colIndex,
-          skipColumnsOnEnter,
-        );
+      const advanceEnter = (skipColumnIds: string[] = []) => {
+        const nextCell = getNextEditableCell(rowIndex, colIndex, [
+          ...skipColumnsOnEnter,
+          ...skipColumnIds,
+        ]);
 
         if (nextCell) {
           setFocusedCell(nextCell);

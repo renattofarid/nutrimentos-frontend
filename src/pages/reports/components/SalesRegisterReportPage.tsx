@@ -8,7 +8,7 @@ import ExportButtons from "@/components/ExportButtons";
 import { FormInput } from "@/components/FormInput";
 import { FormSelect } from "@/components/FormSelect";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
-import { DatePickerFormField } from "@/components/DatePickerFormField";
+import { format, startOfMonth, endOfMonth, parse } from "date-fns";
 import {
   useBranchAsyncSearch,
   useWarehouseAsyncSearch,
@@ -42,20 +42,13 @@ interface FilterFormValues {
   vendedor_id: string;
   document_type: string;
   status: string;
-  start_date: string;
-  end_date: string;
+  month: string;
 }
 
 export default function SalesRegisterReportPage() {
   const { can } = usePermission();
   const { user } = useAuthStore();
   const company_id = user?.company_id;
-
-  const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
-  const defaultStartStr = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    .toISOString()
-    .split("T")[0];
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
@@ -66,8 +59,7 @@ export default function SalesRegisterReportPage() {
       vendedor_id: "",
       document_type: "",
       status: "",
-      start_date: defaultStartStr,
-      end_date: todayStr,
+      month: format(new Date(), "yyyy-MM"),
     },
   });
 
@@ -79,9 +71,18 @@ export default function SalesRegisterReportPage() {
     vendedor_id,
     document_type,
     status,
-    start_date,
-    end_date,
+    month,
   } = form.watch();
+
+  // El reporte es mensual: se envía el primer y último día del mes elegido
+  const { start_date, end_date } = useMemo(() => {
+    const parsed = month ? parse(month, "yyyy-MM", new Date()) : null;
+    if (!parsed || isNaN(parsed.getTime())) return { start_date: "", end_date: "" };
+    return {
+      start_date: format(startOfMonth(parsed), "yyyy-MM-dd"),
+      end_date: format(endOfMonth(parsed), "yyyy-MM-dd"),
+    };
+  }, [month]);
 
   const exportEndpoint = useMemo(() => {
     const params = new URLSearchParams();
@@ -190,21 +191,12 @@ export default function SalesRegisterReportPage() {
                 options={STATUS_OPTIONS}
               />
 
-              <div className="flex justify-start gap-2">
-                <DatePickerFormField
-                  control={form.control}
-                  name="start_date"
-                  label="Del"
-                  placeholder="Seleccionar fecha"
-                />
-                <DatePickerFormField
-                  control={form.control}
-                  name="end_date"
-                  label="Al"
-                  placeholder="Seleccionar fecha"
-                  autoLabelWidth
-                />
-              </div>
+              <FormInput
+                control={form.control}
+                name="month"
+                label="Mes"
+                type="month"
+              />
 
               <div className="flex justify-end gap-2 pt-1">
                 {can(ROUTE, ACTIONS.EXPORTAR) && (

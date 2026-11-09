@@ -34,6 +34,7 @@ import type { RowSelectionState } from "@tanstack/react-table";
 import ExportButtons from "@/components/ExportButtons";
 import { format } from "date-fns";
 import SaleDetailSheet from "./SaleDetailSheet";
+import { usePersistedFilter } from "../lib/sale-filters.state";
 
 function parseDocumento(documento: string) {
   const dashIndex = documento.indexOf("-");
@@ -53,18 +54,25 @@ export default function SalePage() {
   const [per_page, setPerPage] = useState(DEFAULT_PER_PAGE);
 
   // Filters
-  const [branch_id, setBranchId] = useState("");
-  const [document_type, setDocumentType] = useState("");
-  const [status, setStatus] = useState("");
-  const [warehouse_id, setWarehouseId] = useState("");
-  const [vendedor_id, setVendedorId] = useState("");
-  const [start_date, setStartDate] = useState<Date | undefined>(() => {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  });
-  const [end_date, setEndDate] = useState<Date | undefined>(() => new Date());
-  const [documento, setDocumento] = useState("");
-  const [debouncedDocumento, setDebouncedDocumento] = useState("");
+  // Se conservan al salir a crear/editar y volver al listado
+  const [branch_id, setBranchId] = usePersistedFilter("branch_id", "");
+  const [document_type, setDocumentType] = usePersistedFilter("document_type", "");
+  const [status, setStatus] = usePersistedFilter("status", "");
+  const [warehouse_id, setWarehouseId] = usePersistedFilter("warehouse_id", "");
+  const [vendedor_id, setVendedorId] = usePersistedFilter("vendedor_id", "");
+  const [start_date, setStartDate] = usePersistedFilter<Date | undefined>(
+    "start_date",
+    () => {
+      const d = new Date();
+      return new Date(d.getFullYear(), d.getMonth(), 1); // inicio del mes
+    },
+  );
+  const [end_date, setEndDate] = usePersistedFilter<Date | undefined>(
+    "end_date",
+    () => new Date(),
+  );
+  const [documento, setDocumento] = usePersistedFilter("documento", "");
+  const [debouncedDocumento, setDebouncedDocumento] = useState(documento);
 
   // Debounce para evitar race conditions al escribir el documento
   useEffect(() => {

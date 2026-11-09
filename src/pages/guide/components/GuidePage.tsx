@@ -121,7 +121,6 @@ export default function GuidePage() {
         isLoading={isLoading}
         columns={GuideColumns()}
         data={data || []}
-        onRowDoubleClick={(guide) => handleEdit(guide.id)}
         enableRowSelection={true}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}

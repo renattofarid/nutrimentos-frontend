@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Ban, Plus, Trash2, X, Download, Sheet, FileText, Loader2, Printer, Eye } from "lucide-react";
+import { Ban, Pencil, Plus, Trash2, X, Download, Sheet, FileText, Loader2, Printer, Eye } from "lucide-react";
 import { CREDIT_NOTE } from "../lib/credit-note.interface";
 import { useNavigate } from "react-router-dom";
 import { useWindowManager } from "@/stores/window-manager.store";
@@ -24,6 +24,7 @@ const SHOW_VOID = false;
 
 interface CreditNoteActionsProps {
   hasSelection: boolean;
+  onEdit: () => void;
   onDelete: () => void;
   onVoid: () => void;
   canVoid?: boolean;
@@ -34,6 +35,7 @@ interface CreditNoteActionsProps {
 
 export default function CreditNoteActions({
   hasSelection,
+  onEdit,
   onDelete,
   onVoid,
   canVoid = true,
@@ -99,6 +101,18 @@ export default function CreditNoteActions({
           >
             <Eye />
             Gestionar
+          </Button>
+        )}
+        {can(ROUTE, ACTIONS.EDITAR) && (
+          <Button
+            colorIcon="amber"
+            size="sm"
+            variant="outline"
+            onClick={onEdit}
+            disabled={!hasSelection}
+          >
+            <Pencil />
+            Editar
           </Button>
         )}
         {can(ROUTE, ACTIONS.ELIMINAR) && (

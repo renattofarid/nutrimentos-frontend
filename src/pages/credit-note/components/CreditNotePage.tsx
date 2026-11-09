@@ -4,6 +4,7 @@ import { useWindowManager } from "@/stores/window-manager.store";
 import { useCreditNote } from "../lib/credit-note.hook";
 import type { RowSelectionState } from "@tanstack/react-table";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
+import type { CreditNoteResource } from "../lib/credit-note.interface";
 
 import CreditNoteActions from "./CreditNoteActions";
 import CreditNoteTable from "./CreditNoteTable";
@@ -39,7 +40,7 @@ export default function CreditNotePage() {
   const [selectedSale, setSelectedSale] = useState<SaleResource | null>(null);
   const [issue_date_from, setIssueDateFrom] = useState<Date | undefined>(() => {
     const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    return new Date(d.getFullYear(), d.getMonth(), 1); // inicio del mes
   });
   const [issue_date_to, setIssueDateTo] = useState<Date | undefined>(() => new Date());
   const [page, setPage] = useState(1);
@@ -57,10 +58,10 @@ export default function CreditNotePage() {
     status: status || undefined,
     credit_note_motive_id: motive_id ? Number(motive_id) : undefined,
     customer_id: customer_id ? Number(customer_id) : undefined,
-    "issue_date[0]": issue_date_from
+    from: issue_date_from
       ? format(issue_date_from, "yyyy-MM-dd")
       : undefined,
-    "issue_date[1]": issue_date_to
+    to: issue_date_to
       ? format(issue_date_to, "yyyy-MM-dd")
       : undefined,
   });
@@ -83,6 +84,20 @@ export default function CreditNotePage() {
     ? (data?.find((n) => n.id.toString() === selectedNoteId) ?? null)
     : null;
   const hasSelection = !!toolbarNote;
+
+  const handleEdit = (note: CreditNoteResource | null) => {
+    if (!note) return;
+    // Solo se puede editar durante el día en que se creó
+    const created = new Date((note.created_at ?? "").replace(" ", "T"));
+    const isToday =
+      Number.isNaN(created.getTime()) ||
+      created.toDateString() === new Date().toDateString();
+    if (!isToday) {
+      errorToast("Solo se puede editar una nota de crédito durante el día en que se creó");
+      return;
+    }
+    navigate(`${CREDIT_NOTE.ROUTE}/actualizar/${note.id}`);
+  };
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -149,10 +164,10 @@ export default function CreditNotePage() {
     status: status || undefined,
     credit_note_motive_id: motive_id ? Number(motive_id) : undefined,
     customer_id: customer_id ? Number(customer_id) : undefined,
-    "issue_date[0]": issue_date_from
+    from: issue_date_from
       ? format(issue_date_from, "yyyy-MM-dd")
       : undefined,
-    "issue_date[1]": issue_date_to
+    to: issue_date_to
       ? format(issue_date_to, "yyyy-MM-dd")
       : undefined,
   };
@@ -161,6 +176,7 @@ export default function CreditNotePage() {
     <PageWrapper>
       <CreditNoteActions
         hasSelection={hasSelection}
+        onEdit={() => handleEdit(toolbarNote)}
         onDelete={() => toolbarNote && setDeleteId(toolbarNote.id)}
         onVoid={() => toolbarNote && setVoidId(toolbarNote.id)}
         canVoid={toolbarNote?.status !== "ANULADO"}
@@ -182,6 +198,7 @@ export default function CreditNotePage() {
         )}
         data={data || []}
         enableRowSelection={true}
+        onRowDoubleClick={(note) => handleEdit(note)}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
       >

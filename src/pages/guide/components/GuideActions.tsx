@@ -8,6 +8,9 @@ import { ACTIONS } from "@/lib/permission-catalog";
 
 const ROUTE = "guias";
 
+// Las guías no se editan: se oculta el botón. Poner en true para habilitarlo.
+const SHOW_EDIT = false;
+
 interface Props {
   excelEndpoint?: string;
   hasSelection: boolean;
@@ -41,7 +44,7 @@ export default function GuideActions({
             Nuevo
           </Button>
         )}
-        {can(ROUTE, ACTIONS.EDITAR) && (
+        {SHOW_EDIT && can(ROUTE, ACTIONS.EDITAR) && (
           <Button
             colorIcon="amber"
             size="sm"

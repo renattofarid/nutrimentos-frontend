@@ -1,5 +1,6 @@
 "use client";
 
+import { toDateInputValue } from "../lib/credit-note.date";
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -69,7 +70,7 @@ export default function CreditNoteEditPage() {
     if (!creditNote) return {};
     return {
       sale_id: creditNote.sale?.id?.toString() ?? "0",
-      issue_date: creditNote.issue_date ?? "",
+      issue_date: toDateInputValue(creditNote.issue_date),
       credit_note_motive_id: creditNote.credit_note_motive_id?.toString() ?? "1",
       affects_stock: creditNote.affects_stock ?? true,
       observations: creditNote.observations ?? "",
@@ -91,19 +92,12 @@ export default function CreditNoteEditPage() {
   const handleSubmit = async (data: CreditNoteSchema) => {
     setIsSubmitting(true);
     try {
+      // El backend solo permite editar la cabecera (no la venta ni el detalle)
       await updateCreditNote(creditNoteId, {
-        sale_id: Number(data.sale_id),
         issue_date: data.issue_date,
         credit_note_motive_id: Number(data.credit_note_motive_id),
         affects_stock: data.affects_stock,
         observations: data.observations || "",
-        details: data.details.map((detail) => ({
-          sale_detail_id: detail.sale_detail_id,
-          product_id: detail.product_id,
-          quantity_sacks: detail.quantity_sacks,
-          quantity_kg: detail.quantity_kg,
-          unit_price: detail.unit_price,
-        })),
       });
       successToast(SUCCESS_MESSAGE(MODEL, "update"));
       navigate(ROUTE);

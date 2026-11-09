@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,12 +43,15 @@ import { usePermission } from "@/lib/permission-guard";
 import { ACTIONS } from "@/lib/permission-catalog";
 import DataTablePagination from "@/components/DataTablePagination";
 import { DEFAULT_PER_PAGE } from "@/lib/core.constants";
+import { DatePickerFormField } from "@/components/DatePickerFormField";
 
 const ROUTE = "inventario";
 
 interface FilterFormValues {
   product_id: string;
   warehouse_id: string;
+  from: string;
+  to: string;
 }
 
 // Abre el Kardex en su propia ventana, filtrado por producto + almacén y
@@ -242,6 +245,8 @@ export default function InventoryReportPage() {
   // Búsqueda por código: Enter/Tab consulta la API y selecciona el producto con código exacto
   const [productCodeInput, setProductCodeInput] = useState("");
   const [codeToSearch, setCodeToSearch] = useState<string | null>(null);
+  // Último código ya resuelto a producto (para no repetir la búsqueda al pulsar Buscar)
+  const resolvedCodeRef = useRef("");
   const [externalProductOption, setExternalProductOption] =
     useState<Option | null>(null);
 
@@ -257,6 +262,7 @@ export default function InventoryReportPage() {
       (p) => p.codigo.trim().toLowerCase() === wanted,
     );
     if (product) {
+      resolvedCodeRef.current = wanted;
       setExternalProductOption({
         value: String(product.id),
         label: product.name,
@@ -268,6 +274,8 @@ export default function InventoryReportPage() {
         setAppliedFilters({
           product_id: product.id,
           warehouse_id: Number(warehouseId),
+          from: form.getValues("from") || null,
+          to: form.getValues("to") || null,
         });
         setPage(1);
       }
@@ -281,12 +289,16 @@ export default function InventoryReportPage() {
   const [appliedFilters, setAppliedFilters] = useState<{
     product_id: number | null;
     warehouse_id: number;
+    from: string | null;
+    to: string | null;
   } | null>(null);
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
       product_id: "",
       warehouse_id: "",
+      from: "",
+      to: "",
     },
   });
 
@@ -322,9 +334,18 @@ export default function InventoryReportPage() {
 
   const handleSearch = (values: FilterFormValues) => {
     if (!requireWarehouse(values.warehouse_id)) return;
+    // Código escrito y aún sin resolver: buscar el producto primero; al terminar,
+    // el efecto de código aplica los filtros y ejecuta la búsqueda.
+    const typedCode = productCodeInput.trim();
+    if (typedCode && typedCode.toLowerCase() !== resolvedCodeRef.current) {
+      setCodeToSearch(typedCode);
+      return;
+    }
     setAppliedFilters({
       product_id: values.product_id ? Number(values.product_id) : null,
       warehouse_id: Number(values.warehouse_id),
+      from: values.from || null,
+      to: values.to || null,
     });
     setPage(1);
   };
@@ -349,6 +370,8 @@ export default function InventoryReportPage() {
       const params: InventoryReportParams = {
         product_id: values.product_id ? Number(values.product_id) : null,
         warehouse_id: Number(values.warehouse_id),
+        from: values.from || null,
+        to: values.to || null,
       };
 
       const blob = await exportInventoryReport(params);
@@ -466,10 +489,13 @@ export default function InventoryReportPage() {
               onValueChange={(value) => {
                 if (!value) {
                   setProductCodeInput("");
+                  resolvedCodeRef.current = "";
                   setExternalProductOption(null);
                 }
               }}
             />
+            <DatePickerFormField control={form.control} name="from" label="Del" />
+            <DatePickerFormField control={form.control} name="to" label="Al" />
           </GroupFormSection>
 
           {rawData && (

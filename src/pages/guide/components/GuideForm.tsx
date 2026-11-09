@@ -679,7 +679,7 @@ export const GuideForm = ({
     (
       rowIndex: number,
       value: string,
-      advance: () => void,
+      advance: (skipColumnIds?: string[]) => void,
       setError: (msg: string) => void,
       columnId?: string,
     ) => {
@@ -705,8 +705,9 @@ export const GuideForm = ({
 
         void (async () => {
           try {
-            await findProductByCode(rowIndex, code);
-            advance();
+            const found = await findProductByCode(rowIndex, code);
+            // Si el producto existe ya tiene descripción: ir directo a Sacos
+            advance(found ? ["description"] : undefined);
           } catch {
             setError("No se pudo buscar el producto por código");
           }

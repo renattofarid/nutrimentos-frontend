@@ -344,6 +344,8 @@ export default function KardexReportPage() {
 
   const [productCodeInput, setProductCodeInput] = useState("");
   const [codeToSearch, setCodeToSearch] = useState<string | null>(null);
+  // Último código ya resuelto a producto (para no repetir la búsqueda al pulsar Buscar)
+  const resolvedCodeRef = useRef("");
   // Filtros precargados cuando se abre desde Inventario (botón "Ver Kardex")
   const [searchParams] = useSearchParams();
   const presetProductId = searchParams.get("product_id") ?? "";
@@ -377,6 +379,7 @@ export default function KardexReportPage() {
       (p) => p.codigo.trim().toLowerCase() === wanted,
     );
     if (product) {
+      resolvedCodeRef.current = wanted;
       setExternalProductOption({
         value: String(product.id),
         label: product.name,
@@ -433,6 +436,13 @@ export default function KardexReportPage() {
   }, []);
 
   const handleSearch = () => {
+    // Si se escribió un código y aún no se resolvió a producto, buscarlo primero:
+    // al terminar, el efecto de código aplica los filtros y ejecuta la búsqueda.
+    const typedCode = productCodeInput.trim();
+    if (typedCode && typedCode.toLowerCase() !== resolvedCodeRef.current) {
+      setCodeToSearch(typedCode);
+      return;
+    }
     setPage(1);
     setAppliedFilters({ ...form.getValues() });
   };
@@ -575,6 +585,7 @@ export default function KardexReportPage() {
               onValueChange={(value) => {
                 if (!value) {
                   setProductCodeInput("");
+                  resolvedCodeRef.current = "";
                   setExternalProductOption(null);
                 }
               }}

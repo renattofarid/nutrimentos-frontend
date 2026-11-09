@@ -1,3 +1,4 @@
+import { getSheetSaleSaldo } from "../../lib/settlement.utils";
 import type { UseFormReturn } from "react-hook-form";
 import {
   User,
@@ -42,8 +43,7 @@ export function SaleMobileCard({ sale, form }: SaleMobileCardProps) {
   const hasNote =
     formValues?.delivery_notes && formValues.delivery_notes.length > 0;
   const creditNotesTotal = sale.sale.credit_notes_total_raw || 0;
-  const currentAmount = parseFormattedNumber(sale.current_amount);
-  const pendingAmount = currentAmount - creditNotesTotal;
+  const pendingAmount = getSheetSaleSaldo(sale);
   const hasCreditNotes = sale.sale.credit_notes.length > 0;
 
   return (

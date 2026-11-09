@@ -1,3 +1,4 @@
+import { getSheetSaleSaldo } from "../../lib/settlement.utils";
 import { Card, CardContent } from "@/components/ui/card";
 import type { DeliverySheetById } from "../../lib/deliverysheet.interface";
 import { parseFormattedNumber } from "@/lib/utils";
@@ -16,9 +17,7 @@ export function SettlementSummary({ deliverySheet }: SettlementSummaryProps) {
     .toFixed(2);
   const totalPendiente = deliverySheet.sheet_sales
     .reduce((sum, sheetSale) => {
-      const currentAmount = parseFormattedNumber(sheetSale.current_amount);
-      const collectedAmount = parseFormattedNumber(sheetSale.collected_amount);
-      return sum + Math.max(0, currentAmount - collectedAmount);
+      return sum + getSheetSaleSaldo(sheetSale);
     }, 0)
     .toFixed(2);
 

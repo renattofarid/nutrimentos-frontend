@@ -19,6 +19,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getSheetSaleSaldo } from "../lib/settlement.utils";
 import PageWrapper from "@/components/PageWrapper";
 import { cn, parseFormattedNumber } from "@/lib/utils";
 import {
@@ -188,11 +189,7 @@ export default function SettlementPage() {
             ? "ENTREGADO"
             : sheetSale.delivery_status,
         delivery_notes: sheetSale.delivery_notes || "",
-        payment_amount: Math.max(
-          0,
-          parseFormattedNumber(sheetSale.current_amount) -
-            parseFormattedNumber(sheetSale.collected_amount),
-        ).toFixed(2),
+        payment_amount: getSheetSaleSaldo(sheetSale).toFixed(2),
       })),
       payment_date: new Date().toISOString().split("T")[0],
       observations: "",
@@ -288,9 +285,7 @@ export default function SettlementPage() {
   const totalPendiente = useMemo(() => {
     if (!deliverySheet?.sheet_sales) return 0;
     return deliverySheet.sheet_sales.reduce((sum, sheetSale) => {
-      const currentAmount = parseFormattedNumber(sheetSale.current_amount);
-      const collectedAmount = parseFormattedNumber(sheetSale.collected_amount);
-      return sum + Math.max(0, currentAmount - collectedAmount);
+      return sum + getSheetSaleSaldo(sheetSale);
     }, 0);
   }, [deliverySheet]);
 

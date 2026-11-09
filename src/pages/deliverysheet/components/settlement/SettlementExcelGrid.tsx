@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ExcelGrid, type ExcelGridColumn } from "@/components/ExcelGrid";
 import { parseFormattedNumber } from "@/lib/utils";
+import { getSheetSaleSaldo } from "../../lib/settlement.utils";
 import { useWindowManager } from "@/stores/window-manager.store";
 import { DELIVERY_STATUS_OPTIONS } from "./constants";
 import type { SettlementFormSchema } from "./types";
@@ -66,7 +67,7 @@ function PayAllHeader({
     const allFilled = allValues.every((sale, i) => {
       const saleData = sales[i];
       if (!saleData) return false;
-      const saldo = Math.max(0, parseFormattedNumber(saleData.current_amount) - parseFormattedNumber(saleData.collected_amount));
+      const saldo = getSheetSaleSaldo(saleData);
       return Math.abs(parseFloat(sale.payment_amount || "0") - saldo) < 0.01;
     });
     if (allFilled) return true;
@@ -76,7 +77,7 @@ function PayAllHeader({
 
   const handlePayAll = (checked: boolean) => {
     sales.forEach((saleData) => {
-      const saldo = Math.max(0, parseFormattedNumber(saleData.current_amount) - parseFormattedNumber(saleData.collected_amount));
+      const saldo = getSheetSaleSaldo(saleData);
       form.setValue(
         `sales.${saleData.index}.payment_amount`,
         checked ? saldo.toFixed(2) : "0",
@@ -360,7 +361,7 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
       sales.map((sheetSale) => {
         const currentAmount = parseFormattedNumber(sheetSale.current_amount);
         const collectedAmount = parseFormattedNumber(sheetSale.collected_amount);
-        const saldo = Math.max(0, currentAmount - collectedAmount);
+        const saldo = getSheetSaleSaldo(sheetSale);
 
         const issueDate = sheetSale.sale.issue_date || "";
         const fecha = issueDate

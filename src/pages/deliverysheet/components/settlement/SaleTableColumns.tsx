@@ -1,3 +1,4 @@
+import { getSheetSaleSaldo } from "../../lib/settlement.utils";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { UseFormReturn } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
@@ -45,9 +46,7 @@ export function getSaleTableColumns(
       cell: ({ row }) => {
         const index = row.original.index;
         const formValues = form.watch(`sales.${index}`);
-        const currentAmount = parseFormattedNumber(row.original.current_amount);
-        const collectedAmount = parseFormattedNumber(row.original.collected_amount);
-        const pendingAmount = Math.max(0, currentAmount - collectedAmount);
+        const pendingAmount = getSheetSaleSaldo(row.original);
         const isAutoFilled = Math.abs(parseFloat(formValues?.payment_amount || "0") - pendingAmount) < 0.01;
 
         const handleAutoFill = (checked: boolean) => {
@@ -109,9 +108,7 @@ export function getSaleTableColumns(
       accessorKey: "current_amount",
       header: "Pendiente",
       cell: ({ row }) => {
-        const currentAmount = parseFormattedNumber(row.original.current_amount);
-        const collectedAmount = parseFormattedNumber(row.original.collected_amount);
-        const pendingAmount = Math.max(0, currentAmount - collectedAmount);
+        const pendingAmount = getSheetSaleSaldo(row.original);
         return (
           <Badge color="secondary" className="text-xs font-semibold">
             S/. {pendingAmount.toFixed(2)}
@@ -246,9 +243,7 @@ export function getSaleTableColumns(
         const index = row.original.index;
         const formValues = form.watch(`sales.${index}`);
         const formErrors = form.formState.errors.sales?.[index];
-        const currentAmount = parseFormattedNumber(row.original.current_amount);
-        const collectedAmount = parseFormattedNumber(row.original.collected_amount);
-        const pendingAmount = Math.max(0, currentAmount - collectedAmount);
+        const pendingAmount = getSheetSaleSaldo(row.original);
 
         return (
           <div className="min-w-[140px] space-y-2">

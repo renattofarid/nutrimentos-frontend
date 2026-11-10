@@ -63,9 +63,7 @@ export async function getCreditNoteTicket(id: number): Promise<Blob> {
 
 // Tickets en bulk
 export interface BulkCreditNoteTicketsRequest {
-  document_series: string;
-  numero_inicio: number;
-  numero_fin: number;
+  ids: number[];
 }
 
 export async function exportBulkCreditNoteTickets(

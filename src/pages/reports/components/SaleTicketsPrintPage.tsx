@@ -24,7 +24,6 @@ import { FormInput } from "@/components/FormInput";
 import {
   exportBulkCreditNoteTickets,
   getCreditNotesByRange,
-  getCreditNoteTicket,
 } from "@/pages/credit-note/lib/credit-note.actions";
 import { usePermission } from "@/lib/permission-guard";
 import { ACTIONS } from "@/lib/permission-catalog";
@@ -75,14 +74,9 @@ export default function SaleTicketsPrintPage() {
           numero_fin: Number(searchParams.numero_fin),
           company_id: DEFAULT_COMPANY_ID,
         });
-        // El endpoint no filtra por serie: se filtra aquí
-        const serieFilter = searchParams.serie.trim().toUpperCase();
+        // El endpoint no recibe serie: se listan todas las series del rango
+        // (la serie por defecto "001" es de ventas y descartaba toda NC01).
         mapped = response.data
-          .filter(
-            (n) =>
-              !serieFilter ||
-              n.document_series?.trim().toUpperCase() === serieFilter,
-          )
           .map((n) => ({
           id: n.id,
           full_document_number: n.full_document_number,
@@ -151,26 +145,11 @@ export default function SaleTicketsPrintPage() {
       return;
     }
 
-    // Una sola serie y números consecutivos entre sí → un solo ticket por rango.
-    // Si hay "huecos" entre lo seleccionado, se imprime cada nota por separado.
-    const first = selected[0];
-    const last = selected[selected.length - 1];
-    const isContiguous =
-      selected.every((n) => n.series === first.series) &&
-      selected.every(
-        (n, idx) => idx === 0 || n.number === (selected[idx - 1].number ?? 0) + 1,
-      );
-
+    // Un solo ticket con todas las notas seleccionadas (por ids)
     setIsPrinting(true);
-    const printPromise = isContiguous
-      ? exportBulkCreditNoteTickets({
-          document_series: first.series ?? searchParams.serie,
-          numero_inicio: first.number ?? 0,
-          numero_fin: last.number ?? 0,
-        }).then(openBlob)
-      : Promise.all(selected.map((n) => getCreditNoteTicket(n.id))).then(
-          (blobs) => blobs.forEach(openBlob),
-        );
+    const printPromise = exportBulkCreditNoteTickets({
+      ids: selected.map((n) => n.id),
+    }).then(openBlob);
 
     promiseToast(printPromise, {
       loading: "Generando ticket...",

@@ -1,4 +1,7 @@
-import type { CreditNoteResource } from "../lib/credit-note.interface";
+import {
+  isVoidedCreditNote,
+  type CreditNoteResource,
+} from "../lib/credit-note.interface";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { formatIssueDate } from "../lib/credit-note.date";
@@ -105,12 +108,7 @@ export const CreditNoteColumns = (
     header: "Estado",
     cell: ({ getValue }) => {
       const status = getValue() as string;
-      const variant =
-        status === "REGISTRADO"
-          ? "default"
-          : status === "ANULADO"
-            ? "destructive"
-            : "secondary";
+      const variant = isVoidedCreditNote(status) ? "destructive" : "default";
       return <Badge color={variant}>{status}</Badge>;
     },
   },

@@ -91,8 +91,11 @@ export const SaleEditPage = () => {
         product_code: detail.product?.codigo || "",
         product_name: detail.description?.trim() || detail.product?.name || "",
         product_weight: (detail.product?.weight ?? 0).toString(),
-        quantity_sacks: detail.quantity_sacks.toString(),
-        quantity_kg: "0",
+        quantity_sacks: (detail.quantity_sacks ?? 0).toString(),
+        // Ventas por kg: conservar los kg y su precio (por kg) al editar
+        quantity_kg: (detail.quantity_kg ?? 0).toString(),
+        product_price_per_kg:
+          Number(detail.quantity_sacks) > 0 ? "0" : detail.unit_price.toString(),
         unit_price: detail.unit_price.toString(),
       })) ?? [],
     installments:

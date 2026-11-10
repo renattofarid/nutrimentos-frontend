@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Pencil } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { CreditNoteResource } from "../lib/credit-note.interface";
+import {
+  isVoidedCreditNote,
+  type CreditNoteResource,
+} from "../lib/credit-note.interface";
 
 interface CreditNoteSearchResultsProps {
   results: CreditNoteResource[];
@@ -72,7 +75,7 @@ export default function CreditNoteSearchResults({
         header: "Estado",
         cell: ({ row }) => (
           <Badge
-            color={row.original.status === "REGISTRADO" ? "default" : "destructive"}
+            color={isVoidedCreditNote(row.original.status) ? "destructive" : "default"}
             className="text-[10px]"
           >
             {row.original.status}

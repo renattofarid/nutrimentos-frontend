@@ -94,11 +94,16 @@ export interface CreditNotesByRangeResponse {
   data: CreditNoteResource[];
   meta: {
     total: number;
+    total_amount?: number;
     rango_solicitado: {
-      serie: string;
-      numero_inicio: string;
-      numero_fin: string;
+      numero_inicio: number;
+      numero_fin: number;
+      cantidad_total?: number;
     };
+    series_encontradas?: string[];
+    numeros_encontrados?: number[];
+    numeros_faltantes?: number[];
+    tiene_faltantes?: boolean;
   };
 }
 

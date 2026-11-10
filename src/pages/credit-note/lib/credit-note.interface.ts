@@ -150,8 +150,13 @@ export const CreditNoteManageRoute = `${ROUTE}/gestionar/:id`;
 
 // ===== STATUS & TYPE OPTIONS =====
 
+// El backend devuelve "EMITIDA" (by-range) y "REGISTRADO" según el endpoint
+export const isVoidedCreditNote = (status?: string | null) =>
+  (status ?? "").toUpperCase().startsWith("ANULAD");
+
 export const CREDIT_NOTE_STATUSES = [
   { value: "REGISTRADO", label: "Registrado" },
+  { value: "EMITIDA", label: "Emitida" },
   { value: "ANULADO", label: "Anulado" },
 ] as const;
 

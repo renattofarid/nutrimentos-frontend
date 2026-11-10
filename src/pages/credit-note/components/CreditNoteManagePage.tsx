@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { formatIssueDate } from "../lib/credit-note.date";
+import { isVoidedCreditNote } from "../lib/credit-note.interface";
 import { useParams } from "react-router-dom";
 import { useCreditNoteStore } from "../lib/credit-note.store";
 import { Badge } from "@/components/ui/badge";
@@ -94,7 +95,7 @@ export default function CreditNoteManagePage() {
           </div>
         </div>
         <Badge
-          color={creditNote.status === "REGISTRADO" ? "default" : "destructive"}
+          color={isVoidedCreditNote(creditNote.status) ? "destructive" : "default"}
           className="text-sm px-3"
         >
           {creditNote.status}
@@ -355,7 +356,7 @@ export default function CreditNoteManagePage() {
               <span className="text-muted-foreground">Estado</span>
               <Badge
                 color={
-                  creditNote.status === "REGISTRADO" ? "default" : "destructive"
+                  isVoidedCreditNote(creditNote.status) ? "destructive" : "default"
                 }
                 className="text-xs"
               >

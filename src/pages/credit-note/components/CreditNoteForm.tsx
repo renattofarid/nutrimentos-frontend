@@ -9,6 +9,7 @@ import {
   type CreditNoteSchema,
 } from "../lib/credit-note.schema";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
+import { getNextCreditNoteSeries } from "../lib/credit-note.actions";
 import { useSaleByDocument } from "@/pages/sale/lib/sale.hook";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { FormSwitch } from "@/components/FormSwitch";
@@ -35,6 +36,8 @@ interface CreditNoteFormProps {
   selectedSale?: SaleResource | null;
   onSaleChange?: (saleId: number | null) => void;
   readOnlySale?: boolean;
+  // Edición: el backend solo actualiza cabecera, el detalle no se modifica
+  detailsLocked?: boolean;
 }
 
 interface CreditNoteDetailRow {
@@ -55,7 +58,19 @@ interface CreditNoteDetailRow {
   price_per_kg: number;
 }
 
-const round2 = (v: number) => Math.round(v * 100) / 100;
+const getSellerName = (v: {
+  business_name?: string | null;
+  names?: string | null;
+  father_surname?: string | null;
+  mother_surname?: string | null;
+}) =>
+  [v.names, v.father_surname, v.mother_surname]
+    .filter((s) => typeof s === "string" && s.trim() !== "")
+    .join(" ") ||
+  v.business_name ||
+  "";
+
+const round2 =(v: number) => Math.round(v * 100) / 100;
 const round6 = (v: number) => Math.round(v * 1_000_000) / 1_000_000;
 
 function getFirstErrorMessage(
@@ -144,6 +159,7 @@ export const CreditNoteForm = ({
   selectedSale,
   onSaleChange,
   readOnlySale = false,
+  detailsLocked = false,
 }: CreditNoteFormProps) => {
   const [details, setDetails] = useState<CreditNoteDetailRow[]>([]);
   const saleDetailMap = useMemo(
@@ -178,6 +194,24 @@ export const CreditNoteForm = ({
   });
 
   const watchSaleId = form.watch("sale_id");
+
+  // Siguiente correlativo (solo al crear)
+  const [nextNumber, setNextNumber] = useState("");
+  const branchId = selectedSale?.branch?.id ?? selectedSale?.branch_id ?? 1;
+  useEffect(() => {
+    if (detailsLocked) return;
+    let cancelled = false;
+    getNextCreditNoteSeries(Number(branchId))
+      .then((res) => {
+        if (!cancelled) setNextNumber(res.full_number);
+      })
+      .catch(() => {
+        if (!cancelled) setNextNumber("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [branchId, detailsLocked]);
 
   useEffect(() => {
     if (watchSaleId) {
@@ -608,10 +642,19 @@ export const CreditNoteForm = ({
                 return {
                   value: sale.id.toString(),
                   label: `${sale.serie}-${sale.numero} - ${name}`,
-                  description: `${sale.document_type} · ${sale.currency === "USD" ? "$" : "S/."} ${formatNumber(sale.total_amount)}`,
+                  description: `${sale.document_type} · ${sale.currency === "USD" ? "$" : "S/."} ${formatNumber(sale.total_amount)}${sale.vendedor ? ` · Vendedor: ${getSellerName(sale.vendedor)}` : ""}`,
                 };
               }}
               uppercase
+            />
+          )}
+
+          {!detailsLocked && (
+            <FormInput
+              label="N° Documento"
+              name="next_number"
+              value={nextNumber || "—"}
+              readOnly
             />
           )}
 
@@ -639,6 +682,19 @@ export const CreditNoteForm = ({
               }
               readOnly
               name="cliente"
+            />
+          )}
+
+          {selectedSale && (
+            <FormInput
+              label="Vendedor"
+              value={
+                selectedSale.vendedor
+                  ? getSellerName(selectedSale.vendedor)
+                  : "Sin vendedor"
+              }
+              readOnly
+              name="vendedor"
             />
           )}
 
@@ -673,8 +729,8 @@ export const CreditNoteForm = ({
             }
             minHeight="180px"
             // Al editar, el backend solo actualiza cabecera: el detalle es de solo lectura
-            disabled={readOnlySale}
-            hideActionButtons={readOnlySale}
+            disabled={detailsLocked}
+            hideActionButtons={detailsLocked}
           />
 
           {(form.formState.errors.details as any)?.message && (

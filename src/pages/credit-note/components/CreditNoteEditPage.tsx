@@ -139,6 +139,7 @@ export default function CreditNoteEditPage() {
         selectedSale={selectedSale}
         onSaleChange={setSelectedSaleId}
         readOnlySale={true}
+        detailsLocked={true}
       />
     </PageWrapper>
   );

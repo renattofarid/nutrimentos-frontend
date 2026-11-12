@@ -1,4 +1,4 @@
-import { api } from "@/lib/config";
+import { api, DEFAULT_COMPANY_ID } from "@/lib/config";
 import {
   CREDIT_NOTE,
   type getCreditNoteProps,
@@ -59,6 +59,32 @@ export async function getCreditNoteTicket(id: number): Promise<Blob> {
     responseType: "blob",
   });
   return response.data;
+}
+
+// Siguiente correlativo de nota de crédito
+export interface NextCreditNoteSeriesData {
+  exists: boolean;
+  serie: string;
+  current_number: number;
+  next_number: number;
+  next_formatted: string;
+  full_number: string;
+  branch_id: number;
+  branch_name: string;
+}
+
+export async function getNextCreditNoteSeries(
+  branch_id: number,
+): Promise<NextCreditNoteSeriesData> {
+  const response = await api.post<{ data: NextCreditNoteSeriesData }>(
+    `${ENDPOINT}/view-next-series`,
+    {
+      branch_id,
+      document_type: "NOTA_CREDITO",
+      company_id: DEFAULT_COMPANY_ID,
+    },
+  );
+  return response.data.data;
 }
 
 // Tickets en bulk

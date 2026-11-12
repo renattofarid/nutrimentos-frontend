@@ -306,6 +306,11 @@ export const CreditNoteForm = ({
   };
 
   const handleRemoveRow = (index: number) => {
+    // La NC necesita al menos un detalle (sale_detail_id es requerido)
+    if (details.length <= 1) {
+      warningToast("La nota de crédito debe tener al menos un detalle");
+      return;
+    }
     setDetails((prev) => {
       const updated = prev
         .filter((_, i) => i !== index)

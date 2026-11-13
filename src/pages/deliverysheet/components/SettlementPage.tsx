@@ -530,7 +530,7 @@ export default function SettlementPage() {
                 />
                 <SummaryCard
                   label="Monto cobrado"
-                  value={isAlreadyPaid ? totalCobradoFilas : totalPagando}
+                  value={totalCobradoFilas}
                   tone="primary"
                   hint={`Total neto S/. ${totalOriginal.toFixed(2)}`}
                 />

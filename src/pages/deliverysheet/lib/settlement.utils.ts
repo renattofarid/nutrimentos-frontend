@@ -13,11 +13,11 @@ interface SheetSaleAmounts {
  * las suma a `collected_amount` (las trata como "cobradas"). Para no restarlas
  * dos veces, al monto cobrado se le quita lo que corresponde a notas de crédito.
  * Ej.: venta 266.20 con NC 214 → current 52.20, collected 214 → saldo 52.20.
+ *
+ * `current_amount` ya es el saldo vigente: descuenta NC y también los pagos
+ * ya registrados (ej.: venta 42.20 con pago 20.20 → current 22.00). Por eso
+ * NO se le vuelve a restar lo cobrado (antes daba 22.00 - 20.20 = 1.80).
  */
 export function getSheetSaleSaldo(sheetSale: SheetSaleAmounts): number {
-  const current = parseFormattedNumber(sheetSale.current_amount);
-  const collected = parseFormattedNumber(sheetSale.collected_amount);
-  const nc = sheetSale.sale.credit_notes_total_raw || 0;
-  const realCollected = Math.max(0, collected - nc);
-  return Math.max(0, current - realCollected);
+  return Math.max(0, parseFormattedNumber(sheetSale.current_amount));
 }

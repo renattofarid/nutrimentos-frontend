@@ -93,7 +93,7 @@ function SummaryCard({
 }: {
   label: string;
   value: number;
-  tone?: "default" | "primary" | "warning" | "muted";
+  tone?: "default" | "primary" | "warning" | "muted" | "info";
   hint?: string;
 }) {
   const toneClass = {
@@ -101,12 +101,14 @@ function SummaryCard({
     primary: "text-primary",
     warning: "text-orange-600",
     muted: "text-muted-foreground",
+    info: "text-blue-600",
   }[tone];
   return (
     <div
       className={cn(
         "rounded-lg border bg-card px-4 py-3",
         tone === "primary" && "border-primary/40 bg-primary/5",
+        tone === "info" && "border-blue-300 bg-blue-50",
       )}
     >
       <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -510,7 +512,12 @@ export default function SettlementPage() {
                 isDisabled={isAlreadyPaid}
               />
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+              <div
+                className={cn(
+                  "grid grid-cols-2 gap-3 pt-2",
+                  isAlreadyPaid ? "lg:grid-cols-4" : "lg:grid-cols-5",
+                )}
+              >
                 <SummaryCard
                   label="Total documentos"
                   value={totalOriginal + totalNotasCredito}
@@ -529,11 +536,19 @@ export default function SettlementPage() {
                   }
                 />
                 <SummaryCard
-                  label="Monto cobrado"
+                  label="Monto cobrado antes"
                   value={totalCobradoFilas}
-                  tone="primary"
+                  tone="info"
                   hint={`Total neto S/. ${totalOriginal.toFixed(2)}`}
                 />
+                {!isAlreadyPaid && (
+                  <SummaryCard
+                    label="Monto cobrado ahora"
+                    value={totalPagando}
+                    tone="primary"
+                    hint="Lo que se registra con esta rendición"
+                  />
+                )}
               </div>
             </form>
           </Form>

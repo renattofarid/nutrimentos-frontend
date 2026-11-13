@@ -476,32 +476,22 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
         id: "payment_amount",
         header: "MONTO COBRADO",
         type: "readonly",
-        width: "120px",
-        // Lo que ya se cobró antes (no cambia al seleccionar la fila)
-        render: (row) => (
-          <div className="w-full h-full flex items-center justify-end px-2 text-xs font-mono">
-            S/. {row.cobrado.toFixed(2)}
-          </div>
-        ),
+        width: "130px",
+        // Rendida: lo cobrado. Abierta: campo editable con lo que se va a cobrar.
+        render: (row) =>
+          isDisabled ? (
+            <div className="w-full h-full flex items-center justify-end px-2 text-xs">
+              S/. {row.cobrado.toFixed(2)}
+            </div>
+          ) : (
+            <PaymentAmountCell
+              index={row.index}
+              pendingAmount={row.saldo}
+              form={form}
+              locked={isDisabled}
+            />
+          ),
       },
-      ...(isDisabled
-        ? []
-        : [
-            {
-              id: "cobrar_ahora",
-              header: "COBRAR AHORA",
-              type: "readonly" as const,
-              width: "120px",
-              render: (row: SettlementGridRow) => (
-                <PaymentAmountCell
-                  index={row.index}
-                  pendingAmount={row.saldo}
-                  form={form}
-                  locked={isDisabled}
-                />
-              ),
-            },
-          ]),
       {
         id: "nuevo_saldo",
         header: "NUEVO SALDO",
@@ -554,17 +544,17 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
 
   const salesValues = useWatch({ control: form.control, name: "sales" });
   const totales = useMemo(() => {
-    const t = { total: 0, saldo: 0, nc: 0, cobrado: 0, pagando: 0, nuevoSaldo: 0 };
+    const t = { total: 0, saldo: 0, nc: 0, cobrado: 0, nuevoSaldo: 0 };
     gridData.forEach((row) => {
       const pagando = isDisabled
-        ? 0
+        ? row.cobrado
         : parseFloat(salesValues?.[row.index]?.payment_amount || "0") || 0;
       t.total += row.total;
       t.saldo += row.saldo;
       t.nc += row.nota_credito_raw;
-      t.cobrado += row.cobrado;
-      t.pagando += pagando;
-      t.nuevoSaldo += row.saldo - pagando;
+      t.cobrado += pagando;
+      // Rendida: el saldo vigente ya es lo que queda pendiente
+      t.nuevoSaldo += row.saldo - (isDisabled ? 0 : pagando);
     });
     return t;
   }, [gridData, salesValues, isDisabled]);
@@ -586,8 +576,7 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
     total: cell(totales.total),
     saldo: cell(totales.saldo),
     nota_credito: cell(totales.nc, totales.nc > 0 ? "text-orange-600" : "text-muted-foreground"),
-    payment_amount: cell(totales.cobrado),
-    ...(isDisabled ? {} : { cobrar_ahora: cell(totales.pagando, "text-primary") }),
+    payment_amount: cell(totales.cobrado, "text-primary"),
     nuevo_saldo: cell(totales.nuevoSaldo),
   };
 

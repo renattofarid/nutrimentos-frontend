@@ -80,7 +80,14 @@ function resolvePaymentStatus(sheet: DeliverySheetById): PaymentStatus {
   const pending = parseFloat(sheet.pending_amount_raw);
   const collected = parseFloat(sheet.collected_amount_raw);
   if (sheet.status === "ANULADA") return "ANULADA";
-  if (pending === 0 || sheet.status === "RENDIDA") return "CANCELADO";
+  // Solo se cobra una vez: al rendirla queda CANCELADO aunque falte saldo
+  // (el saldo restante se cobra en otra planilla).
+  if (
+    pending === 0 ||
+    sheet.status === "RENDIDA" ||
+    sheet.status === "CANCELADO"
+  )
+    return "CANCELADO";
   if (collected > 0) return "PENDIENTE";
   return "NO_CANCELADO";
 }
@@ -363,6 +370,12 @@ export default function SettlementPage() {
     0,
   );
 
+  // Lo que queda sin cobrar: tras rendir es el saldo vigente; antes de rendir,
+  // el saldo menos lo que se está por cobrar.
+  const saldoQueda = isAlreadyPaid
+    ? totalPendiente
+    : Math.max(0, totalPendiente - totalPagando);
+
   return (
     <PageWrapper>
       <div className="space-y-4">
@@ -512,12 +525,7 @@ export default function SettlementPage() {
                 isDisabled={isAlreadyPaid}
               />
 
-              <div
-                className={cn(
-                  "grid grid-cols-2 gap-3 pt-2",
-                  isAlreadyPaid ? "lg:grid-cols-4" : "lg:grid-cols-5",
-                )}
-              >
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
                 <SummaryCard
                   label="Total documentos"
                   value={totalOriginal + totalNotasCredito}
@@ -528,27 +536,21 @@ export default function SettlementPage() {
                   tone={totalNotasCredito > 0 ? "warning" : "muted"}
                 />
                 <SummaryCard
-                  label="Saldo pendiente"
-                  value={
-                    isAlreadyPaid
-                      ? totalPendiente
-                      : Math.max(0, totalPendiente - totalPagando)
-                  }
-                />
-                <SummaryCard
-                  label="Monto cobrado antes"
-                  value={totalCobradoFilas}
-                  tone="info"
+                  label={isAlreadyPaid ? "Monto cobrado" : "Monto a cobrar"}
+                  value={isAlreadyPaid ? totalCobradoFilas : totalPagando}
+                  tone="primary"
                   hint={`Total neto S/. ${totalOriginal.toFixed(2)}`}
                 />
-                {!isAlreadyPaid && (
-                  <SummaryCard
-                    label="Monto cobrado ahora"
-                    value={totalPagando}
-                    tone="primary"
-                    hint="Lo que se registra con esta rendición"
-                  />
-                )}
+                <SummaryCard
+                  label="Saldo pendiente"
+                  value={saldoQueda}
+                  tone={saldoQueda > 0.009 ? "warning" : "default"}
+                  hint={
+                    saldoQueda > 0.009
+                      ? "Se cobrará en otra planilla"
+                      : "Sin saldo por cobrar"
+                  }
+                />
               </div>
             </form>
           </Form>

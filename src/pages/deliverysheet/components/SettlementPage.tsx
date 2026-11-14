@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -233,14 +233,20 @@ export default function SettlementPage() {
             ? "ENTREGADO"
             : sheetSale.delivery_status,
         delivery_notes: sheetSale.delivery_notes || "",
-        payment_amount: getSheetSaleSaldo(sheetSale).toFixed(2),
+        // Nada se cobra hasta que se marque la boleta (o se escriba el monto).
+        payment_amount: "0",
       })),
       payment_date: new Date().toISOString().split("T")[0],
       observations: "",
     });
   };
 
+  // Solo se guarda si se hizo clic en "Guardar Rendición" (nunca con Enter).
+  const saveClickedRef = useRef(false);
+
   const handleSubmit = async (data: SettlementFormSchema) => {
+    if (!saveClickedRef.current) return;
+    saveClickedRef.current = false;
     if (!deliverySheet) {
       errorToast("No se encontró la planilla de reparto");
       return;
@@ -387,6 +393,9 @@ export default function SettlementPage() {
               <Button
                 type="submit"
                 form="settlement-form"
+                onClick={() => {
+                  saveClickedRef.current = true;
+                }}
                 size="sm"
                 colorIcon="emerald"
                 variant="outline"
@@ -511,7 +520,9 @@ export default function SettlementPage() {
                   e.preventDefault();
                 }
               }}
-              onSubmit={form.handleSubmit(handleSubmit)}
+              onSubmit={form.handleSubmit(handleSubmit, () => {
+                saveClickedRef.current = false;
+              })}
               className="space-y-6"
             >
               <DeliverySheetInfo

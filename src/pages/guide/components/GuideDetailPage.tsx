@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { parseDateOnly } from "@/lib/date-only";
 
 import {
   FileText,
@@ -55,7 +56,7 @@ export default function GuideDetailPage() {
 
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return "-";
-    const date = new Date(dateString);
+    const date = parseDateOnly(dateString);
     return date.toLocaleDateString("es-ES", {
       day: "2-digit",
       month: "2-digit",

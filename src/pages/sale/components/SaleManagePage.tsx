@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { parseDateOnly } from "@/lib/date-only";
 import { useParams } from "react-router-dom";
 import { useWindowManager } from "@/stores/window-manager.store";
 import { useSaleStore } from "../lib/sales.store";
@@ -49,7 +50,7 @@ export default function SaleManagePage() {
     sale?.currency === "PEN" ? "S/." : sale?.currency === "USD" ? "$" : "€";
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = parseDateOnly(dateString);
     return date.toLocaleDateString("es-ES", {
       day: "2-digit",
       month: "2-digit",

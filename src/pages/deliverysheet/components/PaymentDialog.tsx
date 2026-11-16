@@ -1,5 +1,6 @@
 "use client";
 
+import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import GeneralSheet from "@/components/GeneralSheet";
@@ -44,7 +45,7 @@ export function PaymentDialog({
   const form = useForm<DeliverySheetPaymentSchema>({
     resolver: zodResolver(deliverySheetPaymentSchema) as any,
     defaultValues: {
-      payment_date: new Date().toISOString().split("T")[0],
+      payment_date: format(new Date(), "yyyy-MM-dd"),
       amount_cash: "0",
       amount_card: "0",
       amount_yape: "0",

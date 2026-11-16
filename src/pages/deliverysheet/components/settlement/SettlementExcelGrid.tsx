@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef } from "react";
+import { parseDateOnly } from "@/lib/date-only";
 import { useWatch } from "react-hook-form";
 import type { UseFormReturn } from "react-hook-form";
 import {
@@ -365,7 +366,7 @@ export function SettlementExcelGrid({ sales, form, isDisabled }: SettlementExcel
 
         const issueDate = sheetSale.sale.issue_date || "";
         const fecha = issueDate
-          ? new Date(issueDate).toLocaleDateString("es-PE", {
+          ? parseDateOnly(issueDate).toLocaleDateString("es-PE", {
               day: "2-digit",
               month: "2-digit",
               year: "2-digit",

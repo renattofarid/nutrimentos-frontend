@@ -1,4 +1,5 @@
 import GeneralSheet from "@/components/GeneralSheet";
+import { parseDateOnly } from "@/lib/date-only";
 import { GroupFormSection } from "@/components/GroupFormSection";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -31,7 +32,7 @@ export default function SaleDetailSheet({
     sale.currency === "PEN" ? "S/." : sale.currency === "USD" ? "$" : "€";
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = parseDateOnly(dateString);
     return date.toLocaleDateString("es-ES", {
       day: "2-digit",
       month: "2-digit",

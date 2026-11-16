@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { parse } from "date-fns";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { DeliverySheetResource } from "../lib/deliverysheet.interface";
 
@@ -68,7 +69,11 @@ export const getDeliverySheetColumns = (): ColumnDef<DeliverySheetResource>[] =>
     accessorKey: "issue_date",
     header: "F. Emisión",
     cell: ({ row }) => {
-      const date = new Date(row.original.issue_date);
+      const date = parse(
+        row.original.issue_date.split("T")[0],
+        "yyyy-MM-dd",
+        new Date(),
+      );
       return (
         <Badge variant="outline">
           {date.toLocaleDateString("es-ES", {

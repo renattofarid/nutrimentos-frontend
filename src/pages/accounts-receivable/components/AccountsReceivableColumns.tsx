@@ -1,4 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
+import { parseDateOnly } from "@/lib/date-only";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Wallet, Eye } from "lucide-react";
@@ -22,7 +23,7 @@ export const matchCurrency = (currencyCode: string) => {
 };
 
 export const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
+  const date = parseDateOnly(dateString);
   return date.toLocaleDateString("es-ES", {
     day: "2-digit",
     month: "2-digit",

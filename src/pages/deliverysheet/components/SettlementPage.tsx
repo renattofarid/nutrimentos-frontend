@@ -1,5 +1,6 @@
 "use client";
 
+import { format } from "date-fns";
 import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, useWatch } from "react-hook-form";
@@ -219,7 +220,7 @@ export default function SettlementPage() {
     resolver: zodResolver(settlementFormSchema) as any,
     defaultValues: {
       sales: [],
-      payment_date: new Date().toISOString().split("T")[0],
+      payment_date: format(new Date(), "yyyy-MM-dd"),
       observations: "",
     },
   });
@@ -236,7 +237,7 @@ export default function SettlementPage() {
         // Nada se cobra hasta que se marque la boleta (o se escriba el monto).
         payment_amount: "0",
       })),
-      payment_date: new Date().toISOString().split("T")[0],
+      payment_date: format(new Date(), "yyyy-MM-dd"),
       observations: "",
     });
   };

@@ -1,4 +1,5 @@
 import { getSheetSaleSaldo } from "../../lib/settlement.utils";
+import { parseDateOnly } from "@/lib/date-only";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { UseFormReturn } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
@@ -80,7 +81,7 @@ export function getSaleTableColumns(
       header: "Documento",
       cell: ({ row }) => {
         const issueDate = row.original.sale.issue_date || "";
-        const formattedDate = new Date(issueDate).toLocaleDateString("es-PE", {
+        const formattedDate = parseDateOnly(issueDate).toLocaleDateString("es-PE", {
           day: "2-digit",
           month: "2-digit",
           year: "2-digit",

@@ -118,10 +118,10 @@ export default function DeliverySheetPage() {
         company_id: company_id ? Number(company_id) : null,
         customer_id: customer_id ? Number(customer_id) : null,
         delivery_date_from: delivery_date_from
-          ? delivery_date_from.toISOString().split("T")[0]
+          ? format(delivery_date_from, "yyyy-MM-dd")
           : null,
         delivery_date_to: delivery_date_to
-          ? delivery_date_to.toISOString().split("T")[0]
+          ? format(delivery_date_to, "yyyy-MM-dd")
           : null,
         driver_id: driver_id ? Number(driver_id) : null,
         issue_date_from: issue_date_from

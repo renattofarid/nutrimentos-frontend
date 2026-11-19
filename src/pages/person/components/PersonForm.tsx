@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/FormInput";
+import { FormSwitch } from "@/components/FormSwitch";
 import { useFormLayout, FormLayoutContext } from "@/components/GroupFormSection";
 import {
   Loader,
@@ -208,7 +209,10 @@ function NumberDocumentContent({
 
 interface PersonFormProps {
   initialData?: PersonResource | null;
-  onSubmit: (data: PersonSchema | PersonSchemaClient) => Promise<number | void>;
+  onSubmit: (
+    data: PersonSchema | PersonSchemaClient,
+    extra?: { isAlsoClient: boolean },
+  ) => Promise<number | void>;
   onAfterSubmit?: () => void;
   isSubmitting?: boolean;
   onCancel?: () => void;
@@ -221,6 +225,8 @@ interface PersonFormProps {
   showZone?: boolean; // Show zone field
   showDirection?: boolean; // Show address field
   showPriceList?: boolean; // Show price list field for clients
+  showAlsoClient?: boolean; // Show "También es cliente" switch
+  initialAlsoClient?: boolean;
   labelWidth?: string; // Tailwind width class for horizontal labels, e.g. "w-32", "w-48", "w-56"
 }
 
@@ -239,6 +245,8 @@ export const PersonForm = ({
   showZone = false,
   showDirection = true,
   showPriceList = false,
+  showAlsoClient = false,
+  initialAlsoClient = false,
   labelWidth = "w-32",
 }: PersonFormProps) => {
   const isEditing = !!initialData;
@@ -285,7 +293,8 @@ export const PersonForm = ({
         "",
       driver_license: initialData?.driver_license || "",
       reference: primaryZone?.reference || "",
-    },
+      is_also_client: initialAlsoClient,
+    } as any,
     mode: "onChange", // Validate on change for immediate feedback
   });
 
@@ -498,7 +507,9 @@ export const PersonForm = ({
       (submitData as any).commercial_name =
         (submitData as any).business_name || "";
 
-      const returnedId = await onSubmit(submitData);
+      const returnedId = await onSubmit(submitData, {
+        isAlsoClient: !!(form.getValues() as any).is_also_client,
+      });
       const effectivePersonId =
         returnedId ?? (initialData?.id as number | undefined);
 
@@ -1309,6 +1320,15 @@ export const PersonForm = ({
                       name="driver_license"
                       label="Licencia de Conducir"
                       placeholder="Ingrese el número de licencia"
+                    />
+                  )}
+
+                  {showAlsoClient && (
+                    <FormSwitch
+                      control={form.control as any}
+                      name="is_also_client"
+                      label="Cliente"
+                      text="También es cliente"
                     />
                   )}
                 </GroupFormSection>

@@ -40,7 +40,6 @@ export default function DriverEditPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [personData, setPersonData] = useState<PersonResource | null>(null);
   const [currentRoleIds, setCurrentRoleIds] = useState<number[]>([]);
-  const [isAlsoClient, setIsAlsoClient] = useState(false);
 
   useEffect(() => {
     const loadPersonData = async () => {
@@ -57,7 +56,6 @@ export default function DriverEditPage() {
         const roleDetails = await getPersonRoleDetails(Number(id));
         const ids = roleDetails.map((r) => r.role_id);
         setCurrentRoleIds(ids);
-        setIsAlsoClient(ids.includes(CLIENT_ROLE_ID));
       } catch {
         errorToast("Error al cargar los datos del conductor");
         navigate("/conductores");
@@ -69,7 +67,11 @@ export default function DriverEditPage() {
     loadPersonData();
   }, [id, navigate]);
 
-  const handleSubmit = async (data: PersonSchema) => {
+  const handleSubmit = async (
+    data: PersonSchema,
+    extra?: { isAlsoClient: boolean },
+  ) => {
+    const isAlsoClient = extra?.isAlsoClient ?? false;
     if (!personData) return;
 
     setIsSubmitting(true);
@@ -140,15 +142,9 @@ export default function DriverEditPage() {
 
   return (
     <FormWrapper>
-      <label className="flex items-center gap-2 text-sm mb-3 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={isAlsoClient}
-          onChange={(e) => setIsAlsoClient(e.target.checked)}
-        />
-        También es cliente
-      </label>
       <PersonForm
+        showAlsoClient
+        initialAlsoClient={currentRoleIds.includes(CLIENT_ROLE_ID)}
         initialData={personData}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}

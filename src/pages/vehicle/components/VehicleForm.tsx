@@ -43,15 +43,15 @@ export const VehicleForm = ({
     ),
     defaultValues: {
       plate: "",
-      brand: "",
-      model: "",
+      brand: "-",
+      model: "-",
       year: new Date().getFullYear(),
-      color: "",
-      vehicle_type: "",
+      color: "-",
+      vehicle_type: "-",
       max_weight: 0,
       owner_id: "",
       mtc: "-",
-      observations: "",
+      observations: "-",
       ...defaultValues,
     },
     mode: "onChange",
@@ -61,15 +61,34 @@ export const VehicleForm = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sidebar p-4 rounded-lg">
+          <FormSelectAsync
+            control={form.control}
+            name="owner_id"
+            label="Conductor"
+            placeholder="Seleccione un conductor"
+            useQueryHook={useDrivers}
+            mapOptionFn={(driver) => ({
+              value: driver.id.toString(),
+              label: driver.business_name
+                ? driver.business_name
+                : `${driver.names ?? ""} ${driver.father_surname ?? ""} ${driver.mother_surname ?? ""}`,
+            })}
+            preloadItemId={defaultValues.owner_id}
+          />
+
           <FormInput
             control={form.control}
             name="plate"
             label="Placa"
-            placeholder="Ej: ABC-123"
+            placeholder="Ej: ABC123"
             className="font-mono uppercase"
-            maxLength={20}
+            maxLength={6}
             onChange={(e) =>
-              form.setValue("plate", e.target.value.toUpperCase())
+              form.setValue(
+                "plate",
+                e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""),
+                { shouldValidate: true },
+              )
             }
           />
 
@@ -115,21 +134,6 @@ export const VehicleForm = ({
             label="Peso Máximo (kg)"
             type="number"
             placeholder="Ej: 100"
-          />
-
-          <FormSelectAsync
-            control={form.control}
-            name="owner_id"
-            label="Conductor"
-            placeholder="Seleccione un conductor"
-            useQueryHook={useDrivers}
-            mapOptionFn={(driver) => ({
-              value: driver.id.toString(),
-              label: driver.business_name
-                ? driver.business_name
-                : `${driver.names ?? ""} ${driver.father_surname ?? ""} ${driver.mother_surname ?? ""}`,
-            })}
-            preloadItemId={defaultValues.owner_id}
           />
 
           <FormInput

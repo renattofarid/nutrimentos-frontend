@@ -7,7 +7,10 @@ import { PersonForm } from "@/pages/person/components/PersonForm";
 import {
   findPersonById,
   updatePerson,
+  updatePersonRoles,
+  getPersonRoleDetails,
 } from "@/pages/person/lib/person.actions";
+import { CLIENT_ROLE_ID } from "@/pages/client/lib/client.interface";
 import {
   SUCCESS_MESSAGE,
   ERROR_MESSAGE,
@@ -36,6 +39,8 @@ export default function DriverEditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [personData, setPersonData] = useState<PersonResource | null>(null);
+  const [currentRoleIds, setCurrentRoleIds] = useState<number[]>([]);
+  const [isAlsoClient, setIsAlsoClient] = useState(false);
 
   useEffect(() => {
     const loadPersonData = async () => {
@@ -49,6 +54,10 @@ export default function DriverEditPage() {
         const response = await findPersonById(Number(id));
         const person = response.data;
         setPersonData(person);
+        const roleDetails = await getPersonRoleDetails(Number(id));
+        const ids = roleDetails.map((r) => r.role_id);
+        setCurrentRoleIds(ids);
+        setIsAlsoClient(ids.includes(CLIENT_ROLE_ID));
       } catch {
         errorToast("Error al cargar los datos del conductor");
         navigate("/conductores");
@@ -89,6 +98,19 @@ export default function DriverEditPage() {
       };
 
       await updatePerson(personData.id, updatePersonData);
+
+      // Rol de cliente: solo se envía si cambió respecto a lo guardado
+      const hadClientRole = currentRoleIds.includes(CLIENT_ROLE_ID);
+      if (isAlsoClient !== hadClientRole) {
+        const roles = [
+          ...currentRoleIds
+            .filter((rid) => rid !== CLIENT_ROLE_ID)
+            .map((rid) => ({ role_id: rid, status: true })),
+          { role_id: CLIENT_ROLE_ID, status: isAlsoClient },
+        ];
+        await updatePersonRoles(personData.id, { roles });
+      }
+
       successToast(
         SUCCESS_MESSAGE({ name: "Conductor", gender: false }, "update"),
       );
@@ -118,6 +140,14 @@ export default function DriverEditPage() {
 
   return (
     <FormWrapper>
+      <label className="flex items-center gap-2 text-sm mb-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={isAlsoClient}
+          onChange={(e) => setIsAlsoClient(e.target.checked)}
+        />
+        También es cliente
+      </label>
       <PersonForm
         initialData={personData}
         onSubmit={handleSubmit}

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   useSalesByProductReport,
-  useUserAsyncSearch,
   useWarehouseAsyncSearch,
   useBranchAsyncSearch,
 } from "../lib/reports.hook";
@@ -22,6 +21,9 @@ import { exportSalesByProductReport } from "../lib/reports.actions";
 import { FormSelectAsync } from "@/components/FormSelectAsync";
 import { DatePickerFormField } from "@/components/DatePickerFormField";
 import { format } from "date-fns";
+import { useZoneSearch } from "@/pages/zone/lib/zone.hook";
+import { useWorkers } from "@/pages/worker/lib/worker.hook";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
 import { errorToast, successToast } from "@/lib/core.function";
 import { usePermission } from "@/lib/permission-guard";
 import { ACTIONS } from "@/lib/permission-catalog";
@@ -30,7 +32,8 @@ const ROUTE = "ventas-por-producto";
 
 interface FilterFormValues {
   branch_id: string;
-  user_id: string;
+  vendedor_id: string;
+  zone_id: string;
   warehouse_id: string;
   start_date: string;
   end_date: string;
@@ -139,15 +142,17 @@ export default function SalesByProductReportPage() {
 
   const _today = new Date();
   const _todayStr = format(_today, "yyyy-MM-dd");
+  // Periodo por defecto: del 1 del mes actual hasta hoy
   const _defaultStartStr = format(
-    new Date(_today.getFullYear(), _today.getMonth(), _today.getDate()),
+    new Date(_today.getFullYear(), _today.getMonth(), 1),
     "yyyy-MM-dd",
   );
 
   const form = useForm<FilterFormValues>({
     defaultValues: {
       branch_id: "",
-      user_id: "",
+      vendedor_id: "",
+      zone_id: "",
       warehouse_id: "",
       start_date: _defaultStartStr,
       end_date: _todayStr,
@@ -158,7 +163,8 @@ export default function SalesByProductReportPage() {
     values: FilterFormValues,
   ): SalesByProductReportParams => ({
     branch_id: values.branch_id ? Number(values.branch_id) : null,
-    user_id: values.user_id ? Number(values.user_id) : null,
+    vendedor_id: values.vendedor_id ? Number(values.vendedor_id) : null,
+    zone_id: values.zone_id ? Number(values.zone_id) : null,
     warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
     start_date: values.start_date || null,
     end_date: values.end_date || null,
@@ -208,10 +214,24 @@ export default function SalesByProductReportPage() {
           >
             <FormSelectAsync
               control={form.control}
-              name="user_id"
+              name="vendedor_id"
               label="Vendedor"
               placeholder="Buscar vendedor..."
-              useQueryHook={useUserAsyncSearch}
+              useQueryHook={useWorkers}
+              mapOptionFn={(item: PersonResource) => ({
+                label: `${item.names ?? ""} ${item.father_surname ?? ""} ${item.mother_surname ?? ""}`.trim(),
+                description: item.number_document ?? undefined,
+                value: String(item.id),
+              })}
+              withValue={false}
+            />
+
+            <FormSelectAsync
+              control={form.control}
+              name="zone_id"
+              label="Zona"
+              placeholder="Buscar zona..."
+              useQueryHook={useZoneSearch}
               mapOptionFn={(item) => ({
                 label: item.name,
                 value: String(item.id),

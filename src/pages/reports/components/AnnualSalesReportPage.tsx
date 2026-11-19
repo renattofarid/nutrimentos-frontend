@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useZoneSearch } from "@/pages/zone/lib/zone.hook";
+import { useWorkers } from "@/pages/worker/lib/worker.hook";
+import type { PersonResource } from "@/pages/person/lib/person.interface";
 import {
   useAnnualSalesReport,
-  useUserAsyncSearch,
   useWarehouseAsyncSearch,
   useBranchAsyncSearch,
 } from "../lib/reports.hook";
@@ -44,7 +46,8 @@ const MONTH_NAMES = [
 
 interface FilterFormValues {
   branch_id: string;
-  user_id: string;
+  vendedor_id: string;
+  zone_id: string;
   warehouse_id: string;
   year: string;
 }
@@ -112,7 +115,8 @@ export default function AnnualSalesReportPage() {
   const form = useForm<FilterFormValues>({
     defaultValues: {
       branch_id: "",
-      user_id: "",
+      vendedor_id: "",
+      zone_id: "",
       warehouse_id: "",
       year: String(new Date().getFullYear()),
     },
@@ -120,7 +124,8 @@ export default function AnnualSalesReportPage() {
 
   const buildParams = (values: FilterFormValues): AnnualSalesReportParams => ({
     branch_id: values.branch_id ? Number(values.branch_id) : null,
-    user_id: values.user_id ? Number(values.user_id) : null,
+    vendedor_id: values.vendedor_id ? Number(values.vendedor_id) : null,
+    zone_id: values.zone_id ? Number(values.zone_id) : null,
     warehouse_id: values.warehouse_id ? Number(values.warehouse_id) : null,
     year: values.year ? Number(values.year) : null,
   });
@@ -174,10 +179,24 @@ export default function AnnualSalesReportPage() {
 
             <FormSelectAsync
               control={form.control}
-              name="user_id"
+              name="vendedor_id"
               label="Vendedor"
               placeholder="Buscar vendedor..."
-              useQueryHook={useUserAsyncSearch}
+              useQueryHook={useWorkers}
+              mapOptionFn={(item: PersonResource) => ({
+                label: `${item.names ?? ""} ${item.father_surname ?? ""} ${item.mother_surname ?? ""}`.trim(),
+                description: item.number_document ?? undefined,
+                value: String(item.id),
+              })}
+              withValue={false}
+            />
+
+            <FormSelectAsync
+              control={form.control}
+              name="zone_id"
+              label="Zona"
+              placeholder="Buscar zona..."
+              useQueryHook={useZoneSearch}
               mapOptionFn={(item) => ({
                 label: item.name,
                 value: String(item.id),

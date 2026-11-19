@@ -683,8 +683,9 @@ export interface SalesByProductReportParams {
   end_date?: string | null;
   format?: "excel" | "pdf" | null;
   start_date?: string | null;
-  user_id?: number | null;
+  vendedor_id?: number | null;
   warehouse_id?: number | null;
+  zone_id?: number | null;
 }
 
 export interface SalesByProductItem {
@@ -713,8 +714,9 @@ export interface AnnualSalesReportParams {
   end_date?: string | null;
   format?: "excel" | "pdf" | null;
   start_date?: string | null;
-  user_id?: number | null;
+  vendedor_id?: number | null;
   warehouse_id?: number | null;
+  zone_id?: number | null;
   year?: number | null;
 }
 

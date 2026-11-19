@@ -347,6 +347,21 @@ export const PurchaseForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [details, watchDiscount, watchFreight, watchLoading]);
 
+  // Flete y estiba automáticos: toneladas × tarifa fija (189 y 18).
+  // Solo al crear; en edición se respetan los valores guardados.
+  const totalKgForCosts = details.reduce(
+    (sum, d) => sum + (parseFloat(d.quantity_kg) || 0),
+    0,
+  );
+  useEffect(() => {
+    if (mode !== "create") return;
+    const tons = totalKgForCosts / 1000;
+    const floor2 = (n: number) => Math.floor(n * 100 + 1e-6) / 100;
+    form.setValue("freight_cost", floor2(tons * 189));
+    form.setValue("loading_cost", floor2(tons * 18));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalKgForCosts, mode]);
+
   // Establecer fechas automáticamente al cargar el formulario
   useEffect(() => {
     const today = new Date();

@@ -795,9 +795,13 @@ export const GuideForm = ({
       return;
     }
 
-    if (useCustomDetails && !selectedPersonZoneId) {
+    if (
+      useCustomDetails &&
+      !selectedPersonZoneId &&
+      !String(data.destination_address ?? "").trim()
+    ) {
       errorToast(
-        "Debe seleccionar una dirección del cliente para completar el destino",
+        "Debe seleccionar una dirección del cliente o escribir la dirección de destino",
       );
       return;
     }
@@ -1370,22 +1374,29 @@ export const GuideForm = ({
                 />
               </div>
 
-              <div className={useCustomDetails ? "hidden" : ""}>
+              <div>
                 <FormSelectAsync
                   control={form.control}
                   name="ubigeo_destination_id"
                   label="Ubigeo de Destino"
                   placeholder="Buscar ubigeo..."
                   useQueryHook={useUbigeosFrom}
+                  additionalParams={{
+                    per_page: 1300,
+                  }}
                   mapOptionFn={(item: UbigeoResource) => ({
                     value: item.id.toString(),
                     label: item.name,
                     description: item.cadena,
                   })}
+                  preloadItemId={
+                    form.watch("ubigeo_destination_id") ||
+                    defaultValues.ubigeo_destination_id
+                  }
                 />
               </div>
 
-              <div className={useCustomDetails ? "hidden" : ""}>
+              <div>
                 <FormTextArea
                   control={form.control}
                   name="destination_address"

@@ -45,14 +45,14 @@ export default function VehicleModal({
 
   const mapVehicleToForm = (data: VehicleResource): Partial<VehicleSchema> => ({
     plate: data?.plate || "",
-    brand: data?.brand || "",
-    model: data?.model || "",
+    brand: data?.brand || "-",
+    model: data?.model || "-",
     year: data?.year || new Date().getFullYear(),
-    color: data?.color || "",
-    vehicle_type: data?.vehicle_type || "",
+    color: data?.color || "-",
+    vehicle_type: data?.vehicle_type || "-",
     max_weight: parseFloat(data?.max_weight || "0"),
     owner_id: data?.owner?.id?.toString() || "",
-    observations: data?.observations || "",
+    observations: data?.observations || "-",
     mtc: data?.mtc || "-",
   });
 

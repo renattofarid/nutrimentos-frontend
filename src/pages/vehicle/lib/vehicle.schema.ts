@@ -7,8 +7,8 @@ export const vehicleSchemaCreate = z.object({
     .min(1, {
       message: "La placa es requerida",
     })
-    .max(20, {
-      message: "La placa no puede tener más de 20 caracteres",
+    .regex(/^[A-Za-z0-9]{6}$/, {
+      message: "La placa debe tener exactamente 6 caracteres (letras y números, sin guiones)",
     }),
   brand: z
     .string()
@@ -50,12 +50,11 @@ export const vehicleSchemaCreate = z.object({
     }),
   vehicle_type: z
     .string()
-    .min(1, {
-      message: "El tipo de vehículo es requerido",
-    })
     .max(50, {
       message: "El tipo de vehículo no puede tener más de 50 caracteres",
-    }),
+    })
+    .optional()
+    .or(z.literal("")),
   max_weight: z.preprocess(
     (val) => {
       const parsed = Number(val);

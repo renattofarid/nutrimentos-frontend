@@ -25,7 +25,6 @@ import ClientPriceListSheet from "./ClientPriceListSheet";
 import AssignPriceListModal from "./AssignPriceListModal";
 import ClientAddressesSheet from "./ClientAddressesSheet";
 import PageWrapper from "@/components/PageWrapper";
-
 const { MODEL } = CLIENT;
 
 export default function ClientPage() {

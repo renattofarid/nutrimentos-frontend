@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { FilePlus } from "lucide-react";
+import { FilePlus, Pencil } from "lucide-react";
 import { usePermission } from "@/lib/permission-guard";
 import { ACTIONS } from "@/lib/permission-catalog";
 
@@ -45,6 +45,8 @@ interface CreditNoteOptionsProps {
   setSaleId: (value: string) => void;
   onSaleValueChange?: (value: string, item?: SaleResource) => void;
   onGenerateCreditNote?: () => void;
+  editableNote?: { id: number; number: string } | null;
+  onEditCreditNote?: () => void;
 }
 
 export default function CreditNoteOptions({
@@ -64,6 +66,8 @@ export default function CreditNoteOptions({
   setSaleId,
   onSaleValueChange,
   onGenerateCreditNote,
+  editableNote,
+  onEditCreditNote,
 }: CreditNoteOptionsProps) {
   const { data: motives = [] } = useAllCreditNoteMotives();
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>("");
@@ -183,6 +187,18 @@ export default function CreditNoteOptions({
         placeholder="N° de Venta"
         className="w-[200px] bg-accent"
       />
+
+      {sale_id && editableNote && onEditCreditNote && can(SALE_ROUTE, ACTIONS.GENERAR_NOTA_CREDITO) && (
+        <Button
+          size="sm"
+          variant="outline"
+          colorIcon="amber"
+          onClick={onEditCreditNote}
+        >
+          <Pencil className="h-4 w-4" />
+          Editar NC {editableNote.number}
+        </Button>
+      )}
 
       {sale_id && onGenerateCreditNote && can(SALE_ROUTE, ACTIONS.GENERAR_NOTA_CREDITO) && (
         <Button

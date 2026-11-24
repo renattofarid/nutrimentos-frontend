@@ -185,7 +185,18 @@ export default function SalePage() {
     navigate(`/ventas/gestionar/${sale.id}`);
   };
 
+  // Venta de hoy que ya tiene NC: se edita la última en vez de crear otra
+  const canEditCreditNote = (sale?: SaleResource | null) =>
+    !!sale?.has_credit_notes &&
+    !!sale.credit_note_ids?.length &&
+    sale.issue_date?.slice(0, 10) === format(new Date(), "yyyy-MM-dd");
+
   const handleCreateCreditNote = (sale: SaleResource) => {
+    const lastCreditNoteId = sale.credit_note_ids?.at(-1);
+    if (canEditCreditNote(sale) && lastCreditNoteId) {
+      navigate(`/notas-credito/actualizar/${lastCreditNoteId}`);
+      return;
+    }
     navigate(CreditNoteAddRoute, { state: { sale } });
   };
 
@@ -315,6 +326,7 @@ export default function SalePage() {
           onAnular={handleAnular}
           onCerrar={handleCerrar}
           onGenerar={() => toolbarSale && handleCreateCreditNote(toolbarSale)}
+          editCreditNote={canEditCreditNote(toolbarSale)}
           onViewDetails={() => toolbarSale && handleViewDetails(toolbarSale)}
           onManage={() => toolbarSale && handleManage(toolbarSale)}
           onQuickPay={() => toolbarSale && handleQuickPay(toolbarSale)}

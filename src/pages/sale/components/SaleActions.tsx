@@ -30,6 +30,7 @@ interface SaleActionsProps {
   onManage: () => void;
   onQuickPay: () => void;
   canQuickPay: boolean;
+  editCreditNote?: boolean;
 }
 
 export default function SaleActions({
@@ -44,6 +45,7 @@ export default function SaleActions({
   onManage,
   onQuickPay,
   canQuickPay,
+  editCreditNote = false,
 }: SaleActionsProps) {
   const { can } = usePermission();
 
@@ -138,8 +140,8 @@ export default function SaleActions({
           onClick={onGenerar}
           disabled={!hasSelection}
         >
-          <FileMinus />
-          Generar NC
+          {editCreditNote ? <Pencil /> : <FileMinus />}
+          {editCreditNote ? "Editar NC" : "Generar NC"}
         </Button>
       )}
       <div className="h-6 mx-2">

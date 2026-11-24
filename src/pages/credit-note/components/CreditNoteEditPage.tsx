@@ -15,7 +15,7 @@ import {
 import { CREDIT_NOTE } from "../lib/credit-note.interface";
 import { useCreditNoteStore } from "../lib/credit-note.store";
 import FormSkeleton from "@/components/FormSkeleton";
-import { useAllSales } from "@/pages/sale/lib/sale.hook";
+import { useSaleById } from "@/pages/sale/lib/sale.hook";
 import PageWrapper from "@/components/PageWrapper";
 import type { SaleResource } from "@/pages/sale/lib/sale.interface";
 
@@ -31,8 +31,6 @@ export default function CreditNoteEditPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedSaleId, setSelectedSaleId] = useState<number | null>(null);
 
-  const { data: sales, isLoading: isLoadingSales } = useAllSales();
-
   useEffect(() => {
     if (creditNoteId) fetchCreditNote(creditNoteId);
   }, [creditNoteId]);
@@ -43,27 +41,14 @@ export default function CreditNoteEditPage() {
     }
   }, [creditNote]);
 
-  const selectedSale = useMemo<SaleResource | null>(() => {
-    if (!sales || !selectedSaleId) return null;
-    return sales.find((s) => s.id === selectedSaleId) ?? null;
-  }, [sales, selectedSaleId]);
+  // Solo se trae la venta de esta nota (no todo el listado)
+  const { data: saleById, isLoading: isLoadingSales } = useSaleById(
+    selectedSaleId ?? 0,
+  );
 
-  const salesOptions = useMemo(
-    () =>
-      sales?.map((sale) => {
-        const customer = sale.customer ?? {};
-        const name =
-          customer.names?.trim() ||
-          customer.business_name?.trim() ||
-          [customer.names, customer.father_surname, customer.mother_surname]
-            .filter((s) => typeof s === "string" && s.trim() !== "")
-            .join(" ");
-        return {
-          value: sale.id.toString(),
-          label: `${sale.serie}-${sale.numero} - ${name || ""}`,
-        };
-      }) || [],
-    [sales],
+  const selectedSale = useMemo<SaleResource | null>(
+    () => (selectedSaleId ? (saleById?.data ?? null) : null),
+    [saleById, selectedSaleId],
   );
 
   const defaultValues = useMemo<Partial<CreditNoteSchema>>(() => {
@@ -80,11 +65,11 @@ export default function CreditNoteEditPage() {
         product_code: d.product_code ?? "",
         product_name: d.product_name ?? "",
         product_weight: 0,
-        original_quantity_sacks: parseFloat(d.quantity) ?? 0,
+        original_quantity_sacks: 0,
         original_quantity_kg: 0,
-        quantity_sacks: parseFloat(d.quantity) ?? 0,
-        quantity_kg: 0,
-        unit_price: parseFloat(d.unit_price) ?? 0,
+        quantity_sacks: parseFloat(d.quantity_sacks) || 0,
+        quantity_kg: parseFloat(d.quantity_kg) || 0,
+        unit_price: parseFloat(d.unit_price) || 0,
       })) ?? [],
     };
   }, [creditNote]);
@@ -92,12 +77,18 @@ export default function CreditNoteEditPage() {
   const handleSubmit = async (data: CreditNoteSchema) => {
     setIsSubmitting(true);
     try {
-      // El backend solo permite editar la cabecera (no la venta ni el detalle)
       await updateCreditNote(creditNoteId, {
         issue_date: data.issue_date,
         credit_note_motive_id: Number(data.credit_note_motive_id),
         affects_stock: data.affects_stock,
         observations: data.observations || "",
+        details: data.details.map((detail) => ({
+          sale_detail_id: detail.sale_detail_id,
+          product_id: detail.product_id,
+          quantity_sacks: detail.quantity_sacks,
+          quantity_kg: detail.quantity_kg,
+          unit_price: detail.unit_price,
+        })),
       });
       successToast(SUCCESS_MESSAGE(MODEL, "update"));
       navigate(ROUTE);
@@ -135,11 +126,10 @@ export default function CreditNoteEditPage() {
         onSubmit={handleSubmit}
         onCancel={() => navigate(ROUTE)}
         isSubmitting={isSubmitting}
-        sales={salesOptions}
         selectedSale={selectedSale}
         onSaleChange={setSelectedSaleId}
         readOnlySale={true}
-        detailsLocked={true}
+        isEdit={true}
       />
     </PageWrapper>
   );

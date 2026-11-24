@@ -14,7 +14,10 @@ export interface CreditNoteDetailResource {
   product_id: number;
   product_name: string;
   product_code: string;
-  quantity: string;
+  quantity_sacks: string;
+  quantity_kg: string;
+  weight_per_sack?: string;
+  total_quantity_kg?: string;
   unit_price: string;
   subtotal: string;
   tax: string;
@@ -120,6 +123,7 @@ export interface UpdateCreditNoteRequest {
   affects_stock?: boolean;
   status?: string;
   observations?: string;
+  details?: CreateCreditNoteDetailRequest[];
 }
 
 export interface UpdateCreditNoteResponse {

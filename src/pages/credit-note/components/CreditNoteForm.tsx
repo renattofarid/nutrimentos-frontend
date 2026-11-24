@@ -32,12 +32,11 @@ interface CreditNoteFormProps {
   onSubmit: (data: CreditNoteSchema) => void;
   onCancel?: () => void;
   isSubmitting?: boolean;
-  sales?: Array<{ value: string; label: string }>;
   selectedSale?: SaleResource | null;
   onSaleChange?: (saleId: number | null) => void;
   readOnlySale?: boolean;
-  // Edición: el backend solo actualiza cabecera, el detalle no se modifica
-  detailsLocked?: boolean;
+  // Edición: los detalles se cargan desde la nota y no desde la venta completa
+  isEdit?: boolean;
 }
 
 interface CreditNoteDetailRow {
@@ -159,7 +158,7 @@ export const CreditNoteForm = ({
   selectedSale,
   onSaleChange,
   readOnlySale = false,
-  detailsLocked = false,
+  isEdit = false,
 }: CreditNoteFormProps) => {
   const [details, setDetails] = useState<CreditNoteDetailRow[]>([]);
   const saleDetailMap = useMemo(
@@ -199,7 +198,7 @@ export const CreditNoteForm = ({
   const [nextNumber, setNextNumber] = useState("");
   const branchId = selectedSale?.branch?.id ?? selectedSale?.branch_id ?? 1;
   useEffect(() => {
-    if (detailsLocked) return;
+    if (isEdit) return;
     let cancelled = false;
     getNextCreditNoteSeries(Number(branchId))
       .then((res) => {
@@ -211,7 +210,7 @@ export const CreditNoteForm = ({
     return () => {
       cancelled = true;
     };
-  }, [branchId, detailsLocked]);
+  }, [branchId, isEdit]);
 
   useEffect(() => {
     if (watchSaleId) {
@@ -223,7 +222,42 @@ export const CreditNoteForm = ({
 
   // Cargar detalles de la venta seleccionada
   useEffect(() => {
-    if (selectedSale?.details) {
+    if (selectedSale?.details && isEdit) {
+      // Edición: se parte de lo que ya tiene la nota de crédito
+      const rows: CreditNoteDetailRow[] = (defaultValues.details ?? [])
+        .map((saved, i) => {
+          const detail = saleDetailMap.get(Number(saved.sale_detail_id));
+          if (!detail) return null;
+          const weight = detail.product?.weight ?? 0;
+          const isSackSale = (detail.quantity_sacks ?? 0) > 0;
+          const saleUnitPrice = getSaleUnitPrice(detail);
+          const savedSacks = Number(saved.quantity_sacks) || 0;
+          const savedKg = Number(saved.quantity_kg) || 0;
+          return calcRow({
+            index: i + 1,
+            sale_detail_id: detail.id,
+            product_id: detail.product_id,
+            product_code: detail.product?.codigo ?? "",
+            product_name: detail.product?.name ?? "",
+            product_weight: weight,
+            original_quantity_sacks: detail.quantity_sacks ?? 0,
+            original_quantity_kg: detail.quantity_kg ?? 0,
+            quantity_sacks: savedSacks > 0 ? savedSacks.toString() : "",
+            quantity_kg: savedKg > 0 ? savedKg.toString() : "",
+            unit_price: (Number(saved.unit_price) || saleUnitPrice).toString(),
+            subtotal: 0,
+            total_kg: 0,
+            sale_unit_price: saleUnitPrice,
+            price_per_kg:
+              isSackSale && weight > 0
+                ? round6(saleUnitPrice / weight)
+                : saleUnitPrice,
+          });
+        })
+        .filter((r): r is CreditNoteDetailRow => r !== null);
+      setDetails(rows);
+      syncFormDetails(rows);
+    } else if (selectedSale?.details) {
       const rows: CreditNoteDetailRow[] = selectedSale.details.map(
         (detail, i) => {
           const saleUnitPrice = getSaleUnitPrice(detail);
@@ -654,7 +688,7 @@ export const CreditNoteForm = ({
             />
           )}
 
-          {!detailsLocked && (
+          {!isEdit && (
             <FormInput
               label="N° Documento"
               name="next_number"
@@ -733,9 +767,6 @@ export const CreditNoteForm = ({
               "Agregue una fila para comenzar"
             }
             minHeight="180px"
-            // Al editar, el backend solo actualiza cabecera: el detalle es de solo lectura
-            disabled={detailsLocked}
-            hideActionButtons={detailsLocked}
           />
 
           {(form.formState.errors.details as any)?.message && (

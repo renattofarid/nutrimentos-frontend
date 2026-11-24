@@ -9,7 +9,12 @@ import type { CreditNoteResource } from "../lib/credit-note.interface";
 import CreditNoteActions from "./CreditNoteActions";
 import CreditNoteTable from "./CreditNoteTable";
 import CreditNoteOptions from "./CreditNoteOptions";
-import { deleteCreditNote, voidCreditNote } from "../lib/credit-note.actions";
+import {
+  deleteCreditNote,
+  voidCreditNote,
+  getCreditNote,
+} from "../lib/credit-note.actions";
+import { useQuery } from "@tanstack/react-query";
 import { SimpleDeleteDialog } from "@/components/SimpleDeleteDialog";
 import { ConfirmationDialog } from "@/components/ConfirmationDialog";
 import {
@@ -28,6 +33,14 @@ import { format } from "date-fns";
 import PageWrapper from "@/components/PageWrapper";
 
 const { MODEL } = CREDIT_NOTE;
+
+const isCreatedToday = (createdAt?: string) => {
+  const created = new Date((createdAt ?? "").replace(" ", "T"));
+  return (
+    Number.isNaN(created.getTime()) ||
+    created.toDateString() === new Date().toDateString()
+  );
+};
 
 export default function CreditNotePage() {
   const navigate = useNavigate();
@@ -74,6 +87,21 @@ export default function CreditNotePage() {
     refetch(buildParams());
   }, [page, per_page, search, status, motive_id, customer_id, issue_date_from, issue_date_to]);
 
+  // Si la venta buscada ya tiene una NC creada hoy, se ofrece editarla
+  const saleIdForNotes = selectedSale?.id ?? 0;
+  const { data: saleCreditNotes } = useQuery({
+    queryKey: ["credit-notes-by-sale", saleIdForNotes],
+    queryFn: () => getCreditNote({ params: { sale_id: saleIdForNotes } }),
+    enabled: !!saleIdForNotes,
+  });
+  const editableNote = (() => {
+    const note = saleCreditNotes?.data
+      ?.filter((n) => n.status !== "ANULADO")
+      .sort((a, b) => b.id - a.id)[0];
+    if (!note || !isCreatedToday(note.created_at)) return null;
+    return { id: note.id, number: note.full_document_number };
+  })();
+
   const handleGenerateCreditNote = () => {
     if (!selectedSale) return;
     navigate(CREDIT_NOTE.ROUTE_ADD, { state: { sale: selectedSale } });
@@ -88,11 +116,7 @@ export default function CreditNotePage() {
   const handleEdit = (note: CreditNoteResource | null) => {
     if (!note) return;
     // Solo se puede editar durante el día en que se creó
-    const created = new Date((note.created_at ?? "").replace(" ", "T"));
-    const isToday =
-      Number.isNaN(created.getTime()) ||
-      created.toDateString() === new Date().toDateString();
-    if (!isToday) {
+    if (!isCreatedToday(note.created_at)) {
       errorToast("Solo se puede editar una nota de crédito durante el día en que se creó");
       return;
     }
@@ -219,6 +243,11 @@ export default function CreditNotePage() {
           setSaleId={setSaleId}
           onSaleValueChange={(_val, item) => setSelectedSale(item ?? null)}
           onGenerateCreditNote={handleGenerateCreditNote}
+          editableNote={editableNote}
+          onEditCreditNote={() =>
+            editableNote &&
+            navigate(`${CREDIT_NOTE.ROUTE}/actualizar/${editableNote.id}`)
+          }
         />
       </CreditNoteTable>
 

@@ -290,7 +290,9 @@ export default function CreditNoteManagePage() {
                         </td>
                         <td className="px-3 py-2">{detail.product_name}</td>
                         <td className="px-3 py-2 text-right font-mono">
-                          {parseFloat(detail.quantity).toFixed(2)}
+                          {parseFloat(detail.quantity_sacks) > 0
+                            ? `${parseFloat(detail.quantity_sacks).toFixed(2)} sacos`
+                            : `${parseFloat(detail.quantity_kg).toFixed(2)} kg`}
                         </td>
                         <td className="px-3 py-2 text-right font-mono">
                           {currency} {parseFloat(detail.unit_price).toFixed(2)}

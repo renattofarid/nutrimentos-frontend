@@ -86,6 +86,7 @@ export default function PurchaseEditPage() {
         quantity_kg: detail.quantity_kg.toString(),
         quantity_sacks: detail.quantity_sacks.toString(),
         unit_price: detail.unit_price.toString(),
+        discount: detail.discount ? detail.discount.toString() : "",
         tax: detail.tax.toString(),
       })),
       installments: data.installments.map((installment) => ({

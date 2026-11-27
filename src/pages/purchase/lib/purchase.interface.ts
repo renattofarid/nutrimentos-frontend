@@ -14,6 +14,7 @@ export interface PurchaseDetailResource {
   quantity_kg: number;
   quantity_sacks: number;
   unit_price: number;
+  discount?: number;
   subtotal: number;
   tax: number;
   total: number;
@@ -86,6 +87,7 @@ export interface CreatePurchaseDetailRequest {
   quantity_kg: number;
   quantity_sacks: number;
   unit_price: number;
+  discount?: number;
 }
 
 export interface CreatePurchaseInstallmentRequest {

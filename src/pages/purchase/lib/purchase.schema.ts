@@ -23,6 +23,12 @@ export const purchaseDetailSchema = z.object({
     .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
       message: "El precio unitario debe ser un número válido",
     }),
+  discount: z
+    .string()
+    .optional()
+    .refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), {
+      message: "El descuento debe ser un número válido",
+    }),
   tax: z
     .string()
     .min(1, { message: "El impuesto es requerido" })

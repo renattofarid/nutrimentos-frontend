@@ -123,6 +123,7 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
           quantity_kg: Number(detail.quantity_kg),
           quantity_sacks: Number(detail.quantity_sacks),
           unit_price: Number(detail.unit_price),
+          discount: Number(detail.discount) || 0,
           tax: Number(detail.tax),
         })),
         installments: data.installments.map((installment) => ({
@@ -175,6 +176,7 @@ export const usePurchaseStore = create<PurchaseStore>((set) => ({
             quantity_kg: Number(detail.quantity_kg),
             quantity_sacks: Number(detail.quantity_sacks),
             unit_price: Number(detail.unit_price),
+            discount: Number(detail.discount) || 0,
           })),
         }),
         ...(data.installments !== undefined && data.installments?.length > 0

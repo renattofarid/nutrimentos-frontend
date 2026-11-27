@@ -84,6 +84,7 @@ interface DetailRow {
   quantity: string; // Cantidad (sacos o kg según el modo)
   quantity_kg: string; // Siempre en kg (para cálculos internos)
   unit_price: string;
+  discount: string; // Descuento de la línea (resta al subtotal)
   tax: string;
   subtotal: number;
   total: number;
@@ -154,8 +155,36 @@ export const PurchaseForm = ({
 
   const IGV_RATE = 0.18;
 
+  // Importes de una línea. El descuento resta al subtotal de la línea.
+  const calcLine = (
+    quantity: number,
+    unitPrice: number,
+    discount: number,
+    withIgv: boolean,
+  ) => {
+    // Se redondea a 6 decimales para quitar el ruido de punto flotante
+    // (3866.4 - 90 = 3776.3999999999996 se mostraba como 3,776.39)
+    const r6 = (n: number) => Math.round(n * 1e6) / 1e6;
+    const gross = r6(quantity * unitPrice);
+    if (!(quantity > 0 && unitPrice > 0)) {
+      return { subtotal: 0, tax: 0, total: 0 };
+    }
+    if (withIgv) {
+      // El precio ya incluye IGV: el descuento resta al total y se descompone
+      const total = r6(Math.max(gross - discount, 0));
+      const subtotal = r6(total / (1 + IGV_RATE));
+      return { subtotal, tax: r6(total - subtotal), total };
+    }
+    const subtotal = r6(Math.max(gross - discount, 0));
+    const tax = r6(subtotal * IGV_RATE);
+    return { subtotal, tax, total: r6(subtotal + tax) };
+  };
+
   // Trunca a 6 decimales hacia abajo: evita que el monto de la cuota supere
   // al total que recalcula el backend por diferencias de punto flotante (ej. 5.8e-11)
+  // Redondeo a 2 decimales solo para mostrar (formatNumber trunca)
+  const round2 = (value: number) => Math.round(value * 100) / 100;
+
   const floor6 = (value: number) => Math.floor(value * 1e6 + 1e-6) / 1e6;
 
   // Estados para cuotas
@@ -391,26 +420,17 @@ export const PurchaseForm = ({
         const quantityKg = parseFloat(detail.quantity_kg) || 0;
         const quantitySacks = parseFloat(detail.quantity_sacks) || 0;
         const unitPrice = parseFloat(detail.unit_price);
+        const discountValue = parseFloat(detail.discount) || 0;
 
         const isBySack = quantitySacks > 0;
         const quantity = isBySack ? quantitySacks : quantityKg;
 
-        let subtotal = 0;
-        let tax = 0;
-        let total = 0;
-
-        if (quantity > 0 && unitPrice > 0) {
-          if (includeIgv) {
-            const totalIncl = quantity * unitPrice;
-            subtotal = totalIncl / (1 + IGV_RATE);
-            tax = totalIncl - subtotal;
-            total = totalIncl;
-          } else {
-            subtotal = quantity * unitPrice;
-            tax = subtotal * IGV_RATE;
-            total = subtotal + tax;
-          }
-        }
+        const { subtotal, tax, total } = calcLine(
+          quantity,
+          unitPrice,
+          discountValue,
+          includeIgv,
+        );
 
         return {
           product_id: detail.product_id,
@@ -420,6 +440,7 @@ export const PurchaseForm = ({
           quantity: quantity > 0 ? quantity.toString() : "",
           quantity_kg: quantityKg > 0 ? quantityKg.toString() : "",
           unit_price: detail.unit_price,
+          discount: discountValue > 0 ? discountValue.toString() : "",
           tax: tax.toFixed(2),
           subtotal,
           total,
@@ -485,6 +506,7 @@ export const PurchaseForm = ({
       quantity: "",
       quantity_kg: "",
       unit_price: "",
+      discount: "",
       tax: "",
       subtotal: 0,
       total: 0,
@@ -501,18 +523,12 @@ export const PurchaseForm = ({
   const handlePasteDetails = (rows: PastedDetail[]) => {
     const newRows: DetailRow[] = rows.map((r) => {
       const productWeight = r.product.weight ? parseFloat(r.product.weight) : 0;
-      let subtotal = 0;
-      let tax = 0;
-      let total = 0;
-      if (includeIgv) {
-        total = r.quantity * r.unit_price;
-        subtotal = total / (1 + IGV_RATE);
-        tax = total - subtotal;
-      } else {
-        subtotal = r.quantity * r.unit_price;
-        tax = subtotal * IGV_RATE;
-        total = subtotal + tax;
-      }
+      const { subtotal, tax, total } = calcLine(
+        r.quantity,
+        r.unit_price,
+        0,
+        includeIgv,
+      );
       const quantityKg = r.is_by_sack ? r.quantity * productWeight : r.quantity;
       return {
         product_id: r.product.id.toString(),
@@ -522,6 +538,7 @@ export const PurchaseForm = ({
         quantity: r.quantity.toString(),
         quantity_kg: quantityKg > 0 ? quantityKg.toString() : "",
         unit_price: r.unit_price.toString(),
+        discount: "",
         tax: tax.toFixed(2),
         subtotal,
         total,
@@ -576,28 +593,18 @@ export const PurchaseForm = ({
     }
 
     // Recalcular totales cuando cambian quantity o precio
-    if (field === "quantity" || field === "unit_price") {
+    if (field === "quantity" || field === "unit_price" || field === "discount") {
       const quantity = parseFloat(updatedDetails[index].quantity) || 0;
       const unitPrice = parseFloat(updatedDetails[index].unit_price) || 0;
-      let subtotal = 0;
-      let tax = 0;
-      let total = 0;
+      const discountValue = parseFloat(updatedDetails[index].discount) || 0;
 
       // El precio siempre se multiplica por la cantidad ingresada (sacos o kg según el modo)
-      if (quantity > 0 && unitPrice > 0) {
-        if (includeIgv) {
-          // includeIgv=true: El precio YA incluye IGV, lo descomponemos
-          const totalIncl = quantity * unitPrice;
-          subtotal = totalIncl / (1 + IGV_RATE);
-          tax = totalIncl - subtotal;
-          total = totalIncl;
-        } else {
-          // includeIgv=false: El precio NO incluye IGV, se lo agregamos
-          subtotal = quantity * unitPrice;
-          tax = subtotal * IGV_RATE;
-          total = subtotal + tax;
-        }
-      }
+      const { subtotal, tax, total } = calcLine(
+        quantity,
+        unitPrice,
+        discountValue,
+        includeIgv,
+      );
 
       updatedDetails[index] = {
         ...updatedDetails[index],
@@ -744,22 +751,8 @@ export const PurchaseForm = ({
       // Usar la cantidad según el modo (sacos o kg)
       const q = parseFloat(d.quantity || "0");
       const up = parseFloat(d.unit_price || "0");
-      let subtotal = 0;
-      let tax = 0;
-      let total = 0;
-
-      if (includeIgv) {
-        // includeIgv=true: El precio YA incluye IGV, lo descomponemos
-        const totalIncl = q * up;
-        subtotal = totalIncl / (1 + IGV_RATE);
-        tax = totalIncl - subtotal;
-        total = totalIncl;
-      } else {
-        // includeIgv=false: El precio NO incluye IGV, se lo agregamos
-        subtotal = q * up;
-        tax = subtotal * IGV_RATE;
-        total = subtotal + tax;
-      }
+      const disc = parseFloat(d.discount || "0") || 0;
+      const { subtotal, tax, total } = calcLine(q, up, disc, includeIgv);
 
       return {
         ...d,
@@ -812,6 +805,13 @@ export const PurchaseForm = ({
       type: "number",
       width: "120px",
       accessor: "unit_price",
+    },
+    {
+      id: "discount",
+      header: "Descuento",
+      type: "number",
+      width: "110px",
+      accessor: "discount",
     },
     {
       id: "subtotal",
@@ -949,6 +949,7 @@ export const PurchaseForm = ({
           : parseFloat(d.quantity)
         : 0,
       unit_price: parseFloat(d.unit_price),
+      discount: parseFloat(d.discount) || 0,
       tax: parseFloat(d.tax),
     }));
 
@@ -1460,7 +1461,7 @@ export const PurchaseForm = ({
                   </span>
                   <span className="font-semibold">
                     {currencySymbol}
-                    {formatNumber(calculateSubtotalTotal())}
+                    {formatNumber(round2(calculateSubtotalTotal()))}
                   </span>
                 </div>
 
@@ -1482,7 +1483,7 @@ export const PurchaseForm = ({
                   </span>
                   <span className="font-semibold text-orange-600">
                     {currencySymbol}
-                    {formatNumber(calculateTaxTotal())}
+                    {formatNumber(round2(calculateTaxTotal()))}
                   </span>
                 </div>
 
@@ -1512,7 +1513,7 @@ export const PurchaseForm = ({
                   <span className="text-base font-bold">TOTAL</span>
                   <span className="text-xl font-bold text-primary">
                     {currencySymbol}
-                    {formatNumber(calculatePurchaseTotal())}
+                    {formatNumber(round2(calculatePurchaseTotal()))}
                   </span>
                 </div>
 

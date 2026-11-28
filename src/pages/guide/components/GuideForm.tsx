@@ -384,7 +384,13 @@ export const GuideForm = ({
     const formattedDate = format(today, "yyyy-MM-dd");
     form.setValue("issue_date", formattedDate);
     form.setValue("transfer_date", formattedDate);
-    form.setValue("motive_id", "3");
+    // Motivo por defecto: Venta (código SUNAT 01); si no se encuentra, id 3
+    const saleMotive = motives.find(
+      (m) =>
+        m.code === "01" ||
+        m.name.toLowerCase().includes("venta"),
+    );
+    form.setValue("motive_id", saleMotive ? saleMotive.id.toString() : "3");
     // En modo por ventas (default), el cliente siempre es "Clientes Varios" (id=30)
     form.setValue("customer_id", "30");
     if (form.getValues("modality") !== "PRIVADO") {

@@ -106,7 +106,12 @@ export default function GuideAddPage() {
     issue_date: "",
     transfer_date: "",
     modality: "PRIVADO",
-    motive_id: "3",
+    motive_id:
+      motives
+        ?.find(
+          (m) => m.code === "01" || m.name.toLowerCase().includes("venta"),
+        )
+        ?.id.toString() ?? "3",
     sale_document_number: "",
     carrier_document_type: "RUC",
     carrier_document_number: "",
